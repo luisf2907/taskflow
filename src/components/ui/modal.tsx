@@ -1,0 +1,65 @@
+"use client";
+
+import { cn } from "@/lib/utils";
+import { X } from "lucide-react";
+import { useEffect, useRef } from "react";
+
+interface ModalProps {
+  aberto: boolean;
+  onFechar: () => void;
+  titulo?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function Modal({ aberto, onFechar, titulo, children, className }: ModalProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleEsc(e: KeyboardEvent) { if (e.key === "Escape") onFechar(); }
+    if (aberto) {
+      document.addEventListener("keydown", handleEsc);
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = "";
+    };
+  }, [aberto, onFechar]);
+
+  if (!aberto) return null;
+
+  return (
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-black/50 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === overlayRef.current) onFechar(); }}
+    >
+      <div
+        className={cn("rounded-2xl w-full max-w-lg mx-4 border", className)}
+        style={{
+          background: "var(--tf-surface)",
+          borderColor: "var(--tf-border)",
+          boxShadow: "var(--tf-shadow-lg)",
+        }}
+      >
+        {titulo && (
+          <div
+            className="flex items-center justify-between px-6 py-4 border-b"
+            style={{ borderColor: "var(--tf-border)" }}
+          >
+            <h2 className="text-base font-semibold" style={{ color: "var(--tf-text)" }}>{titulo}</h2>
+            <button
+              onClick={onFechar}
+              className="p-1 rounded-lg transition-smooth"
+              style={{ color: "var(--tf-text-tertiary)" }}
+            >
+              <X size={18} />
+            </button>
+          </div>
+        )}
+        <div className="p-6">{children}</div>
+      </div>
+    </div>
+  );
+}

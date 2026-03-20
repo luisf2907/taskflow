@@ -1,0 +1,233 @@
+"use client";
+
+import { CartaoComResumo, useCartoes } from "@/hooks/use-cartoes";
+import { useColunas } from "@/hooks/use-colunas";
+import { useEtiquetas } from "@/hooks/use-etiquetas";
+import { useMembros } from "@/hooks/use-membros";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  closestCorners,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useCallback, useMemo, useState } from "react";
+import { Cartao } from "./cartao";
+import { Coluna } from "./coluna";
+import { DetalheCartao } from "./detalhe-cartao";
+import { NovaColuna } from "./nova-coluna";
+
+interface KanbanBoardProps {
+  quadroId: string;
+}
+
+export function KanbanBoard({ quadroId }: KanbanBoardProps) {
+  const {
+    colunas,
+    carregando: carregandoColunas,
+    criar: criarColuna,
+    atualizar: atualizarColuna,
+    excluir: excluirColuna,
+  } = useColunas(quadroId);
+
+  const {
+    cartoesDaColuna,
+    criar: criarCartao,
+    atualizar: atualizarCartao,
+    excluir: excluirCartao,
+    mover,
+    reordenarNaColuna,
+    buscar: refreshCartoes,
+  } = useCartoes(quadroId);
+
+  const {
+    etiquetas,
+    criar: criarEtiqueta,
+    excluir: excluirEtiqueta,
+  } = useEtiquetas(quadroId);
+
+  const {
+    membros,
+    criar: criarMembro,
+  } = useMembros(quadroId);
+
+  const [cartaoSelecionado, setCartaoSelecionado] =
+    useState<CartaoComResumo | null>(null);
+  const [cartaoArrastando, setCartaoArrastando] =
+    useState<CartaoComResumo | null>(null);
+
+  // Memoizar IDs das colunas para evitar re-render do SortableContext
+  const colunaIds = useMemo(
+    () => colunas.map((c) => `coluna-${c.id}`),
+    [colunas]
+  );
+
+  // Callbacks estáveis para evitar re-render de NovoCartao/NovaColuna
+  const handleCriarCartao = useCallback(
+    (colunaId: string, titulo: string) => criarCartao(colunaId, titulo),
+    [criarCartao]
+  );
+
+  const handleCriarColuna = useCallback(
+    (nome: string) => criarColuna(nome),
+    [criarColuna]
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  );
+
+  function handleDragStart(event: DragStartEvent) {
+    const { active } = event;
+    const data = active.data.current;
+    if (data?.type === "cartao") {
+      setCartaoArrastando(data.cartao);
+    }
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeData = active.data.current;
+    const overData = over.data.current;
+
+    if (activeData?.type !== "cartao") return;
+
+    const cartaoAtivo = activeData.cartao as CartaoComResumo;
+
+    if (overData?.type === "cartao") {
+      const cartaoAlvo = overData.cartao as CartaoComResumo;
+      if (cartaoAtivo.coluna_id !== cartaoAlvo.coluna_id && cartaoAlvo.coluna_id) {
+        const cartoesAlvo = cartoesDaColuna(cartaoAlvo.coluna_id);
+        const indiceAlvo = cartoesAlvo.findIndex(
+          (c) => c.id === cartaoAlvo.id
+        );
+        mover(cartaoAtivo.id, cartaoAlvo.coluna_id, indiceAlvo);
+      }
+    }
+
+    if (overData?.type === "coluna") {
+      const colunaAlvo = overData.coluna;
+      if (cartaoAtivo.coluna_id !== colunaAlvo.id) {
+        const cartoesAlvo = cartoesDaColuna(colunaAlvo.id);
+        mover(cartaoAtivo.id, colunaAlvo.id, cartoesAlvo.length);
+      }
+    }
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    setCartaoArrastando(null);
+
+    if (!over) return;
+
+    const activeData = active.data.current;
+    const overData = over.data.current;
+
+    if (activeData?.type === "cartao" && overData?.type === "cartao") {
+      const cartaoAtivo = activeData.cartao as CartaoComResumo;
+      const cartaoAlvo = overData.cartao as CartaoComResumo;
+
+      if (cartaoAtivo.id === cartaoAlvo.id) return;
+
+      const colunaId = cartaoAlvo.coluna_id;
+      if (!colunaId) return;
+      const cartoesColuna = cartoesDaColuna(colunaId);
+
+      const indiceAntigo = cartoesColuna.findIndex(
+        (c) => c.id === cartaoAtivo.id
+      );
+      const indiceNovo = cartoesColuna.findIndex(
+        (c) => c.id === cartaoAlvo.id
+      );
+
+      if (indiceAntigo !== -1 && indiceNovo !== -1) {
+        const reordenados = [...cartoesColuna];
+        const [movido] = reordenados.splice(indiceAntigo, 1);
+        reordenados.splice(indiceNovo, 0, movido);
+        reordenarNaColuna(colunaId, reordenados);
+      }
+    }
+  }
+
+  if (carregandoColunas) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex-1 overflow-x-auto p-6">
+          <div className="flex gap-4 items-start h-full">
+            <SortableContext
+              items={colunaIds}
+              strategy={horizontalListSortingStrategy}
+            >
+              {colunas.map((coluna) => (
+                <Coluna
+                  key={coluna.id}
+                  coluna={coluna}
+                  cartoes={cartoesDaColuna(coluna.id)}
+                  etiquetas={etiquetas}
+                  membros={membros}
+                  onCriarCartao={handleCriarCartao}
+                  onCartaoClick={setCartaoSelecionado}
+                  onRenomear={(nome) => atualizarColuna(coluna.id, { nome })}
+                  onExcluir={() => excluirColuna(coluna.id)}
+                />
+              ))}
+            </SortableContext>
+            <NovaColuna onCriar={handleCriarColuna} />
+          </div>
+        </div>
+
+        <DragOverlay>
+          {cartaoArrastando && (
+            <div className="rotate-3 w-[256px]">
+              <Cartao
+                cartao={cartaoArrastando}
+                etiquetas={etiquetas}
+                membros={membros}
+                onClick={() => {}}
+              />
+            </div>
+          )}
+        </DragOverlay>
+      </DndContext>
+
+      <DetalheCartao
+        cartao={cartaoSelecionado}
+        etiquetas={etiquetas}
+        membros={membros}
+        onFechar={() => setCartaoSelecionado(null)}
+        onAtualizar={atualizarCartao}
+        onExcluir={excluirCartao}
+        onCriarEtiqueta={criarEtiqueta}
+        onExcluirEtiqueta={excluirEtiqueta}
+        onCriarMembro={criarMembro}
+        onRefresh={refreshCartoes}
+      />
+    </>
+  );
+}
