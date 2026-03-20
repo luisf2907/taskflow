@@ -377,7 +377,7 @@ export default function PaginaWorkspace() {
     setSprintNome(""); setSprintMeta(""); setSprintInicio(""); setSprintFim("");
     setSprintCor(CORES_QUADRO[0]);
 
-    if (quadro) router.push(`/quadro/${quadro.id}`);
+    // Fica na página do workspace após criar
   }
 
   async function ativarSprint(id: string) {
