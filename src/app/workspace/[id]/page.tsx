@@ -18,6 +18,7 @@ import { RepoFileBrowser } from "@/components/workspace/repo-file-browser";
 import { RepoFileViewer } from "@/components/workspace/repo-file-viewer";
 import { RepoBranches } from "@/components/workspace/repo-branches";
 import { RepoPRs } from "@/components/workspace/repo-prs";
+import { MetricasWorkspace } from "@/components/workspace/metricas";
 import { Quadro, StatusSprint } from "@/types";
 import {
   DndContext,
@@ -1007,143 +1008,15 @@ export default function PaginaWorkspace() {
             )}
 
             {/* ═══ ABA MÉTRICAS ═══ */}
-            {abaAtiva === "metricas" && (() => {
-              // Calcular métricas
-              const sprintsConcl = sprintsDoWorkspace.filter((s) => s.status_sprint === "concluida");
-              const sprintsParaMetricas = [...sprintsConcl, ...(sprintAtiva ? [sprintAtiva] : [])];
-
-              const velocityPorSprint = sprintsParaMetricas.map((s) => {
-                const cards = cartoesDaSprint(s.id);
-                const totalPontos = cards.reduce((acc, c) => acc + (c.peso || 0), 0);
-                const concluidos = cards.filter((c) => c.concluido);
-                const pontosConcluidos = concluidos.reduce((acc, c) => acc + (c.peso || 0), 0);
-                return {
-                  nome: s.nome,
-                  pontosConcluidos,
-                  totalPontos,
-                  status: s.status_sprint,
-                  totalCards: cards.length,
-                  cardsConcluidos: concluidos.length,
-                };
-              });
-
-              const maxPontos = Math.max(...velocityPorSprint.map((v) => v.totalPontos), 1);
-
-              // Sprint ativa stats
-              const ativaCards = sprintAtiva ? cartoesDaSprint(sprintAtiva.id) : [];
-              const ativaPontosTotal = ativaCards.reduce((acc, c) => acc + (c.peso || 0), 0);
-              const ativaConcluidos = ativaCards.filter((c) => c.concluido);
-              const ativaPontosConcluidos = ativaConcluidos.reduce((acc, c) => acc + (c.peso || 0), 0);
-              const ativaTotal = ativaCards.length;
-              const ativaProgresso = ativaTotal > 0 ? Math.round((ativaConcluidos.length / ativaTotal) * 100) : 0;
-
-              // Velocity média (pontos CONCLUÍDOS por sprint finalizada)
-              const velocidades = sprintsConcl.map((s) => {
-                const cards = cartoesDaSprint(s.id);
-                return cards.filter((c) => c.concluido).reduce((acc, c) => acc + (c.peso || 0), 0);
-              });
-              const velocityMedia = velocidades.length > 0 ? Math.round(velocidades.reduce((a, b) => a + b, 0) / velocidades.length) : 0;
-
-              // Distribuição por etiqueta
-              const todosCards = sprintsDoWorkspace.flatMap((s) => cartoesDaSprint(s.id));
-              const porEtiqueta: Record<string, { nome: string; cor: string; count: number; pontos: number }> = {};
-              for (const card of todosCards) {
-                for (const eId of (card as unknown as { etiqueta_ids?: string[] }).etiqueta_ids || []) {
-                  const et = etiquetasWs.find((e) => e.id === eId);
-                  if (et) {
-                    if (!porEtiqueta[eId]) porEtiqueta[eId] = { nome: et.nome, cor: et.cor, count: 0, pontos: 0 };
-                    porEtiqueta[eId].count++;
-                    porEtiqueta[eId].pontos += card.peso || 0;
-                  }
-                }
-              }
-              const etiquetaStats = Object.values(porEtiqueta).sort((a, b) => b.count - a.count);
-              const maxEtCount = Math.max(...etiquetaStats.map((e) => e.count), 1);
-
-              return (
-                <>
-                  {/* Stats cards */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {[
-                      { label: "Velocity média", valor: `${velocityMedia} pts`, sub: `${sprintsConcl.length} sprints concluídas` },
-                      { label: "Sprint ativa", valor: sprintAtiva?.nome || "—", sub: `${ativaPontosConcluidos}/${ativaPontosTotal} pts · ${ativaProgresso}%` },
-                      { label: "Total sprints", valor: `${sprintsDoWorkspace.length}`, sub: `${sprintsConcl.length} concluídas` },
-                      { label: "Backlog", valor: `${backlogPuro.length}`, sub: "tarefas sem sprint" },
-                    ].map((stat, i) => (
-                      <div key={i} className="rounded-xl border p-4" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
-                        <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-tertiary)" }}>{stat.label}</p>
-                        <p className="text-xl font-bold mt-1" style={{ color: "var(--tf-text)" }}>{stat.valor}</p>
-                        <p className="text-[12px] mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>{stat.sub}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Velocity chart */}
-                  {velocityPorSprint.length > 0 && (
-                    <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
-                      <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>Velocity por Sprint</h3>
-                      <div className="space-y-2.5">
-                        {velocityPorSprint.map((v, i) => (
-                          <div key={i} className="flex items-center gap-3">
-                            <span className="text-[12px] font-medium w-24 truncate text-right" style={{ color: "var(--tf-text-secondary)" }}>{v.nome}</span>
-                            <div className="flex-1 h-6 rounded-md overflow-hidden relative" style={{ background: "var(--tf-bg-secondary)" }}>
-                              {/* Barra total (fundo mais claro) */}
-                              <div
-                                className="absolute inset-y-0 left-0 rounded-md opacity-25"
-                                style={{
-                                  width: `${Math.max((v.totalPontos / maxPontos) * 100, 4)}%`,
-                                  background: v.status === "ativa" ? "var(--tf-accent)" : "var(--tf-success)",
-                                }}
-                              />
-                              {/* Barra concluídos */}
-                              <div
-                                className="absolute inset-y-0 left-0 rounded-md flex items-center px-2 transition-all duration-500"
-                                style={{
-                                  width: `${Math.max((v.pontosConcluidos / maxPontos) * 100, v.pontosConcluidos > 0 ? 4 : 0)}%`,
-                                  background: v.status === "ativa" ? "var(--tf-accent)" : "var(--tf-success)",
-                                }}
-                              >
-                                <span className="text-[11px] font-bold text-white whitespace-nowrap">{v.pontosConcluidos} pts</span>
-                              </div>
-                            </div>
-                            <span className="text-[11px] w-20 text-right" style={{ color: "var(--tf-text-tertiary)" }}>
-                              {v.cardsConcluidos}/{v.totalCards} cards
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Distribuição por etiqueta */}
-                  {etiquetaStats.length > 0 && (
-                    <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
-                      <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>Distribuição por Etiqueta</h3>
-                      <div className="space-y-2">
-                        {etiquetaStats.map((e, i) => (
-                          <div key={i} className="flex items-center gap-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold text-white w-20 text-center truncate" style={{ background: e.cor }}>{e.nome}</span>
-                            <div className="flex-1 h-5 rounded overflow-hidden" style={{ background: "var(--tf-bg-secondary)" }}>
-                              <div className="h-full rounded transition-all duration-500" style={{ width: `${(e.count / maxEtCount) * 100}%`, background: e.cor, opacity: 0.7 }} />
-                            </div>
-                            <span className="text-[11px] font-medium w-20 text-right" style={{ color: "var(--tf-text-secondary)" }}>{e.count} cards · {e.pontos}pts</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Empty */}
-                  {sprintsParaMetricas.length === 0 && (
-                    <div className="text-center py-16">
-                      <BarChart3 size={32} className="mx-auto mb-3" style={{ color: "var(--tf-text-tertiary)" }} />
-                      <h3 className="text-base font-bold mb-1" style={{ color: "var(--tf-text)" }}>Sem dados ainda</h3>
-                      <p className="text-sm" style={{ color: "var(--tf-text-tertiary)" }}>Conclua ou ative sprints para ver métricas</p>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+            {abaAtiva === "metricas" && (
+              <MetricasWorkspace
+                sprints={sprintsDoWorkspace}
+                cartoesDaSprint={cartoesDaSprint}
+                backlogPuro={backlogPuro}
+                etiquetas={etiquetasWs}
+                membros={membrosWs}
+              />
+            )}
 
             {abaAtiva === "config" && (
               <section className="space-y-6">
