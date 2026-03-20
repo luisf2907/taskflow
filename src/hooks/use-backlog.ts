@@ -5,10 +5,10 @@ import { Cartao } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 
 export interface CartaoBacklog extends Cartao {
-  // Nome da coluna e do quadro (sprint) se associado
   coluna_nome: string | null;
   quadro_nome: string | null;
   quadro_id: string | null;
+  concluido: boolean;
 }
 
 function chave(workspaceId: string) {
@@ -38,6 +38,24 @@ async function fetchBacklog(workspaceId: string): Promise<CartaoBacklog[]> {
   const quadroNomes: Record<string, string> = {};
   (quadrosDoWs || []).forEach((q) => { quadroNomes[q.id] = q.nome; });
 
+  // Buscar última coluna de cada quadro (pra saber se card está "concluído")
+  const ultimaColunaPorQuadro: Record<string, string> = {};
+  if (quadroIds.length > 0) {
+    const { data: todasColunas } = await supabase
+      .from("colunas")
+      .select("id, quadro_id, posicao")
+      .in("quadro_id", quadroIds)
+      .order("posicao", { ascending: false });
+
+    if (todasColunas) {
+      for (const col of todasColunas) {
+        if (!ultimaColunaPorQuadro[col.quadro_id]) {
+          ultimaColunaPorQuadro[col.quadro_id] = col.id;
+        }
+      }
+    }
+  }
+
   let cartoesEmSprints: CartaoBacklog[] = [];
   if (quadroIds.length > 0) {
     const { data: cartoesSprints } = await supabase
@@ -57,6 +75,7 @@ async function fetchBacklog(workspaceId: string): Promise<CartaoBacklog[]> {
             coluna_nome: col.nome,
             quadro_nome: quadroNomes[col.quadro_id] || null,
             quadro_id: col.quadro_id,
+            concluido: col.id === ultimaColunaPorQuadro[col.quadro_id],
           };
         });
     }
@@ -68,6 +87,7 @@ async function fetchBacklog(workspaceId: string): Promise<CartaoBacklog[]> {
     coluna_nome: null,
     quadro_nome: null,
     quadro_id: null,
+    concluido: false,
   }));
 
   return [...backlogFormatado, ...cartoesEmSprints];

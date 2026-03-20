@@ -97,8 +97,12 @@ function BacklogRow({
 
       {/* Status (coluna) */}
       {tarefa.coluna_nome && (
-        <span className="text-[11px] px-2 py-0.5 rounded-md shrink-0" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}>
-          {tarefa.coluna_nome}
+        <span className="text-[11px] px-2 py-0.5 rounded-md shrink-0" style={{
+          background: tarefa.concluido ? "var(--tf-success-bg)" : "var(--tf-bg-secondary)",
+          color: tarefa.concluido ? "var(--tf-success)" : "var(--tf-text-tertiary)",
+          fontWeight: tarefa.concluido ? 600 : 400,
+        }}>
+          {tarefa.concluido ? "Concluído" : tarefa.coluna_nome}
         </span>
       )}
 
@@ -623,19 +627,34 @@ export default function PaginaWorkspace() {
 
               const velocityPorSprint = sprintsParaMetricas.map((s) => {
                 const cards = cartoesDaSprint(s.id);
-                const pontos = cards.reduce((acc, c) => acc + (c.peso || 0), 0);
-                return { nome: s.nome, pontos, status: s.status_sprint, totalCards: cards.length };
+                const totalPontos = cards.reduce((acc, c) => acc + (c.peso || 0), 0);
+                const concluidos = cards.filter((c) => c.concluido);
+                const pontosConcluidos = concluidos.reduce((acc, c) => acc + (c.peso || 0), 0);
+                return {
+                  nome: s.nome,
+                  pontosConcluidos,
+                  totalPontos,
+                  status: s.status_sprint,
+                  totalCards: cards.length,
+                  cardsConcluidos: concluidos.length,
+                };
               });
 
-              const maxPontos = Math.max(...velocityPorSprint.map((v) => v.pontos), 1);
+              const maxPontos = Math.max(...velocityPorSprint.map((v) => v.totalPontos), 1);
 
               // Sprint ativa stats
               const ativaCards = sprintAtiva ? cartoesDaSprint(sprintAtiva.id) : [];
-              const ativaPontos = ativaCards.reduce((acc, c) => acc + (c.peso || 0), 0);
+              const ativaPontosTotal = ativaCards.reduce((acc, c) => acc + (c.peso || 0), 0);
+              const ativaConcluidos = ativaCards.filter((c) => c.concluido);
+              const ativaPontosConcluidos = ativaConcluidos.reduce((acc, c) => acc + (c.peso || 0), 0);
               const ativaTotal = ativaCards.length;
+              const ativaProgresso = ativaTotal > 0 ? Math.round((ativaConcluidos.length / ativaTotal) * 100) : 0;
 
-              // Velocity média
-              const velocidades = sprintsConcl.map((s) => cartoesDaSprint(s.id).reduce((acc, c) => acc + (c.peso || 0), 0));
+              // Velocity média (pontos CONCLUÍDOS por sprint finalizada)
+              const velocidades = sprintsConcl.map((s) => {
+                const cards = cartoesDaSprint(s.id);
+                return cards.filter((c) => c.concluido).reduce((acc, c) => acc + (c.peso || 0), 0);
+              });
               const velocityMedia = velocidades.length > 0 ? Math.round(velocidades.reduce((a, b) => a + b, 0) / velocidades.length) : 0;
 
               // Distribuição por etiqueta
@@ -659,8 +678,8 @@ export default function PaginaWorkspace() {
                   {/* Stats cards */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                      { label: "Velocity média", valor: `${velocityMedia} pts`, sub: `${sprintsConcl.length} sprints` },
-                      { label: "Sprint ativa", valor: sprintAtiva?.nome || "—", sub: `${ativaPontos} pts · ${ativaTotal} cards` },
+                      { label: "Velocity média", valor: `${velocityMedia} pts`, sub: `${sprintsConcl.length} sprints concluídas` },
+                      { label: "Sprint ativa", valor: sprintAtiva?.nome || "—", sub: `${ativaPontosConcluidos}/${ativaPontosTotal} pts · ${ativaProgresso}%` },
                       { label: "Total sprints", valor: `${sprintsDoWorkspace.length}`, sub: `${sprintsConcl.length} concluídas` },
                       { label: "Backlog", valor: `${backlogPuro.length}`, sub: "tarefas sem sprint" },
                     ].map((stat, i) => (
@@ -680,18 +699,29 @@ export default function PaginaWorkspace() {
                         {velocityPorSprint.map((v, i) => (
                           <div key={i} className="flex items-center gap-3">
                             <span className="text-[12px] font-medium w-24 truncate text-right" style={{ color: "var(--tf-text-secondary)" }}>{v.nome}</span>
-                            <div className="flex-1 h-6 rounded-md overflow-hidden" style={{ background: "var(--tf-bg-secondary)" }}>
+                            <div className="flex-1 h-6 rounded-md overflow-hidden relative" style={{ background: "var(--tf-bg-secondary)" }}>
+                              {/* Barra total (fundo mais claro) */}
                               <div
-                                className="h-full rounded-md flex items-center px-2 transition-all duration-500"
+                                className="absolute inset-y-0 left-0 rounded-md opacity-25"
                                 style={{
-                                  width: `${Math.max((v.pontos / maxPontos) * 100, 4)}%`,
+                                  width: `${Math.max((v.totalPontos / maxPontos) * 100, 4)}%`,
+                                  background: v.status === "ativa" ? "var(--tf-accent)" : "var(--tf-success)",
+                                }}
+                              />
+                              {/* Barra concluídos */}
+                              <div
+                                className="absolute inset-y-0 left-0 rounded-md flex items-center px-2 transition-all duration-500"
+                                style={{
+                                  width: `${Math.max((v.pontosConcluidos / maxPontos) * 100, v.pontosConcluidos > 0 ? 4 : 0)}%`,
                                   background: v.status === "ativa" ? "var(--tf-accent)" : "var(--tf-success)",
                                 }}
                               >
-                                <span className="text-[11px] font-bold text-white whitespace-nowrap">{v.pontos} pts</span>
+                                <span className="text-[11px] font-bold text-white whitespace-nowrap">{v.pontosConcluidos} pts</span>
                               </div>
                             </div>
-                            <span className="text-[11px] w-14 text-right" style={{ color: "var(--tf-text-tertiary)" }}>{v.totalCards} cards</span>
+                            <span className="text-[11px] w-20 text-right" style={{ color: "var(--tf-text-tertiary)" }}>
+                              {v.cardsConcluidos}/{v.totalCards} cards
+                            </span>
                           </div>
                         ))}
                       </div>
