@@ -268,7 +268,7 @@ export default function PaginaQuadro() {
                       border: quadro.status_sprint === s ? "none" : "1px solid var(--tf-border)",
                     }}
                   >
-                    {s === "planejada" ? "📋 Planejada" : s === "ativa" ? "▶ Ativa" : "✅ Concluída"}
+                    {s === "planejada" ? "Planejada" : s === "ativa" ? "Ativa" : "Concluida"}
                   </button>
                 ))}
               </div>

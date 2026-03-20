@@ -1,7 +1,7 @@
 "use client";
 
 import { ChecklistComItens } from "@/types";
-import { CheckSquare, Plus, Square, Trash2 } from "lucide-react";
+import { CheckSquare, Plus, Square, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
 interface ChecklistProps {
@@ -142,7 +142,7 @@ export function ChecklistComponent({
             }}
             className="px-2 py-1.5 text-xs text-[var(--trello-text-subtle)] hover:text-[var(--trello-text)]"
           >
-            ✕
+            <X size={14} />
           </button>
         </div>
       ) : (

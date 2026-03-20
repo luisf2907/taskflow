@@ -159,7 +159,7 @@ function BacklogRow({
             {sprints.filter((s) => s.status_sprint !== "concluida" && s.id !== tarefa.quadro_id).map((s) => (
               <option key={s.id} value={s.id}>→ {s.nome}</option>
             ))}
-            <option value="__remover__">✕ Remover da sprint</option>
+            <option value="__remover__">Remover da sprint</option>
           </select>
         </div>
       )}

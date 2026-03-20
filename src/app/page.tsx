@@ -200,7 +200,7 @@ export default function PaginaInicial() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold" style={{ color: "var(--tf-text)" }}>
-                  {saudacao()} 👋
+                  {saudacao()}
                 </h1>
                 <p className="text-sm mt-1" style={{ color: "var(--tf-text-tertiary)" }}>
                   {quadros.length} {quadros.length === 1 ? "quadro" : "quadros"} · {workspaces.length} {workspaces.length === 1 ? "workspace" : "workspaces"}
