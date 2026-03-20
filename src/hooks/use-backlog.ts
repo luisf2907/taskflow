@@ -141,10 +141,9 @@ export function useBacklog(workspaceId: string) {
       })
       .eq("id", cartaoId);
 
-    // Atualizar cache
-    globalMutate(key);
-    // Também invalidar cache dos cartões do quadro
-    globalMutate(`cartoes-${quadroId}`);
+    // Forçar refetch dos caches (revalidate: true força o fetch mesmo com revalidateIfStale: false)
+    await globalMutate(key, undefined, { revalidate: true });
+    await globalMutate(`cartoes-${quadroId}`, undefined, { revalidate: true });
   }
 
   // Desassociar de sprint (volta pro backlog)
@@ -158,8 +157,8 @@ export function useBacklog(workspaceId: string) {
       })
       .eq("id", cartaoId);
 
-    globalMutate(key);
-    globalMutate(`cartoes-${quadroIdOriginal}`);
+    await globalMutate(key, undefined, { revalidate: true });
+    await globalMutate(`cartoes-${quadroIdOriginal}`, undefined, { revalidate: true });
   }
 
   // Mover de uma sprint pra outra (direto)
@@ -184,9 +183,9 @@ export function useBacklog(workspaceId: string) {
       .update({ coluna_id: colunas[0].id, posicao: count || 0 })
       .eq("id", cartaoId);
 
-    globalMutate(key);
-    globalMutate(`cartoes-${quadroIdOriginal}`);
-    globalMutate(`cartoes-${quadroIdNovo}`);
+    await globalMutate(key, undefined, { revalidate: true });
+    await globalMutate(`cartoes-${quadroIdOriginal}`, undefined, { revalidate: true });
+    await globalMutate(`cartoes-${quadroIdNovo}`, undefined, { revalidate: true });
   }
 
   // Excluir tarefa
