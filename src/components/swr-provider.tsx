@@ -6,12 +6,13 @@ export function SWRProvider({ children }: { children: React.ReactNode }) {
   return (
     <SWRConfig
       value={{
-        revalidateOnFocus: true,
+        revalidateOnFocus: false,
         revalidateOnReconnect: true,
-        revalidateIfStale: true,
-        dedupingInterval: 3000,
+        revalidateIfStale: false,
+        dedupingInterval: 30000,
         errorRetryCount: 2,
         keepPreviousData: true,
+        revalidateOnMount: true,
       }}
     >
       {children}

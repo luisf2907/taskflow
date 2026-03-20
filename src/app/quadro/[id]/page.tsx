@@ -237,7 +237,7 @@ export default function PaginaQuadro() {
           <div className="flex-1 flex flex-col overflow-hidden">
             {quadro && <div className="h-1 shrink-0" style={{ background: quadro.cor }} />}
             <div className="flex-1 flex overflow-hidden board-area" style={{ background: "var(--tf-bg-secondary)" }}>
-              <KanbanBoard quadroId={quadroId} />
+              <KanbanBoard quadroId={quadroId} workspaceId={quadro?.workspace_id || null} />
             </div>
           </div>
         </div>

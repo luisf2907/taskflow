@@ -31,9 +31,9 @@ export function useCartaoMembros(cartaoId: string | null) {
     await supabase.from("cartao_membros").delete().eq("cartao_id", cartaoId).eq("membro_id", membroId);
   }
 
-  function toggle(membroId: string) {
-    if (membroIds.includes(membroId)) remover(membroId);
-    else adicionar(membroId);
+  async function toggle(membroId: string) {
+    if (membroIds.includes(membroId)) await remover(membroId);
+    else await adicionar(membroId);
   }
 
   function buscar() { if (key) globalMutate(key); }

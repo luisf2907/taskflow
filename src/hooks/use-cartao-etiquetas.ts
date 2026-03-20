@@ -31,9 +31,9 @@ export function useCartaoEtiquetas(cartaoId: string | null) {
     await supabase.from("cartao_etiquetas").delete().eq("cartao_id", cartaoId).eq("etiqueta_id", etiquetaId);
   }
 
-  function toggle(etiquetaId: string) {
-    if (etiquetaIds.includes(etiquetaId)) remover(etiquetaId);
-    else adicionar(etiquetaId);
+  async function toggle(etiquetaId: string) {
+    if (etiquetaIds.includes(etiquetaId)) await remover(etiquetaId);
+    else await adicionar(etiquetaId);
   }
 
   function buscar() { if (key) globalMutate(key); }

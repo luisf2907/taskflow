@@ -2,8 +2,8 @@
 
 import { CartaoComResumo, useCartoes } from "@/hooks/use-cartoes";
 import { useColunas } from "@/hooks/use-colunas";
-import { useEtiquetas } from "@/hooks/use-etiquetas";
-import { useMembros } from "@/hooks/use-membros";
+import { useEtiquetasWorkspace } from "@/hooks/use-etiquetas-workspace";
+import { useMembrosWorkspace } from "@/hooks/use-membros-workspace";
 import {
   DndContext,
   DragEndEvent,
@@ -28,9 +28,10 @@ import { NovaColuna } from "./nova-coluna";
 
 interface KanbanBoardProps {
   quadroId: string;
+  workspaceId: string | null;
 }
 
-export function KanbanBoard({ quadroId }: KanbanBoardProps) {
+export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
   const {
     colunas,
     carregando: carregandoColunas,
@@ -49,16 +50,17 @@ export function KanbanBoard({ quadroId }: KanbanBoardProps) {
     buscar: refreshCartoes,
   } = useCartoes(quadroId);
 
+  // Etiquetas e membros pertencem ao workspace (compartilhados entre sprints)
   const {
     etiquetas,
     criar: criarEtiqueta,
     excluir: excluirEtiqueta,
-  } = useEtiquetas(quadroId);
+  } = useEtiquetasWorkspace(workspaceId || `quadro-${quadroId}`);
 
   const {
     membros,
     criar: criarMembro,
-  } = useMembros(quadroId);
+  } = useMembrosWorkspace(workspaceId || `quadro-${quadroId}`);
 
   const [cartaoSelecionado, setCartaoSelecionado] =
     useState<CartaoComResumo | null>(null);
@@ -239,6 +241,7 @@ export function KanbanBoard({ quadroId }: KanbanBoardProps) {
         cartao={cartaoSelecionado}
         etiquetas={etiquetas}
         membros={membros}
+        quadroId={quadroId}
         onFechar={() => setCartaoSelecionado(null)}
         onAtualizar={atualizarCartao}
         onExcluir={excluirCartao}

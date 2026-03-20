@@ -9,6 +9,8 @@ export interface CartaoBacklog extends Cartao {
   quadro_nome: string | null;
   quadro_id: string | null;
   concluido: boolean;
+  etiqueta_ids: string[];
+  membro_ids: string[];
 }
 
 function chave(workspaceId: string) {
@@ -16,59 +18,56 @@ function chave(workspaceId: string) {
 }
 
 async function fetchBacklog(workspaceId: string): Promise<CartaoBacklog[]> {
-  // Buscar TODOS os cartões do workspace:
-  // 1. Cartões de backlog (coluna_id IS NULL, workspace_id = workspaceId)
-  // 2. Cartões dentro de sprints (quadros do workspace)
+  // 2 queries em paralelo em vez de 4 sequenciais
+  const [backlogRes, quadrosRes] = await Promise.all([
+    supabase
+      .from("cartoes")
+      .select("*, cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)")
+      .is("coluna_id", null)
+      .eq("workspace_id", workspaceId)
+      .order("criado_em", { ascending: false }),
+    supabase
+      .from("quadros")
+      .select("id, nome")
+      .eq("workspace_id", workspaceId),
+  ]);
 
-  // Cartões de backlog puro
-  const { data: backlogPuro } = await supabase
-    .from("cartoes")
-    .select("*")
-    .is("coluna_id", null)
-    .eq("workspace_id", workspaceId)
-    .order("criado_em", { ascending: false });
-
-  // Cartões dentro de sprints desse workspace
-  const { data: quadrosDoWs } = await supabase
-    .from("quadros")
-    .select("id, nome")
-    .eq("workspace_id", workspaceId);
-
-  const quadroIds = (quadrosDoWs || []).map((q) => q.id);
+  const backlogPuro = backlogRes.data || [];
+  const quadrosDoWs = quadrosRes.data || [];
+  const quadroIds = quadrosDoWs.map((q) => q.id);
   const quadroNomes: Record<string, string> = {};
-  (quadrosDoWs || []).forEach((q) => { quadroNomes[q.id] = q.nome; });
+  quadrosDoWs.forEach((q) => { quadroNomes[q.id] = q.nome; });
 
-  // Buscar última coluna de cada quadro (pra saber se card está "concluído")
-  const ultimaColunaPorQuadro: Record<string, string> = {};
+  // Se tem quadros, buscar colunas e cartões em paralelo
+  let cartoesEmSprints: CartaoBacklog[] = [];
   if (quadroIds.length > 0) {
-    const { data: todasColunas } = await supabase
-      .from("colunas")
-      .select("id, quadro_id, posicao")
-      .in("quadro_id", quadroIds)
-      .order("posicao", { ascending: false });
+    const [colunasRes, sprintsRes] = await Promise.all([
+      supabase
+        .from("colunas")
+        .select("id, quadro_id, posicao")
+        .in("quadro_id", quadroIds)
+        .order("posicao", { ascending: false }),
+      supabase
+        .from("cartoes")
+        .select("*, colunas(id, nome, quadro_id), cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)")
+        .not("coluna_id", "is", null)
+        .in("colunas.quadro_id", quadroIds)
+        .order("posicao"),
+    ]);
 
-    if (todasColunas) {
-      for (const col of todasColunas) {
+    const ultimaColunaPorQuadro: Record<string, string> = {};
+    if (colunasRes.data) {
+      for (const col of colunasRes.data) {
         if (!ultimaColunaPorQuadro[col.quadro_id]) {
           ultimaColunaPorQuadro[col.quadro_id] = col.id;
         }
       }
     }
-  }
 
-  let cartoesEmSprints: CartaoBacklog[] = [];
-  if (quadroIds.length > 0) {
-    const { data: cartoesSprints } = await supabase
-      .from("cartoes")
-      .select("*, colunas(id, nome, quadro_id)")
-      .not("coluna_id", "is", null)
-      .in("colunas.quadro_id", quadroIds)
-      .order("posicao");
-
-    if (cartoesSprints) {
-      cartoesEmSprints = cartoesSprints
+    if (sprintsRes.data) {
+      cartoesEmSprints = sprintsRes.data
         .filter((c) => c.colunas)
-        .map(({ colunas, ...cartao }) => {
+        .map(({ colunas, cartao_etiquetas, cartao_membros, ...cartao }) => {
           const col = colunas as unknown as { id: string; nome: string; quadro_id: string };
           return {
             ...(cartao as Cartao),
@@ -76,18 +75,21 @@ async function fetchBacklog(workspaceId: string): Promise<CartaoBacklog[]> {
             quadro_nome: quadroNomes[col.quadro_id] || null,
             quadro_id: col.quadro_id,
             concluido: col.id === ultimaColunaPorQuadro[col.quadro_id],
+            etiqueta_ids: ((cartao_etiquetas || []) as { etiqueta_id: string }[]).map(ce => ce.etiqueta_id),
+            membro_ids: ((cartao_membros || []) as { membro_id: string }[]).map(cm => cm.membro_id),
           };
         });
     }
   }
 
-  // Combinar
-  const backlogFormatado: CartaoBacklog[] = (backlogPuro || []).map((c) => ({
-    ...c,
+  const backlogFormatado: CartaoBacklog[] = backlogPuro.map(({ cartao_etiquetas, cartao_membros, ...c }) => ({
+    ...(c as Cartao),
     coluna_nome: null,
     quadro_nome: null,
     quadro_id: null,
     concluido: false,
+    etiqueta_ids: ((cartao_etiquetas || []) as { etiqueta_id: string }[]).map(ce => ce.etiqueta_id),
+    membro_ids: ((cartao_membros || []) as { membro_id: string }[]).map(cm => cm.membro_id),
   }));
 
   return [...backlogFormatado, ...cartoesEmSprints];

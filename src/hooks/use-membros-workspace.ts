@@ -9,53 +9,27 @@ const CORES_AVATAR = [
   "#3B82F6", "#6366F1", "#A855F7", "#EC4899", "#78716C",
 ];
 
-function chave(quadroId: string) {
-  return `membros-${quadroId}`;
+function chave(workspaceId: string) {
+  return `membros-ws-${workspaceId}`;
 }
 
-export function useMembros(quadroId: string) {
-  const key = chave(quadroId);
+export function useMembrosWorkspace(workspaceId: string) {
+  const key = chave(workspaceId);
 
   const { data: membros = [], isLoading: carregando } = useSWR(key, async () => {
-    // Membros do quadro
-    const { data: doQuadro } = await supabase
+    const { data } = await supabase
       .from("membros")
       .select("*")
-      .eq("quadro_id", quadroId)
+      .eq("workspace_id", workspaceId)
       .order("criado_em");
-
-    // Buscar workspace_id do quadro pra pegar membros do workspace
-    const { data: quadro } = await supabase
-      .from("quadros")
-      .select("workspace_id")
-      .eq("id", quadroId)
-      .single();
-
-    let doWorkspace: Membro[] = [];
-    if (quadro?.workspace_id) {
-      const { data } = await supabase
-        .from("membros")
-        .select("*")
-        .eq("workspace_id", quadro.workspace_id)
-        .order("criado_em");
-      doWorkspace = (data || []) as Membro[];
-    }
-
-    // Combinar sem duplicatas
-    const todos = [...(doQuadro || []), ...doWorkspace];
-    const ids = new Set<string>();
-    return todos.filter((m) => {
-      if (ids.has(m.id)) return false;
-      ids.add(m.id);
-      return true;
-    }) as Membro[];
+    return (data || []) as Membro[];
   });
 
   async function criar(nome: string, email?: string) {
     const cor = CORES_AVATAR[membros.length % CORES_AVATAR.length];
     const { data } = await supabase
       .from("membros")
-      .insert({ quadro_id: quadroId, nome, email: email || null, cor_avatar: cor })
+      .insert({ workspace_id: workspaceId, quadro_id: null, nome, email: email || null, cor_avatar: cor })
       .select()
       .single();
     if (data) globalMutate(key, [...membros, data], false);
@@ -74,5 +48,9 @@ export function useMembros(quadroId: string) {
     await supabase.from("membros").delete().eq("id", id);
   }
 
-  return { membros, carregando, criar, atualizar, excluir };
+  function buscar() {
+    globalMutate(key);
+  }
+
+  return { membros, carregando, criar, atualizar, excluir, buscar };
 }

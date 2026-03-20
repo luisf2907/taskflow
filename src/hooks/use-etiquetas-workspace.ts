@@ -12,39 +12,12 @@ export function useEtiquetasWorkspace(workspaceId: string) {
   const key = chave(workspaceId);
 
   const { data: etiquetas = [], isLoading: carregando } = useSWR(key, async () => {
-    // Buscar etiquetas diretas do workspace
-    const { data: diretas } = await supabase
+    const { data } = await supabase
       .from("etiquetas")
       .select("*")
       .eq("workspace_id", workspaceId)
       .order("criado_em");
-
-    // Buscar etiquetas dos quadros do workspace
-    const { data: quadrosWs } = await supabase
-      .from("quadros")
-      .select("id")
-      .eq("workspace_id", workspaceId);
-
-    const quadroIds = (quadrosWs || []).map((q) => q.id);
-
-    let deQuadros: Etiqueta[] = [];
-    if (quadroIds.length > 0) {
-      const { data } = await supabase
-        .from("etiquetas")
-        .select("*")
-        .in("quadro_id", quadroIds)
-        .order("criado_em");
-      deQuadros = (data || []) as Etiqueta[];
-    }
-
-    // Combinar sem duplicatas
-    const todas = [...(diretas || []), ...deQuadros];
-    const ids = new Set<string>();
-    return todas.filter((e) => {
-      if (ids.has(e.id)) return false;
-      ids.add(e.id);
-      return true;
-    }) as Etiqueta[];
+    return (data || []) as Etiqueta[];
   });
 
   async function criar(nome: string, cor: string) {
@@ -57,6 +30,13 @@ export function useEtiquetasWorkspace(workspaceId: string) {
     return data;
   }
 
+  async function atualizar(id: string, campos: Partial<Pick<Etiqueta, "nome" | "cor">>) {
+    globalMutate(key, etiquetas.map((e) => (e.id === id ? { ...e, ...campos } : e)), false);
+    const { data } = await supabase.from("etiquetas").update(campos).eq("id", id).select().single();
+    if (data) globalMutate(key, etiquetas.map((e) => (e.id === id ? data : e)), false);
+    return data;
+  }
+
   async function excluir(id: string) {
     globalMutate(key, etiquetas.filter((e) => e.id !== id), false);
     await supabase.from("etiquetas").delete().eq("id", id);
@@ -66,5 +46,5 @@ export function useEtiquetasWorkspace(workspaceId: string) {
     globalMutate(key);
   }
 
-  return { etiquetas, carregando, criar, excluir, buscar };
+  return { etiquetas, carregando, criar, atualizar, excluir, buscar };
 }

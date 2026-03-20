@@ -8,6 +8,7 @@ import { useQuadros } from "@/hooks/use-quadros";
 import { useWorkspaces } from "@/hooks/use-workspaces";
 import { useBacklog, CartaoBacklog } from "@/hooks/use-backlog";
 import { useEtiquetasWorkspace } from "@/hooks/use-etiquetas-workspace";
+import { useMembrosWorkspace } from "@/hooks/use-membros-workspace";
 import { CartaoComResumo } from "@/hooks/use-cartoes";
 import { DetalheCartao } from "@/components/quadro/detalhe-cartao";
 import { Quadro, StatusSprint } from "@/types";
@@ -82,9 +83,9 @@ function BacklogRow({
     data: { tarefa },
   });
 
-  // Etiquetas do cartão
+  // Etiquetas do cartão (usa etiqueta_ids da junction table)
   const etiquetasDoCartao = etiquetas.filter((e) =>
-    tarefa.etiquetas?.includes(e.nome) || tarefa.etiquetas?.includes(e.id)
+    tarefa.etiqueta_ids?.includes(e.id)
   );
 
   return (
@@ -264,6 +265,7 @@ export default function PaginaWorkspace() {
   const { quadros, criar: criarQuadro, atualizar: atualizarQuadro, excluir: excluirQuadro } = useQuadros();
   const { backlogPuro, cartoesDaSprint, criarTarefa, associarASprint, desassociarDeSprint, moverParaSprint, excluirTarefa, buscar: buscarBacklog } = useBacklog(workspaceId);
   const { etiquetas: etiquetasWs, criar: criarEtiquetaWs, excluir: excluirEtiquetaWs } = useEtiquetasWorkspace(workspaceId);
+  const { membros: membrosWs, criar: criarMembroWs, excluir: excluirMembroWs } = useMembrosWorkspace(workspaceId);
 
   const workspace = workspaces.find((w) => w.id === workspaceId);
   const [sidebarAberta, setSidebarAberta] = useState(true);
@@ -317,8 +319,8 @@ export default function PaginaWorkspace() {
     // Converter CartaoBacklog para CartaoComResumo (que o DetalheCartao espera)
     const como: CartaoComResumo = {
       ...tarefa,
-      etiqueta_ids: [],
-      membro_ids: [],
+      etiqueta_ids: tarefa.etiqueta_ids || [],
+      membro_ids: tarefa.membro_ids || [],
       total_checklist_itens: 0,
       total_checklist_concluidos: 0,
       total_anexos: 0,
@@ -1078,15 +1080,16 @@ export default function PaginaWorkspace() {
       <DetalheCartao
         cartao={cartaoSelecionado}
         etiquetas={etiquetasWs}
-        membros={[]}
+        membros={membrosWs}
         onFechar={() => setCartaoSelecionado(null)}
         onAtualizar={async (id, campos) => {
           await (await import("@/lib/supabase/client")).supabase
             .from("cartoes")
             .update({ ...campos, atualizado_em: new Date().toISOString() })
             .eq("id", id);
+          // Atualizar o cartão selecionado localmente (sem fechar o modal)
+          setCartaoSelecionado((prev) => prev && prev.id === id ? { ...prev, ...campos } : prev);
           buscarBacklog();
-          setCartaoSelecionado(null);
         }}
         onExcluir={(id) => {
           excluirTarefa(id);
@@ -1094,7 +1097,7 @@ export default function PaginaWorkspace() {
         }}
         onCriarEtiqueta={criarEtiquetaWs}
         onExcluirEtiqueta={excluirEtiquetaWs}
-        onCriarMembro={() => {}}
+        onCriarMembro={criarMembroWs}
         onRefresh={buscarBacklog}
       />
 

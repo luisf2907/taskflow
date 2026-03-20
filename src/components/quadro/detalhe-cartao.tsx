@@ -7,6 +7,7 @@ import { CartaoComResumo } from "@/hooks/use-cartoes";
 import { useChecklists } from "@/hooks/use-checklists";
 import { useComentarios } from "@/hooks/use-comentarios";
 import { Etiqueta, Membro } from "@/types";
+import { mutate as globalMutate } from "swr";
 import {
   AlignLeft,
   Calendar,
@@ -36,6 +37,7 @@ interface DetalheCartaoProps {
   cartao: CartaoComResumo | null;
   etiquetas: Etiqueta[];
   membros: Membro[];
+  quadroId?: string;
   onFechar: () => void;
   onAtualizar: (id: string, campos: Record<string, unknown>) => void;
   onExcluir: (id: string) => void;
@@ -48,7 +50,7 @@ interface DetalheCartaoProps {
 type Painel = "etiquetas" | "membros" | "data" | "peso" | null;
 
 export function DetalheCartao({
-  cartao, etiquetas, membros, onFechar, onAtualizar, onExcluir,
+  cartao, etiquetas, membros, quadroId, onFechar, onAtualizar, onExcluir,
   onCriarEtiqueta, onExcluirEtiqueta, onCriarMembro, onRefresh,
 }: DetalheCartaoProps) {
   const [titulo, setTitulo] = useState("");
@@ -60,8 +62,35 @@ export function DetalheCartao({
   const [pesoLocal, setPesoLocal] = useState<number | null>(null);
   const [dataLocal, setDataLocal] = useState<string | null>(null);
 
-  const { etiquetaIds, toggle: toggleEtiqueta } = useCartaoEtiquetas(cartao?.id || null);
-  const { membroIds, toggle: toggleMembro } = useCartaoMembros(cartao?.id || null);
+  const { etiquetaIds, toggle: toggleEtiquetaBase } = useCartaoEtiquetas(cartao?.id || null);
+  const { membroIds, toggle: toggleMembroBase } = useCartaoMembros(cartao?.id || null);
+
+  // Atualiza o cache dos cartões otimisticamente (sem refetch)
+  function atualizarCartaoNoCache(updates: Partial<CartaoComResumo>) {
+    if (!cartao || !quadroId) return;
+    const cacheKey = `cartoes-${quadroId}`;
+    globalMutate(cacheKey, (current: CartaoComResumo[] | undefined) => {
+      if (!current) return current;
+      return current.map(c => c.id === cartao.id ? { ...c, ...updates } : c);
+    }, false);
+  }
+
+  // Wrap toggles com optimistic update direto no cache
+  async function toggleEtiqueta(id: string) {
+    const novasIds = etiquetaIds.includes(id)
+      ? etiquetaIds.filter(eid => eid !== id)
+      : [...etiquetaIds, id];
+    atualizarCartaoNoCache({ etiqueta_ids: novasIds });
+    await toggleEtiquetaBase(id);
+  }
+
+  async function toggleMembro(id: string) {
+    const novosIds = membroIds.includes(id)
+      ? membroIds.filter(mid => mid !== id)
+      : [...membroIds, id];
+    atualizarCartaoNoCache({ membro_ids: novosIds });
+    await toggleMembroBase(id);
+  }
   const { checklists, criarChecklist, excluirChecklist, criarItem, toggleItem, excluirItem } = useChecklists(cartao?.id || null);
   const { comentarios, criar: criarComentario, excluir: excluirComentario } = useComentarios(cartao?.id || null);
   const { anexos, enviando, upload: uploadAnexo, excluir: excluirAnexo } = useAnexos(cartao?.id || null);

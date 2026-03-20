@@ -12,12 +12,38 @@ export function useEtiquetas(quadroId: string) {
   const key = chave(quadroId);
 
   const { data: etiquetas = [], isLoading: carregando } = useSWR(key, async () => {
-    const { data } = await supabase
+    // Buscar etiquetas do quadro
+    const { data: doQuadro } = await supabase
       .from("etiquetas")
       .select("*")
       .eq("quadro_id", quadroId)
       .order("criado_em");
-    return (data || []) as Etiqueta[];
+
+    // Buscar workspace_id do quadro pra pegar etiquetas do workspace também
+    const { data: quadro } = await supabase
+      .from("quadros")
+      .select("workspace_id")
+      .eq("id", quadroId)
+      .single();
+
+    let doWorkspace: Etiqueta[] = [];
+    if (quadro?.workspace_id) {
+      const { data } = await supabase
+        .from("etiquetas")
+        .select("*")
+        .eq("workspace_id", quadro.workspace_id)
+        .order("criado_em");
+      doWorkspace = (data || []) as Etiqueta[];
+    }
+
+    // Combinar sem duplicatas
+    const todas = [...(doQuadro || []), ...doWorkspace];
+    const ids = new Set<string>();
+    return todas.filter((e) => {
+      if (ids.has(e.id)) return false;
+      ids.add(e.id);
+      return true;
+    }) as Etiqueta[];
   });
 
   async function criar(nome: string, cor: string) {
