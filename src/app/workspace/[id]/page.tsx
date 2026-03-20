@@ -217,21 +217,14 @@ function BacklogPuroDropZone({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={setNodeRef}
-      className="rounded-xl border-2 transition-all duration-200 -m-1 p-1"
+      className="rounded-2xl transition-all duration-200 min-h-[80px]"
       style={{
-        borderColor: isOver ? "var(--tf-accent)" : "transparent",
+        padding: isOver ? "12px" : "0",
+        border: isOver ? "2px solid var(--tf-accent)" : "2px solid transparent",
         background: isOver ? "var(--tf-accent-light)" : "transparent",
       }}
     >
       {children}
-      {isOver && (
-        <div
-          className="flex items-center justify-center py-2 mt-1 rounded-lg text-[12px] font-semibold border-2 border-dashed"
-          style={{ borderColor: "var(--tf-accent)", color: "var(--tf-accent-text)" }}
-        >
-          Soltar aqui para mover para o backlog
-        </div>
-      )}
     </div>
   );
 }
@@ -250,21 +243,14 @@ function SprintDropZone({ sprintId, sprintNome, cor, children }: {
   return (
     <div
       ref={setNodeRef}
-      className="rounded-xl border-2 transition-all duration-200 -m-1 p-1"
+      className="rounded-2xl transition-all duration-200 min-h-[80px]"
       style={{
-        borderColor: isOver ? cor : "transparent",
-        background: isOver ? `${cor}10` : "transparent",
+        padding: isOver ? "12px" : "0",
+        border: isOver ? `2px solid ${cor}` : "2px solid transparent",
+        background: isOver ? `${cor}15` : "transparent",
       }}
     >
       {children}
-      {isOver && (
-        <div
-          className="flex items-center justify-center py-2 mt-1 rounded-lg text-[12px] font-semibold border-2 border-dashed"
-          style={{ borderColor: cor, color: cor }}
-        >
-          Soltar aqui para mover para {sprintNome}
-        </div>
-      )}
     </div>
   );
 }
@@ -291,7 +277,7 @@ export default function PaginaWorkspace() {
   const [arrastando, setArrastando] = useState<CartaoBacklog | null>(null);
 
   const dndSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
   function handleDragStart(event: DragStartEvent) {

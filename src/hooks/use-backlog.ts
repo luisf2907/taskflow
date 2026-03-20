@@ -133,75 +133,53 @@ export function useBacklog(workspaceId: string) {
     return data;
   }
 
-  // Associar tarefa a sprint (move pra primeira coluna do quadro)
+  // Associar tarefa a sprint (optimistic → persist)
   async function associarASprint(cartaoId: string, quadroId: string) {
-    // Buscar primeira coluna do quadro
-    const { data: colunas } = await supabase
-      .from("colunas")
-      .select("id, nome")
-      .eq("quadro_id", quadroId)
-      .order("posicao")
-      .limit(1);
+    // Optimistic: remover do backlog imediatamente
+    const quadroNome = cartoes.find((c) => c.quadro_id === quadroId)?.quadro_nome || null;
+    globalMutate(key, cartoes.map((c) =>
+      c.id === cartaoId ? { ...c, coluna_id: "__pending__", workspace_id: null, quadro_id: quadroId, quadro_nome: quadroNome, coluna_nome: "...", concluido: false } : c
+    ), { revalidate: false });
 
-    if (!colunas || colunas.length === 0) return;
-    const primeiraColuna = colunas[0];
+    // Persist em background
+    const { data: colunas } = await supabase.from("colunas").select("id, nome").eq("quadro_id", quadroId).order("posicao").limit(1);
+    if (!colunas || colunas.length === 0) { globalMutate(key); return; }
 
-    // Contar cartões na coluna pra posição
-    const { count } = await supabase
-      .from("cartoes")
-      .select("id", { count: "exact", head: true })
-      .eq("coluna_id", primeiraColuna.id);
+    const { count } = await supabase.from("cartoes").select("id", { count: "exact", head: true }).eq("coluna_id", colunas[0].id);
+    await supabase.from("cartoes").update({ coluna_id: colunas[0].id, workspace_id: null, posicao: count || 0 }).eq("id", cartaoId);
 
-    await supabase
-      .from("cartoes")
-      .update({
-        coluna_id: primeiraColuna.id,
-        workspace_id: null,
-        posicao: count || 0,
-      })
-      .eq("id", cartaoId);
-
-    // Revalidar caches
     globalMutate(key);
     globalMutate(`cartoes-${quadroId}`);
   }
 
-  // Desassociar de sprint (volta pro backlog)
+  // Desassociar de sprint (optimistic → persist)
   async function desassociarDeSprint(cartaoId: string, quadroIdOriginal: string) {
-    await supabase
-      .from("cartoes")
-      .update({
-        coluna_id: null,
-        workspace_id: workspaceId,
-        posicao: 0,
-      })
-      .eq("id", cartaoId);
+    // Optimistic: mover pro backlog imediatamente
+    globalMutate(key, cartoes.map((c) =>
+      c.id === cartaoId ? { ...c, coluna_id: null, workspace_id: workspaceId, quadro_id: null, quadro_nome: null, coluna_nome: null, concluido: false } : c
+    ), { revalidate: false });
+
+    // Persist
+    await supabase.from("cartoes").update({ coluna_id: null, workspace_id: workspaceId, posicao: 0 }).eq("id", cartaoId);
 
     globalMutate(key);
     globalMutate(`cartoes-${quadroIdOriginal}`);
   }
 
-  // Mover de uma sprint pra outra (direto)
+  // Mover entre sprints (optimistic → persist)
   async function moverParaSprint(cartaoId: string, quadroIdOriginal: string, quadroIdNovo: string) {
-    // Buscar primeira coluna do quadro novo
-    const { data: colunas } = await supabase
-      .from("colunas")
-      .select("id")
-      .eq("quadro_id", quadroIdNovo)
-      .order("posicao")
-      .limit(1);
+    // Optimistic: atualizar quadro_id imediatamente
+    const quadroNome = cartoes.find((c) => c.quadro_id === quadroIdNovo)?.quadro_nome || null;
+    globalMutate(key, cartoes.map((c) =>
+      c.id === cartaoId ? { ...c, quadro_id: quadroIdNovo, quadro_nome: quadroNome, coluna_nome: "...", concluido: false } : c
+    ), { revalidate: false });
 
-    if (!colunas || colunas.length === 0) return;
+    // Persist
+    const { data: colunas } = await supabase.from("colunas").select("id").eq("quadro_id", quadroIdNovo).order("posicao").limit(1);
+    if (!colunas || colunas.length === 0) { globalMutate(key); return; }
 
-    const { count } = await supabase
-      .from("cartoes")
-      .select("id", { count: "exact", head: true })
-      .eq("coluna_id", colunas[0].id);
-
-    await supabase
-      .from("cartoes")
-      .update({ coluna_id: colunas[0].id, posicao: count || 0 })
-      .eq("id", cartaoId);
+    const { count } = await supabase.from("cartoes").select("id", { count: "exact", head: true }).eq("coluna_id", colunas[0].id);
+    await supabase.from("cartoes").update({ coluna_id: colunas[0].id, posicao: count || 0 }).eq("id", cartaoId);
 
     globalMutate(key);
     globalMutate(`cartoes-${quadroIdOriginal}`);
