@@ -80,7 +80,6 @@ function BacklogRow({
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
     id: `backlog-${tarefa.id}`,
     data: { tarefa },
-    disabled: !noSprint,
   });
 
   // Etiquetas do cartão
@@ -97,18 +96,16 @@ function BacklogRow({
       onMouseLeave={(e) => { if (!isDragging) e.currentTarget.style.background = "var(--tf-surface)"; }}
       onClick={onClick}
     >
-      {/* Drag handle — só aparece pra itens do backlog */}
-      {noSprint && (
-        <button
-          {...attributes}
-          {...listeners}
-          className="p-0.5 rounded opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing shrink-0"
-          style={{ color: "var(--tf-text-tertiary)" }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <GripVertical size={14} />
-        </button>
-      )}
+      {/* Drag handle */}
+      <button
+        {...attributes}
+        {...listeners}
+        className="p-0.5 rounded opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing shrink-0"
+        style={{ color: "var(--tf-text-tertiary)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <GripVertical size={14} />
+      </button>
 
       {/* Título + etiquetas */}
       <div className="flex-1 min-w-0">
@@ -212,6 +209,33 @@ function BacklogRow({
   );
 }
 
+function BacklogPuroDropZone({ children }: { children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: "backlog-drop-zone",
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="rounded-xl border-2 transition-all duration-200 -m-1 p-1"
+      style={{
+        borderColor: isOver ? "var(--tf-accent)" : "transparent",
+        background: isOver ? "var(--tf-accent-light)" : "transparent",
+      }}
+    >
+      {children}
+      {isOver && (
+        <div
+          className="flex items-center justify-center py-2 mt-1 rounded-lg text-[12px] font-semibold border-2 border-dashed"
+          style={{ borderColor: "var(--tf-accent)", color: "var(--tf-accent-text)" }}
+        >
+          Soltar aqui para mover para o backlog
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SprintDropZone({ sprintId, sprintNome, cor, children }: {
   sprintId: string;
   sprintNome: string;
@@ -279,10 +303,27 @@ export default function PaginaWorkspace() {
     setArrastando(null);
     const { active, over } = event;
     if (!over) return;
+
     const tarefa = active.data.current?.tarefa as CartaoBacklog | undefined;
-    const sprintId = over.data.current?.sprintId as string | undefined;
-    if (tarefa && sprintId && !tarefa.coluna_id) {
-      associarASprint(tarefa.id, sprintId);
+    const sprintIdDestino = over.data.current?.sprintId as string | undefined;
+    const isBacklogDestino = over.id === "backlog-drop-zone";
+
+    if (!tarefa) return;
+
+    const noBacklog = !tarefa.coluna_id;
+    const sprintIdOrigem = tarefa.quadro_id;
+
+    if (sprintIdDestino) {
+      if (noBacklog) {
+        // Backlog → Sprint
+        associarASprint(tarefa.id, sprintIdDestino);
+      } else if (sprintIdOrigem && sprintIdOrigem !== sprintIdDestino) {
+        // Sprint A → Sprint B
+        moverParaSprint(tarefa.id, sprintIdOrigem, sprintIdDestino);
+      }
+    } else if (isBacklogDestino && !noBacklog && sprintIdOrigem) {
+      // Sprint → Backlog
+      desassociarDeSprint(tarefa.id, sprintIdOrigem);
     }
   }
 
@@ -588,8 +629,8 @@ export default function PaginaWorkspace() {
                   </div>
                 )}
 
-                {/* Seção: Sem Sprint (backlog puro) */}
-                {backlogPuro.length > 0 && (
+                {/* Seção: Sem Sprint (backlog puro) — também é drop zone */}
+                <BacklogPuroDropZone>
                   <section>
                     <div className="flex items-center gap-2 mb-2">
                       <Inbox size={14} style={{ color: "var(--tf-text-tertiary)" }} />
@@ -597,13 +638,19 @@ export default function PaginaWorkspace() {
                         Sem sprint ({backlogPuro.length})
                       </h3>
                     </div>
-                    <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--tf-border)" }}>
-                      {backlogPuro.map((tarefa, i) => (
-                        <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === backlogPuro.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
-                      ))}
-                    </div>
+                    {backlogPuro.length > 0 ? (
+                      <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--tf-border)" }}>
+                        {backlogPuro.map((tarefa, i) => (
+                          <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === backlogPuro.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border-2 border-dashed py-4 text-center text-[12px]" style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}>
+                        Arraste tarefas aqui para remover da sprint
+                      </div>
+                    )}
                   </section>
-                )}
+                </BacklogPuroDropZone>
 
                 {/* Seções por Sprint */}
                 {sprintsDoWorkspace.filter((s) => s.status_sprint !== "concluida").map((sprint) => {
