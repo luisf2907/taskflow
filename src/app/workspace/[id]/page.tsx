@@ -12,10 +12,21 @@ import { CartaoComResumo } from "@/hooks/use-cartoes";
 import { DetalheCartao } from "@/components/quadro/detalhe-cartao";
 import { Quadro, StatusSprint } from "@/types";
 import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+import {
   Calendar,
   ChevronRight,
   Folder,
   Gauge,
+  GripVertical,
   Inbox,
   MoreHorizontal,
   Pencil,
@@ -66,19 +77,39 @@ function BacklogRow({
   const [seletor, setSeletor] = useState(false);
   const noSprint = !tarefa.coluna_id;
 
-  // Etiquetas do cartão (via texto array legado — simplificado)
+  const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
+    id: `backlog-${tarefa.id}`,
+    data: { tarefa },
+    disabled: !noSprint,
+  });
+
+  // Etiquetas do cartão
   const etiquetasDoCartao = etiquetas.filter((e) =>
     tarefa.etiquetas?.includes(e.nome) || tarefa.etiquetas?.includes(e.id)
   );
 
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-2.5 transition-smooth group cursor-pointer ${!isLast ? "border-b" : ""}`}
+      ref={setDragRef}
+      className={`flex items-center gap-3 px-4 py-2.5 transition-smooth group cursor-pointer ${!isLast ? "border-b" : ""} ${isDragging ? "opacity-30" : ""}`}
       style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
-      onMouseLeave={(e) => (e.currentTarget.style.background = "var(--tf-surface)")}
+      onMouseEnter={(e) => { if (!isDragging) e.currentTarget.style.background = "var(--tf-surface-hover)"; }}
+      onMouseLeave={(e) => { if (!isDragging) e.currentTarget.style.background = "var(--tf-surface)"; }}
       onClick={onClick}
     >
+      {/* Drag handle — só aparece pra itens do backlog */}
+      {noSprint && (
+        <button
+          {...attributes}
+          {...listeners}
+          className="p-0.5 rounded opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing shrink-0"
+          style={{ color: "var(--tf-text-tertiary)" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GripVertical size={14} />
+        </button>
+      )}
+
       {/* Título + etiquetas */}
       <div className="flex-1 min-w-0">
         <span className="text-[13px] truncate block" style={{ color: "var(--tf-text)" }}>
@@ -181,6 +212,39 @@ function BacklogRow({
   );
 }
 
+function SprintDropZone({ sprintId, sprintNome, cor, children }: {
+  sprintId: string;
+  sprintNome: string;
+  cor: string;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `sprint-drop-${sprintId}`,
+    data: { sprintId },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="rounded-xl border-2 transition-all duration-200 -m-1 p-1"
+      style={{
+        borderColor: isOver ? cor : "transparent",
+        background: isOver ? `${cor}10` : "transparent",
+      }}
+    >
+      {children}
+      {isOver && (
+        <div
+          className="flex items-center justify-center py-2 mt-1 rounded-lg text-[12px] font-semibold border-2 border-dashed"
+          style={{ borderColor: cor, color: cor }}
+        >
+          Soltar aqui para mover para {sprintNome}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PaginaWorkspace() {
   const params = useParams();
   const router = useRouter();
@@ -200,6 +264,27 @@ export default function PaginaWorkspace() {
   const [novaTarefaPeso, setNovaTarefaPeso] = useState("");
   const [criandoTarefa, setCriandoTarefa] = useState(false);
   const [cartaoSelecionado, setCartaoSelecionado] = useState<CartaoComResumo | null>(null);
+  const [arrastando, setArrastando] = useState<CartaoBacklog | null>(null);
+
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  function handleDragStart(event: DragStartEvent) {
+    const tarefa = event.active.data.current?.tarefa as CartaoBacklog | undefined;
+    if (tarefa) setArrastando(tarefa);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    setArrastando(null);
+    const { active, over } = event;
+    if (!over) return;
+    const tarefa = active.data.current?.tarefa as CartaoBacklog | undefined;
+    const sprintId = over.data.current?.sprintId as string | undefined;
+    if (tarefa && sprintId && !tarefa.coluna_id) {
+      associarASprint(tarefa.id, sprintId);
+    }
+  }
 
   function abrirDetalhe(tarefa: CartaoBacklog) {
     // Converter CartaoBacklog para CartaoComResumo (que o DetalheCartao espera)
@@ -452,7 +537,7 @@ export default function PaginaWorkspace() {
 
             {/* ═══ ABA BACKLOG ═══ */}
             {abaAtiva === "backlog" && (
-              <>
+              <DndContext sensors={dndSensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 {/* Header + Criar */}
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>
@@ -521,22 +606,51 @@ export default function PaginaWorkspace() {
                 )}
 
                 {/* Seções por Sprint */}
-                {sprintsDoWorkspace.map((sprint) => {
+                {sprintsDoWorkspace.filter((s) => s.status_sprint !== "concluida").map((sprint) => {
+                  const tarefas = cartoesDaSprint(sprint.id);
+
+                  return (
+                    <SprintDropZone key={sprint.id} sprintId={sprint.id} sprintNome={sprint.nome} cor={sprint.cor}>
+                      <section>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2.5 h-2.5 rounded-full" style={{
+                            background: sprint.status_sprint === "ativa" ? "var(--tf-success)" : "var(--tf-warning)"
+                          }} />
+                          <h3 className="text-[12px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-secondary)" }}>
+                            {sprint.nome} ({tarefas.length})
+                          </h3>
+                          <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>
+                            {sprint.status_sprint === "ativa" ? "ativa" : "planejada"}
+                          </span>
+                        </div>
+                        {tarefas.length > 0 ? (
+                          <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--tf-border)" }}>
+                            {tarefas.map((tarefa, i) => (
+                              <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="rounded-xl border-2 border-dashed py-4 text-center text-[12px]" style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}>
+                            Arraste tarefas do backlog para cá
+                          </div>
+                        )}
+                      </section>
+                    </SprintDropZone>
+                  );
+                })}
+
+                {/* Sprints concluídas (sem drop zone) */}
+                {sprintsDoWorkspace.filter((s) => s.status_sprint === "concluida").map((sprint) => {
                   const tarefas = cartoesDaSprint(sprint.id);
                   if (tarefas.length === 0) return null;
-
                   return (
                     <section key={sprint.id}>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{
-                          background: sprint.status_sprint === "ativa" ? "var(--tf-success)" : sprint.status_sprint === "concluida" ? "var(--tf-text-tertiary)" : "var(--tf-warning)"
-                        }} />
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--tf-text-tertiary)" }} />
                         <h3 className="text-[12px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-secondary)" }}>
                           {sprint.nome} ({tarefas.length})
                         </h3>
-                        <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>
-                          {sprint.status_sprint === "ativa" ? "ativa" : sprint.status_sprint === "concluida" ? "concluída" : "planejada"}
-                        </span>
+                        <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>concluída</span>
                       </div>
                       <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--tf-border)" }}>
                         {tarefas.map((tarefa, i) => (
@@ -558,7 +672,25 @@ export default function PaginaWorkspace() {
                     </button>
                   </div>
                 )}
-              </>
+
+                {/* Drag overlay */}
+                <DragOverlay>
+                  {arrastando && (
+                    <div
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-xl shadow-lg border"
+                      style={{ background: "var(--tf-surface)", borderColor: "var(--tf-accent)", minWidth: 280 }}
+                    >
+                      <GripVertical size={14} style={{ color: "var(--tf-text-tertiary)" }} />
+                      <span className="text-[13px] font-medium" style={{ color: "var(--tf-text)" }}>{arrastando.titulo}</span>
+                      {arrastando.peso && (
+                        <span className="text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0 ml-auto" style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}>
+                          {arrastando.peso}pts
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </DragOverlay>
+              </DndContext>
             )}
 
             {/* ═══ ABA SPRINTS ═══ */}
