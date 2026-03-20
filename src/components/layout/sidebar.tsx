@@ -8,7 +8,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Folder,
+  GitBranch,
   Grid3X3,
+  LayoutDashboard,
   Plus,
 } from "lucide-react";
 import Link from "next/link";
@@ -104,8 +106,8 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
             {workspaces.map((ws) => {
               const wsQuadros = quadrosPorWs[ws.id] || [];
               const aberto = wsAbertos.has(ws.id);
-              // Auto-abrir se tem quadro ativo dentro
-              const temAtivo = wsQuadros.some((q) => pathname === `/quadro/${q.id}`);
+              // Auto-abrir se tem quadro ou rota do workspace ativa
+              const temAtivo = wsQuadros.some((q) => pathname === `/quadro/${q.id}`) || pathname.startsWith(`/workspace/${ws.id}`);
 
               return (
                 <div key={ws.id}>
@@ -131,8 +133,40 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
                     )}
                   </button>
 
-                  {(aberto || temAtivo) && wsQuadros.length > 0 && (
+                  {(aberto || temAtivo) && (
                     <div className="ml-4 mt-0.5 space-y-0.5">
+                      {/* Links do workspace */}
+                      <Link
+                        href={`/workspace/${ws.id}`}
+                        className={cn(
+                          "flex items-center gap-2.5 px-2 py-[6px] rounded-lg text-[13px] transition-smooth"
+                        )}
+                        style={{
+                          background: pathname === `/workspace/${ws.id}` ? "var(--tf-accent-light)" : "transparent",
+                          color: pathname === `/workspace/${ws.id}` ? "var(--tf-accent-text)" : "var(--tf-text-tertiary)",
+                        }}
+                        onMouseEnter={(e) => { if (pathname !== `/workspace/${ws.id}`) e.currentTarget.style.background = "var(--tf-surface-hover)"; }}
+                        onMouseLeave={(e) => { if (pathname !== `/workspace/${ws.id}`) e.currentTarget.style.background = "transparent"; }}
+                      >
+                        <LayoutDashboard size={14} />
+                        <span>Hub</span>
+                      </Link>
+                      <Link
+                        href={`/workspace/${ws.id}/repos`}
+                        className={cn(
+                          "flex items-center gap-2.5 px-2 py-[6px] rounded-lg text-[13px] transition-smooth"
+                        )}
+                        style={{
+                          background: pathname === `/workspace/${ws.id}/repos` ? "var(--tf-accent-light)" : "transparent",
+                          color: pathname === `/workspace/${ws.id}/repos` ? "var(--tf-accent-text)" : "var(--tf-text-tertiary)",
+                        }}
+                        onMouseEnter={(e) => { if (pathname !== `/workspace/${ws.id}/repos`) e.currentTarget.style.background = "var(--tf-surface-hover)"; }}
+                        onMouseLeave={(e) => { if (pathname !== `/workspace/${ws.id}/repos`) e.currentTarget.style.background = "transparent"; }}
+                      >
+                        <GitBranch size={14} />
+                        <span>Repositórios</span>
+                      </Link>
+                      {/* Sprints do workspace */}
                       {wsQuadros.map((q) => <QuadroLink key={q.id} quadro={q} />)}
                     </div>
                   )}
