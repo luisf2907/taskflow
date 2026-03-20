@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { ArrowLeft, ExternalLink, FileCode, FileWarning, Download } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileCode, FileText, FileWarning, Download } from "lucide-react";
 import { useGitHubArquivo } from "@/hooks/use-github";
 import { extensaoParaLinguagem, ehBinario } from "@/lib/github/client";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface RepoFileViewerProps {
   owner: string;
@@ -18,6 +20,7 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
   const nomeArquivo = path.split("/").pop() || path;
   const linguagem = extensaoParaLinguagem(nomeArquivo);
   const binario = ehBinario(nomeArquivo);
+  const ehMarkdown = /\.(md|mdx|markdown)$/i.test(nomeArquivo);
 
   const segmentos = useMemo(() => path.split("/").filter(Boolean), [path]);
 
@@ -143,7 +146,11 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
           <ArrowLeft size={16} />
         </button>
 
-        <FileCode size={16} style={{ color: "var(--tf-text-tertiary)", flexShrink: 0 }} />
+        {ehMarkdown ? (
+          <FileText size={16} style={{ color: "var(--tf-text-tertiary)", flexShrink: 0 }} />
+        ) : (
+          <FileCode size={16} style={{ color: "var(--tf-text-tertiary)", flexShrink: 0 }} />
+        )}
 
         {/* Breadcrumb */}
         <div
@@ -236,7 +243,95 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
       </div>
 
       {/* Content */}
-      {binario ? (
+      {ehMarkdown && conteudo ? (
+        <div className="markdown-body" style={{ padding: "24px 32px", color: "var(--tf-text)", lineHeight: 1.7 }}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              h1: ({ children }) => (
+                <h1 style={{ fontSize: 28, fontWeight: 700, marginTop: 24, marginBottom: 16, paddingBottom: 8, borderBottom: "1px solid var(--tf-border)", color: "var(--tf-text)" }}>{children}</h1>
+              ),
+              h2: ({ children }) => (
+                <h2 style={{ fontSize: 22, fontWeight: 600, marginTop: 24, marginBottom: 12, paddingBottom: 6, borderBottom: "1px solid var(--tf-border)", color: "var(--tf-text)" }}>{children}</h2>
+              ),
+              h3: ({ children }) => (
+                <h3 style={{ fontSize: 18, fontWeight: 600, marginTop: 20, marginBottom: 8, color: "var(--tf-text)" }}>{children}</h3>
+              ),
+              h4: ({ children }) => (
+                <h4 style={{ fontSize: 16, fontWeight: 600, marginTop: 16, marginBottom: 6, color: "var(--tf-text)" }}>{children}</h4>
+              ),
+              p: ({ children }) => (
+                <p style={{ marginBottom: 12, fontSize: 14, color: "var(--tf-text-secondary)" }}>{children}</p>
+              ),
+              a: ({ href, children }) => (
+                <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: "var(--tf-accent)", textDecoration: "underline" }}>{children}</a>
+              ),
+              ul: ({ children }) => (
+                <ul style={{ marginBottom: 12, paddingLeft: 24, listStyleType: "disc" }}>{children}</ul>
+              ),
+              ol: ({ children }) => (
+                <ol style={{ marginBottom: 12, paddingLeft: 24, listStyleType: "decimal" }}>{children}</ol>
+              ),
+              li: ({ children }) => (
+                <li style={{ marginBottom: 4, fontSize: 14, color: "var(--tf-text-secondary)" }}>{children}</li>
+              ),
+              blockquote: ({ children }) => (
+                <blockquote style={{ borderLeft: "3px solid var(--tf-accent)", paddingLeft: 16, margin: "12px 0", color: "var(--tf-text-tertiary)", fontStyle: "italic" }}>{children}</blockquote>
+              ),
+              code: ({ className, children }) => {
+                const isInline = !className;
+                if (isInline) {
+                  return (
+                    <code style={{ background: "var(--tf-bg-secondary)", padding: "2px 6px", borderRadius: 4, fontSize: 13, fontFamily: "monospace", color: "var(--tf-accent-text)" }}>
+                      {children}
+                    </code>
+                  );
+                }
+                return (
+                  <code style={{ display: "block", fontFamily: "monospace", fontSize: 13, lineHeight: "20px", color: "var(--tf-text)" }}>
+                    {children}
+                  </code>
+                );
+              },
+              pre: ({ children }) => (
+                <pre style={{ background: "var(--tf-bg-secondary)", borderRadius: 8, padding: 16, margin: "12px 0", overflow: "auto", border: "1px solid var(--tf-border)" }}>
+                  {children}
+                </pre>
+              ),
+              table: ({ children }) => (
+                <div style={{ overflow: "auto", marginBottom: 12 }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>{children}</table>
+                </div>
+              ),
+              thead: ({ children }) => (
+                <thead style={{ background: "var(--tf-bg-secondary)" }}>{children}</thead>
+              ),
+              th: ({ children }) => (
+                <th style={{ border: "1px solid var(--tf-border)", padding: "8px 12px", textAlign: "left", fontWeight: 600, color: "var(--tf-text)", fontSize: 13 }}>{children}</th>
+              ),
+              td: ({ children }) => (
+                <td style={{ border: "1px solid var(--tf-border)", padding: "8px 12px", color: "var(--tf-text-secondary)", fontSize: 13 }}>{children}</td>
+              ),
+              hr: () => (
+                <hr style={{ border: "none", borderTop: "1px solid var(--tf-border)", margin: "24px 0" }} />
+              ),
+              img: ({ src, alt }) => (
+                <img src={src} alt={alt || ""} style={{ maxWidth: "100%", borderRadius: 8, margin: "12px 0" }} />
+              ),
+              input: ({ type, checked, ...props }) => {
+                if (type === "checkbox") {
+                  return (
+                    <input type="checkbox" checked={checked} readOnly style={{ marginRight: 8, accentColor: "var(--tf-accent)" }} />
+                  );
+                }
+                return <input type={type} {...props} />;
+              },
+            }}
+          >
+            {conteudo}
+          </ReactMarkdown>
+        </div>
+      ) : binario ? (
         <div
           style={{
             padding: "48px 16px",

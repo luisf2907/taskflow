@@ -1,9 +1,11 @@
 "use client";
 
-import { useGitHubConteudo } from "@/hooks/use-github";
+import { useGitHubConteudo, useGitHubArquivo } from "@/hooks/use-github";
 import type { GitHubConteudo } from "@/types/github";
-import { ChevronRight, FileText, Folder } from "lucide-react";
+import { BookOpen, ChevronRight, FileText, Folder } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface RepoFileBrowserProps {
   owner: string;
@@ -75,6 +77,15 @@ export function RepoFileBrowser({
   const itensOrdenados = useMemo(() => {
     if (!conteudo || !Array.isArray(conteudo)) return [];
     return ordenarConteudo(conteudo);
+  }, [conteudo]);
+
+  // Detectar README na pasta atual
+  const readmePath = useMemo(() => {
+    if (!conteudo || !Array.isArray(conteudo)) return null;
+    const readme = conteudo.find((item) =>
+      item.type === "file" && /^readme\.(md|mdx|markdown)$/i.test(item.name)
+    );
+    return readme ? readme.path : null;
   }, [conteudo]);
 
   const segmentos = useMemo(() => {
@@ -222,6 +233,122 @@ export function RepoFileBrowser({
             ))}
           </div>
         )}
+      </div>
+
+      {/* README inline (como o GitHub) */}
+      {readmePath && !carregando && (
+        <ReadmePreview owner={owner} nome={nome} path={readmePath} branch={branch} />
+      )}
+    </div>
+  );
+}
+
+// ─── README Preview (renderizado abaixo do file browser) ───
+function ReadmePreview({ owner, nome, path, branch }: { owner: string; nome: string; path: string; branch: string }) {
+  const { conteudo, carregando } = useGitHubArquivo(owner, nome, path, branch);
+  const nomeArquivo = path.split("/").pop() || "README.md";
+
+  if (carregando) {
+    return (
+      <div className="border-t p-6" style={{ borderColor: "var(--tf-border)" }}>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-4 w-4 rounded animate-pulse" style={{ background: "var(--tf-border)" }} />
+          <div className="h-4 w-24 rounded animate-pulse" style={{ background: "var(--tf-border)" }} />
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-4 rounded animate-pulse" style={{ background: "var(--tf-border)", width: `${40 + Math.random() * 50}%` }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!conteudo) return null;
+
+  return (
+    <div className="border-t" style={{ borderColor: "var(--tf-border)" }}>
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-2 border-b" style={{ borderColor: "var(--tf-border)", background: "var(--tf-bg-secondary)" }}>
+        <BookOpen size={14} style={{ color: "var(--tf-text-tertiary)" }} />
+        <span className="text-[13px] font-medium" style={{ color: "var(--tf-text-secondary)" }}>{nomeArquivo}</span>
+      </div>
+      {/* Content */}
+      <div style={{ padding: "20px 24px", color: "var(--tf-text)", lineHeight: 1.7 }}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            h1: ({ children }) => (
+              <h1 style={{ fontSize: 26, fontWeight: 700, marginTop: 20, marginBottom: 14, paddingBottom: 6, borderBottom: "1px solid var(--tf-border)", color: "var(--tf-text)" }}>{children}</h1>
+            ),
+            h2: ({ children }) => (
+              <h2 style={{ fontSize: 20, fontWeight: 600, marginTop: 20, marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid var(--tf-border)", color: "var(--tf-text)" }}>{children}</h2>
+            ),
+            h3: ({ children }) => (
+              <h3 style={{ fontSize: 16, fontWeight: 600, marginTop: 16, marginBottom: 6, color: "var(--tf-text)" }}>{children}</h3>
+            ),
+            p: ({ children }) => (
+              <p style={{ marginBottom: 10, fontSize: 14, color: "var(--tf-text-secondary)" }}>{children}</p>
+            ),
+            a: ({ href, children }) => (
+              <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: "var(--tf-accent)", textDecoration: "underline" }}>{children}</a>
+            ),
+            ul: ({ children }) => (
+              <ul style={{ marginBottom: 10, paddingLeft: 24, listStyleType: "disc" }}>{children}</ul>
+            ),
+            ol: ({ children }) => (
+              <ol style={{ marginBottom: 10, paddingLeft: 24, listStyleType: "decimal" }}>{children}</ol>
+            ),
+            li: ({ children }) => (
+              <li style={{ marginBottom: 3, fontSize: 14, color: "var(--tf-text-secondary)" }}>{children}</li>
+            ),
+            blockquote: ({ children }) => (
+              <blockquote style={{ borderLeft: "3px solid var(--tf-accent)", paddingLeft: 14, margin: "10px 0", color: "var(--tf-text-tertiary)", fontStyle: "italic" }}>{children}</blockquote>
+            ),
+            code: ({ className, children }) => {
+              const isInline = !className;
+              if (isInline) {
+                return (
+                  <code style={{ background: "var(--tf-bg-secondary)", padding: "2px 5px", borderRadius: 3, fontSize: 13, fontFamily: "monospace", color: "var(--tf-accent-text)" }}>
+                    {children}
+                  </code>
+                );
+              }
+              return (
+                <code style={{ display: "block", fontFamily: "monospace", fontSize: 13, lineHeight: "20px", color: "var(--tf-text)" }}>
+                  {children}
+                </code>
+              );
+            },
+            pre: ({ children }) => (
+              <pre style={{ background: "var(--tf-bg-secondary)", borderRadius: 6, padding: 14, margin: "10px 0", overflow: "auto", border: "1px solid var(--tf-border)" }}>
+                {children}
+              </pre>
+            ),
+            table: ({ children }) => (
+              <div style={{ overflow: "auto", marginBottom: 10 }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>{children}</table>
+              </div>
+            ),
+            thead: ({ children }) => (
+              <thead style={{ background: "var(--tf-bg-secondary)" }}>{children}</thead>
+            ),
+            th: ({ children }) => (
+              <th style={{ border: "1px solid var(--tf-border)", padding: "6px 10px", textAlign: "left", fontWeight: 600, color: "var(--tf-text)", fontSize: 13 }}>{children}</th>
+            ),
+            td: ({ children }) => (
+              <td style={{ border: "1px solid var(--tf-border)", padding: "6px 10px", color: "var(--tf-text-secondary)", fontSize: 13 }}>{children}</td>
+            ),
+            hr: () => (
+              <hr style={{ border: "none", borderTop: "1px solid var(--tf-border)", margin: "20px 0" }} />
+            ),
+            img: ({ src, alt }) => (
+              <img src={src} alt={alt || ""} style={{ maxWidth: "100%", borderRadius: 6, margin: "10px 0" }} />
+            ),
+          }}
+        >
+          {conteudo}
+        </ReactMarkdown>
       </div>
     </div>
   );
