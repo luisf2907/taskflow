@@ -35,7 +35,7 @@ export function useWorkspaces() {
     return data;
   }
 
-  async function atualizar(id: string, campos: Partial<Pick<Workspace, "nome" | "descricao" | "cor" | "icone">>) {
+  async function atualizar(id: string, campos: Partial<Pick<Workspace, "nome" | "descricao" | "cor" | "icone" | "colunas_padrao">>) {
     // Optimistic
     globalMutate(
       CHAVE,

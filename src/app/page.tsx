@@ -110,6 +110,20 @@ export default function PaginaInicial() {
     });
 
     if (quadro) {
+      // Criar colunas padrão do workspace se aplicável
+      if (novoWorkspaceId) {
+        const ws = workspaces.find((w) => w.id === novoWorkspaceId);
+        if (ws?.colunas_padrao && ws.colunas_padrao.length > 0) {
+          const { supabase } = await import("@/lib/supabase/client");
+          const colunas = ws.colunas_padrao.map((nome, i) => ({
+            quadro_id: quadro.id,
+            nome,
+            posicao: i,
+          }));
+          await supabase.from("colunas").insert(colunas);
+        }
+      }
+
       setModalQuadro(false);
       setNovoNome(""); setNovaCor(CORES_QUADRO[0]); setNovoWorkspaceId("");
       setNovoDataInicio(""); setNovoDataFim(""); setNovoMeta("");

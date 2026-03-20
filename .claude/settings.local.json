@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(yes \"N\")",
-      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --turbopack)"
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --turbopack)",
+      "Bash(ls -la /c/Users/lfcfr/Documents/trello/*.ts /c/Users/lfcfr/Documents/trello/*.js /c/Users/lfcfr/Documents/trello/*.json)"
     ]
   }
 }

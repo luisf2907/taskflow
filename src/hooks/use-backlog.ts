@@ -162,6 +162,33 @@ export function useBacklog(workspaceId: string) {
     globalMutate(`cartoes-${quadroIdOriginal}`);
   }
 
+  // Mover de uma sprint pra outra (direto)
+  async function moverParaSprint(cartaoId: string, quadroIdOriginal: string, quadroIdNovo: string) {
+    // Buscar primeira coluna do quadro novo
+    const { data: colunas } = await supabase
+      .from("colunas")
+      .select("id")
+      .eq("quadro_id", quadroIdNovo)
+      .order("posicao")
+      .limit(1);
+
+    if (!colunas || colunas.length === 0) return;
+
+    const { count } = await supabase
+      .from("cartoes")
+      .select("id", { count: "exact", head: true })
+      .eq("coluna_id", colunas[0].id);
+
+    await supabase
+      .from("cartoes")
+      .update({ coluna_id: colunas[0].id, posicao: count || 0 })
+      .eq("id", cartaoId);
+
+    globalMutate(key);
+    globalMutate(`cartoes-${quadroIdOriginal}`);
+    globalMutate(`cartoes-${quadroIdNovo}`);
+  }
+
   // Excluir tarefa
   async function excluirTarefa(cartaoId: string) {
     globalMutate(key, cartoes.filter((c) => c.id !== cartaoId), false);
@@ -180,6 +207,7 @@ export function useBacklog(workspaceId: string) {
     criarTarefa,
     associarASprint,
     desassociarDeSprint,
+    moverParaSprint,
     excluirTarefa,
     buscar,
   };

@@ -27,6 +27,7 @@ import {
   Trash2,
   Settings,
   ArrowRight,
+  BarChart3,
   X,
   Zap,
 } from "lucide-react";
@@ -50,7 +51,7 @@ function formatarData(data: string | null): string {
 }
 
 function BacklogRow({
-  tarefa, sprints, etiquetas, isLast, onAssociar, onDesassociar, onExcluir, onClick,
+  tarefa, sprints, etiquetas, isLast, onAssociar, onDesassociar, onMover, onExcluir, onClick,
 }: {
   tarefa: CartaoBacklog;
   sprints: Quadro[];
@@ -58,6 +59,7 @@ function BacklogRow({
   isLast: boolean;
   onAssociar: (cartaoId: string, quadroId: string) => void;
   onDesassociar: (cartaoId: string, quadroIdOriginal: string) => void;
+  onMover: (cartaoId: string, quadroIdOriginal: string, quadroIdNovo: string) => void;
   onExcluir: (cartaoId: string) => void;
   onClick: () => void;
 }) {
@@ -138,14 +140,28 @@ function BacklogRow({
           <ArrowRight size={10} /> Mover pra sprint
         </button>
       ) : (
-        <button
-          onClick={(e) => { e.stopPropagation(); if (tarefa.quadro_id) onDesassociar(tarefa.id, tarefa.quadro_id); }}
-          className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-smooth shrink-0"
-          style={{ color: "var(--tf-danger)" }}
-          title="Remover da sprint"
-        >
-          <X size={10} /> Remover
-        </button>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 shrink-0" onClick={(e) => e.stopPropagation()}>
+          <select
+            className="text-[11px] px-1.5 py-0.5 rounded-md outline-none transition-smooth"
+            style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text-secondary)" }}
+            defaultValue=""
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "__remover__") {
+                if (tarefa.quadro_id) onDesassociar(tarefa.id, tarefa.quadro_id);
+              } else if (val && tarefa.quadro_id) {
+                onMover(tarefa.id, tarefa.quadro_id, val);
+              }
+              e.target.value = "";
+            }}
+          >
+            <option value="" disabled>Mover...</option>
+            {sprints.filter((s) => s.status_sprint !== "concluida" && s.id !== tarefa.quadro_id).map((s) => (
+              <option key={s.id} value={s.id}>→ {s.nome}</option>
+            ))}
+            <option value="__remover__">✕ Remover da sprint</option>
+          </select>
+        </div>
       )}
 
       {/* Excluir */}
@@ -168,12 +184,12 @@ export default function PaginaWorkspace() {
 
   const { workspaces, atualizar: atualizarWs, excluir: excluirWs } = useWorkspaces();
   const { quadros, criar: criarQuadro, atualizar: atualizarQuadro, excluir: excluirQuadro } = useQuadros();
-  const { backlogPuro, cartoesDaSprint, criarTarefa, associarASprint, desassociarDeSprint, excluirTarefa, buscar: buscarBacklog } = useBacklog(workspaceId);
+  const { backlogPuro, cartoesDaSprint, criarTarefa, associarASprint, desassociarDeSprint, moverParaSprint, excluirTarefa, buscar: buscarBacklog } = useBacklog(workspaceId);
   const { etiquetas: etiquetasWs, criar: criarEtiquetaWs, excluir: excluirEtiquetaWs } = useEtiquetasWorkspace(workspaceId);
 
   const workspace = workspaces.find((w) => w.id === workspaceId);
   const [sidebarAberta, setSidebarAberta] = useState(true);
-  const [abaAtiva, setAbaAtiva] = useState<"backlog" | "sprints" | "config">("sprints");
+  const [abaAtiva, setAbaAtiva] = useState<"backlog" | "sprints" | "metricas" | "config">("sprints");
 
   // Backlog
   const [novaTarefa, setNovaTarefa] = useState("");
@@ -206,6 +222,9 @@ export default function PaginaWorkspace() {
   const [wsNome, setWsNome] = useState("");
   const [wsDescricao, setWsDescricao] = useState("");
   const [editandoConfig, setEditandoConfig] = useState(false);
+  const [editandoColunas, setEditandoColunas] = useState(false);
+  const [colunasEdit, setColunasEdit] = useState<string[]>([]);
+  const [novaColunaInput, setNovaColunaInput] = useState("");
 
   const sprintsDoWorkspace = useMemo(
     () => quadros.filter((q) => q.workspace_id === workspaceId),
@@ -228,9 +247,14 @@ export default function PaginaWorkspace() {
       meta: sprintMeta.trim() || undefined,
     });
 
-    if (quadro && workspace?.colunas_padrao) {
-      // Criar colunas padrão não é possível aqui diretamente
-      // O usuário criará no board
+    if (quadro && workspace?.colunas_padrao && workspace.colunas_padrao.length > 0) {
+      const { supabase } = await import("@/lib/supabase/client");
+      const colunas = workspace.colunas_padrao.map((nome, i) => ({
+        quadro_id: quadro.id,
+        nome,
+        posicao: i,
+      }));
+      await supabase.from("colunas").insert(colunas);
     }
 
     setModalSprint(false);
@@ -401,6 +425,7 @@ export default function PaginaWorkspace() {
               {[
                 { id: "backlog" as const, label: "Backlog", icon: Inbox },
                 { id: "sprints" as const, label: "Sprints", icon: Calendar },
+                { id: "metricas" as const, label: "Métricas", icon: BarChart3 },
                 { id: "config" as const, label: "Configurações", icon: Settings },
               ].map(({ id, label, icon: Icon }) => (
                 <button
@@ -485,7 +510,7 @@ export default function PaginaWorkspace() {
                     </div>
                     <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--tf-border)" }}>
                       {backlogPuro.map((tarefa, i) => (
-                        <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === backlogPuro.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
+                        <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === backlogPuro.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
                       ))}
                     </div>
                   </section>
@@ -511,7 +536,7 @@ export default function PaginaWorkspace() {
                       </div>
                       <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--tf-border)" }}>
                         {tarefas.map((tarefa, i) => (
-                          <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
+                          <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
                         ))}
                       </div>
                     </section>
@@ -590,6 +615,119 @@ export default function PaginaWorkspace() {
               </>
             )}
 
+            {/* ═══ ABA MÉTRICAS ═══ */}
+            {abaAtiva === "metricas" && (() => {
+              // Calcular métricas
+              const sprintsConcl = sprintsDoWorkspace.filter((s) => s.status_sprint === "concluida");
+              const sprintsParaMetricas = [...sprintsConcl, ...(sprintAtiva ? [sprintAtiva] : [])];
+
+              const velocityPorSprint = sprintsParaMetricas.map((s) => {
+                const cards = cartoesDaSprint(s.id);
+                const pontos = cards.reduce((acc, c) => acc + (c.peso || 0), 0);
+                return { nome: s.nome, pontos, status: s.status_sprint, totalCards: cards.length };
+              });
+
+              const maxPontos = Math.max(...velocityPorSprint.map((v) => v.pontos), 1);
+
+              // Sprint ativa stats
+              const ativaCards = sprintAtiva ? cartoesDaSprint(sprintAtiva.id) : [];
+              const ativaPontos = ativaCards.reduce((acc, c) => acc + (c.peso || 0), 0);
+              const ativaTotal = ativaCards.length;
+
+              // Velocity média
+              const velocidades = sprintsConcl.map((s) => cartoesDaSprint(s.id).reduce((acc, c) => acc + (c.peso || 0), 0));
+              const velocityMedia = velocidades.length > 0 ? Math.round(velocidades.reduce((a, b) => a + b, 0) / velocidades.length) : 0;
+
+              // Distribuição por etiqueta
+              const todosCards = sprintsDoWorkspace.flatMap((s) => cartoesDaSprint(s.id));
+              const porEtiqueta: Record<string, { nome: string; cor: string; count: number; pontos: number }> = {};
+              for (const card of todosCards) {
+                for (const eId of (card as unknown as { etiqueta_ids?: string[] }).etiqueta_ids || []) {
+                  const et = etiquetasWs.find((e) => e.id === eId);
+                  if (et) {
+                    if (!porEtiqueta[eId]) porEtiqueta[eId] = { nome: et.nome, cor: et.cor, count: 0, pontos: 0 };
+                    porEtiqueta[eId].count++;
+                    porEtiqueta[eId].pontos += card.peso || 0;
+                  }
+                }
+              }
+              const etiquetaStats = Object.values(porEtiqueta).sort((a, b) => b.count - a.count);
+              const maxEtCount = Math.max(...etiquetaStats.map((e) => e.count), 1);
+
+              return (
+                <>
+                  {/* Stats cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      { label: "Velocity média", valor: `${velocityMedia} pts`, sub: `${sprintsConcl.length} sprints` },
+                      { label: "Sprint ativa", valor: sprintAtiva?.nome || "—", sub: `${ativaPontos} pts · ${ativaTotal} cards` },
+                      { label: "Total sprints", valor: `${sprintsDoWorkspace.length}`, sub: `${sprintsConcl.length} concluídas` },
+                      { label: "Backlog", valor: `${backlogPuro.length}`, sub: "tarefas sem sprint" },
+                    ].map((stat, i) => (
+                      <div key={i} className="rounded-xl border p-4" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                        <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-tertiary)" }}>{stat.label}</p>
+                        <p className="text-xl font-bold mt-1" style={{ color: "var(--tf-text)" }}>{stat.valor}</p>
+                        <p className="text-[12px] mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>{stat.sub}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Velocity chart */}
+                  {velocityPorSprint.length > 0 && (
+                    <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                      <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>Velocity por Sprint</h3>
+                      <div className="space-y-2.5">
+                        {velocityPorSprint.map((v, i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <span className="text-[12px] font-medium w-24 truncate text-right" style={{ color: "var(--tf-text-secondary)" }}>{v.nome}</span>
+                            <div className="flex-1 h-6 rounded-md overflow-hidden" style={{ background: "var(--tf-bg-secondary)" }}>
+                              <div
+                                className="h-full rounded-md flex items-center px-2 transition-all duration-500"
+                                style={{
+                                  width: `${Math.max((v.pontos / maxPontos) * 100, 4)}%`,
+                                  background: v.status === "ativa" ? "var(--tf-accent)" : "var(--tf-success)",
+                                }}
+                              >
+                                <span className="text-[11px] font-bold text-white whitespace-nowrap">{v.pontos} pts</span>
+                              </div>
+                            </div>
+                            <span className="text-[11px] w-14 text-right" style={{ color: "var(--tf-text-tertiary)" }}>{v.totalCards} cards</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Distribuição por etiqueta */}
+                  {etiquetaStats.length > 0 && (
+                    <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                      <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>Distribuição por Etiqueta</h3>
+                      <div className="space-y-2">
+                        {etiquetaStats.map((e, i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold text-white w-20 text-center truncate" style={{ background: e.cor }}>{e.nome}</span>
+                            <div className="flex-1 h-5 rounded overflow-hidden" style={{ background: "var(--tf-bg-secondary)" }}>
+                              <div className="h-full rounded transition-all duration-500" style={{ width: `${(e.count / maxEtCount) * 100}%`, background: e.cor, opacity: 0.7 }} />
+                            </div>
+                            <span className="text-[11px] font-medium w-20 text-right" style={{ color: "var(--tf-text-secondary)" }}>{e.count} cards · {e.pontos}pts</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty */}
+                  {sprintsParaMetricas.length === 0 && (
+                    <div className="text-center py-16">
+                      <BarChart3 size={32} className="mx-auto mb-3" style={{ color: "var(--tf-text-tertiary)" }} />
+                      <h3 className="text-base font-bold mb-1" style={{ color: "var(--tf-text)" }}>Sem dados ainda</h3>
+                      <p className="text-sm" style={{ color: "var(--tf-text-tertiary)" }}>Conclua ou ative sprints para ver métricas</p>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+
             {abaAtiva === "config" && (
               <section className="space-y-6">
                 <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
@@ -626,15 +764,103 @@ export default function PaginaWorkspace() {
                 </div>
 
                 <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
-                  <h3 className="text-sm font-bold mb-3" style={{ color: "var(--tf-text)" }}>Colunas padrão</h3>
-                  <p className="text-[12px] mb-2" style={{ color: "var(--tf-text-tertiary)" }}>Colunas criadas automaticamente em novas sprints</p>
-                  <div className="flex flex-wrap gap-2">
-                    {workspace.colunas_padrao?.map((col, i) => (
-                      <span key={i} className="px-3 py-1.5 text-[12px] font-medium rounded-lg" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}>
-                        {col}
-                      </span>
-                    ))}
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Colunas padrão</h3>
+                      <p className="text-[12px] mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>Criadas automaticamente em novas sprints</p>
+                    </div>
+                    {!editandoColunas && (
+                      <button
+                        onClick={() => { setColunasEdit([...(workspace.colunas_padrao || [])]); setEditandoColunas(true); }}
+                        className="flex items-center gap-1 text-[12px] font-medium transition-smooth"
+                        style={{ color: "var(--tf-accent-text)" }}
+                      >
+                        <Pencil size={12} /> Editar
+                      </button>
+                    )}
                   </div>
+
+                  {editandoColunas ? (
+                    <div className="space-y-2">
+                      {colunasEdit.map((col, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <button
+                            onClick={() => { if (i > 0) { const c = [...colunasEdit]; [c[i-1], c[i]] = [c[i], c[i-1]]; setColunasEdit(c); } }}
+                            disabled={i === 0}
+                            className="p-1 rounded text-[12px] disabled:opacity-20"
+                            style={{ color: "var(--tf-text-tertiary)" }}
+                          >↑</button>
+                          <button
+                            onClick={() => { if (i < colunasEdit.length - 1) { const c = [...colunasEdit]; [c[i], c[i+1]] = [c[i+1], c[i]]; setColunasEdit(c); } }}
+                            disabled={i === colunasEdit.length - 1}
+                            className="p-1 rounded text-[12px] disabled:opacity-20"
+                            style={{ color: "var(--tf-text-tertiary)" }}
+                          >↓</button>
+                          <span className="flex-1 px-3 py-1.5 text-[13px] rounded-lg" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text)" }}>
+                            {col}
+                          </span>
+                          <button
+                            onClick={() => setColunasEdit(colunasEdit.filter((_, j) => j !== i))}
+                            className="p-1 rounded transition-smooth"
+                            style={{ color: "var(--tf-danger)" }}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          value={novaColunaInput}
+                          onChange={(e) => setNovaColunaInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && novaColunaInput.trim()) {
+                              setColunasEdit([...colunasEdit, novaColunaInput.trim()]);
+                              setNovaColunaInput("");
+                            }
+                          }}
+                          placeholder="Nova coluna..."
+                          className="flex-1 px-3 py-1.5 text-[13px] rounded-lg outline-none transition-smooth"
+                          style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
+                          onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
+                          onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
+                        />
+                        <button
+                          onClick={() => { if (novaColunaInput.trim()) { setColunasEdit([...colunasEdit, novaColunaInput.trim()]); setNovaColunaInput(""); } }}
+                          className="px-3 py-1.5 text-[12px] font-medium rounded-lg transition-smooth"
+                          style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={async () => { await atualizarWs(workspace.id, { colunas_padrao: colunasEdit }); setEditandoColunas(false); }}
+                          className="px-4 py-1.5 text-sm font-semibold text-white rounded-lg transition-smooth"
+                          style={{ background: "var(--tf-accent)" }}
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          onClick={() => { setEditandoColunas(false); setNovaColunaInput(""); }}
+                          className="px-4 py-1.5 text-sm rounded-lg transition-smooth"
+                          style={{ color: "var(--tf-text-secondary)" }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {workspace.colunas_padrao?.map((col, i) => (
+                        <span key={i} className="px-3 py-1.5 text-[12px] font-medium rounded-lg" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}>
+                          {col}
+                        </span>
+                      ))}
+                      {(!workspace.colunas_padrao || workspace.colunas_padrao.length === 0) && (
+                        <p className="text-[12px]" style={{ color: "var(--tf-text-tertiary)" }}>Nenhuma coluna padrão definida</p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-xl border p-5" style={{ background: "var(--tf-danger-bg)", borderColor: "var(--tf-danger)" }}>
