@@ -335,6 +335,7 @@ export default function PaginaWorkspace() {
   const [repoSubAba, setRepoSubAba] = useState<"arquivos" | "branches" | "prs">("arquivos");
   const [repoBranch, setRepoBranch] = useState("main");
   const [repoArquivoAberto, setRepoArquivoAberto] = useState<string | null>(null);
+  const [repoCaminho, setRepoCaminho] = useState("");
 
   // Backlog
   const [novaTarefa, setNovaTarefa] = useState("");
@@ -894,6 +895,7 @@ export default function PaginaWorkspace() {
                               setRepoSelecionado({ owner: repo.owner, nome: repo.nome });
                               setRepoBranch("main");
                               setRepoArquivoAberto(null);
+                              setRepoCaminho("");
                               setRepoSubAba("arquivos");
                             }}
                             onDesconectar={() => desconectarRepo(repo.id)}
@@ -957,7 +959,12 @@ export default function PaginaWorkspace() {
                           nome={repoSelecionado.nome}
                           path={repoArquivoAberto}
                           branch={repoBranch}
-                          onVoltar={() => setRepoArquivoAberto(null)}
+                          onVoltar={() => {
+                            const partes = repoArquivoAberto!.split("/");
+                            partes.pop();
+                            setRepoCaminho(partes.join("/"));
+                            setRepoArquivoAberto(null);
+                          }}
                         />
                       ) : (
                         <div>
@@ -973,6 +980,8 @@ export default function PaginaWorkspace() {
                             owner={repoSelecionado.owner}
                             nome={repoSelecionado.nome}
                             branch={repoBranch}
+                            caminhoAtual={repoCaminho}
+                            onCaminhoChange={setRepoCaminho}
                             onAbrirArquivo={(path) => setRepoArquivoAberto(path)}
                           />
                         </div>

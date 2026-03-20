@@ -96,6 +96,7 @@ export default function ReposPage() {
   const [subAba, setSubAba] = useState<"arquivos" | "branches" | "prs">("arquivos");
   const [branch, setBranch] = useState("main");
   const [arquivoAberto, setArquivoAberto] = useState<string | null>(null);
+  const [caminhoNavegacao, setCaminhoNavegacao] = useState("");
 
   // Clone URL
   const [copiado, setCopiado] = useState(false);
@@ -187,6 +188,7 @@ export default function ReposPage() {
                         setRepoAberto({ owner: repo.owner, nome: repo.nome });
                         setBranch("main");
                         setArquivoAberto(null);
+                        setCaminhoNavegacao("");
                         setSubAba("arquivos");
                       }}
                       onDesconectar={() => desconectarRepo(repo.id)}
@@ -264,7 +266,13 @@ export default function ReposPage() {
                     nome={repoAberto.nome}
                     path={arquivoAberto}
                     branch={branch}
-                    onVoltar={() => setArquivoAberto(null)}
+                    onVoltar={() => {
+                      // Voltar pra pasta do arquivo, não pra raiz
+                      const partes = arquivoAberto.split("/");
+                      partes.pop(); // remove o nome do arquivo
+                      setCaminhoNavegacao(partes.join("/"));
+                      setArquivoAberto(null);
+                    }}
                   />
                 ) : (
                   <div>
@@ -279,6 +287,8 @@ export default function ReposPage() {
                       owner={repoAberto.owner}
                       nome={repoAberto.nome}
                       branch={branch}
+                      caminhoAtual={caminhoNavegacao}
+                      onCaminhoChange={setCaminhoNavegacao}
                       onAbrirArquivo={(path) => setArquivoAberto(path)}
                     />
                   </div>

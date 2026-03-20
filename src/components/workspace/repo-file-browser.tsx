@@ -11,6 +11,8 @@ interface RepoFileBrowserProps {
   owner: string;
   nome: string;
   branch: string;
+  caminhoAtual?: string;
+  onCaminhoChange?: (path: string) => void;
   onAbrirArquivo: (path: string) => void;
 }
 
@@ -63,9 +65,16 @@ export function RepoFileBrowser({
   owner,
   nome,
   branch,
+  caminhoAtual: caminhoExterno,
+  onCaminhoChange,
   onAbrirArquivo,
 }: RepoFileBrowserProps) {
-  const [caminhoAtual, setCaminhoAtual] = useState("");
+  const [caminhoInterno, setCaminhoInterno] = useState("");
+  const caminhoAtual = caminhoExterno ?? caminhoInterno;
+  const setCaminhoAtual = (path: string) => {
+    setCaminhoInterno(path);
+    onCaminhoChange?.(path);
+  };
 
   const { conteudo, carregando, erro } = useGitHubConteudo(
     owner,
