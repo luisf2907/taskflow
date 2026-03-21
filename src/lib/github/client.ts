@@ -163,6 +163,107 @@ export function extensaoParaLinguagem(filename: string): string {
   return mapa[ext] || "text";
 }
 
+// =============================================
+// AUTHENTICATED GITHUB API (server-side proxy)
+// =============================================
+
+export async function githubAuthFetch<T>(
+  path: string,
+  token: string,
+  options?: RequestInit
+): Promise<{ data: T | null; status: number; error?: string }> {
+  try {
+    const res = await fetch(`${BASE}${path}`, {
+      ...options,
+      headers: {
+        Accept: "application/vnd.github.v3+json",
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      return { data: null, status: res.status, error: err.message };
+    }
+    const data = await res.json().catch(() => null);
+    return { data: data as T, status: res.status };
+  } catch {
+    return { data: null, status: 500, error: "Network error" };
+  }
+}
+
+export async function mergePR(
+  owner: string,
+  repo: string,
+  prNumber: number,
+  token: string
+) {
+  return githubAuthFetch(
+    `/repos/${owner}/${repo}/pulls/${prNumber}/merge`,
+    token,
+    { method: "PUT" }
+  );
+}
+
+export async function closePR(
+  owner: string,
+  repo: string,
+  prNumber: number,
+  token: string
+) {
+  return githubAuthFetch(
+    `/repos/${owner}/${repo}/pulls/${prNumber}`,
+    token,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ state: "closed" }),
+    }
+  );
+}
+
+export async function createPR(
+  owner: string,
+  repo: string,
+  title: string,
+  head: string,
+  base: string,
+  body: string,
+  token: string
+) {
+  return githubAuthFetch<GitHubPR>(
+    `/repos/${owner}/${repo}/pulls`,
+    token,
+    {
+      method: "POST",
+      body: JSON.stringify({ title, head, base, body }),
+    }
+  );
+}
+
+export async function buscarBranchesAuth(
+  owner: string,
+  repo: string,
+  token: string
+) {
+  return githubAuthFetch<GitHubBranch[]>(
+    `/repos/${owner}/${repo}/branches?per_page=100`,
+    token
+  );
+}
+
+export async function buscarPRsAuth(
+  owner: string,
+  repo: string,
+  token: string,
+  state: "open" | "closed" | "all" = "open"
+) {
+  return githubAuthFetch<GitHubPR[]>(
+    `/repos/${owner}/${repo}/pulls?state=${state}&per_page=30&sort=updated&direction=desc`,
+    token
+  );
+}
+
 // Verificar se é arquivo binário pela extensão
 export function ehBinario(filename: string): boolean {
   const ext = filename.split(".").pop()?.toLowerCase() || "";

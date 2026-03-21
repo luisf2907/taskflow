@@ -11,16 +11,37 @@ import {
   GitBranch,
   ArrowRight,
   Inbox,
+  Plus,
+  RefreshCw,
 } from "lucide-react";
-import { useGitHubPRs } from "@/hooks/use-github";
+import { CriarPR } from "./criar-pr";
+import useSWR from "swr";
 import type { GitHubPR } from "@/types/github";
 
 interface RepoPRsProps {
   owner: string;
   nome: string;
+  repoId?: string;
 }
 
 type Aba = "open" | "closed" | "all";
+
+// Hook que usa API autenticada (funciona com repos privados)
+function usePRsAuth(owner: string, nome: string, state: Aba) {
+  const { data, isLoading, mutate } = useSWR<{ prs: GitHubPR[] }>(
+    owner && nome ? `prs-auth-${owner}-${nome}-${state}` : null,
+    async () => {
+      const res = await fetch("/api/prs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ owner, repo: nome, state }),
+      });
+      return res.json();
+    },
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
+  );
+  return { prs: data?.prs || [], carregando: isLoading, revalidar: () => mutate() };
+}
 
 function tempoAtras(date: string): string {
   const agora = Date.now();
@@ -385,133 +406,209 @@ const ABAS: { valor: Aba; rotulo: string }[] = [
   { valor: "all", rotulo: "Todas" },
 ];
 
-export function RepoPRs({ owner, nome }: RepoPRsProps) {
+export function RepoPRs({ owner, nome, repoId }: RepoPRsProps) {
   const [aba, setAba] = useState<Aba>("open");
-  const { prs, carregando } = useGitHubPRs(owner, nome, aba);
+  const { prs, carregando, revalidar } = usePRsAuth(owner, nome, aba);
+  const [modalCriar, setModalCriar] = useState(false);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        border: "1px solid var(--tf-border)",
-        borderRadius: "8px",
-        overflow: "hidden",
-        background: "var(--tf-surface)",
-      }}
-    >
-      {/* Cabeçalho com abas */}
+    <>
       <div
         style={{
           display: "flex",
-          alignItems: "center",
-          gap: "2px",
-          padding: "8px 12px",
-          borderBottom: "1px solid var(--tf-border)",
-          background: "var(--tf-bg-secondary)",
+          flexDirection: "column",
+          border: "1px solid var(--tf-border)",
+          borderRadius: "8px",
+          overflow: "hidden",
+          background: "var(--tf-surface)",
         }}
       >
-        <GitPullRequest
-          size={16}
-          style={{
-            color: "var(--tf-text-secondary)",
-            marginRight: "8px",
-          }}
-        />
-        <span
-          style={{
-            fontSize: "13px",
-            fontWeight: 600,
-            color: "var(--tf-text)",
-            marginRight: "12px",
-          }}
-        >
-          Pull Requests
-        </span>
-
+        {/* Cabeçalho com abas */}
         <div
           style={{
             display: "flex",
+            alignItems: "center",
             gap: "2px",
-            background: "var(--tf-bg)",
-            borderRadius: "6px",
-            padding: "2px",
+            padding: "8px 12px",
+            borderBottom: "1px solid var(--tf-border)",
+            background: "var(--tf-bg-secondary)",
           }}
         >
-          {ABAS.map((a) => (
+          <GitPullRequest
+            size={16}
+            style={{
+              color: "var(--tf-text-secondary)",
+              marginRight: "8px",
+            }}
+          />
+          <span
+            style={{
+              fontSize: "13px",
+              fontWeight: 600,
+              color: "var(--tf-text)",
+              marginRight: "12px",
+            }}
+          >
+            Pull Requests
+          </span>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "2px",
+              background: "var(--tf-bg)",
+              borderRadius: "6px",
+              padding: "2px",
+            }}
+          >
+            {ABAS.map((a) => (
+              <button
+                key={a.valor}
+                onClick={() => setAba(a.valor)}
+                style={{
+                  padding: "4px 12px",
+                  borderRadius: "4px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: aba === a.valor ? 600 : 400,
+                  color:
+                    aba === a.valor
+                      ? "var(--tf-text)"
+                      : "var(--tf-text-tertiary)",
+                  background:
+                    aba === a.valor ? "var(--tf-surface)" : "transparent",
+                  boxShadow:
+                    aba === a.valor ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
+                  transition: "all 0.15s",
+                }}
+              >
+                {a.rotulo}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
+            {!carregando && (
+              <span style={{ fontSize: "12px", color: "var(--tf-text-tertiary)" }}>
+                {prs.length} {prs.length === 1 ? "PR" : "PRs"}
+              </span>
+            )}
+
             <button
-              key={a.valor}
-              onClick={() => setAba(a.valor)}
+              onClick={() => revalidar()}
+              title="Recarregar PRs"
               style={{
-                padding: "4px 12px",
+                display: "flex",
+                alignItems: "center",
+                padding: "4px",
                 borderRadius: "4px",
                 border: "none",
                 cursor: "pointer",
-                fontSize: "12px",
-                fontWeight: aba === a.valor ? 600 : 400,
-                color:
-                  aba === a.valor
-                    ? "var(--tf-text)"
-                    : "var(--tf-text-tertiary)",
-                background:
-                  aba === a.valor ? "var(--tf-surface)" : "transparent",
-                boxShadow:
-                  aba === a.valor ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
-                transition: "all 0.15s",
+                color: "var(--tf-text-tertiary)",
+                background: "transparent",
+                transition: "color 0.15s",
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-text)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
             >
-              {a.rotulo}
+              <RefreshCw size={14} />
             </button>
-          ))}
+
+            {repoId && (
+              <button
+                onClick={() => setModalCriar(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#fff",
+                  background: "var(--tf-accent)",
+                  transition: "opacity 0.15s",
+                }}
+              >
+                <Plus size={13} /> Criar PR
+              </button>
+            )}
+          </div>
         </div>
 
-        {!carregando && (
-          <span
-            style={{
-              fontSize: "12px",
-              color: "var(--tf-text-tertiary)",
-              marginLeft: "auto",
-            }}
-          >
-            {prs.length} {prs.length === 1 ? "PR" : "PRs"}
-          </span>
-        )}
+        {/* Conteúdo */}
+        <div>
+          {carregando ? (
+            <>
+              <SkeletonItem />
+              <SkeletonItem />
+              <SkeletonItem />
+              <SkeletonItem />
+            </>
+          ) : prs.length === 0 ? (
+            <div
+              style={{
+                padding: "40px 16px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "8px",
+                color: "var(--tf-text-tertiary)",
+              }}
+            >
+              <Inbox size={32} style={{ opacity: 0.4 }} />
+              <span style={{ fontSize: "14px" }}>
+                Nenhuma pull request{" "}
+                {aba === "open"
+                  ? "aberta"
+                  : aba === "closed"
+                    ? "fechada"
+                    : "encontrada"}
+              </span>
+              {repoId && (
+                <button
+                  onClick={() => setModalCriar(true)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "#fff",
+                    background: "var(--tf-accent)",
+                    marginTop: "8px",
+                  }}
+                >
+                  <Plus size={14} /> Criar Pull Request
+                </button>
+              )}
+            </div>
+          ) : (
+            prs.map((pr) => <PRItem key={pr.number} pr={pr} />)
+          )}
+        </div>
       </div>
 
-      {/* Conteúdo */}
-      <div>
-        {carregando ? (
-          <>
-            <SkeletonItem />
-            <SkeletonItem />
-            <SkeletonItem />
-            <SkeletonItem />
-          </>
-        ) : prs.length === 0 ? (
-          <div
-            style={{
-              padding: "40px 16px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "8px",
-              color: "var(--tf-text-tertiary)",
-            }}
-          >
-            <Inbox size={32} style={{ opacity: 0.4 }} />
-            <span style={{ fontSize: "14px" }}>
-              Nenhuma pull request{" "}
-              {aba === "open"
-                ? "aberta"
-                : aba === "closed"
-                  ? "fechada"
-                  : "encontrada"}
-            </span>
-          </div>
-        ) : (
-          prs.map((pr) => <PRItem key={pr.number} pr={pr} />)
-        )}
-      </div>
-    </div>
+      {/* Modal Criar PR */}
+      {repoId && (
+        <CriarPR
+          aberto={modalCriar}
+          onFechar={() => {
+            setModalCriar(false);
+            revalidar();
+          }}
+          repoId={repoId}
+          owner={owner}
+          nome={nome}
+        />
+      )}
+    </>
   );
 }

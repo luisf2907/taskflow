@@ -5,6 +5,10 @@ export interface Repositorio {
   workspace_id: string;
   owner: string;
   nome: string;
+  webhook_secret: string | null;
+  coluna_review_id: string | null;
+  coluna_done_id: string | null;
+  coluna_doing_id: string | null;
   criado_em: string;
 }
 

@@ -9,6 +9,7 @@ import {
   Calendar,
   CheckSquare,
   Gauge,
+  GitPullRequest,
   Paperclip,
 } from "lucide-react";
 import { CartaoComResumo } from "@/hooks/use-cartoes";
@@ -34,7 +35,8 @@ export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
   const dataStatus = statusData(cartao.data_entrega);
   const temChecklist = cartao.total_checklist_itens > 0;
   const checklistCompleto = temChecklist && cartao.total_checklist_concluidos === cartao.total_checklist_itens;
-  const temIndicadores = cartao.data_entrega || cartao.descricao || temChecklist || cartao.total_anexos > 0 || cartao.peso || membrosDoCartao.length > 0;
+  const temPR = !!cartao.pr_numero;
+  const temIndicadores = cartao.data_entrega || cartao.descricao || temChecklist || cartao.total_anexos > 0 || cartao.peso || membrosDoCartao.length > 0 || temPR;
 
   return (
     <div
@@ -71,6 +73,19 @@ export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
       {/* Badges */}
       {temIndicadores && (
         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+          {temPR && (
+            <span
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium"
+              style={{
+                color: cartao.pr_status === "open" ? "var(--tf-success)" : cartao.pr_status === "merged" ? "var(--tf-accent)" : "var(--tf-danger)",
+                background: cartao.pr_status === "open" ? "var(--tf-success-bg)" : cartao.pr_status === "merged" ? "var(--tf-accent-light)" : "var(--tf-danger-bg)",
+              }}
+            >
+              <GitPullRequest size={10} />
+              #{cartao.pr_numero}
+            </span>
+          )}
+
           {cartao.data_entrega && (
             <span
               className={cn(

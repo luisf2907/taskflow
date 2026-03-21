@@ -23,12 +23,22 @@ export function useWorkspaces() {
     cor: string = "#C4841D",
     icone: string = "folder"
   ) {
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { data } = await supabase
       .from("workspaces")
-      .insert({ nome, descricao: descricao || null, cor, icone })
+      .insert({ nome, descricao: descricao || null, cor, icone, criado_por: user?.id || null })
       .select()
       .single();
     if (data) {
+      // Adicionar criador como admin do workspace
+      if (user) {
+        await supabase.from("workspace_usuarios").insert({
+          workspace_id: data.id,
+          user_id: user.id,
+          papel: "admin",
+        });
+      }
       const novo = [...workspaces, data].sort((a, b) => a.nome.localeCompare(b.nome));
       globalMutate(CHAVE, novo, false);
     }

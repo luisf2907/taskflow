@@ -12,6 +12,8 @@ import { RepoFileBrowser } from "@/components/workspace/repo-file-browser";
 import { RepoFileViewer } from "@/components/workspace/repo-file-viewer";
 import { RepoBranches } from "@/components/workspace/repo-branches";
 import { RepoPRs } from "@/components/workspace/repo-prs";
+import { RepoWebhookConfig } from "@/components/workspace/repo-webhook-config";
+import { useColunas } from "@/hooks/use-colunas";
 import {
   ArrowLeft,
   ExternalLink,
@@ -23,9 +25,146 @@ import {
   Copy,
   Check,
   X,
+  Loader2,
+  Lock,
+  Search,
+  Settings2,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { Repositorio } from "@/types/github";
+
+// ─── Webhook Config Inline ───
+function WebhookConfigInline({ repoDb }: { repoDb: Repositorio }) {
+  // Pegar colunas de algum quadro — usar o primeiro que existir
+  // Para isso precisaríamos do quadroId, mas como simplificação vamos usar colunas vazias
+  // e deixar o user mapear depois
+  const { colunas } = useColunas("");
+
+  return (
+    <div className="max-w-xl rounded-xl p-5" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}>
+      <RepoWebhookConfig
+        repoId={repoDb.id}
+        colunas={colunas}
+        webhookSecret={repoDb.webhook_secret ?? null}
+        colunaReviewId={repoDb.coluna_review_id ?? null}
+        colunaDoneId={repoDb.coluna_done_id ?? null}
+        colunaDoingId={repoDb.coluna_doing_id ?? null}
+        onSalvar={() => {}}
+      />
+    </div>
+  );
+}
+
+// ─── Modal Conectar Repo (com listagem autenticada) ───
+function ModalConectarRepoLocal({
+  aberto, onFechar, repositorios, onConectar,
+}: {
+  aberto: boolean; onFechar: () => void; repositorios: Repositorio[];
+  onConectar: (owner: string, nome: string) => void;
+}) {
+  const [ghRepos, setGhRepos] = useState<
+    { id: number; name: string; full_name: string; description: string | null; private: boolean; language: string | null; owner: string }[]
+  >([]);
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
+  const [modo, setModo] = useState<"lista" | "manual">("lista");
+  const [manualInput, setManualInput] = useState("");
+
+  useEffect(() => {
+    if (!aberto) return;
+    setCarregando(true);
+    setErro(null);
+    fetch("/api/repos")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.repos) setGhRepos(data.repos);
+        else if (data.error) { setErro(data.error); setModo("manual"); }
+      })
+      .catch(() => { setErro("Erro ao carregar"); setModo("manual"); })
+      .finally(() => setCarregando(false));
+  }, [aberto]);
+
+  const jaConectados = new Set(repositorios.map((r) => `${r.owner}/${r.nome}`));
+  const filtrados = ghRepos.filter((r) => {
+    if (jaConectados.has(r.full_name)) return false;
+    if (!busca) return true;
+    return r.full_name.toLowerCase().includes(busca.toLowerCase());
+  });
+
+  return (
+    <Modal aberto={aberto} onFechar={onFechar} titulo="Conectar repositório" className="max-w-md">
+      <div className="space-y-3">
+        <div className="flex gap-1 p-0.5 rounded-lg" style={{ background: "var(--tf-bg-secondary)" }}>
+          {(["lista", "manual"] as const).map((m) => (
+            <button key={m} onClick={() => setModo(m)}
+              className="flex-1 py-1.5 text-xs font-semibold rounded-md transition-smooth"
+              style={{
+                background: modo === m ? "var(--tf-surface)" : "transparent",
+                color: modo === m ? "var(--tf-text)" : "var(--tf-text-tertiary)",
+                boxShadow: modo === m ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
+              }}
+            >{m === "lista" ? "Meus Repos" : "Manual"}</button>
+          ))}
+        </div>
+
+        {modo === "lista" ? (
+          <>
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--tf-text-tertiary)" }} />
+              <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar repositório..."
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg outline-none" style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} />
+            </div>
+            <div className="max-h-[320px] overflow-y-auto space-y-1" style={{ scrollbarWidth: "thin" }}>
+              {carregando ? (
+                <div className="flex items-center justify-center py-8 gap-2" style={{ color: "var(--tf-text-tertiary)" }}>
+                  <Loader2 size={16} className="animate-spin" /><span className="text-xs">Carregando...</span>
+                </div>
+              ) : filtrados.length === 0 ? (
+                <p className="text-center py-6 text-xs" style={{ color: "var(--tf-text-tertiary)" }}>
+                  {busca ? "Nenhum repo encontrado" : "Todos já conectados"}
+                </p>
+              ) : filtrados.map((r) => (
+                <button key={r.id} onClick={() => onConectar(r.owner, r.name)}
+                  className="w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-smooth group"
+                  style={{ border: "1px solid transparent" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--tf-bg-secondary)"; e.currentTarget.style.borderColor = "var(--tf-border)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; }}
+                >
+                  <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0" style={{ background: "var(--tf-accent-light)" }}>
+                    <GitBranch size={14} style={{ color: "var(--tf-accent)" }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold truncate" style={{ color: "var(--tf-text)" }}>{r.full_name}</span>
+                      {r.private && <Lock size={11} style={{ color: "var(--tf-text-tertiary)" }} />}
+                    </div>
+                    {r.description && <p className="text-[11px] truncate mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>{r.description}</p>}
+                  </div>
+                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-md opacity-0 group-hover:opacity-100" style={{ background: "var(--tf-accent)", color: "#fff" }}>
+                    Conectar
+                  </span>
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <input value={manualInput} onChange={(e) => setManualInput(e.target.value)} placeholder="owner/repo ou URL do GitHub"
+              className="w-full px-3 py-2 text-sm rounded-lg outline-none" style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
+              onKeyDown={(e) => { if (e.key === "Enter") { const p = parsearRepo(manualInput); if (p) onConectar(p.owner, p.nome); } }} />
+            <button onClick={() => { const p = parsearRepo(manualInput); if (p) onConectar(p.owner, p.nome); }}
+              disabled={!manualInput || !parsearRepo(manualInput)}
+              className="w-full py-2.5 text-sm font-semibold text-white rounded-lg disabled:opacity-40" style={{ background: "var(--tf-accent)" }}>
+              Conectar
+            </button>
+          </>
+        )}
+      </div>
+    </Modal>
+  );
+}
 
 // ─── Repo Card ───
 function RepoCard({ owner, nome, onAbrir, onDesconectar }: { owner: string; nome: string; onAbrir: () => void; onDesconectar: () => void }) {
@@ -93,7 +232,7 @@ export default function ReposPage() {
 
   // Repo aberto
   const [repoAberto, setRepoAberto] = useState<{ owner: string; nome: string } | null>(null);
-  const [subAba, setSubAba] = useState<"arquivos" | "branches" | "prs">("arquivos");
+  const [subAba, setSubAba] = useState<"arquivos" | "branches" | "prs" | "webhook">("arquivos");
   const [branch, setBranch] = useState("main");
   const [arquivoAberto, setArquivoAberto] = useState<string | null>(null);
   const [caminhoNavegacao, setCaminhoNavegacao] = useState("");
@@ -242,6 +381,7 @@ export default function ReposPage() {
                   { id: "arquivos" as const, label: "Arquivos", icon: Code },
                   { id: "branches" as const, label: "Branches", icon: GitBranch },
                   { id: "prs" as const, label: "Pull Requests", icon: GitFork },
+                  { id: "webhook" as const, label: "Webhook", icon: Settings2 },
                 ]).map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
@@ -305,55 +445,42 @@ export default function ReposPage() {
                 />
               )}
 
-              {subAba === "prs" && (
-                <RepoPRs owner={repoAberto.owner} nome={repoAberto.nome} />
-              )}
+              {subAba === "prs" && (() => {
+                const repoDb = repositorios.find(
+                  (r) => r.owner === repoAberto.owner && r.nome === repoAberto.nome
+                );
+                return (
+                  <RepoPRs
+                    owner={repoAberto.owner}
+                    nome={repoAberto.nome}
+                    repoId={repoDb?.id}
+                  />
+                );
+              })()}
+
+              {subAba === "webhook" && (() => {
+                const repoDb = repositorios.find(
+                  (r) => r.owner === repoAberto.owner && r.nome === repoAberto.nome
+                );
+                if (!repoDb) return null;
+                return (
+                  <WebhookConfigInline repoDb={repoDb} />
+                );
+              })()}
             </div>
           )}
         </main>
       </div>
 
-      {/* Modal: Conectar Repositório */}
-      <Modal aberto={modalConectar} onFechar={() => { setModalConectar(false); setRepoInput(""); }} titulo="Conectar repositório">
-        <div className="space-y-4">
-          <div>
-            <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>URL ou owner/repo</label>
-            <input
-              value={repoInput}
-              onChange={(e) => setRepoInput(e.target.value)}
-              placeholder="https://github.com/owner/repo ou owner/repo"
-              className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-smooth"
-              style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
-              onKeyDown={(e) => { if (e.key === "Enter") conectar(); }}
-            />
-            <p className="text-[11px] mt-1" style={{ color: "var(--tf-text-tertiary)" }}>
-              Ex: luisf2907/open-chat ou https://github.com/luisf2907/open-chat
-            </p>
-          </div>
-
-          {repoInput && parsearRepo(repoInput) && (
-            <div className="p-3 rounded-lg border" style={{ background: "var(--tf-bg-secondary)", borderColor: "var(--tf-border)" }}>
-              <div className="flex items-center gap-2">
-                <GitBranch size={16} style={{ color: "var(--tf-accent)" }} />
-                <span className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>
-                  {parsearRepo(repoInput)!.owner}/{parsearRepo(repoInput)!.nome}
-                </span>
-              </div>
-            </div>
-          )}
-
-          <button
-            onClick={conectar}
-            disabled={!repoInput || !parsearRepo(repoInput)}
-            className="w-full py-2.5 text-sm font-semibold text-white rounded-lg transition-smooth disabled:opacity-40 hover:opacity-90"
-            style={{ background: "var(--tf-accent)" }}
-          >
-            Conectar
-          </button>
-        </div>
-      </Modal>
+      <ModalConectarRepoLocal
+        aberto={modalConectar}
+        onFechar={() => setModalConectar(false)}
+        repositorios={repositorios}
+        onConectar={(owner, nome) => {
+          conectarRepo(owner, nome);
+          setModalConectar(false);
+        }}
+      />
     </div>
   );
 }

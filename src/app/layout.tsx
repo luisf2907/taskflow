@@ -1,3 +1,4 @@
+import { AuthListener } from "@/components/auth-listener";
 import { SWRProvider } from "@/components/swr-provider";
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
@@ -37,7 +38,10 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${dmSans.className} h-full antialiased`}
       >
-        <SWRProvider>{children}</SWRProvider>
+        <SWRProvider>
+          <AuthListener />
+          {children}
+        </SWRProvider>
       </body>
     </html>
   );

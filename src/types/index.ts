@@ -45,6 +45,11 @@ export interface Cartao {
   etiquetas: string[];
   data_entrega: string | null;
   peso: number | null;
+  pr_numero: number | null;
+  pr_url: string | null;
+  pr_status: "open" | "closed" | "merged" | null;
+  pr_repo_id: string | null;
+  pr_autor: string | null;
   criado_em: string;
   atualizado_em: string;
 }
@@ -151,4 +156,29 @@ export interface CartaoEnriquecido extends Cartao {
   total_checklist_itens: number;
   total_checklist_concluidos: number;
   total_anexos: number;
+}
+
+// =============================================
+// PERFIS (auth)
+// =============================================
+export interface Perfil {
+  id: string;
+  nome: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  github_username: string | null;
+  criado_em: string;
+  atualizado_em: string;
+}
+
+// =============================================
+// WORKSPACE MEMBERSHIP
+// =============================================
+export interface WorkspaceUsuario {
+  id: string;
+  workspace_id: string;
+  user_id: string;
+  papel: "admin" | "membro";
+  criado_em: string;
+  perfis?: Perfil;
 }

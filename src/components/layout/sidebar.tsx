@@ -142,8 +142,8 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
                           "flex items-center gap-2.5 px-2 py-[6px] rounded-lg text-[13px] transition-smooth"
                         )}
                         style={{
-                          background: pathname === `/workspace/${ws.id}` ? "var(--tf-accent-light)" : "transparent",
-                          color: pathname === `/workspace/${ws.id}` ? "var(--tf-accent-text)" : "var(--tf-text-tertiary)",
+                          background: pathname === `/workspace/${ws.id}` && !pathname.includes("/repos") ? "var(--tf-accent-light)" : "transparent",
+                          color: pathname === `/workspace/${ws.id}` && !pathname.includes("/repos") ? "var(--tf-accent-text)" : "var(--tf-text-tertiary)",
                         }}
                         onMouseEnter={(e) => { if (pathname !== `/workspace/${ws.id}`) e.currentTarget.style.background = "var(--tf-surface-hover)"; }}
                         onMouseLeave={(e) => { if (pathname !== `/workspace/${ws.id}`) e.currentTarget.style.background = "transparent"; }}

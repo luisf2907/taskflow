@@ -13,7 +13,10 @@ import {
   Calendar,
   CheckSquare,
   ChevronRight,
+  ExternalLink,
   Gauge,
+  GitPullRequest,
+  Loader2,
   MoreHorizontal,
   Paperclip,
   Tag,
@@ -284,6 +287,11 @@ export function DetalheCartao({
                 )}
               </div>
 
+              {/* ── PULL REQUEST ── */}
+              {cartao.pr_numero && (
+                <PainelPR cartao={cartao} onRefresh={onRefresh} />
+              )}
+
               {/* ── SUBTASKS / CHECKLISTS ── */}
               {checklists.length > 0 && (
                 <div>
@@ -502,6 +510,156 @@ export function DetalheCartao({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── PR Actions Panel ──
+function PainelPR({
+  cartao,
+  onRefresh,
+}: {
+  cartao: CartaoComResumo;
+  onRefresh: () => void;
+}) {
+  const [carregando, setCarregando] = useState<string | null>(null);
+  const [erro, setErro] = useState("");
+
+  async function handleAction(action: "merge" | "close") {
+    setCarregando(action);
+    setErro("");
+
+    try {
+      const res = await fetch("/api/pr-actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, cardId: cartao.id }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErro(data.error || "Erro ao processar ação");
+        return;
+      }
+
+      onRefresh();
+    } catch {
+      setErro("Erro de conexão");
+    } finally {
+      setCarregando(null);
+    }
+  }
+
+  const statusCor =
+    cartao.pr_status === "open"
+      ? "var(--tf-success)"
+      : cartao.pr_status === "merged"
+        ? "var(--tf-accent)"
+        : "var(--tf-danger)";
+
+  const statusLabel =
+    cartao.pr_status === "open"
+      ? "Aberto"
+      : cartao.pr_status === "merged"
+        ? "Merged"
+        : "Fechado";
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <GitPullRequest size={16} style={{ color: statusCor }} />
+        <h3
+          className="text-[13px] font-bold uppercase tracking-wider"
+          style={{ color: "var(--tf-text)" }}
+        >
+          Pull Request #{cartao.pr_numero}
+        </h3>
+        {cartao.pr_url && (
+          <a
+            href={cartao.pr_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto p-1 rounded transition-smooth"
+            style={{ color: "var(--tf-text-tertiary)" }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.color = "var(--tf-accent)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "var(--tf-text-tertiary)")
+            }
+          >
+            <ExternalLink size={14} />
+          </a>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3 mb-3">
+        <span
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
+          style={{
+            background: `color-mix(in srgb, ${statusCor} 15%, transparent)`,
+            color: statusCor,
+          }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ background: statusCor }}
+          />
+          {statusLabel}
+        </span>
+        {cartao.pr_autor && (
+          <span
+            className="text-xs"
+            style={{ color: "var(--tf-text-secondary)" }}
+          >
+            por <strong>{cartao.pr_autor}</strong>
+          </span>
+        )}
+      </div>
+
+      {cartao.pr_status === "open" && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleAction("merge")}
+            disabled={carregando !== null}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-white transition-smooth"
+            style={{ background: "var(--tf-success)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+          >
+            {carregando === "merge" ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <GitPullRequest size={13} />
+            )}
+            Aprovar e Merge
+          </button>
+          <button
+            onClick={() => handleAction("close")}
+            disabled={carregando !== null}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-white transition-smooth"
+            style={{ background: "var(--tf-danger)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+          >
+            {carregando === "close" ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <X size={13} />
+            )}
+            Rejeitar
+          </button>
+        </div>
+      )}
+
+      {erro && (
+        <p
+          className="text-[11px] mt-2"
+          style={{ color: "var(--tf-danger)" }}
+        >
+          {erro}
+        </p>
+      )}
     </div>
   );
 }
