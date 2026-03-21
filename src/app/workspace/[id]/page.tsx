@@ -22,6 +22,8 @@ import { RepoWebhookConfig } from "@/components/workspace/repo-webhook-config";
 import { MetricasWorkspace } from "@/components/workspace/metricas";
 import { useColunas } from "@/hooks/use-colunas";
 import { usePRSync } from "@/hooks/use-pr-sync";
+import { useWorkspaceUsuarios } from "@/hooks/use-workspace-usuarios";
+import { Users, Mail, Shield, Crown, UserMinus } from "lucide-react";
 import { Quadro, StatusSprint } from "@/types";
 import {
   DndContext,
@@ -569,6 +571,10 @@ export default function PaginaWorkspace() {
   const { backlogPuro, cartoesDaSprint, criarTarefa, associarASprint, desassociarDeSprint, moverParaSprint, excluirTarefa, buscar: buscarBacklog } = useBacklog(workspaceId);
   const { etiquetas: etiquetasWs, criar: criarEtiquetaWs, excluir: excluirEtiquetaWs } = useEtiquetasWorkspace(workspaceId);
   const { membros: membrosWs, criar: criarMembroWs, excluir: excluirMembroWs } = useMembrosWorkspace(workspaceId);
+  const { usuarios: wsUsuarios, convidar: convidarUsuario, remover: removerUsuario, alterarPapel } = useWorkspaceUsuarios(workspaceId);
+  const [emailConvite, setEmailConvite] = useState("");
+  const [erroConvite, setErroConvite] = useState<string | null>(null);
+  const [convidando, setConvidando] = useState(false);
 
   const workspace = workspaces.find((w) => w.id === workspaceId);
   const [sidebarAberta, setSidebarAberta] = useState(true);
@@ -1147,6 +1153,148 @@ export default function PaginaWorkspace() {
                       <p className="text-sm" style={{ color: "var(--tf-text)" }}><strong>Sprints:</strong> {sprintsDoWorkspace.length}</p>
                     </div>
                   )}
+                </div>
+
+                {/* ─── Equipe ─── */}
+                <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Users size={16} style={{ color: "var(--tf-accent)" }} />
+                    <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Equipe</h3>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full font-medium" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}>
+                      {wsUsuarios.length} {wsUsuarios.length === 1 ? "membro" : "membros"}
+                    </span>
+                  </div>
+
+                  {/* Convidar */}
+                  <div className="flex gap-2 mb-4">
+                    <div className="relative flex-1">
+                      <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--tf-text-tertiary)" }} />
+                      <input
+                        value={emailConvite}
+                        onChange={(e) => { setEmailConvite(e.target.value); setErroConvite(null); }}
+                        placeholder="Email do membro para convidar..."
+                        className="w-full pl-9 pr-3 py-2 text-sm rounded-lg outline-none transition-smooth"
+                        style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }}
+                        onKeyDown={async (e) => {
+                          if (e.key === "Enter" && emailConvite.trim()) {
+                            setConvidando(true);
+                            setErroConvite(null);
+                            const resultado = await convidarUsuario(emailConvite.trim());
+                            if (resultado?.error) setErroConvite(resultado.error);
+                            else setEmailConvite("");
+                            setConvidando(false);
+                          }
+                        }}
+                      />
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (!emailConvite.trim()) return;
+                        setConvidando(true);
+                        setErroConvite(null);
+                        const resultado = await convidarUsuario(emailConvite.trim());
+                        if (resultado?.error) setErroConvite(resultado.error);
+                        else setEmailConvite("");
+                        setConvidando(false);
+                      }}
+                      disabled={convidando || !emailConvite.trim()}
+                      className="px-4 py-2 text-sm font-semibold text-white rounded-lg transition-smooth disabled:opacity-40"
+                      style={{ background: "var(--tf-accent)" }}
+                    >
+                      {convidando ? "..." : "Convidar"}
+                    </button>
+                  </div>
+
+                  {erroConvite && (
+                    <p className="text-xs mb-3 px-3 py-2 rounded-lg" style={{ background: "#ef444420", color: "#ef4444" }}>
+                      {erroConvite}
+                    </p>
+                  )}
+
+                  {/* Lista de membros */}
+                  <div className="space-y-1">
+                    {wsUsuarios.length === 0 ? (
+                      <p className="text-xs py-4 text-center" style={{ color: "var(--tf-text-tertiary)" }}>
+                        Nenhum membro no workspace ainda. Convide alguém pelo email!
+                      </p>
+                    ) : (
+                      wsUsuarios.map((u) => (
+                        <div
+                          key={u.id}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-smooth group"
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-bg-secondary)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                        >
+                          {/* Avatar */}
+                          {u.perfis?.avatar_url ? (
+                            <img
+                              src={u.perfis.avatar_url}
+                              alt={u.perfis.nome || ""}
+                              className="w-8 h-8 rounded-full shrink-0"
+                            />
+                          ) : (
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                              style={{ background: "var(--tf-accent)" }}
+                            >
+                              {(u.perfis?.nome || u.perfis?.email || "?").charAt(0).toUpperCase()}
+                            </div>
+                          )}
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate" style={{ color: "var(--tf-text)" }}>
+                              {u.perfis?.nome || u.perfis?.email || "Usuário"}
+                              {u.perfis?.github_username && (
+                                <span className="text-[11px] ml-1.5 font-normal" style={{ color: "var(--tf-text-tertiary)" }}>
+                                  @{u.perfis.github_username}
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-[11px] truncate" style={{ color: "var(--tf-text-tertiary)" }}>
+                              {u.perfis?.email || ""}
+                            </p>
+                          </div>
+
+                          {/* Badge papel */}
+                          <span
+                            className="flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-md shrink-0"
+                            style={{
+                              background: u.papel === "admin" ? "var(--tf-accent-light)" : "var(--tf-bg-secondary)",
+                              color: u.papel === "admin" ? "var(--tf-accent-text)" : "var(--tf-text-tertiary)",
+                            }}
+                          >
+                            {u.papel === "admin" ? <Crown size={10} /> : <Shield size={10} />}
+                            {u.papel === "admin" ? "Admin" : "Membro"}
+                          </span>
+
+                          {/* Ações */}
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-smooth">
+                            <button
+                              onClick={() => alterarPapel(u.id, u.papel === "admin" ? "membro" : "admin")}
+                              className="p-1.5 rounded-md transition-smooth"
+                              style={{ color: "var(--tf-text-tertiary)" }}
+                              title={u.papel === "admin" ? "Tornar membro" : "Tornar admin"}
+                              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-accent)")}
+                              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
+                            >
+                              <Shield size={13} />
+                            </button>
+                            <button
+                              onClick={() => removerUsuario(u.id)}
+                              className="p-1.5 rounded-md transition-smooth"
+                              style={{ color: "var(--tf-text-tertiary)" }}
+                              title="Remover do workspace"
+                              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
+                              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
+                            >
+                              <UserMinus size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
 
                 <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
