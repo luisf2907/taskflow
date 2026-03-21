@@ -44,12 +44,9 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
   const [reviewersSelecionados, setReviewersSelecionados] = useState<string[]>([]);
   const [mostrarReviewers, setMostrarReviewers] = useState(false);
 
-  // Membros com GitHub (para reviewer selection)
-  const membrosComGithub = membros.filter((m) => {
-    // Membros que têm user_id provavelmente têm GitHub
-    // O nome do perfil do GitHub é salvo, então usamos como username
-    return !!m.user_id;
-  });
+  // Membros com GitHub (para reviewer selection) — deduplicar por user_id
+  const membrosComGithub = membros.filter((m) => !!m.user_id)
+    .filter((m, i, arr) => arr.findIndex((x) => x.user_id === m.user_id) === i);
 
   // Buscar branches quando abre o modal
   useEffect(() => {
