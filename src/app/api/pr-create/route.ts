@@ -73,6 +73,29 @@ export async function POST(request: NextRequest) {
     await requestReviewers(repo.owner, repo.nome, pr.number, reviewers, token);
   }
 
+  // Encontrar coluna Review — primeiro tenta a configurada, senão busca por nome
+  let colunaReviewId = repo.coluna_review_id;
+  if (!colunaReviewId) {
+    // Buscar quadros do workspace
+    const { data: quadros } = await service
+      .from("quadros")
+      .select("id")
+      .eq("workspace_id", repo.workspace_id);
+
+    if (quadros && quadros.length > 0) {
+      const quadroIds = quadros.map((q) => q.id);
+      // Buscar coluna com nome parecido com "Review"
+      const { data: colunaReview } = await service
+        .from("colunas")
+        .select("id")
+        .in("quadro_id", quadroIds)
+        .ilike("nome", "%review%")
+        .limit(1)
+        .single();
+      colunaReviewId = colunaReview?.id || null;
+    }
+  }
+
   // Vincular a card existente OU criar card novo
   if (cardId) {
     // Atualizar card existente com dados do PR e mover para Review
@@ -84,15 +107,15 @@ export async function POST(request: NextRequest) {
       pr_autor: pr.user?.login || user.email || "unknown",
       atualizado_em: new Date().toISOString(),
     };
-    if (repo.coluna_review_id) {
-      updateData.coluna_id = repo.coluna_review_id;
+    if (colunaReviewId) {
+      updateData.coluna_id = colunaReviewId;
     }
     await service.from("cartoes").update(updateData).eq("id", cardId);
-  } else if (repo.coluna_review_id) {
+  } else if (colunaReviewId) {
     // Criar card novo automaticamente
     await service.from("cartoes").upsert(
       {
-        coluna_id: repo.coluna_review_id,
+        coluna_id: colunaReviewId,
         workspace_id: repo.workspace_id,
         titulo: `PR #${pr.number}: ${pr.title}`,
         descricao: pr.body || null,

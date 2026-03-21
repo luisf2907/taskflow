@@ -7,6 +7,7 @@ import { useQuadros } from "@/hooks/use-quadros";
 import { useWorkspaces } from "@/hooks/use-workspaces";
 import { useRepositorios } from "@/hooks/use-repositorios";
 import { useMembrosWorkspace } from "@/hooks/use-membros-workspace";
+import { supabase } from "@/lib/supabase/client";
 import { useGitHubRepo } from "@/hooks/use-github";
 import { parsearRepo } from "@/lib/github/client";
 import { RepoFileBrowser } from "@/components/workspace/repo-file-browser";
@@ -14,7 +15,7 @@ import { RepoFileViewer } from "@/components/workspace/repo-file-viewer";
 import { RepoBranches } from "@/components/workspace/repo-branches";
 import { RepoPRs } from "@/components/workspace/repo-prs";
 import { RepoWebhookConfig } from "@/components/workspace/repo-webhook-config";
-import { useColunas } from "@/hooks/use-colunas";
+// useColunas removido — buscamos colunas diretamente
 import {
   ArrowLeft,
   ExternalLink,
@@ -36,17 +37,33 @@ import { useEffect, useState } from "react";
 import type { Repositorio } from "@/types/github";
 
 // ─── Webhook Config Inline ───
-function WebhookConfigInline({ repoDb }: { repoDb: Repositorio }) {
-  // Pegar colunas de algum quadro — usar o primeiro que existir
-  // Para isso precisaríamos do quadroId, mas como simplificação vamos usar colunas vazias
-  // e deixar o user mapear depois
-  const { colunas } = useColunas("");
+function WebhookConfigInline({ repoDb, workspaceId }: { repoDb: Repositorio; workspaceId: string }) {
+  const [todasColunas, setTodasColunas] = useState<import("@/types").Coluna[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { data: quadros } = await supabase
+        .from("quadros")
+        .select("id")
+        .eq("workspace_id", workspaceId);
+
+      if (!quadros || quadros.length === 0) return;
+
+      const { data: colunas } = await supabase
+        .from("colunas")
+        .select("*")
+        .in("quadro_id", quadros.map((q) => q.id))
+        .order("posicao");
+
+      if (colunas) setTodasColunas(colunas as import("@/types").Coluna[]);
+    })();
+  }, [workspaceId]);
 
   return (
     <div className="max-w-xl rounded-xl p-5" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}>
       <RepoWebhookConfig
         repoId={repoDb.id}
-        colunas={colunas}
+        colunas={todasColunas}
         webhookSecret={repoDb.webhook_secret ?? null}
         colunaReviewId={repoDb.coluna_review_id ?? null}
         colunaDoneId={repoDb.coluna_done_id ?? null}
@@ -468,7 +485,7 @@ export default function ReposPage() {
                 );
                 if (!repoDb) return null;
                 return (
-                  <WebhookConfigInline repoDb={repoDb} />
+                  <WebhookConfigInline repoDb={repoDb} workspaceId={workspaceId} />
                 );
               })()}
             </div>
