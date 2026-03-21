@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   // 2. Buscar card com info do repo
   const { data: card } = await supabase
     .from("cartoes")
-    .select("id, pr_numero, pr_url, pr_status, pr_repo_id")
+    .select("id, pr_numero, pr_url, pr_status, pr_repo_id, pr_autor")
     .eq("id", cardId)
     .single();
 
@@ -93,9 +93,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Mover card para Done
+    // Salvar no histórico e mover card para Done
+    const historicoEntry = {
+      numero: card.pr_numero,
+      url: card.pr_url,
+      status: "merged",
+      autor: card.pr_autor || "unknown",
+      data: new Date().toISOString(),
+    };
+
+    // Buscar histórico existente
+    const { data: cardAtual } = await supabase
+      .from("cartoes")
+      .select("pr_historico")
+      .eq("id", cardId)
+      .single();
+    const historico = Array.isArray(cardAtual?.pr_historico) ? cardAtual.pr_historico : [];
+
     const updateData: Record<string, unknown> = {
       pr_status: "merged",
+      pr_historico: [...historico, historicoEntry],
       atualizado_em: new Date().toISOString(),
     };
     if (repo.coluna_done_id) {
@@ -120,9 +137,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Mover card para Doing
+    // Salvar no histórico e mover card para Doing
+    const historicoEntry = {
+      numero: card.pr_numero,
+      url: card.pr_url,
+      status: "closed",
+      autor: card.pr_autor || "unknown",
+      data: new Date().toISOString(),
+    };
+
+    const { data: cardAtual } = await supabase
+      .from("cartoes")
+      .select("pr_historico")
+      .eq("id", cardId)
+      .single();
+    const historico = Array.isArray(cardAtual?.pr_historico) ? cardAtual.pr_historico : [];
+
     const updateData: Record<string, unknown> = {
       pr_status: "closed",
+      pr_historico: [...historico, historicoEntry],
       atualizado_em: new Date().toISOString(),
     };
     if (repo.coluna_doing_id) {

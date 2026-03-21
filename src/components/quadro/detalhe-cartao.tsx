@@ -517,44 +517,15 @@ export function DetalheCartao({
 // ── PR Actions Panel ──
 function PainelPR({
   cartao,
-  onRefresh,
 }: {
   cartao: CartaoComResumo;
   onRefresh: () => void;
 }) {
-  const [carregando, setCarregando] = useState<string | null>(null);
-  const [erro, setErro] = useState("");
-
-  async function handleAction(action: "merge" | "close") {
-    setCarregando(action);
-    setErro("");
-
-    try {
-      const res = await fetch("/api/pr-actions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, cardId: cartao.id }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setErro(data.error || "Erro ao processar ação");
-        return;
-      }
-
-      onRefresh();
-    } catch {
-      setErro("Erro de conexão");
-    } finally {
-      setCarregando(null);
-    }
-  }
-
   const statusCor =
     cartao.pr_status === "open"
       ? "var(--tf-success)"
       : cartao.pr_status === "merged"
-        ? "var(--tf-accent)"
+        ? "#8b5cf6"
         : "var(--tf-danger)";
 
   const statusLabel =
@@ -564,101 +535,85 @@ function PainelPR({
         ? "Merged"
         : "Fechado";
 
+  const historico = Array.isArray(cartao.pr_historico) ? cartao.pr_historico : [];
+
+  function formatarData(d: string) {
+    return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
   return (
     <div>
-      <div className="flex items-center gap-2 mb-3">
-        <GitPullRequest size={16} style={{ color: statusCor }} />
-        <h3
-          className="text-[13px] font-bold uppercase tracking-wider"
-          style={{ color: "var(--tf-text)" }}
-        >
-          Pull Request #{cartao.pr_numero}
-        </h3>
-        {cartao.pr_url && (
-          <a
-            href={cartao.pr_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto p-1 rounded transition-smooth"
-            style={{ color: "var(--tf-text-tertiary)" }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.color = "var(--tf-accent)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.color = "var(--tf-text-tertiary)")
-            }
-          >
-            <ExternalLink size={14} />
-          </a>
-        )}
-      </div>
-
-      <div className="flex items-center gap-3 mb-3">
-        <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
-          style={{
-            background: `color-mix(in srgb, ${statusCor} 15%, transparent)`,
-            color: statusCor,
-          }}
-        >
-          <span
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ background: statusCor }}
-          />
-          {statusLabel}
-        </span>
-        {cartao.pr_autor && (
-          <span
-            className="text-xs"
-            style={{ color: "var(--tf-text-secondary)" }}
-          >
-            por <strong>{cartao.pr_autor}</strong>
-          </span>
-        )}
-      </div>
-
-      {cartao.pr_status === "open" && (
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleAction("merge")}
-            disabled={carregando !== null}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-white transition-smooth"
-            style={{ background: "var(--tf-success)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-          >
-            {carregando === "merge" ? (
-              <Loader2 size={13} className="animate-spin" />
-            ) : (
-              <GitPullRequest size={13} />
+      {/* PR atual */}
+      {cartao.pr_numero && (
+        <div className="mb-3">
+          <div className="flex items-center gap-2 mb-2">
+            <GitPullRequest size={16} style={{ color: statusCor }} />
+            <h3 className="text-[13px] font-bold" style={{ color: "var(--tf-text)" }}>
+              PR #{cartao.pr_numero}
+            </h3>
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+              style={{ background: `color-mix(in srgb, ${statusCor} 15%, transparent)`, color: statusCor }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusCor }} />
+              {statusLabel}
+            </span>
+            {cartao.pr_url && (
+              <a
+                href={cartao.pr_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-auto p-1 rounded transition-smooth"
+                style={{ color: "var(--tf-text-tertiary)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-accent)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
+              >
+                <ExternalLink size={14} />
+              </a>
             )}
-            Aprovar e Merge
-          </button>
-          <button
-            onClick={() => handleAction("close")}
-            disabled={carregando !== null}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-white transition-smooth"
-            style={{ background: "var(--tf-danger)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-          >
-            {carregando === "close" ? (
-              <Loader2 size={13} className="animate-spin" />
-            ) : (
-              <X size={13} />
-            )}
-            Rejeitar
-          </button>
+          </div>
+          {cartao.pr_autor && (
+            <p className="text-[11px] ml-6" style={{ color: "var(--tf-text-tertiary)" }}>
+              por <strong style={{ color: "var(--tf-text-secondary)" }}>{cartao.pr_autor}</strong>
+            </p>
+          )}
         </div>
       )}
 
-      {erro && (
-        <p
-          className="text-[11px] mt-2"
-          style={{ color: "var(--tf-danger)" }}
-        >
-          {erro}
-        </p>
+      {/* Histórico de PRs */}
+      {historico.length > 0 && (
+        <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--tf-border)" }}>
+          <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--tf-text-tertiary)" }}>
+            Histórico
+          </p>
+          <div className="space-y-1.5">
+            {historico.map((h, i) => {
+              const cor = h.status === "merged" ? "#8b5cf6" : "#ef4444";
+              const iconeLabel = h.status === "merged" ? "✓ Merged" : "✗ Rejeitado";
+              return (
+                <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px]" style={{ background: "var(--tf-bg-secondary)" }}>
+                  <span className="font-semibold" style={{ color: cor }}>{iconeLabel}</span>
+                  <a
+                    href={h.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium hover:underline"
+                    style={{ color: "var(--tf-text-secondary)" }}
+                  >
+                    PR #{h.numero}
+                  </a>
+                  <span style={{ color: "var(--tf-text-tertiary)" }}>por {h.autor}</span>
+                  <span className="ml-auto" style={{ color: "var(--tf-text-tertiary)" }}>{formatarData(h.data)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Sem PR e sem histórico */}
+      {!cartao.pr_numero && historico.length === 0 && (
+        <p className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>Nenhum PR vinculado</p>
       )}
     </div>
   );

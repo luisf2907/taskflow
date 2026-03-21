@@ -35,6 +35,14 @@ export interface Coluna {
   criado_em: string;
 }
 
+export interface PRHistorico {
+  numero: number;
+  url: string;
+  status: "open" | "closed" | "merged";
+  autor: string;
+  data: string;
+}
+
 export interface Cartao {
   id: string;
   coluna_id: string | null;
@@ -50,6 +58,7 @@ export interface Cartao {
   pr_status: "open" | "closed" | "merged" | null;
   pr_repo_id: string | null;
   pr_autor: string | null;
+  pr_historico: PRHistorico[] | null;
   criado_em: string;
   atualizado_em: string;
 }
