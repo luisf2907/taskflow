@@ -87,18 +87,61 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
     if (workspaceId) {
       setCarregandoCards(true);
       (async () => {
-        // Buscar todos os cards do workspace sem PR vinculado
+        // Buscar quadros (sprints) do workspace
+        const { data: quadros } = await supabase
+          .from("quadros")
+          .select("id")
+          .eq("workspace_id", workspaceId);
+
+        const quadroIds = (quadros || []).map((q) => q.id);
+
+        if (quadroIds.length === 0) {
+          setCarregandoCards(false);
+          return;
+        }
+
+        // Buscar colunas desses quadros
+        const { data: colunas } = await supabase
+          .from("colunas")
+          .select("id")
+          .in("quadro_id", quadroIds);
+
+        const colunaIds = (colunas || []).map((c) => c.id);
+
+        if (colunaIds.length === 0) {
+          setCarregandoCards(false);
+          return;
+        }
+
+        // Buscar cards nessas colunas sem PR vinculado
         const { data } = await supabase
           .from("cartoes")
           .select("id, titulo")
-          .eq("workspace_id", workspaceId)
+          .in("coluna_id", colunaIds)
           .is("pr_numero", null)
           .order("atualizado_em", { ascending: false })
           .limit(100);
 
-        if (data) {
-          setCards(data.map((c) => ({ id: c.id, titulo: c.titulo, coluna_nome: null })));
-        }
+        // Também buscar cards com workspace_id direto (backlog)
+        const { data: backlogCards } = await supabase
+          .from("cartoes")
+          .select("id, titulo")
+          .eq("workspace_id", workspaceId)
+          .is("coluna_id", null)
+          .is("pr_numero", null)
+          .order("atualizado_em", { ascending: false })
+          .limit(50);
+
+        const todos = [...(data || []), ...(backlogCards || [])];
+        // Deduplicar por id
+        const vistos = new Set<string>();
+        const unicos = todos.filter((c) => {
+          if (vistos.has(c.id)) return false;
+          vistos.add(c.id);
+          return true;
+        });
+
+        setCards(unicos.map((c) => ({ id: c.id, titulo: c.titulo, coluna_nome: null })));
         setCarregandoCards(false);
       })();
     }
@@ -318,26 +361,32 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
                 >
                   {carregandoCards ? "Carregando cards..." : "Selecionar card..."}
                 </button>
-                {mostrarCards && cards.length > 0 && (
+                {mostrarCards && (
                   <div
                     className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border shadow-lg"
                     style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)", scrollbarWidth: "thin" }}
                   >
-                    {cards.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => { setCardSelecionado(c.id); setMostrarCards(false); }}
-                        className="w-full text-left px-3 py-2 text-sm transition-smooth"
-                        style={{ color: "var(--tf-text)" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-bg-secondary)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                      >
-                        <p className="font-medium truncate">{c.titulo}</p>
-                        {c.coluna_nome && (
-                          <p className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>{c.coluna_nome}</p>
-                        )}
-                      </button>
-                    ))}
+                    {cards.length === 0 ? (
+                      <p className="text-xs text-center py-4" style={{ color: "var(--tf-text-tertiary)" }}>
+                        Nenhum card disponível
+                      </p>
+                    ) : (
+                      cards.map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => { setCardSelecionado(c.id); setMostrarCards(false); }}
+                          className="w-full text-left px-3 py-2 text-sm transition-smooth"
+                          style={{ color: "var(--tf-text)" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-bg-secondary)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <p className="font-medium truncate">{c.titulo}</p>
+                          {c.coluna_nome && (
+                            <p className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>{c.coluna_nome}</p>
+                          )}
+                        </button>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
