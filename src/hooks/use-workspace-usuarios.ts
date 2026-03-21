@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
-import { WorkspaceUsuario } from "@/types";
+import { WorkspaceUsuario, Perfil } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 
 function chave(workspaceId: string | undefined) {
@@ -12,12 +12,30 @@ export function useWorkspaceUsuarios(workspaceId: string | undefined) {
   const { data: usuarios = [], isLoading: carregando } = useSWR(
     chave(workspaceId),
     async () => {
-      const { data } = await supabase
+      // 1. Buscar membros do workspace
+      const { data: membros } = await supabase
         .from("workspace_usuarios")
-        .select("*, perfis(*)")
+        .select("*")
         .eq("workspace_id", workspaceId!)
         .order("criado_em");
-      return (data || []) as WorkspaceUsuario[];
+
+      if (!membros || membros.length === 0) return [] as WorkspaceUsuario[];
+
+      // 2. Buscar perfis dos user_ids
+      const userIds = membros.map((m) => m.user_id);
+      const { data: perfis } = await supabase
+        .from("perfis")
+        .select("*")
+        .in("id", userIds);
+
+      const perfisMap = new Map<string, Perfil>();
+      (perfis || []).forEach((p) => perfisMap.set(p.id, p as Perfil));
+
+      // 3. Juntar
+      return membros.map((m) => ({
+        ...m,
+        perfis: perfisMap.get(m.user_id) || undefined,
+      })) as WorkspaceUsuario[];
     }
   );
 
@@ -25,7 +43,7 @@ export function useWorkspaceUsuarios(workspaceId: string | undefined) {
     // Buscar perfil pelo email
     const { data: perfil } = await supabase
       .from("perfis")
-      .select("id")
+      .select("*")
       .eq("email", email)
       .single();
 
@@ -46,13 +64,18 @@ export function useWorkspaceUsuarios(workspaceId: string | undefined) {
         user_id: perfil.id,
         papel: "membro",
       })
-      .select("*, perfis(*)")
+      .select("*")
       .single();
 
     if (error) return { error: error.message };
 
-    globalMutate(chave(workspaceId), [...usuarios, data], false);
-    return { data };
+    const novoUsuario: WorkspaceUsuario = {
+      ...data,
+      perfis: perfil as Perfil,
+    };
+
+    globalMutate(chave(workspaceId), [...usuarios, novoUsuario], false);
+    return { data: novoUsuario };
   }
 
   async function remover(usuarioId: string) {

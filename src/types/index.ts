@@ -81,10 +81,13 @@ export interface CartaoEtiqueta {
 // =============================================
 export interface Membro {
   id: string;
-  quadro_id: string;
+  quadro_id: string | null;
+  workspace_id: string | null;
+  user_id: string | null;
   nome: string;
   email: string | null;
   cor_avatar: string;
+  avatar_url: string | null;
   criado_em: string;
 }
 
