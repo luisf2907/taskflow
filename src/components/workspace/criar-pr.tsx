@@ -90,19 +90,41 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
     if (workspaceId) {
       setCarregandoCards(true);
       (async () => {
-        const { data } = await supabase
-          .from("cartoes")
-          .select("id, titulo, coluna_id")
-          .eq("workspace_id", workspaceId)
-          .is("pr_numero", null)
-          .order("atualizado_em", { ascending: false })
-          .limit(50);
-        if (data) {
-          setCards(data.map((c) => ({
-            id: c.id,
-            titulo: c.titulo,
-            coluna_nome: null,
-          })));
+        // Buscar user logado
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+
+        // Buscar o membro_id do user logado neste workspace
+        let meuMembroId: string | null = null;
+        if (authUser) {
+          const { data: meuMembro } = await supabase
+            .from("membros")
+            .select("id")
+            .eq("workspace_id", workspaceId)
+            .eq("user_id", authUser.id)
+            .single();
+          meuMembroId = meuMembro?.id || null;
+        }
+
+        if (meuMembroId) {
+          // Buscar cards vinculados ao membro
+          const { data: vinculos } = await supabase
+            .from("cartao_membros")
+            .select("cartao_id")
+            .eq("membro_id", meuMembroId);
+
+          const cartaoIds = (vinculos || []).map((v) => v.cartao_id);
+
+          if (cartaoIds.length > 0) {
+            const { data } = await supabase
+              .from("cartoes")
+              .select("id, titulo")
+              .in("id", cartaoIds)
+              .is("pr_numero", null)
+              .order("atualizado_em", { ascending: false });
+            if (data) {
+              setCards(data.map((c) => ({ id: c.id, titulo: c.titulo, coluna_nome: null })));
+            }
+          }
         }
         setCarregandoCards(false);
       })();

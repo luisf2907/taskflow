@@ -17,6 +17,7 @@ import {
 import { CriarPR } from "./criar-pr";
 import useSWR from "swr";
 import type { GitHubPR } from "@/types/github";
+import { supabase } from "@/lib/supabase/client";
 
 interface RepoPRsProps {
   owner: string;
@@ -158,9 +159,51 @@ function SkeletonItem() {
   );
 }
 
-function PRItem({ pr }: { pr: GitHubPR }) {
+function PRItem({ pr, repoId, onAcao }: { pr: GitHubPR; repoId?: string; onAcao?: () => void }) {
   const status = obterStatus(pr);
   const tempo = obterDataReferencia(pr);
+  const [executando, setExecutando] = useState<"merge" | "close" | null>(null);
+  const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const ehAberta = pr.state === "open" && !pr.merged_at;
+
+  async function handleAcaoPR(action: "merge" | "close") {
+    if (!repoId) return;
+    setExecutando(action);
+    setErroAcao(null);
+
+    try {
+      // Buscar card vinculado a este PR
+      const { data: card } = await supabase
+        .from("cartoes")
+        .select("id")
+        .eq("pr_repo_id", repoId)
+        .eq("pr_numero", pr.number)
+        .single();
+
+      if (!card) {
+        setErroAcao("Nenhum card vinculado a este PR");
+        setExecutando(null);
+        return;
+      }
+
+      const res = await fetch("/api/pr-actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, cardId: card.id }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setErroAcao(data.error || "Erro ao executar ação");
+      } else {
+        onAcao?.();
+      }
+    } catch {
+      setErroAcao("Erro de conexão");
+    } finally {
+      setExecutando(null);
+    }
+  }
 
   return (
     <div
@@ -397,7 +440,61 @@ function PRItem({ pr }: { pr: GitHubPR }) {
             {pr.base.ref}
           </span>
         </div>
+
+        {/* Botões de ação para PRs abertas */}
+        {ehAberta && repoId && (
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "auto" }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleAcaoPR("merge"); }}
+              disabled={!!executando}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "3px 10px",
+                borderRadius: "6px",
+                border: "none",
+                cursor: executando ? "not-allowed" : "pointer",
+                fontSize: "11px",
+                fontWeight: 600,
+                color: "#fff",
+                background: executando === "merge" ? "#16a34a88" : "#16a34a",
+                opacity: executando && executando !== "merge" ? 0.4 : 1,
+                transition: "all 0.15s",
+              }}
+            >
+              {executando === "merge" ? "..." : "✓ Merge"}
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleAcaoPR("close"); }}
+              disabled={!!executando}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "3px 10px",
+                borderRadius: "6px",
+                border: "1px solid var(--tf-border)",
+                cursor: executando ? "not-allowed" : "pointer",
+                fontSize: "11px",
+                fontWeight: 600,
+                color: "var(--tf-danger, #ef4444)",
+                background: "transparent",
+                opacity: executando && executando !== "close" ? 0.4 : 1,
+                transition: "all 0.15s",
+              }}
+            >
+              {executando === "close" ? "..." : "✗ Fechar"}
+            </button>
+          </div>
+        )}
       </div>
+
+      {erroAcao && (
+        <div style={{ paddingLeft: "24px" }}>
+          <span style={{ fontSize: "11px", color: "#ef4444" }}>{erroAcao}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -593,7 +690,7 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
               )}
             </div>
           ) : (
-            prs.map((pr) => <PRItem key={pr.number} pr={pr} />)
+            prs.map((pr) => <PRItem key={pr.number} pr={pr} repoId={repoId} onAcao={revalidar} />)
           )}
         </div>
       </div>
