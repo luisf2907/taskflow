@@ -197,12 +197,32 @@ export async function mergePR(
   owner: string,
   repo: string,
   prNumber: number,
-  token: string
+  token: string,
+  options?: { mergeMethod?: "merge" | "squash" | "rebase"; commitTitle?: string; commitMessage?: string }
 ) {
+  const body: Record<string, string> = {};
+  if (options?.mergeMethod) body.merge_method = options.mergeMethod;
+  if (options?.commitTitle) body.commit_title = options.commitTitle;
+  if (options?.commitMessage) body.commit_message = options.commitMessage;
+
   return githubAuthFetch(
     `/repos/${owner}/${repo}/pulls/${prNumber}/merge`,
     token,
-    { method: "PUT" }
+    { method: "PUT", body: JSON.stringify(body) }
+  );
+}
+
+export async function addPRComment(
+  owner: string,
+  repo: string,
+  prNumber: number,
+  body: string,
+  token: string
+) {
+  return githubAuthFetch(
+    `/repos/${owner}/${repo}/issues/${prNumber}/comments`,
+    token,
+    { method: "POST", body: JSON.stringify({ body }) }
   );
 }
 

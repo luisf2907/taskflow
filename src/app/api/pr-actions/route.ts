@@ -1,11 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { closePR, mergePR } from "@/lib/github/client";
+import { closePR, mergePR, addPRComment } from "@/lib/github/client";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  const { action, cardId } = await request.json();
+  const { action, cardId, mergeMethod, commitTitle, commitMessage, comment } = await request.json();
 
   if (!action || !cardId || !["merge", "close"].includes(action)) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -81,7 +81,11 @@ export async function POST(request: NextRequest) {
 
   // 4. Executar ação no GitHub
   if (action === "merge") {
-    const result = await mergePR(repo.owner, repo.nome, card.pr_numero, token);
+    const result = await mergePR(repo.owner, repo.nome, card.pr_numero, token, {
+      mergeMethod: mergeMethod || "merge",
+      commitTitle: commitTitle || undefined,
+      commitMessage: commitMessage || undefined,
+    });
     if (result.error) {
       return NextResponse.json(
         { error: `Falha ao fazer merge: ${result.error}` },
@@ -103,6 +107,11 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === "close") {
+    // Adicionar comentário de rejeição se fornecido
+    if (comment) {
+      await addPRComment(repo.owner, repo.nome, card.pr_numero, comment, token);
+    }
+
     const result = await closePR(repo.owner, repo.nome, card.pr_numero, token);
     if (result.error) {
       return NextResponse.json(

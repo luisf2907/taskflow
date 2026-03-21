@@ -93,3 +93,62 @@ export function useGitHubCommits(owner: string, nome: string, branch?: string) {
   );
   return { commits: data || [], carregando: isLoading };
 }
+
+// PR Detail
+export function useGitHubPRDetalhe(owner: string, nome: string, prNumber: number | null) {
+  const { data, isLoading, mutate } = useSWR(
+    owner && nome && prNumber ? `github-pr-detail-${owner}/${nome}/${prNumber}` : null,
+    () => githubProxy<GitHubPR>(`/repos/${owner}/${nome}/pulls/${prNumber}`),
+    { revalidateOnFocus: false, dedupingInterval: 15000 }
+  );
+  return { pr: data || null, carregando: isLoading, revalidar: () => mutate() };
+}
+
+// PR Files (diff)
+export interface GitHubPRFile {
+  sha: string;
+  filename: string;
+  status: "added" | "removed" | "modified" | "renamed" | "changed";
+  additions: number;
+  deletions: number;
+  changes: number;
+  patch?: string;
+  previous_filename?: string;
+}
+
+export function useGitHubPRFiles(owner: string, nome: string, prNumber: number | null) {
+  const { data, isLoading } = useSWR(
+    owner && nome && prNumber ? `github-pr-files-${owner}/${nome}/${prNumber}` : null,
+    async () => (await githubProxy<GitHubPRFile[]>(`/repos/${owner}/${nome}/pulls/${prNumber}/files?per_page=100`)) || [],
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
+  );
+  return { files: data || [], carregando: isLoading };
+}
+
+// PR Commits
+export function useGitHubPRCommits(owner: string, nome: string, prNumber: number | null) {
+  const { data, isLoading } = useSWR(
+    owner && nome && prNumber ? `github-pr-commits-${owner}/${nome}/${prNumber}` : null,
+    async () => (await githubProxy<GitHubCommit[]>(`/repos/${owner}/${nome}/pulls/${prNumber}/commits?per_page=100`)) || [],
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
+  );
+  return { commits: data || [], carregando: isLoading };
+}
+
+// PR Comments (issue comments)
+export interface GitHubComment {
+  id: number;
+  body: string;
+  user: { login: string; avatar_url: string };
+  created_at: string;
+  updated_at: string;
+}
+
+export function useGitHubPRComments(owner: string, nome: string, prNumber: number | null) {
+  const { data, isLoading, mutate } = useSWR(
+    owner && nome && prNumber ? `github-pr-comments-${owner}/${nome}/${prNumber}` : null,
+    async () => (await githubProxy<GitHubComment[]>(`/repos/${owner}/${nome}/issues/${prNumber}/comments?per_page=100`)) || [],
+    { revalidateOnFocus: false, dedupingInterval: 15000 }
+  );
+  return { comments: data || [], carregando: isLoading, revalidar: () => mutate() };
+}

@@ -15,6 +15,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { CriarPR } from "./criar-pr";
+import { PRDetalhe } from "./pr-detalhe";
 import useSWR from "swr";
 import type { GitHubPR } from "@/types/github";
 import { supabase } from "@/lib/supabase/client";
@@ -159,14 +160,15 @@ function SkeletonItem() {
   );
 }
 
-function PRItem({ pr, repoId, onAcao }: { pr: GitHubPR; repoId?: string; onAcao?: () => void }) {
+function PRItem({ pr, repoId, onAcao, onAbrir }: { pr: GitHubPR; repoId?: string; onAcao?: () => void; onAbrir?: () => void }) {
   const status = obterStatus(pr);
   const tempo = obterDataReferencia(pr);
   const [executando, setExecutando] = useState<"merge" | "close" | null>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const ehAberta = pr.state === "open" && !pr.merged_at;
 
-  async function handleAcaoPR(action: "merge" | "close") {
+  async function handleAcaoPR(action: "merge" | "close", e: React.MouseEvent) {
+    e.stopPropagation();
     if (!repoId) return;
     setExecutando(action);
     setErroAcao(null);
@@ -207,9 +209,11 @@ function PRItem({ pr, repoId, onAcao }: { pr: GitHubPR; repoId?: string; onAcao?
 
   return (
     <div
+      onClick={onAbrir}
       style={{
         padding: "14px 16px",
         borderBottom: "1px solid var(--tf-border)",
+        cursor: onAbrir ? "pointer" : "default",
         display: "flex",
         flexDirection: "column",
         gap: "8px",
@@ -445,7 +449,7 @@ function PRItem({ pr, repoId, onAcao }: { pr: GitHubPR; repoId?: string; onAcao?
         {ehAberta && repoId && (
           <div style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "auto" }}>
             <button
-              onClick={(e) => { e.stopPropagation(); handleAcaoPR("merge"); }}
+              onClick={(e) => { e.stopPropagation(); handleAcaoPR("merge", e); }}
               disabled={!!executando}
               style={{
                 display: "flex",
@@ -466,7 +470,7 @@ function PRItem({ pr, repoId, onAcao }: { pr: GitHubPR; repoId?: string; onAcao?
               {executando === "merge" ? "..." : "✓ Merge"}
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); handleAcaoPR("close"); }}
+              onClick={(e) => { e.stopPropagation(); handleAcaoPR("close", e); }}
               disabled={!!executando}
               style={{
                 display: "flex",
@@ -509,6 +513,20 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
   const [aba, setAba] = useState<Aba>("open");
   const { prs, carregando, revalidar } = usePRsAuth(owner, nome, aba);
   const [modalCriar, setModalCriar] = useState(false);
+  const [prAberto, setPrAberto] = useState<number | null>(null);
+
+  // Se um PR está aberto, mostrar o detalhe
+  if (prAberto !== null) {
+    return (
+      <PRDetalhe
+        owner={owner}
+        nome={nome}
+        prNumber={prAberto}
+        repoId={repoId}
+        onVoltar={() => { setPrAberto(null); revalidar(); }}
+      />
+    );
+  }
 
   return (
     <>
@@ -690,7 +708,7 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
               )}
             </div>
           ) : (
-            prs.map((pr) => <PRItem key={pr.number} pr={pr} repoId={repoId} onAcao={revalidar} />)
+            prs.map((pr) => <PRItem key={pr.number} pr={pr} repoId={repoId} onAcao={revalidar} onAbrir={() => setPrAberto(pr.number)} />)
           )}
         </div>
       </div>
