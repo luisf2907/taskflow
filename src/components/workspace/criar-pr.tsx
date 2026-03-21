@@ -113,22 +113,22 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
           return;
         }
 
-        // Buscar cards nessas colunas sem PR vinculado
+        // Buscar cards nessas colunas sem PR ou com PR rejeitado
         const { data } = await supabase
           .from("cartoes")
-          .select("id, titulo")
+          .select("id, titulo, pr_status")
           .in("coluna_id", colunaIds)
-          .is("pr_numero", null)
+          .or("pr_numero.is.null,pr_status.eq.closed")
           .order("atualizado_em", { ascending: false })
           .limit(100);
 
         // Também buscar cards com workspace_id direto (backlog)
         const { data: backlogCards } = await supabase
           .from("cartoes")
-          .select("id, titulo")
+          .select("id, titulo, pr_status")
           .eq("workspace_id", workspaceId)
           .is("coluna_id", null)
-          .is("pr_numero", null)
+          .or("pr_numero.is.null,pr_status.eq.closed")
           .order("atualizado_em", { ascending: false })
           .limit(50);
 
