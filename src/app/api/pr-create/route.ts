@@ -1,10 +1,10 @@
 import { createServerClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { createPR } from "@/lib/github/client";
+import { createPR, requestReviewers } from "@/lib/github/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  const { repoId, title, head, base, body } = await request.json();
+  const { repoId, title, head, base, body, cardId, reviewers } = await request.json();
 
   if (!repoId || !title || !head || !base) {
     return NextResponse.json(
@@ -46,6 +46,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const token = tokenData.provider_token;
+
   // Criar PR no GitHub
   const result = await createPR(
     repo.owner,
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
     head,
     base,
     body || "",
-    tokenData.provider_token
+    token
   );
 
   if (result.error || !result.data) {
@@ -66,8 +68,28 @@ export async function POST(request: NextRequest) {
 
   const pr = result.data;
 
-  // Se coluna_review_id configurada, criar card automaticamente
-  if (repo.coluna_review_id) {
+  // Solicitar reviewers (se fornecido)
+  if (reviewers && reviewers.length > 0) {
+    await requestReviewers(repo.owner, repo.nome, pr.number, reviewers, token);
+  }
+
+  // Vincular a card existente OU criar card novo
+  if (cardId) {
+    // Atualizar card existente com dados do PR e mover para Review
+    const updateData: Record<string, unknown> = {
+      pr_numero: pr.number,
+      pr_url: pr.html_url,
+      pr_status: "open",
+      pr_repo_id: repo.id,
+      pr_autor: pr.user?.login || user.email || "unknown",
+      atualizado_em: new Date().toISOString(),
+    };
+    if (repo.coluna_review_id) {
+      updateData.coluna_id = repo.coluna_review_id;
+    }
+    await service.from("cartoes").update(updateData).eq("id", cardId);
+  } else if (repo.coluna_review_id) {
+    // Criar card novo automaticamente
     await service.from("cartoes").upsert(
       {
         coluna_id: repo.coluna_review_id,

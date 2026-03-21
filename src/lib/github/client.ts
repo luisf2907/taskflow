@@ -241,6 +241,23 @@ export async function createPR(
   );
 }
 
+export async function requestReviewers(
+  owner: string,
+  repo: string,
+  prNumber: number,
+  reviewers: string[],
+  token: string
+) {
+  return githubAuthFetch(
+    `/repos/${owner}/${repo}/pulls/${prNumber}/requested_reviewers`,
+    token,
+    {
+      method: "POST",
+      body: JSON.stringify({ reviewers }),
+    }
+  );
+}
+
 export async function buscarBranchesAuth(
   owner: string,
   repo: string,

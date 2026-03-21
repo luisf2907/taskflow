@@ -6,6 +6,7 @@ import { Modal } from "@/components/ui/modal";
 import { useQuadros } from "@/hooks/use-quadros";
 import { useWorkspaces } from "@/hooks/use-workspaces";
 import { useRepositorios } from "@/hooks/use-repositorios";
+import { useMembrosWorkspace } from "@/hooks/use-membros-workspace";
 import { useGitHubRepo } from "@/hooks/use-github";
 import { parsearRepo } from "@/lib/github/client";
 import { RepoFileBrowser } from "@/components/workspace/repo-file-browser";
@@ -221,6 +222,7 @@ export default function ReposPage() {
   const { quadros } = useQuadros();
   const { workspaces } = useWorkspaces();
   const { repositorios, conectar: conectarRepo, desconectar: desconectarRepo } = useRepositorios(workspaceId);
+  const { membros: membrosWs } = useMembrosWorkspace(workspaceId);
   const workspace = workspaces.find((ws) => ws.id === workspaceId);
 
   // Sidebar
@@ -454,6 +456,8 @@ export default function ReposPage() {
                     owner={repoAberto.owner}
                     nome={repoAberto.nome}
                     repoId={repoDb?.id}
+                    workspaceId={workspaceId}
+                    membros={membrosWs}
                   />
                 );
               })()}

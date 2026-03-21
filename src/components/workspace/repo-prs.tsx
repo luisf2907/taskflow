@@ -22,6 +22,8 @@ interface RepoPRsProps {
   owner: string;
   nome: string;
   repoId?: string;
+  workspaceId?: string;
+  membros?: import("@/types").Membro[];
 }
 
 type Aba = "open" | "closed" | "all";
@@ -406,7 +408,7 @@ const ABAS: { valor: Aba; rotulo: string }[] = [
   { valor: "all", rotulo: "Todas" },
 ];
 
-export function RepoPRs({ owner, nome, repoId }: RepoPRsProps) {
+export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsProps) {
   const [aba, setAba] = useState<Aba>("open");
   const { prs, carregando, revalidar } = usePRsAuth(owner, nome, aba);
   const [modalCriar, setModalCriar] = useState(false);
@@ -607,6 +609,8 @@ export function RepoPRs({ owner, nome, repoId }: RepoPRsProps) {
           repoId={repoId}
           owner={owner}
           nome={nome}
+          workspaceId={workspaceId}
+          membros={membros}
         />
       )}
     </>
