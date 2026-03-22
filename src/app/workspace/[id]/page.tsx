@@ -1163,7 +1163,9 @@ export default function PaginaWorkspace() {
             )}
 
             {abaAtiva === "config" && (
-              <section className="grid grid-cols-1 2xl:grid-cols-2 gap-6 items-start">
+              <section className="space-y-6">
+                {/* Row 1: Informações + Colunas padrão lado a lado */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
                 <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Informações</h3>
@@ -1197,8 +1199,110 @@ export default function PaginaWorkspace() {
                   )}
                 </div>
 
+                <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Colunas padrão</h3>
+                      <p className="text-[12px] mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>Criadas automaticamente em novas sprints</p>
+                    </div>
+                    {!editandoColunas && (
+                      <button
+                        onClick={() => { setColunasEdit([...(workspace.colunas_padrao || [])]); setEditandoColunas(true); }}
+                        className="flex items-center gap-1 text-[12px] font-medium transition-smooth"
+                        style={{ color: "var(--tf-accent-text)" }}
+                      >
+                        <Pencil size={12} /> Editar
+                      </button>
+                    )}
+                  </div>
+
+                  {editandoColunas ? (
+                    <div className="space-y-2">
+                      {colunasEdit.map((col, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <button
+                            onClick={() => { if (i > 0) { const c = [...colunasEdit]; [c[i-1], c[i]] = [c[i], c[i-1]]; setColunasEdit(c); } }}
+                            disabled={i === 0}
+                            className="p-1 rounded text-[12px] disabled:opacity-20"
+                            style={{ color: "var(--tf-text-tertiary)" }}
+                          >↑</button>
+                          <button
+                            onClick={() => { if (i < colunasEdit.length - 1) { const c = [...colunasEdit]; [c[i], c[i+1]] = [c[i+1], c[i]]; setColunasEdit(c); } }}
+                            disabled={i === colunasEdit.length - 1}
+                            className="p-1 rounded text-[12px] disabled:opacity-20"
+                            style={{ color: "var(--tf-text-tertiary)" }}
+                          >↓</button>
+                          <span className="flex-1 px-3 py-1.5 text-[13px] rounded-[8px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text)" }}>
+                            {col}
+                          </span>
+                          <button
+                            onClick={() => setColunasEdit(colunasEdit.filter((_, j) => j !== i))}
+                            className="p-1 rounded transition-smooth"
+                            style={{ color: "var(--tf-danger)" }}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          value={novaColunaInput}
+                          onChange={(e) => setNovaColunaInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && novaColunaInput.trim()) {
+                              setColunasEdit([...colunasEdit, novaColunaInput.trim()]);
+                              setNovaColunaInput("");
+                            }
+                          }}
+                          placeholder="Nova coluna..."
+                          className="flex-1 px-3 py-1.5 text-[13px] rounded-[8px] outline-none transition-smooth"
+                          style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
+                          onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
+                          onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
+                        />
+                        <button
+                          onClick={() => { if (novaColunaInput.trim()) { setColunasEdit([...colunasEdit, novaColunaInput.trim()]); setNovaColunaInput(""); } }}
+                          className="px-3 py-1.5 text-[12px] font-medium rounded-[8px] transition-smooth"
+                          style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={async () => { await atualizarWs(workspace.id, { colunas_padrao: colunasEdit }); setEditandoColunas(false); }}
+                          className="px-4 py-1.5 text-sm font-semibold text-white rounded-[8px] transition-smooth"
+                          style={{ background: "var(--tf-accent)" }}
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          onClick={() => { setEditandoColunas(false); setNovaColunaInput(""); }}
+                          className="px-4 py-1.5 text-sm rounded-[8px] transition-smooth"
+                          style={{ color: "var(--tf-text-secondary)" }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {workspace.colunas_padrao?.map((col, i) => (
+                        <span key={i} className="px-3 py-1.5 text-[12px] font-medium rounded-[8px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}>
+                          {col}
+                        </span>
+                      ))}
+                      {(!workspace.colunas_padrao || workspace.colunas_padrao.length === 0) && (
+                        <p className="text-[12px]" style={{ color: "var(--tf-text-tertiary)" }}>Nenhuma coluna padrão definida</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                </div>{/* Close grid row 1 */}
+
                 {/* ─── Equipe ─── */}
-                <div className="rounded-[14px] border p-5 2xl:col-span-2" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
                   <div className="flex items-center gap-2 mb-4">
                     <Users size={16} style={{ color: "var(--tf-accent)" }} />
                     <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Equipe</h3>
@@ -1339,107 +1443,7 @@ export default function PaginaWorkspace() {
                   </div>
                 </div>
 
-                <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Colunas padrão</h3>
-                      <p className="text-[12px] mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>Criadas automaticamente em novas sprints</p>
-                    </div>
-                    {!editandoColunas && (
-                      <button
-                        onClick={() => { setColunasEdit([...(workspace.colunas_padrao || [])]); setEditandoColunas(true); }}
-                        className="flex items-center gap-1 text-[12px] font-medium transition-smooth"
-                        style={{ color: "var(--tf-accent-text)" }}
-                      >
-                        <Pencil size={12} /> Editar
-                      </button>
-                    )}
-                  </div>
-
-                  {editandoColunas ? (
-                    <div className="space-y-2">
-                      {colunasEdit.map((col, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <button
-                            onClick={() => { if (i > 0) { const c = [...colunasEdit]; [c[i-1], c[i]] = [c[i], c[i-1]]; setColunasEdit(c); } }}
-                            disabled={i === 0}
-                            className="p-1 rounded text-[12px] disabled:opacity-20"
-                            style={{ color: "var(--tf-text-tertiary)" }}
-                          >↑</button>
-                          <button
-                            onClick={() => { if (i < colunasEdit.length - 1) { const c = [...colunasEdit]; [c[i], c[i+1]] = [c[i+1], c[i]]; setColunasEdit(c); } }}
-                            disabled={i === colunasEdit.length - 1}
-                            className="p-1 rounded text-[12px] disabled:opacity-20"
-                            style={{ color: "var(--tf-text-tertiary)" }}
-                          >↓</button>
-                          <span className="flex-1 px-3 py-1.5 text-[13px] rounded-[8px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text)" }}>
-                            {col}
-                          </span>
-                          <button
-                            onClick={() => setColunasEdit(colunasEdit.filter((_, j) => j !== i))}
-                            className="p-1 rounded transition-smooth"
-                            style={{ color: "var(--tf-danger)" }}
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                      <div className="flex gap-2 mt-2">
-                        <input
-                          value={novaColunaInput}
-                          onChange={(e) => setNovaColunaInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && novaColunaInput.trim()) {
-                              setColunasEdit([...colunasEdit, novaColunaInput.trim()]);
-                              setNovaColunaInput("");
-                            }
-                          }}
-                          placeholder="Nova coluna..."
-                          className="flex-1 px-3 py-1.5 text-[13px] rounded-[8px] outline-none transition-smooth"
-                          style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
-                          onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
-                          onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
-                        />
-                        <button
-                          onClick={() => { if (novaColunaInput.trim()) { setColunasEdit([...colunasEdit, novaColunaInput.trim()]); setNovaColunaInput(""); } }}
-                          className="px-3 py-1.5 text-[12px] font-medium rounded-[8px] transition-smooth"
-                          style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}
-                        >
-                          <Plus size={14} />
-                        </button>
-                      </div>
-                      <div className="flex gap-2 mt-3">
-                        <button
-                          onClick={async () => { await atualizarWs(workspace.id, { colunas_padrao: colunasEdit }); setEditandoColunas(false); }}
-                          className="px-4 py-1.5 text-sm font-semibold text-white rounded-[8px] transition-smooth"
-                          style={{ background: "var(--tf-accent)" }}
-                        >
-                          Salvar
-                        </button>
-                        <button
-                          onClick={() => { setEditandoColunas(false); setNovaColunaInput(""); }}
-                          className="px-4 py-1.5 text-sm rounded-[8px] transition-smooth"
-                          style={{ color: "var(--tf-text-secondary)" }}
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {workspace.colunas_padrao?.map((col, i) => (
-                        <span key={i} className="px-3 py-1.5 text-[12px] font-medium rounded-[8px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}>
-                          {col}
-                        </span>
-                      ))}
-                      {(!workspace.colunas_padrao || workspace.colunas_padrao.length === 0) && (
-                        <p className="text-[12px]" style={{ color: "var(--tf-text-tertiary)" }}>Nenhuma coluna padrão definida</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="rounded-[20px] border p-6 transition-smooth 2xl:col-span-2" style={{ background: "var(--tf-danger-bg)", borderColor: "var(--tf-danger)" }}>
+                <div className="rounded-[20px] border p-6 transition-smooth" style={{ background: "var(--tf-danger-bg)", borderColor: "var(--tf-danger)" }}>
                   <h3 className="text-sm font-bold mb-2 flex items-center gap-2" style={{ color: "var(--tf-danger)" }}><Trash2 size={16}/> Zona de perigo</h3>
                   <p className="text-[13px] mb-4 font-medium" style={{ color: "var(--tf-danger)" }}>Excluir este workspace. Os quadros/sprints ficarão como avulsos soltos.</p>
                   <button

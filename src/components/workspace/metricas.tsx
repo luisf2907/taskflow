@@ -465,7 +465,7 @@ export function MetricasWorkspace({ sprints, cartoesDaSprint, backlogPuro, etiqu
       </div>
 
       {/* ── Linha: Cards por Membro + Sprint Completion ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
         {/* Cards por Membro */}
         {membroData.length > 0 && (
           <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
@@ -509,7 +509,7 @@ export function MetricasWorkspace({ sprints, cartoesDaSprint, backlogPuro, etiqu
 
         {/* Sprint Completion Rate */}
         {completionData.length > 0 && (
-          <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+          <div className={`rounded-[14px] border p-5 ${membroData.length === 0 ? "lg:col-span-2" : ""}`} style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
             <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
               <Target size={14} className="inline mr-1.5" style={{ color: "var(--tf-accent)" }} />
               Taxa de Conclusão por Sprint
