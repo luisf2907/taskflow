@@ -20,10 +20,10 @@ interface AnexosProps {
 }
 
 function iconeArquivo(tipo: string | null) {
-  if (!tipo) return <File size={16} />;
-  if (tipo.startsWith("image/")) return <FileImage size={16} />;
-  if (tipo.includes("pdf") || tipo.includes("text")) return <FileText size={16} />;
-  return <File size={16} />;
+  if (!tipo) return <File size={15} />;
+  if (tipo.startsWith("image/")) return <FileImage size={15} />;
+  if (tipo.includes("pdf") || tipo.includes("text")) return <FileText size={15} />;
+  return <File size={15} />;
 }
 
 function formatarTamanho(bytes: number | null): string {
@@ -37,16 +37,27 @@ export function Anexos({ anexos, enviando, onUpload, onExcluir }: AnexosProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold text-[var(--trello-text)]">
-          <Paperclip size={16} />
-          Anexos
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Paperclip size={15} style={{ color: "var(--tf-text-tertiary)" }} />
+          <h3 className="text-[13px] font-semibold" style={{ color: "var(--tf-text)" }}>
+            Anexos
+          </h3>
+          {anexos.length > 0 && (
+            <span
+              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+              style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}
+            >
+              {anexos.length}
+            </span>
+          )}
         </div>
         <button
           onClick={() => inputRef.current?.click()}
           disabled={enviando}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[var(--trello-hover)] text-[var(--trello-text)] rounded-[3px] hover:bg-[var(--trello-border)] disabled:opacity-50 transition-smooth"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-[8px] disabled:opacity-40 hover:bg-[var(--tf-surface-hover)]"
+          style={{ color: "var(--tf-text-secondary)", border: "1px dashed var(--tf-border)", transition: "background 0.15s ease" }}
         >
           <Upload size={12} />
           {enviando ? "Enviando..." : "Anexar"}
@@ -63,56 +74,61 @@ export function Anexos({ anexos, enviando, onUpload, onExcluir }: AnexosProps) {
         />
       </div>
 
-      <div className="space-y-1.5">
-        {anexos.map((anexo) => (
-          <div
-            key={anexo.id}
-            className="flex items-center gap-2.5 p-2 rounded-[3px] group hover:bg-[var(--trello-hover)] transition-smooth"
-            style={{ background: "var(--trello-surface)" }}
-          >
-            <div className="text-[var(--trello-text-subtle)] shrink-0">
-              {iconeArquivo(anexo.tipo)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-[var(--trello-text)] truncate">
-                {anexo.nome}
-              </p>
-              <p className="text-xs text-[var(--trello-text-subtle)]">
-                {formatarTamanho(anexo.tamanho)}
-                {" · "}
-                {new Date(anexo.criado_em).toLocaleDateString("pt-BR", {
-                  day: "2-digit",
-                  month: "short",
-                })}
-              </p>
-            </div>
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <a
-                href={anexo.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-1 rounded-[3px] text-[var(--trello-text-subtle)] hover:text-[#0C66E4] transition-smooth"
-                title="Download"
+      {anexos.length > 0 ? (
+        <div className="space-y-1">
+          {anexos.map((anexo) => (
+            <div
+              key={anexo.id}
+              className="flex items-center gap-3 p-2.5 rounded-[8px] group hover:bg-[var(--tf-bg-secondary)]"
+              style={{ transition: "background 0.15s ease" }}
+            >
+              <div
+                className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
+                style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}
               >
-                <Download size={14} />
-              </a>
-              <button
-                onClick={() => onExcluir(anexo.id)}
-                className="p-1 rounded-[3px] text-[var(--trello-text-subtle)] hover:text-[#C9372C] transition-smooth"
-                title="Excluir"
-              >
-                <Trash2 size={14} />
-              </button>
+                {iconeArquivo(anexo.tipo)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-medium truncate" style={{ color: "var(--tf-text)" }}>
+                  {anexo.nome}
+                </p>
+                <p className="text-[10px]" style={{ color: "var(--tf-text-tertiary)" }}>
+                  {formatarTamanho(anexo.tamanho)}
+                  {" · "}
+                  {new Date(anexo.criado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                </p>
+              </div>
+              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100" style={{ transition: "opacity 0.15s ease" }}>
+                <a
+                  href={anexo.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 rounded-[4px] hover:bg-[var(--tf-surface-hover)]"
+                  style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+                  title="Download"
+                >
+                  <Download size={13} />
+                </a>
+                <button
+                  onClick={() => onExcluir(anexo.id)}
+                  className="p-1.5 rounded-[4px] hover:bg-[var(--tf-danger-bg)]"
+                  style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
+                  title="Excluir"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-
-        {anexos.length === 0 && !enviando && (
-          <p className="text-xs text-[var(--trello-text-subtle)] italic text-center py-3">
-            Nenhum anexo
-          </p>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : !enviando ? (
+        <div className="text-center py-5">
+          <Paperclip size={18} className="mx-auto mb-1.5 opacity-20" style={{ color: "var(--tf-text-tertiary)" }} />
+          <p className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>Nenhum anexo</p>
+        </div>
+      ) : null}
     </div>
   );
 }

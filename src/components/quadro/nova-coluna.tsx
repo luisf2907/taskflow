@@ -24,7 +24,7 @@ export function NovaColuna({ onCriar }: NovaColunaProps) {
     return (
       <button
         onClick={() => { setAtivo(true); setTimeout(() => inputRef.current?.focus(), 50); }}
-        className="flex items-center gap-2 w-[272px] min-w-[272px] px-4 py-3 text-[13px] font-medium rounded-xl transition-smooth shrink-0 border-2 border-dashed"
+        className="flex items-center gap-2 w-[290px] min-w-[290px] px-5 py-4 text-[13px] font-medium rounded-[20px] transition-smooth shrink-0 border-2 border-dashed"
         style={{
           borderColor: "var(--tf-border)",
           color: "var(--tf-text-tertiary)",
@@ -37,7 +37,7 @@ export function NovaColuna({ onCriar }: NovaColunaProps) {
   }
 
   return (
-    <div className="w-[272px] min-w-[272px] column-surface p-2.5 space-y-2 shrink-0">
+    <div className="w-[290px] min-w-[290px] column-surface p-3 space-y-2 shrink-0 rounded-[20px]">
       <input
         ref={inputRef}
         value={nome}
@@ -47,7 +47,7 @@ export function NovaColuna({ onCriar }: NovaColunaProps) {
           if (e.key === "Escape") setAtivo(false);
         }}
         placeholder="Título da lista..."
-        className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-smooth"
+        className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
         style={{
           background: "var(--tf-surface)",
           border: "2px solid var(--tf-accent)",
@@ -57,7 +57,7 @@ export function NovaColuna({ onCriar }: NovaColunaProps) {
       <div className="flex items-center gap-1.5">
         <button
           onClick={handleSubmit}
-          className="px-3 py-1.5 text-xs font-semibold text-white rounded-lg transition-smooth"
+          className="px-3 py-1.5 text-xs font-semibold text-white rounded-[8px] transition-smooth"
           style={{ background: "var(--tf-accent)" }}
         >
           Adicionar

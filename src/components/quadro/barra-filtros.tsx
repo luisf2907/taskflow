@@ -53,7 +53,7 @@ export function BarraFiltros({ filtros, onChange, etiquetas, membros }: BarraFil
           value={filtros.texto}
           onChange={(e) => onChange({ ...filtros, texto: e.target.value })}
           placeholder="Buscar..."
-          className="pl-8 pr-3 py-1.5 text-[13px] rounded-lg outline-none w-44 transition-smooth"
+          className="pl-8 pr-3 py-1.5 text-[13px] rounded-[8px] outline-none w-44 transition-smooth"
           style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }}
           onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
           onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
@@ -63,7 +63,7 @@ export function BarraFiltros({ filtros, onChange, etiquetas, membros }: BarraFil
       {/* Toggle filtros */}
       <button
         onClick={() => setExpandido(!expandido)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] font-medium rounded-lg transition-smooth"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] font-medium rounded-[8px] transition-smooth"
         style={{
           background: expandido || totalAtivos > 0 ? "var(--tf-accent-light)" : "var(--tf-surface)",
           color: expandido || totalAtivos > 0 ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
@@ -83,7 +83,7 @@ export function BarraFiltros({ filtros, onChange, etiquetas, membros }: BarraFil
       {totalAtivos > 0 && (
         <button
           onClick={limpar}
-          className="flex items-center gap-1 px-2 py-1.5 text-[12px] rounded-lg transition-smooth"
+          className="flex items-center gap-1 px-2 py-1.5 text-[12px] rounded-[8px] transition-smooth"
           style={{ color: "var(--tf-danger)" }}
         >
           <X size={12} /> Limpar
@@ -93,8 +93,8 @@ export function BarraFiltros({ filtros, onChange, etiquetas, membros }: BarraFil
       {/* Painel expandido */}
       {expandido && (
         <div
-          className="absolute top-full left-0 right-0 mt-2 p-4 rounded-xl border shadow-lg z-40 flex gap-6"
-          style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)", boxShadow: "var(--tf-shadow-lg)" }}
+          className="absolute top-full left-0 right-0 mt-2 p-4 rounded-[14px] border z-40 flex gap-6"
+          style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
         >
           {/* Etiquetas */}
           {etiquetas.length > 0 && (
@@ -105,7 +105,7 @@ export function BarraFiltros({ filtros, onChange, etiquetas, membros }: BarraFil
                   <button
                     key={e.id}
                     onClick={() => toggleEtiqueta(e.id)}
-                    className="px-2.5 py-1 rounded-md text-[11px] font-bold text-white transition-smooth"
+                    className="px-2.5 py-1 rounded-[8px] text-[11px] font-bold text-white transition-smooth"
                     style={{
                       backgroundColor: e.cor,
                       opacity: filtros.etiquetaIds.length === 0 || filtros.etiquetaIds.includes(e.id) ? 1 : 0.35,
@@ -129,7 +129,7 @@ export function BarraFiltros({ filtros, onChange, etiquetas, membros }: BarraFil
                   <button
                     key={m.id}
                     onClick={() => toggleMembro(m.id)}
-                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-smooth"
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-[8px] transition-smooth"
                     style={{
                       background: filtros.membroIds.includes(m.id) ? "var(--tf-accent-light)" : "var(--tf-bg-secondary)",
                       opacity: filtros.membroIds.length === 0 || filtros.membroIds.includes(m.id) ? 1 : 0.5,

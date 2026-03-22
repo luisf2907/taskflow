@@ -1,7 +1,7 @@
 "use client";
 
 import { ChecklistComItens } from "@/types";
-import { CheckSquare, Plus, Square, Trash2, X } from "lucide-react";
+import { Check, Plus, Square, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
 interface ChecklistProps {
@@ -22,10 +22,6 @@ export function ChecklistComponent({
   const [novoItem, setNovoItem] = useState("");
   const [adicionando, setAdicionando] = useState(false);
 
-  const total = checklist.checklist_itens.length;
-  const concluidos = checklist.checklist_itens.filter((i) => i.concluido).length;
-  const percentual = total > 0 ? Math.round((concluidos / total) * 100) : 0;
-
   function handleCriar() {
     if (!novoItem.trim()) return;
     onCriarItem(checklist.id, novoItem.trim());
@@ -33,124 +29,117 @@ export function ChecklistComponent({
   }
 
   return (
-    <div className="space-y-2">
+    <div>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <CheckSquare size={16} className="text-[var(--trello-text-subtle)]" />
-          <h4 className="text-sm font-semibold text-[var(--trello-text)]">
-            {checklist.titulo}
-          </h4>
-        </div>
+      <div className="flex items-center justify-between mb-2">
+        <h4 className="text-[13px] font-semibold" style={{ color: "var(--tf-text)" }}>
+          {checklist.titulo}
+        </h4>
         <button
           onClick={() => onExcluirChecklist(checklist.id)}
-          className="p-1 rounded-[3px] text-[var(--trello-text-subtle)] hover:text-[#C9372C] hover:bg-[var(--trello-hover)] transition-smooth"
+          className="p-1 rounded-[4px] opacity-0 group-hover:opacity-100 hover:bg-[var(--tf-danger-bg)]"
+          style={{ color: "var(--tf-text-tertiary)", transition: "opacity 0.15s ease, background 0.15s ease" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
           title="Excluir checklist"
         >
-          <Trash2 size={14} />
+          <Trash2 size={13} />
         </button>
       </div>
 
-      {/* Barra de progresso */}
-      {total > 0 && (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-[var(--trello-text-subtle)] w-8 text-right">
-            {percentual}%
-          </span>
-          <div
-            className="flex-1 h-1.5 rounded-full overflow-hidden"
-            style={{ background: "var(--trello-border)" }}
-          >
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                percentual === 100
-                  ? "bg-[#4BCE97]"
-                  : "bg-[#0C66E4]"
-              }`}
-              style={{ width: `${percentual}%` }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Itens */}
+      {/* Items */}
       <div className="space-y-0.5">
         {checklist.checklist_itens.map((item) => (
           <div
             key={item.id}
-            className="flex items-start gap-2 group py-1 px-1 rounded-[3px] hover:bg-[var(--trello-hover)] transition-smooth"
+            className="flex items-start gap-2.5 py-1.5 px-2 rounded-[8px] group/item hover:bg-[var(--tf-bg-secondary)]"
+            style={{ transition: "background 0.15s ease" }}
           >
             <button
               onClick={() => onToggleItem(item.id, !item.concluido)}
-              className="mt-0.5 shrink-0 text-[var(--trello-text-subtle)] hover:text-[#0C66E4] transition-smooth"
+              className="mt-0.5 shrink-0"
             >
               {item.concluido ? (
-                <CheckSquare size={16} className="text-[#4BCE97]" />
+                <div
+                  className="w-4 h-4 rounded-[4px] flex items-center justify-center"
+                  style={{ background: "var(--tf-accent)" }}
+                >
+                  <Check size={10} className="text-white" strokeWidth={3} />
+                </div>
               ) : (
-                <Square size={16} />
+                <div
+                  className="w-4 h-4 rounded-[4px]"
+                  style={{ border: "2px solid var(--tf-border)" }}
+                />
               )}
             </button>
             <span
-              className={`text-sm flex-1 ${
-                item.concluido
-                  ? "line-through text-[var(--trello-text-subtle)]"
-                  : "text-[var(--trello-text)]"
-              }`}
+              className="text-[13px] flex-1 leading-snug"
+              style={{
+                color: item.concluido ? "var(--tf-text-tertiary)" : "var(--tf-text)",
+                textDecoration: item.concluido ? "line-through" : "none",
+              }}
             >
               {item.texto}
             </span>
             <button
               onClick={() => onExcluirItem(item.id)}
-              className="p-0.5 rounded-[3px] text-[var(--trello-text-subtle)] opacity-0 group-hover:opacity-100 hover:text-[#C9372C] transition-all"
+              className="p-0.5 rounded-[4px] opacity-0 group-hover/item:opacity-100 hover:bg-[var(--tf-danger-bg)]"
+              style={{ color: "var(--tf-text-tertiary)", transition: "opacity 0.15s ease, background 0.15s ease" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
             >
-              <Trash2 size={12} />
+              <Trash2 size={11} />
             </button>
           </div>
         ))}
       </div>
 
-      {/* Adicionar item */}
+      {/* Add item */}
       {adicionando ? (
-        <div className="flex gap-2">
+        <div
+          className="mt-2 rounded-[14px] overflow-hidden"
+          style={{
+            background: "var(--tf-bg-secondary)",
+            border: "2px solid var(--tf-accent)",
+          }}
+        >
           <input
             value={novoItem}
             onChange={(e) => setNovoItem(e.target.value)}
-            placeholder="Adicionar item..."
-            className="flex-1 px-2 py-1.5 text-sm rounded-[3px] outline-none focus:ring-2 focus:ring-[var(--trello-blue)] text-[var(--trello-text)]"
-            style={{
-              background: "var(--trello-card)",
-              borderWidth: 1,
-              borderStyle: "solid",
-              borderColor: "var(--trello-border)",
-            }}
+            placeholder="Novo item..."
+            className="w-full bg-transparent px-3 py-2.5 text-[13px] outline-none"
+            style={{ color: "var(--tf-text)" }}
             autoFocus
             onKeyDown={(e) => {
               if (e.key === "Enter") handleCriar();
               if (e.key === "Escape") setAdicionando(false);
             }}
           />
-          <button
-            onClick={handleCriar}
-            className="px-3 py-1.5 text-xs font-medium bg-[#0C66E4] text-white rounded-[3px] hover:bg-[#0055CC] transition-smooth"
-          >
-            Adicionar
-          </button>
-          <button
-            onClick={() => {
-              setAdicionando(false);
-              setNovoItem("");
-            }}
-            className="px-2 py-1.5 text-xs text-[var(--trello-text-subtle)] hover:text-[var(--trello-text)]"
-          >
-            <X size={14} />
-          </button>
+          <div className="flex items-center gap-2 px-3 pb-2.5">
+            <button
+              onClick={handleCriar}
+              className="px-3 py-1 text-[11px] font-semibold text-white rounded-[8px]"
+              style={{ background: "var(--tf-accent)" }}
+            >
+              Adicionar
+            </button>
+            <button
+              onClick={() => { setAdicionando(false); setNovoItem(""); }}
+              className="p-1 rounded-[4px] hover:bg-[var(--tf-surface-hover)]"
+              style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+            >
+              <X size={14} />
+            </button>
+          </div>
         </div>
       ) : (
         <button
           onClick={() => setAdicionando(true)}
-          className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-[var(--trello-text-subtle)] hover:text-[#0C66E4] hover:bg-[var(--trello-hover)] rounded-[3px] transition-smooth"
+          className="flex items-center gap-1.5 mt-2 px-2 py-1.5 text-[12px] font-medium rounded-[8px] hover:bg-[var(--tf-bg-secondary)]"
+          style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
         >
-          <Plus size={14} />
+          <Plus size={13} />
           Adicionar item
         </button>
       )}

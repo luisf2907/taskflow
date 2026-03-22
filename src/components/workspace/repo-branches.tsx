@@ -27,119 +27,60 @@ export function RepoBranches({
   );
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "8px",
-      }}
-    >
+    <div className="flex flex-col gap-2">
       {/* Campo de busca */}
-      <div
-        style={{
-          position: "relative",
-        }}
-      >
+      <div className="relative">
         <Search
           size={16}
-          style={{
-            position: "absolute",
-            left: "10px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            color: "var(--tf-text-tertiary)",
-            pointerEvents: "none",
-          }}
+          className="absolute left-[10px] top-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ color: "var(--tf-text-tertiary)" }}
         />
         <input
           type="text"
           placeholder="Filtrar branches..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
+          className="w-full py-2 pr-3 pl-[34px] text-[13px] rounded-[8px] outline-none"
           style={{
-            width: "100%",
-            padding: "8px 12px 8px 34px",
-            borderRadius: "6px",
+            background: "var(--tf-bg-secondary)",
             border: "1px solid var(--tf-border)",
-            backgroundColor: "var(--tf-bg-secondary)",
             color: "var(--tf-text)",
-            fontSize: "13px",
-            outline: "none",
-            boxSizing: "border-box",
           }}
         />
       </div>
 
       {/* Lista de branches */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "2px",
-        }}
-      >
+      <div className="flex flex-col gap-[2px]">
         {carregando ? (
           Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                padding: "10px 12px",
-                borderRadius: "6px",
-                backgroundColor: "var(--tf-bg-secondary)",
-              }}
+              className="flex items-center gap-[10px] px-3 py-[10px] rounded-[8px]"
+              style={{ backgroundColor: "var(--tf-bg-secondary)" }}
             >
               <div
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  borderRadius: "4px",
-                  backgroundColor: "var(--tf-border)",
-                  opacity: 0.5,
-                  animation: "pulse 1.5s ease-in-out infinite",
-                }}
+                className="w-4 h-4 rounded-[4px] opacity-50 animate-pulse"
+                style={{ backgroundColor: "var(--tf-border)" }}
               />
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "4px",
-                }}
-              >
+              <div className="flex-1 flex flex-col gap-1">
                 <div
+                  className="h-[14px] rounded-[4px] opacity-50 animate-pulse"
                   style={{
                     width: `${100 + i * 20}px`,
-                    height: "14px",
-                    borderRadius: "4px",
                     backgroundColor: "var(--tf-border)",
-                    opacity: 0.5,
-                    animation: "pulse 1.5s ease-in-out infinite",
                   }}
                 />
                 <div
-                  style={{
-                    width: "56px",
-                    height: "12px",
-                    borderRadius: "4px",
-                    backgroundColor: "var(--tf-border)",
-                    opacity: 0.3,
-                    animation: "pulse 1.5s ease-in-out infinite",
-                  }}
+                  className="w-14 h-3 rounded-[4px] opacity-30 animate-pulse"
+                  style={{ backgroundColor: "var(--tf-border)" }}
                 />
               </div>
             </div>
           ))
         ) : branchesFiltradas.length === 0 ? (
           <div
-            style={{
-              padding: "24px 12px",
-              textAlign: "center",
-              color: "var(--tf-text-tertiary)",
-              fontSize: "13px",
-            }}
+            className="px-3 py-6 text-center text-[13px]"
+            style={{ color: "var(--tf-text-tertiary)" }}
           >
             {busca
               ? "Nenhuma branch encontrada para esta busca."
@@ -154,20 +95,11 @@ export function RepoBranches({
               <button
                 key={branch.name}
                 onClick={() => onTrocarBranch(branch.name)}
+                className="flex items-center gap-[10px] px-3 py-[10px] rounded-[8px] border-none cursor-pointer text-left w-full transition-all duration-150"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "10px 12px",
-                  borderRadius: "6px",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  width: "100%",
                   backgroundColor: isAtiva
                     ? "color-mix(in srgb, var(--tf-accent) 12%, transparent)"
                     : "transparent",
-                  transition: "background-color 150ms ease",
                 }}
                 onMouseEnter={(e) => {
                   if (!isAtiva) {
@@ -183,40 +115,22 @@ export function RepoBranches({
               >
                 <GitBranch
                   size={16}
+                  className="shrink-0"
                   style={{
                     color: isAtiva
                       ? "var(--tf-accent)"
                       : "var(--tf-text-tertiary)",
-                    flexShrink: 0,
                   }}
                 />
 
-                <div
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "2px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
+                <div className="flex-1 min-w-0 flex flex-col gap-[2px]">
+                  <div className="flex items-center gap-[6px]">
                     <span
+                      className={`text-[13px] overflow-hidden text-ellipsis whitespace-nowrap ${isDefault ? "font-semibold" : "font-normal"}`}
                       style={{
-                        fontSize: "13px",
-                        fontWeight: isDefault ? 600 : 400,
                         color: isAtiva
                           ? "var(--tf-accent)"
                           : "var(--tf-text)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
                       }}
                     >
                       {branch.name}
@@ -224,16 +138,11 @@ export function RepoBranches({
 
                     {isDefault && (
                       <span
+                        className="text-[10px] font-medium px-[6px] py-[1px] rounded-full whitespace-nowrap shrink-0"
                         style={{
-                          fontSize: "10px",
-                          fontWeight: 500,
-                          padding: "1px 6px",
-                          borderRadius: "9999px",
                           backgroundColor:
                             "color-mix(in srgb, var(--tf-success) 15%, transparent)",
                           color: "var(--tf-success)",
-                          whiteSpace: "nowrap",
-                          flexShrink: 0,
                         }}
                       >
                         padrão
@@ -243,21 +152,16 @@ export function RepoBranches({
                     {branch.protected && (
                       <Shield
                         size={12}
-                        style={{
-                          color: "var(--tf-text-tertiary)",
-                          flexShrink: 0,
-                        }}
+                        className="shrink-0"
+                        style={{ color: "var(--tf-text-tertiary)" }}
                         aria-label="Branch protegida"
                       />
                     )}
                   </div>
 
                   <span
-                    style={{
-                      fontSize: "11px",
-                      fontFamily: "monospace",
-                      color: "var(--tf-text-tertiary)",
-                    }}
+                    className="text-[11px] font-mono"
+                    style={{ color: "var(--tf-text-tertiary)" }}
                   >
                     {branch.commit.sha.slice(0, 7)}
                   </span>

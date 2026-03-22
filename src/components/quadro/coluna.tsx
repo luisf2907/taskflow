@@ -15,6 +15,7 @@ import { NovoCartao } from "./novo-cartao";
 
 interface ColunaProps {
   coluna: ColunaType;
+  index: number;
   cartoes: CartaoComResumo[];
   etiquetas: Etiqueta[];
   membros: Membro[];
@@ -25,7 +26,7 @@ interface ColunaProps {
 }
 
 export function Coluna({
-  coluna, cartoes, etiquetas, membros,
+  coluna, index, cartoes, etiquetas, membros,
   onCriarCartao, onCartaoClick, onRenomear, onExcluir,
 }: ColunaProps) {
   const [editando, setEditando] = useState(false);
@@ -56,13 +57,13 @@ export function Coluna({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex flex-col w-[272px] min-w-[272px] max-w-[272px] column-surface shrink-0 max-h-[calc(100vh-160px)]",
+        "flex flex-col w-[290px] min-w-[290px] max-w-[290px] shrink-0 max-h-[calc(100vh-180px)] column-surface",
         isDragging && "opacity-50"
       )}
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-3 py-2.5 cursor-grab active:cursor-grabbing"
+        className="flex items-center justify-between px-4 pt-4 pb-3 cursor-grab active:cursor-grabbing"
         {...attributes} {...listeners}
       >
         {editando ? (
@@ -75,7 +76,7 @@ export function Coluna({
               if (e.key === "Enter") salvarNome();
               if (e.key === "Escape") { setNome(coluna.nome); setEditando(false); }
             }}
-            className="flex-1 text-sm font-semibold rounded-md px-2 py-1 outline-none"
+            className="flex-1 text-sm font-semibold rounded-[8px] px-2 py-1 outline-none"
             style={{
               color: "var(--tf-text)", background: "var(--tf-surface)",
               border: "2px solid var(--tf-accent)",
@@ -84,26 +85,34 @@ export function Coluna({
             onPointerDown={(e) => e.stopPropagation()}
           />
         ) : (
-          <h3 className="text-[13px] font-semibold flex items-center gap-2 flex-1 min-w-0" style={{ color: "var(--tf-text)" }}>
-            <span className="truncate">{coluna.nome}</span>
-            <span className="text-[11px] font-normal" style={{ color: "var(--tf-text-tertiary)" }}>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <h3 className="text-[13px] font-bold tracking-tight truncate" style={{ color: "var(--tf-text)" }}>
+              {coluna.nome}
+            </h3>
+            <span
+              className="text-[11px] font-semibold px-1.5 py-0.5 rounded-[8px] shrink-0"
+              style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}
+            >
               {cartoes.length}
             </span>
             {pesoTotal > 0 && (
               <span
-                className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0"
+                className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-[8px] shrink-0"
                 style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}
               >
                 <Gauge size={9} />
                 {pesoTotal}
               </span>
             )}
-          </h3>
+          </div>
         )}
         <div onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
           <Dropdown
             trigger={
-              <button className="p-1 rounded-md transition-smooth" style={{ color: "var(--tf-text-tertiary)" }}>
+              <button
+                className="p-1 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
+                style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+              >
                 <MoreHorizontal size={16} />
               </button>
             }
@@ -119,7 +128,7 @@ export function Coluna({
       </div>
 
       {/* Cards */}
-      <div className="flex-1 overflow-y-auto px-2 pb-1 space-y-1.5 min-h-[8px]">
+      <div className="flex-1 overflow-y-auto px-2.5 pb-1 space-y-2 min-h-[8px]" style={{ scrollbarWidth: "none" }}>
         <SortableContext items={cartoes.map((c) => c.id)} strategy={verticalListSortingStrategy}>
           {cartoes.map((cartao) => (
             <Cartao key={cartao.id} cartao={cartao} etiquetas={etiquetas} membros={membros} onClick={() => onCartaoClick(cartao)} />
@@ -127,7 +136,7 @@ export function Coluna({
         </SortableContext>
       </div>
 
-      <div className="px-2 pb-2">
+      <div className="px-2.5 pb-2.5 mt-1">
         <NovoCartao onCriar={handleCriarCartao} />
       </div>
     </div>

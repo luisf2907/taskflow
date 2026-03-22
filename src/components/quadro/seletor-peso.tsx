@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Gauge } from "lucide-react";
 
 const FIBONACCI = [1, 2, 3, 5, 8, 13, 21];
 
@@ -13,8 +12,7 @@ interface SeletorPesoProps {
 export function SeletorPeso({ valor, onChange }: SeletorPesoProps) {
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium text-[var(--trello-text-subtle)] uppercase tracking-wide flex items-center gap-1.5">
-        <Gauge size={12} />
+      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-tertiary)" }}>
         Story Points
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -22,12 +20,13 @@ export function SeletorPeso({ valor, onChange }: SeletorPesoProps) {
           <button
             key={n}
             onClick={() => onChange(valor === n ? null : n)}
-            className={cn(
-              "w-9 h-9 rounded-[3px] text-sm font-semibold transition-all",
-              valor === n
-                ? "bg-[#0C66E4] text-white shadow-sm"
-                : "bg-[var(--trello-hover)] text-[var(--trello-text)] hover:bg-[var(--trello-border)]"
-            )}
+            className="w-9 h-9 rounded-[8px] text-[13px] font-bold"
+            style={{
+              background: valor === n ? "var(--tf-accent)" : "var(--tf-surface)",
+              color: valor === n ? "#fff" : "var(--tf-text)",
+              border: valor === n ? "none" : "1px solid var(--tf-border)",
+              transition: "all 0.15s ease",
+            }}
           >
             {n}
           </button>

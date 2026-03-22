@@ -1,7 +1,7 @@
 "use client";
 
 import { Membro } from "@/types";
-import { Check, Plus, UserPlus } from "lucide-react";
+import { Check, Plus, UserPlus, X } from "lucide-react";
 import { useState } from "react";
 import { Avatar } from "./avatar";
 
@@ -30,23 +30,23 @@ export function SeletorMembros({
     setCriando(false);
   }
 
-  // Se não tem membros, abrir form de criar automaticamente
   const semMembros = membros.length === 0;
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--tf-text-tertiary)" }}>
+      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-tertiary)" }}>
         Membros
       </p>
 
       {semMembros && !criando && (
-        <div className="text-center py-3">
-          <p className="text-[12px] mb-2" style={{ color: "var(--tf-text-tertiary)" }}>
+        <div className="text-center py-4">
+          <UserPlus size={20} className="mx-auto mb-2 opacity-20" style={{ color: "var(--tf-text-tertiary)" }} />
+          <p className="text-[11px] mb-3" style={{ color: "var(--tf-text-tertiary)" }}>
             Nenhum membro criado ainda.
           </p>
           <button
             onClick={() => setCriando(true)}
-            className="px-4 py-2 text-sm font-semibold text-white rounded-lg transition-smooth"
+            className="px-4 py-1.5 text-[11px] font-semibold text-white rounded-[8px]"
             style={{ background: "var(--tf-accent)" }}
           >
             Criar primeiro membro
@@ -54,77 +54,80 @@ export function SeletorMembros({
         </div>
       )}
 
-      <div className="space-y-1">
-        {membros.map((membro) => (
-          <button
-            key={membro.id}
-            onClick={() => onToggle(membro.id)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg w-full transition-smooth"
-            style={{ color: "var(--tf-text)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-bg-secondary)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            <Avatar membro={membro} tamanho="sm" />
-            <div className="flex-1 text-left">
-              <span className="text-sm">{membro.nome}</span>
-              {membro.email && (
-                <span className="text-xs ml-1.5" style={{ color: "var(--tf-text-tertiary)" }}>
-                  {membro.email}
+      <div className="space-y-0.5">
+        {membros.map((membro) => {
+          const selecionado = selecionados.includes(membro.id);
+          return (
+            <button
+              key={membro.id}
+              onClick={() => onToggle(membro.id)}
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-[8px] w-full hover:bg-[var(--tf-surface-hover)]"
+              style={{ transition: "background 0.15s ease" }}
+            >
+              <div className="relative shrink-0">
+                <Avatar membro={membro} tamanho="sm" />
+                {selecionado && (
+                  <div
+                    className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+                    style={{ background: "var(--tf-accent)" }}
+                  >
+                    <Check size={8} className="text-white" strokeWidth={3} />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <span className="text-[13px] font-medium block truncate" style={{ color: "var(--tf-text)" }}>
+                  {membro.nome}
                 </span>
-              )}
-            </div>
-            {selecionados.includes(membro.id) && (
-              <Check size={14} style={{ color: "var(--tf-accent)" }} />
-            )}
-          </button>
-        ))}
+                {membro.email && (
+                  <span className="text-[10px] block truncate" style={{ color: "var(--tf-text-tertiary)" }}>
+                    {membro.email}
+                  </span>
+                )}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {criando ? (
-        <div className="space-y-2 p-3 rounded-lg" style={{ background: "var(--tf-bg-secondary)" }}>
+        <div
+          className="rounded-[14px] overflow-hidden"
+          style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-accent)" }}
+        >
           <input
             value={novoNome}
             onChange={(e) => setNovoNome(e.target.value)}
             placeholder="Nome do membro"
-            className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-smooth"
-            style={{
-              background: "var(--tf-surface)",
-              border: "2px solid var(--tf-border)",
-              color: "var(--tf-text)",
-            }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
+            className="w-full bg-transparent px-3 py-2.5 text-[13px] outline-none"
+            style={{ color: "var(--tf-text)" }}
             autoFocus
             onKeyDown={(e) => e.key === "Enter" && handleCriar()}
           />
-          <input
-            value={novoEmail}
-            onChange={(e) => setNovoEmail(e.target.value)}
-            placeholder="Email (opcional)"
-            className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-smooth"
-            style={{
-              background: "var(--tf-surface)",
-              border: "2px solid var(--tf-border)",
-              color: "var(--tf-text)",
-            }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
-            onKeyDown={(e) => e.key === "Enter" && handleCriar()}
-          />
-          <div className="flex gap-2">
+          <div className="border-t" style={{ borderColor: "var(--tf-border-subtle)" }}>
+            <input
+              value={novoEmail}
+              onChange={(e) => setNovoEmail(e.target.value)}
+              placeholder="Email (opcional)"
+              className="w-full bg-transparent px-3 py-2.5 text-[13px] outline-none"
+              style={{ color: "var(--tf-text)" }}
+              onKeyDown={(e) => e.key === "Enter" && handleCriar()}
+            />
+          </div>
+          <div className="flex items-center gap-2 px-3 pb-2.5">
             <button
               onClick={handleCriar}
-              className="px-4 py-1.5 text-xs font-semibold text-white rounded-lg transition-smooth"
+              className="px-3 py-1 text-[11px] font-semibold text-white rounded-[8px]"
               style={{ background: "var(--tf-accent)" }}
             >
               Adicionar
             </button>
             <button
-              onClick={() => setCriando(false)}
-              className="px-3 py-1.5 text-xs rounded-lg transition-smooth"
-              style={{ color: "var(--tf-text-tertiary)" }}
+              onClick={() => { setCriando(false); setNovoNome(""); setNovoEmail(""); }}
+              className="p-1 rounded-[4px] hover:bg-[var(--tf-surface-hover)]"
+              style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
             >
-              Cancelar
+              <X size={14} />
             </button>
           </div>
         </div>
@@ -132,12 +135,10 @@ export function SeletorMembros({
         !semMembros && (
           <button
             onClick={() => setCriando(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg w-full transition-smooth"
-            style={{ color: "var(--tf-text-tertiary)" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--tf-accent)"; e.currentTarget.style.background = "var(--tf-bg-secondary)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--tf-text-tertiary)"; e.currentTarget.style.background = "transparent"; }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium rounded-[8px] w-full hover:bg-[var(--tf-surface-hover)]"
+            style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
           >
-            <UserPlus size={14} />
+            <Plus size={13} />
             Adicionar membro
           </button>
         )

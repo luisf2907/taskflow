@@ -43,61 +43,38 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
   if (carregando) {
     return (
       <div
-        style={{
-          backgroundColor: "var(--tf-surface)",
-          borderRadius: 8,
-          border: "1px solid var(--tf-border)",
-          overflow: "hidden",
-        }}
+        className="rounded-[8px] overflow-hidden"
+        style={{ backgroundColor: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
       >
         {/* Header skeleton */}
         <div
-          style={{
-            padding: "12px 16px",
-            borderBottom: "1px solid var(--tf-border)",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-          }}
+          className="px-4 py-3 flex items-center gap-3"
+          style={{ borderBottom: "1px solid var(--tf-border)" }}
         >
           <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 6,
-              backgroundColor: "var(--tf-bg-secondary)",
-            }}
+            className="w-7 h-7 rounded-[8px] animate-pulse"
+            style={{ backgroundColor: "var(--tf-bg-secondary)" }}
           />
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <div className="flex-1 flex flex-col gap-1.5">
             <div
-              style={{
-                width: "40%",
-                height: 14,
-                borderRadius: 4,
-                backgroundColor: "var(--tf-bg-secondary)",
-              }}
+              className="w-[40%] h-3.5 rounded-[4px] animate-pulse"
+              style={{ backgroundColor: "var(--tf-bg-secondary)" }}
             />
             <div
-              style={{
-                width: "20%",
-                height: 12,
-                borderRadius: 4,
-                backgroundColor: "var(--tf-bg-secondary)",
-              }}
+              className="w-[20%] h-3 rounded-[4px] animate-pulse"
+              style={{ backgroundColor: "var(--tf-bg-secondary)" }}
             />
           </div>
         </div>
         {/* Content skeleton */}
-        <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="p-4 flex flex-col gap-2">
           {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
+              className="h-3.5 rounded-[4px] animate-pulse opacity-60"
               style={{
-                height: 14,
-                borderRadius: 4,
                 backgroundColor: "var(--tf-bg-secondary)",
                 width: `${Math.max(30, Math.random() * 90)}%`,
-                opacity: 0.6,
               }}
             />
           ))}
@@ -108,71 +85,43 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
 
   return (
     <div
-      style={{
-        backgroundColor: "var(--tf-surface)",
-        borderRadius: 8,
-        border: "1px solid var(--tf-border)",
-        overflow: "hidden",
-      }}
+      className="rounded-[8px] overflow-hidden"
+      style={{ backgroundColor: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
     >
       {/* Header */}
       <div
-        style={{
-          padding: "10px 16px",
-          borderBottom: "1px solid var(--tf-border)",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          flexWrap: "wrap",
-        }}
+        className="px-4 py-2.5 flex items-center gap-2.5 flex-wrap"
+        style={{ borderBottom: "1px solid var(--tf-border)" }}
       >
         <button
           onClick={onVoltar}
           title="Voltar"
+          className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[8px] cursor-pointer shrink-0"
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 30,
-            height: 30,
-            borderRadius: 6,
             border: "1px solid var(--tf-border)",
             backgroundColor: "var(--tf-bg-secondary)",
             color: "var(--tf-text-secondary)",
-            cursor: "pointer",
-            flexShrink: 0,
           }}
         >
           <ArrowLeft size={16} />
         </button>
 
         {ehMarkdown ? (
-          <FileText size={16} style={{ color: "var(--tf-text-tertiary)", flexShrink: 0 }} />
+          <FileText size={16} className="shrink-0" style={{ color: "var(--tf-text-tertiary)" }} />
         ) : (
-          <FileCode size={16} style={{ color: "var(--tf-text-tertiary)", flexShrink: 0 }} />
+          <FileCode size={16} className="shrink-0" style={{ color: "var(--tf-text-tertiary)" }} />
         )}
 
         {/* Breadcrumb */}
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            flexWrap: "wrap",
-            fontFamily: "monospace",
-            fontSize: 13,
-            minWidth: 0,
-          }}
-        >
+        <div className="flex-1 flex items-center gap-1 flex-wrap font-mono text-[13px] min-w-0">
           <span style={{ color: "var(--tf-text-secondary)" }}>{nome}</span>
           {segmentos.map((seg, i) => (
-            <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <span key={i} className="inline-flex items-center gap-1">
               <span style={{ color: "var(--tf-text-tertiary)" }}>/</span>
               <span
+                className={i === segmentos.length - 1 ? "font-semibold" : "font-normal"}
                 style={{
                   color: i === segmentos.length - 1 ? "var(--tf-text)" : "var(--tf-text-secondary)",
-                  fontWeight: i === segmentos.length - 1 ? 600 : 400,
                 }}
               >
                 {seg}
@@ -182,27 +131,15 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
         </div>
 
         {/* Meta + Links */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        <div className="flex items-center gap-2 shrink-0">
           {tamanhoFormatado && (
-            <span
-              style={{
-                fontSize: 12,
-                color: "var(--tf-text-tertiary)",
-                whiteSpace: "nowrap",
-              }}
-            >
+            <span className="text-xs whitespace-nowrap" style={{ color: "var(--tf-text-tertiary)" }}>
               {tamanhoFormatado}
             </span>
           )}
 
           {!binario && linhas.length > 0 && (
-            <span
-              style={{
-                fontSize: 12,
-                color: "var(--tf-text-tertiary)",
-                whiteSpace: "nowrap",
-              }}
-            >
+            <span className="text-xs whitespace-nowrap" style={{ color: "var(--tf-text-tertiary)" }}>
               {linhas.length} {linhas.length === 1 ? "linha" : "linhas"}
             </span>
           )}
@@ -211,12 +148,8 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
             href={urlRaw}
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              fontSize: 12,
-              color: "var(--tf-accent)",
-              textDecoration: "none",
-              whiteSpace: "nowrap",
-            }}
+            className="text-xs no-underline whitespace-nowrap"
+            style={{ color: "var(--tf-accent)" }}
           >
             Raw
           </a>
@@ -226,15 +159,8 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
             target="_blank"
             rel="noopener noreferrer"
             title="Abrir no GitHub"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: 12,
-              color: "var(--tf-accent)",
-              textDecoration: "none",
-              whiteSpace: "nowrap",
-            }}
+            className="inline-flex items-center gap-1 text-xs no-underline whitespace-nowrap"
+            style={{ color: "var(--tf-accent)" }}
           >
             <ExternalLink size={13} />
             Abrir no GitHub
@@ -244,84 +170,125 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
 
       {/* Content */}
       {ehMarkdown && conteudo ? (
-        <div className="markdown-body" style={{ padding: "24px 32px", color: "var(--tf-text)", lineHeight: 1.7 }}>
+        <div className="markdown-body px-8 py-6 leading-[1.7]" style={{ color: "var(--tf-text)" }}>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
               h1: ({ children }) => (
-                <h1 style={{ fontSize: 28, fontWeight: 700, marginTop: 24, marginBottom: 16, paddingBottom: 8, borderBottom: "1px solid var(--tf-border)", color: "var(--tf-text)" }}>{children}</h1>
+                <h1
+                  className="text-[28px] font-bold mt-6 mb-4 pb-2"
+                  style={{ borderBottom: "1px solid var(--tf-border)", color: "var(--tf-text)" }}
+                >
+                  {children}
+                </h1>
               ),
               h2: ({ children }) => (
-                <h2 style={{ fontSize: 22, fontWeight: 600, marginTop: 24, marginBottom: 12, paddingBottom: 6, borderBottom: "1px solid var(--tf-border)", color: "var(--tf-text)" }}>{children}</h2>
+                <h2
+                  className="text-[22px] font-semibold mt-6 mb-3 pb-1.5"
+                  style={{ borderBottom: "1px solid var(--tf-border)", color: "var(--tf-text)" }}
+                >
+                  {children}
+                </h2>
               ),
               h3: ({ children }) => (
-                <h3 style={{ fontSize: 18, fontWeight: 600, marginTop: 20, marginBottom: 8, color: "var(--tf-text)" }}>{children}</h3>
+                <h3 className="text-lg font-semibold mt-5 mb-2" style={{ color: "var(--tf-text)" }}>
+                  {children}
+                </h3>
               ),
               h4: ({ children }) => (
-                <h4 style={{ fontSize: 16, fontWeight: 600, marginTop: 16, marginBottom: 6, color: "var(--tf-text)" }}>{children}</h4>
+                <h4 className="text-base font-semibold mt-4 mb-1.5" style={{ color: "var(--tf-text)" }}>
+                  {children}
+                </h4>
               ),
               p: ({ children }) => (
-                <p style={{ marginBottom: 12, fontSize: 14, color: "var(--tf-text-secondary)" }}>{children}</p>
+                <p className="mb-3 text-sm" style={{ color: "var(--tf-text-secondary)" }}>
+                  {children}
+                </p>
               ),
               a: ({ href, children }) => (
-                <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: "var(--tf-accent)", textDecoration: "underline" }}>{children}</a>
+                <a href={href} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: "var(--tf-accent)" }}>
+                  {children}
+                </a>
               ),
               ul: ({ children }) => (
-                <ul style={{ marginBottom: 12, paddingLeft: 24, listStyleType: "disc" }}>{children}</ul>
+                <ul className="mb-3 pl-6 list-disc">{children}</ul>
               ),
               ol: ({ children }) => (
-                <ol style={{ marginBottom: 12, paddingLeft: 24, listStyleType: "decimal" }}>{children}</ol>
+                <ol className="mb-3 pl-6 list-decimal">{children}</ol>
               ),
               li: ({ children }) => (
-                <li style={{ marginBottom: 4, fontSize: 14, color: "var(--tf-text-secondary)" }}>{children}</li>
+                <li className="mb-1 text-sm" style={{ color: "var(--tf-text-secondary)" }}>
+                  {children}
+                </li>
               ),
               blockquote: ({ children }) => (
-                <blockquote style={{ borderLeft: "3px solid var(--tf-accent)", paddingLeft: 16, margin: "12px 0", color: "var(--tf-text-tertiary)", fontStyle: "italic" }}>{children}</blockquote>
+                <blockquote
+                  className="pl-4 my-3 italic"
+                  style={{ borderLeft: "3px solid var(--tf-accent)", color: "var(--tf-text-tertiary)" }}
+                >
+                  {children}
+                </blockquote>
               ),
               code: ({ className, children }) => {
                 const isInline = !className;
                 if (isInline) {
                   return (
-                    <code style={{ background: "var(--tf-bg-secondary)", padding: "2px 6px", borderRadius: 4, fontSize: 13, fontFamily: "monospace", color: "var(--tf-accent-text)" }}>
+                    <code
+                      className="px-1.5 py-0.5 rounded-[4px] text-[13px] font-mono"
+                      style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-accent-text)" }}
+                    >
                       {children}
                     </code>
                   );
                 }
                 return (
-                  <code style={{ display: "block", fontFamily: "monospace", fontSize: 13, lineHeight: "20px", color: "var(--tf-text)" }}>
+                  <code className="block font-mono text-[13px] leading-5" style={{ color: "var(--tf-text)" }}>
                     {children}
                   </code>
                 );
               },
               pre: ({ children }) => (
-                <pre style={{ background: "var(--tf-bg-secondary)", borderRadius: 8, padding: 16, margin: "12px 0", overflow: "auto", border: "1px solid var(--tf-border)" }}>
+                <pre
+                  className="rounded-[8px] p-4 my-3 overflow-auto"
+                  style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)" }}
+                >
                   {children}
                 </pre>
               ),
               table: ({ children }) => (
-                <div style={{ overflow: "auto", marginBottom: 12 }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>{children}</table>
+                <div className="overflow-auto mb-3">
+                  <table className="w-full border-collapse text-[13px]">{children}</table>
                 </div>
               ),
               thead: ({ children }) => (
                 <thead style={{ background: "var(--tf-bg-secondary)" }}>{children}</thead>
               ),
               th: ({ children }) => (
-                <th style={{ border: "1px solid var(--tf-border)", padding: "8px 12px", textAlign: "left", fontWeight: 600, color: "var(--tf-text)", fontSize: 13 }}>{children}</th>
+                <th
+                  className="px-3 py-2 text-left font-semibold text-[13px]"
+                  style={{ border: "1px solid var(--tf-border)", color: "var(--tf-text)" }}
+                >
+                  {children}
+                </th>
               ),
               td: ({ children }) => (
-                <td style={{ border: "1px solid var(--tf-border)", padding: "8px 12px", color: "var(--tf-text-secondary)", fontSize: 13 }}>{children}</td>
+                <td
+                  className="px-3 py-2 text-[13px]"
+                  style={{ border: "1px solid var(--tf-border)", color: "var(--tf-text-secondary)" }}
+                >
+                  {children}
+                </td>
               ),
               hr: () => (
-                <hr style={{ border: "none", borderTop: "1px solid var(--tf-border)", margin: "24px 0" }} />
+                <hr className="my-6 border-none" style={{ borderTop: "1px solid var(--tf-border)" }} />
               ),
               img: ({ src, alt }) => (
-                <img src={src} alt={alt || ""} style={{ maxWidth: "100%", borderRadius: 8, margin: "12px 0" }} />
+                <img src={src} alt={alt || ""} className="max-w-full rounded-[8px] my-3" />
               ),
               input: ({ type, checked, ...props }) => {
                 if (type === "checkbox") {
                   return (
-                    <input type="checkbox" checked={checked} readOnly style={{ marginRight: 8, accentColor: "var(--tf-accent)" }} />
+                    <input type="checkbox" checked={checked} readOnly className="mr-2" style={{ accentColor: "var(--tf-accent)" }} />
                   );
                 }
                 return <input type={type} {...props} />;
@@ -333,32 +300,20 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
         </div>
       ) : binario ? (
         <div
-          style={{
-            padding: "48px 16px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 12,
-            color: "var(--tf-text-secondary)",
-          }}
+          className="px-4 py-12 flex flex-col items-center gap-3"
+          style={{ color: "var(--tf-text-secondary)" }}
         >
           <FileWarning size={40} style={{ color: "var(--tf-text-tertiary)" }} />
-          <span style={{ fontSize: 14 }}>
+          <span className="text-sm">
             Arquivo bin&aacute;rio &mdash; n&atilde;o &eacute; poss&iacute;vel visualizar
           </span>
           <a
             href={urlRaw}
             target="_blank"
             rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[13px] no-underline px-3.5 py-1.5 rounded-[8px]"
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 13,
               color: "var(--tf-accent)",
-              textDecoration: "none",
-              padding: "6px 14px",
-              borderRadius: 6,
               border: "1px solid var(--tf-border)",
               backgroundColor: "var(--tf-bg-secondary)",
             }}
@@ -368,54 +323,20 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
           </a>
         </div>
       ) : (
-        <div style={{ overflow: "auto" }}>
-          <pre
-            style={{
-              margin: 0,
-              padding: 0,
-              fontFamily: "monospace",
-              fontSize: 13,
-              lineHeight: "20px",
-              backgroundColor: "var(--tf-bg)",
-            }}
-          >
-            <code className={`language-${linguagem}`} style={{ display: "table", width: "100%" }}>
+        <div className="overflow-auto">
+          <pre className="m-0 p-0 font-mono text-[13px] leading-5" style={{ backgroundColor: "var(--tf-bg)" }}>
+            <code className={`language-${linguagem} table w-full`}>
               {linhas.map((linha, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "table-row",
-                  }}
-                >
+                <div key={i} className="table-row">
                   <span
-                    style={{
-                      display: "table-cell",
-                      textAlign: "right",
-                      paddingLeft: 16,
-                      paddingRight: 16,
-                      userSelect: "none",
-                      color: "var(--tf-text-tertiary)",
-                      fontFamily: "monospace",
-                      fontSize: 12,
-                      lineHeight: "20px",
-                      borderRight: "1px solid var(--tf-border)",
-                      whiteSpace: "nowrap",
-                      verticalAlign: "top",
-                      minWidth: 48,
-                    }}
+                    className="table-cell text-right px-4 select-none font-mono text-xs leading-5 whitespace-nowrap align-top min-w-[48px]"
+                    style={{ color: "var(--tf-text-tertiary)", borderRight: "1px solid var(--tf-border)" }}
                   >
                     {i + 1}
                   </span>
                   <span
-                    style={{
-                      display: "table-cell",
-                      paddingLeft: 16,
-                      paddingRight: 16,
-                      whiteSpace: "pre",
-                      color: "var(--tf-text)",
-                      fontFamily: "monospace",
-                      lineHeight: "20px",
-                    }}
+                    className="table-cell px-4 whitespace-pre font-mono leading-5"
+                    style={{ color: "var(--tf-text)" }}
                   >
                     {linha}
                   </span>

@@ -45,18 +45,18 @@ export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
       {...attributes}
       {...listeners}
       className={cn(
-        "card-surface px-3 py-2.5 cursor-pointer transition-smooth",
-        isDragging && "opacity-60 shadow-xl rotate-1 scale-[1.02]"
+        "card-surface px-3.5 py-3 cursor-pointer group",
+        isDragging && "opacity-60 rotate-2 scale-[1.02]"
       )}
       onClick={onClick}
     >
-      {/* Labels */}
+      {/* Labels — small dots/pills */}
       {etiquetasDoCartao.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-1.5">
+        <div className="flex flex-wrap gap-1 mb-2">
           {etiquetasDoCartao.map((etiqueta) => (
             <span
               key={etiqueta.id}
-              className="px-2 py-[2px] rounded text-[10px] font-bold text-white leading-tight"
+              className="px-2 py-[2px] rounded-[4px] text-[10px] font-bold text-white leading-tight"
               style={{ backgroundColor: etiqueta.cor }}
             >
               {etiqueta.nome}
@@ -66,16 +66,16 @@ export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
       )}
 
       {/* Title */}
-      <p className="text-[13px] leading-snug mb-0.5" style={{ color: "var(--tf-text)" }}>
+      <p className="text-[13px] leading-snug font-medium" style={{ color: "var(--tf-text)" }}>
         {cartao.titulo}
       </p>
 
-      {/* Badges */}
+      {/* Badges — compact row */}
       {temIndicadores && (
-        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+        <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
           {temPR && (
             <span
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium"
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-[4px] text-[10px] font-bold"
               style={{
                 color: cartao.pr_status === "open" ? "var(--tf-success)" : cartao.pr_status === "merged" ? "var(--tf-accent)" : "var(--tf-danger)",
                 background: cartao.pr_status === "open" ? "var(--tf-success-bg)" : cartao.pr_status === "merged" ? "var(--tf-accent-light)" : "var(--tf-danger-bg)",
@@ -89,7 +89,7 @@ export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
           {cartao.data_entrega && (
             <span
               className={cn(
-                "flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium",
+                "flex items-center gap-1 px-1.5 py-0.5 rounded-[4px] text-[10px] font-bold",
                 dataStatus === "vencido" && "text-white",
                 dataStatus === "proximo" && "text-[var(--tf-warning)]",
                 dataStatus === "normal" && "text-[var(--tf-text-tertiary)]"
@@ -103,13 +103,13 @@ export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
 
           {cartao.descricao && (
             <span style={{ color: "var(--tf-text-tertiary)" }} title="Descrição">
-              <AlignLeft size={13} />
+              <AlignLeft size={12} />
             </span>
           )}
 
           {temChecklist && (
             <span
-              className="flex items-center gap-1 px-1 py-0.5 rounded text-[11px] font-medium"
+              className="flex items-center gap-1 px-1 py-0.5 rounded-[4px] text-[10px] font-bold"
               style={{
                 color: checklistCompleto ? "var(--tf-success)" : "var(--tf-text-tertiary)",
                 background: checklistCompleto ? "var(--tf-success-bg)" : "transparent",
@@ -121,7 +121,7 @@ export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
           )}
 
           {cartao.total_anexos > 0 && (
-            <span className="flex items-center gap-0.5 text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>
+            <span className="flex items-center gap-0.5 text-[10px] font-bold" style={{ color: "var(--tf-text-tertiary)" }}>
               <Paperclip size={10} />
               {cartao.total_anexos}
             </span>
@@ -129,7 +129,7 @@ export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
 
           {cartao.peso && (
             <span
-              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-bold"
+              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-[4px] text-[10px] font-bold"
               style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}
             >
               <Gauge size={9} />

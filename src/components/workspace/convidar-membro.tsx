@@ -49,11 +49,10 @@ export function ConvidarMembro({
     <>
       <div className="fixed inset-0 bg-black/40 z-50" onClick={onFechar} />
       <div
-        className="fixed right-4 top-16 w-80 max-h-[70vh] rounded-2xl z-50 overflow-hidden flex flex-col"
+        className="fixed right-4 top-16 w-80 max-h-[70vh] rounded-[14px] z-50 overflow-hidden flex flex-col"
         style={{
           background: "var(--tf-surface)",
           border: "1px solid var(--tf-border)",
-          boxShadow: "var(--tf-shadow-lg)",
         }}
       >
         {/* Header */}
@@ -72,7 +71,7 @@ export function ConvidarMembro({
           </div>
           <button
             onClick={onFechar}
-            className="p-1 rounded-lg transition-smooth"
+            className="p-1 rounded-[8px] transition-smooth"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
             <X size={15} />
@@ -92,7 +91,7 @@ export function ConvidarMembro({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="flex-1 px-3 py-2 rounded-lg text-xs outline-none transition-smooth"
+              className="flex-1 px-3 py-2 rounded-[8px] text-xs outline-none transition-smooth"
               style={{
                 background: "var(--tf-bg)",
                 border: "1px solid var(--tf-border)",
@@ -108,7 +107,7 @@ export function ConvidarMembro({
             <button
               type="submit"
               disabled={carregando}
-              className="px-3 py-2 rounded-lg text-xs font-medium text-white transition-smooth"
+              className="px-3 py-2 rounded-[8px] text-xs font-medium text-white transition-smooth"
               style={{ background: "var(--tf-accent)" }}
             >
               {carregando ? (
@@ -133,7 +132,7 @@ export function ConvidarMembro({
           {usuarios.map((u) => (
             <div
               key={u.id}
-              className="flex items-center gap-2.5 px-2 py-2 rounded-lg transition-smooth"
+              className="flex items-center gap-2.5 px-2 py-2 rounded-[8px] transition-smooth"
               onMouseEnter={(e) =>
                 (e.currentTarget.style.background = "var(--tf-surface-hover)")
               }

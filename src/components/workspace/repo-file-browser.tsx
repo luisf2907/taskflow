@@ -37,22 +37,22 @@ function SkeletonLinhas() {
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 rounded-md px-3 py-2 animate-pulse"
+          className="flex items-center gap-3 rounded-[8px] px-3 py-2 animate-pulse"
           style={{ backgroundColor: "var(--tf-bg-secondary)" }}
         >
           <div
-            className="h-4 w-4 rounded"
+            className="h-4 w-4 rounded-[4px]"
             style={{ backgroundColor: "var(--tf-border)" }}
           />
           <div
-            className="h-4 rounded flex-1"
+            className="h-4 rounded-[4px] flex-1"
             style={{
               backgroundColor: "var(--tf-border)",
               maxWidth: `${120 + Math.random() * 160}px`,
             }}
           />
           <div
-            className="h-4 w-12 rounded ml-auto"
+            className="h-4 w-12 rounded-[4px] ml-auto"
             style={{ backgroundColor: "var(--tf-border)" }}
           />
         </div>
@@ -131,7 +131,7 @@ export function RepoFileBrowser({
 
   return (
     <div
-      className="rounded-lg border overflow-hidden"
+      className="rounded-[8px] border overflow-hidden"
       style={{
         backgroundColor: "var(--tf-surface)",
         borderColor: "var(--tf-border)",
@@ -148,7 +148,7 @@ export function RepoFileBrowser({
         <button
           type="button"
           onClick={() => navegarParaSegmento(-1)}
-          className="shrink-0 font-medium px-1 py-0.5 rounded transition-colors cursor-pointer hover:underline"
+          className="shrink-0 font-medium px-1 py-0.5 rounded-[4px] transition-colors cursor-pointer hover:underline"
           style={{
             color: segmentos.length > 0 ? "var(--tf-accent)" : "var(--tf-text)",
           }}
@@ -164,7 +164,7 @@ export function RepoFileBrowser({
             <button
               type="button"
               onClick={() => navegarParaSegmento(i)}
-              className="px-1 py-0.5 rounded transition-colors cursor-pointer hover:underline"
+              className="px-1 py-0.5 rounded-[4px] transition-colors cursor-pointer hover:underline"
               style={{
                 color:
                   i < segmentos.length - 1
@@ -205,12 +205,12 @@ export function RepoFileBrowser({
                 key={item.sha}
                 type="button"
                 onClick={() => handleClick(item)}
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors cursor-pointer text-left w-full"
+                className="flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm transition-colors cursor-pointer text-left w-full"
                 style={{
                   color: "var(--tf-text)",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "var(--tf-hover)";
+                  e.currentTarget.style.backgroundColor = "var(--tf-surface-hover)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = "transparent";
@@ -261,12 +261,12 @@ function ReadmePreview({ owner, nome, path, branch }: { owner: string; nome: str
     return (
       <div className="border-t p-6" style={{ borderColor: "var(--tf-border)" }}>
         <div className="flex items-center gap-2 mb-4">
-          <div className="h-4 w-4 rounded animate-pulse" style={{ background: "var(--tf-border)" }} />
-          <div className="h-4 w-24 rounded animate-pulse" style={{ background: "var(--tf-border)" }} />
+          <div className="h-4 w-4 rounded-[4px] animate-pulse" style={{ background: "var(--tf-border)" }} />
+          <div className="h-4 w-24 rounded-[4px] animate-pulse" style={{ background: "var(--tf-border)" }} />
         </div>
         <div className="space-y-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-4 rounded animate-pulse" style={{ background: "var(--tf-border)", width: `${40 + Math.random() * 50}%` }} />
+            <div key={i} className="h-4 rounded-[4px] animate-pulse" style={{ background: "var(--tf-border)", width: `${40 + Math.random() * 50}%` }} />
           ))}
         </div>
       </div>
@@ -318,7 +318,7 @@ function ReadmePreview({ owner, nome, path, branch }: { owner: string; nome: str
               const isInline = !className;
               if (isInline) {
                 return (
-                  <code style={{ background: "var(--tf-bg-secondary)", padding: "2px 5px", borderRadius: 3, fontSize: 13, fontFamily: "monospace", color: "var(--tf-accent-text)" }}>
+                  <code style={{ background: "var(--tf-bg-secondary)", padding: "2px 5px", borderRadius: 4, fontSize: 13, fontFamily: "monospace", color: "var(--tf-accent-text)" }}>
                     {children}
                   </code>
                 );
@@ -330,7 +330,7 @@ function ReadmePreview({ owner, nome, path, branch }: { owner: string; nome: str
               );
             },
             pre: ({ children }) => (
-              <pre style={{ background: "var(--tf-bg-secondary)", borderRadius: 6, padding: 14, margin: "10px 0", overflow: "auto", border: "1px solid var(--tf-border)" }}>
+              <pre style={{ background: "var(--tf-bg-secondary)", borderRadius: 8, padding: 14, margin: "10px 0", overflow: "auto", border: "1px solid var(--tf-border)" }}>
                 {children}
               </pre>
             ),
@@ -352,7 +352,7 @@ function ReadmePreview({ owner, nome, path, branch }: { owner: string; nome: str
               <hr style={{ border: "none", borderTop: "1px solid var(--tf-border)", margin: "20px 0" }} />
             ),
             img: ({ src, alt }) => (
-              <img src={src} alt={alt || ""} style={{ maxWidth: "100%", borderRadius: 6, margin: "10px 0" }} />
+              <img src={src} alt={alt || ""} style={{ maxWidth: "100%", borderRadius: 8, margin: "10px 0" }} />
             ),
           }}
         >

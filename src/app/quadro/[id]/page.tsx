@@ -2,6 +2,7 @@
 
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { useSidebar } from "@/hooks/use-sidebar";
 import { KanbanBoard } from "@/components/quadro/kanban-board";
 import { Modal } from "@/components/ui/modal";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
@@ -48,7 +49,7 @@ export default function PaginaQuadro() {
 
   const [editandoNome, setEditandoNome] = useState(false);
   const [nome, setNome] = useState("");
-  const [sidebarAberta, setSidebarAberta] = useState(true);
+  const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
   const [modalConfig, setModalConfig] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -114,107 +115,144 @@ export default function PaginaQuadro() {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <Header />
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar quadros={quadros} onNovoQuadro={() => router.push("/")} aberta={sidebarAberta} onToggle={() => setSidebarAberta(!sidebarAberta)} />
+    <div className="h-full flex overflow-hidden" style={{ background: "var(--tf-bg)" }}>
+      {iniciado && (
+        <Sidebar quadros={quadros} onNovoQuadro={() => router.push("/")} aberta={sidebarAberta} onToggle={toggleSidebar} />
+      )}
 
-        <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden px-4">
+        <Header />
+        <div className="flex-1 flex flex-col overflow-hidden rounded-[32px] mb-4" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}>
           {/* Board header */}
           {quadro && (
-            <div className="shrink-0 border-b" style={{ borderColor: "var(--tf-border)", background: "var(--tf-bg)" }}>
-              <div className="flex items-center gap-3 px-5 py-2.5">
-                {/* Breadcrumb */}
-                {workspace && (
-                  <div className="flex items-center gap-1.5 mr-1">
-                    <Link href={`/workspace/${workspace.id}`} className="flex items-center gap-1.5 text-[12px] font-medium transition-smooth hover:underline" style={{ color: "var(--tf-text-tertiary)" }}>
-                      <Folder size={12} />
-                      {workspace.nome}
-                    </Link>
-                    <ChevronRight size={12} style={{ color: "var(--tf-text-tertiary)" }} />
-                  </div>
-                )}
-
-                {/* Cor + Nome */}
-                <div className="w-3 h-6 rounded-full shrink-0" style={{ background: quadro.cor }} />
-
-                {editandoNome ? (
-                  <input
-                    ref={inputRef} value={nome} onChange={(e) => setNome(e.target.value)}
-                    onBlur={salvarNome}
-                    onKeyDown={(e) => { if (e.key === "Enter") salvarNome(); if (e.key === "Escape") setEditandoNome(false); }}
-                    className="text-base font-bold rounded-md px-2 py-0.5 outline-none"
-                    style={{ color: "var(--tf-text)", background: "var(--tf-surface)", border: "2px solid var(--tf-accent)" }}
-                  />
-                ) : (
-                  <h1 className="text-base font-bold" style={{ color: "var(--tf-text)" }}>{quadro.nome}</h1>
-                )}
-
-                {/* Status badge clicável */}
-                {isSprint && (
-                  <Dropdown
-                    trigger={
-                      <button
-                        className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md transition-smooth hover:opacity-80"
-                        style={{
-                          background: quadro.status_sprint === "ativa" ? "var(--tf-success-bg)" : quadro.status_sprint === "concluida" ? "var(--tf-bg-secondary)" : "var(--tf-warning-bg)",
-                          color: quadro.status_sprint === "ativa" ? "var(--tf-success)" : quadro.status_sprint === "concluida" ? "var(--tf-text-tertiary)" : "var(--tf-warning)",
-                        }}
-                      >
-                        {quadro.status_sprint === "ativa" ? "● Ativa" : quadro.status_sprint === "concluida" ? "Concluída" : "Planejada"}
-                      </button>
-                    }
+            <div className="shrink-0">
+              <div className="flex items-center gap-4 px-6 py-3.5">
+                {/* Left: Breadcrumb + Name */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {/* Color indicator */}
+                  <div
+                    className="w-9 h-9 rounded-[14px] flex items-center justify-center shrink-0"
+                    style={{ background: quadro.cor }}
                   >
-                    {quadro.status_sprint !== "ativa" && (
-                      <DropdownItem onClick={() => mudarStatus("ativa")}>
-                        <Play size={14} /> Ativar sprint
-                      </DropdownItem>
-                    )}
-                    {quadro.status_sprint === "ativa" && (
-                      <DropdownItem onClick={() => mudarStatus("planejada")}>
-                        <Pause size={14} /> Pausar (voltar pra planejada)
-                      </DropdownItem>
-                    )}
-                    {quadro.status_sprint !== "concluida" && (
-                      <DropdownItem onClick={() => mudarStatus("concluida")}>
-                        <CheckCircle2 size={14} /> Concluir sprint
-                      </DropdownItem>
-                    )}
-                    {quadro.status_sprint === "concluida" && (
-                      <DropdownItem onClick={() => mudarStatus("ativa")}>
-                        <RotateCcw size={14} /> Reativar sprint
-                      </DropdownItem>
-                    )}
-                  </Dropdown>
-                )}
+                    <Folder size={16} className="text-white" />
+                  </div>
 
-                {/* Sprint dates */}
-                {isSprint && (quadro.data_inicio || quadro.data_fim) && (
-                  <div className="flex items-center gap-1.5 text-[12px]" style={{ color: "var(--tf-text-tertiary)" }}>
-                    <Calendar size={12} />
-                    <span>{formatarData(quadro.data_inicio)} → {formatarData(quadro.data_fim)}</span>
-                    {dias !== null && quadro.status_sprint === "ativa" && (
-                      <span className="font-semibold" style={{ color: dias <= 2 ? "var(--tf-danger)" : dias <= 5 ? "var(--tf-warning)" : "var(--tf-text-secondary)" }}>
-                        · {dias > 0 ? `${dias}d` : dias === 0 ? "Hoje!" : `${Math.abs(dias)}d atrasada`}
-                      </span>
+                  <div className="min-w-0">
+                    {/* Breadcrumb */}
+                    {workspace && (
+                      <Link
+                        href={`/workspace/${workspace.id}`}
+                        className="text-[11px] font-medium transition-smooth hover:underline block"
+                        style={{ color: "var(--tf-text-tertiary)" }}
+                      >
+                        {workspace.nome}
+                      </Link>
+                    )}
+
+                    {/* Name */}
+                    {editandoNome ? (
+                      <input
+                        ref={inputRef} value={nome} onChange={(e) => setNome(e.target.value)}
+                        onBlur={salvarNome}
+                        onKeyDown={(e) => { if (e.key === "Enter") salvarNome(); if (e.key === "Escape") setEditandoNome(false); }}
+                        className="text-[15px] font-bold rounded-[8px] px-2 py-0.5 outline-none -ml-2"
+                        style={{ color: "var(--tf-text)", background: "var(--tf-surface)", border: "2px solid var(--tf-accent)" }}
+                      />
+                    ) : (
+                      <h1
+                        className="text-[15px] font-bold truncate cursor-pointer hover:opacity-70 transition-opacity"
+                        style={{ color: "var(--tf-text)" }}
+                        onClick={iniciarEdicao}
+                        title="Clique para renomear"
+                      >
+                        {quadro.nome}
+                      </h1>
                     )}
                   </div>
-                )}
+                </div>
 
-                {/* Actions */}
-                <div className="ml-auto flex items-center gap-1">
+                {/* Center: Status + Date pills */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {isSprint && (
+                    <Dropdown
+                      trigger={
+                        <button
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-full transition-smooth hover:opacity-80"
+                          style={{
+                            background: quadro.status_sprint === "ativa" ? "var(--tf-success-bg)" : quadro.status_sprint === "concluida" ? "var(--tf-bg-secondary)" : "var(--tf-warning-bg)",
+                            color: quadro.status_sprint === "ativa" ? "var(--tf-success)" : quadro.status_sprint === "concluida" ? "var(--tf-text-tertiary)" : "var(--tf-warning)",
+                          }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full" style={{
+                            background: quadro.status_sprint === "ativa" ? "var(--tf-success)" : quadro.status_sprint === "concluida" ? "var(--tf-text-tertiary)" : "var(--tf-warning)",
+                          }} />
+                          {quadro.status_sprint === "ativa" ? "Ativa" : quadro.status_sprint === "concluida" ? "Concluída" : "Planejada"}
+                        </button>
+                      }
+                    >
+                      {quadro.status_sprint !== "ativa" && (
+                        <DropdownItem onClick={() => mudarStatus("ativa")}>
+                          <Play size={14} /> Ativar sprint
+                        </DropdownItem>
+                      )}
+                      {quadro.status_sprint === "ativa" && (
+                        <DropdownItem onClick={() => mudarStatus("planejada")}>
+                          <Pause size={14} /> Pausar
+                        </DropdownItem>
+                      )}
+                      {quadro.status_sprint !== "concluida" && (
+                        <DropdownItem onClick={() => mudarStatus("concluida")}>
+                          <CheckCircle2 size={14} /> Concluir sprint
+                        </DropdownItem>
+                      )}
+                      {quadro.status_sprint === "concluida" && (
+                        <DropdownItem onClick={() => mudarStatus("ativa")}>
+                          <RotateCcw size={14} /> Reativar sprint
+                        </DropdownItem>
+                      )}
+                    </Dropdown>
+                  )}
+
+                  {isSprint && (quadro.data_inicio || quadro.data_fim) && (
+                    <div
+                      className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-full"
+                      style={{ color: "var(--tf-text-secondary)", background: "var(--tf-bg-secondary)" }}
+                    >
+                      <Calendar size={11} />
+                      <span>{formatarData(quadro.data_inicio)} → {formatarData(quadro.data_fim)}</span>
+                      {dias !== null && quadro.status_sprint === "ativa" && (
+                        <span
+                          className="font-bold ml-0.5"
+                          style={{ color: dias <= 2 ? "var(--tf-danger)" : dias <= 5 ? "var(--tf-warning)" : "var(--tf-accent)" }}
+                        >
+                          {dias > 0 ? `${dias}d` : dias === 0 ? "Hoje!" : `${Math.abs(dias)}d atrasada`}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: Actions */}
+                <div className="flex items-center gap-1 shrink-0">
                   {isSprint && (
                     <button
                       onClick={() => setModalConfig(true)}
-                      className="p-1.5 rounded-md transition-smooth"
-                      style={{ color: "var(--tf-text-tertiary)" }}
+                      className="p-2 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
+                      style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
                       title="Configurar sprint"
                     >
                       <Settings size={16} />
                     </button>
                   )}
                   <Dropdown
-                    trigger={<button className="p-1.5 rounded-md transition-smooth" style={{ color: "var(--tf-text-tertiary)" }}><MoreHorizontal size={18} /></button>}
+                    trigger={
+                      <button
+                        className="p-2 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
+                        style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+                      >
+                        <MoreHorizontal size={16} />
+                      </button>
+                    }
                   >
                     <DropdownItem onClick={iniciarEdicao}><Pencil size={14} /> Renomear</DropdownItem>
                     {isSprint && <DropdownItem onClick={() => setModalConfig(true)}><Settings size={14} /> Configurar sprint</DropdownItem>}
@@ -225,17 +263,18 @@ export default function PaginaQuadro() {
 
               {/* Meta */}
               {quadro.meta && (
-                <div className="flex items-center gap-2 px-5 pb-2.5 -mt-0.5">
-                  <Target size={12} style={{ color: "var(--tf-text-tertiary)" }} />
-                  <p className="text-[12px]" style={{ color: "var(--tf-text-tertiary)" }}>{quadro.meta}</p>
+                <div className="flex items-center gap-2 px-6 pb-3 -mt-1">
+                  <Target size={11} style={{ color: "var(--tf-text-tertiary)" }} />
+                  <p className="text-[11px] font-medium" style={{ color: "var(--tf-text-tertiary)" }}>{quadro.meta}</p>
                 </div>
               )}
+
             </div>
           )}
 
           {/* Board area */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            {quadro && <div className="h-1 shrink-0" style={{ background: quadro.cor }} />}
+            {/* Color line moved to board header */}
             <div className="flex-1 flex overflow-hidden board-area" style={{ background: "var(--tf-bg-secondary)" }}>
               <KanbanBoard quadroId={quadroId} workspaceId={quadro?.workspace_id || null} />
             </div>
@@ -259,7 +298,7 @@ export default function PaginaQuadro() {
                   <button
                     key={s}
                     onClick={() => mudarStatus(s)}
-                    className="flex-1 py-2 text-[13px] font-semibold rounded-lg transition-smooth text-center"
+                    className="flex-1 py-2 text-[13px] font-semibold rounded-[8px] transition-smooth text-center"
                     style={{
                       background: quadro.status_sprint === s
                         ? s === "ativa" ? "var(--tf-success)" : s === "concluida" ? "var(--tf-text-tertiary)" : "var(--tf-warning)"
@@ -281,7 +320,7 @@ export default function PaginaQuadro() {
                 value={editMeta}
                 onChange={(e) => setEditMeta(e.target.value)}
                 placeholder="O que queremos alcançar nessa sprint?"
-                className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-smooth"
+                className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
                 style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
@@ -296,7 +335,7 @@ export default function PaginaQuadro() {
                   type="date"
                   value={editInicio}
                   onChange={(e) => setEditInicio(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-smooth"
+                  className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
                   style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
                 />
               </div>
@@ -306,7 +345,7 @@ export default function PaginaQuadro() {
                   type="date"
                   value={editFim}
                   onChange={(e) => setEditFim(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-smooth"
+                  className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
                   style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
                 />
               </div>
@@ -315,7 +354,7 @@ export default function PaginaQuadro() {
             {/* Salvar */}
             <button
               onClick={salvarConfigSprint}
-              className="w-full py-2.5 text-sm font-semibold text-white rounded-lg transition-smooth"
+              className="w-full py-2.5 text-sm font-semibold text-white rounded-[8px] transition-smooth"
               style={{ background: "var(--tf-accent)" }}
             >
               Salvar alterações

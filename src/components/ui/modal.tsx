@@ -36,11 +36,10 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
       onClick={(e) => { if (e.target === overlayRef.current) onFechar(); }}
     >
       <div
-        className={cn("rounded-2xl w-full max-w-lg mx-4 border my-auto", className)}
+        className={cn("rounded-[32px] w-full max-w-lg mx-4 border my-auto", className)}
         style={{
           background: "var(--tf-surface)",
           borderColor: "var(--tf-border)",
-          boxShadow: "var(--tf-shadow-lg)",
           maxHeight: "90vh",
           display: "flex",
           flexDirection: "column",
@@ -54,7 +53,7 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
             <h2 className="text-base font-semibold" style={{ color: "var(--tf-text)" }}>{titulo}</h2>
             <button
               onClick={onFechar}
-              className="p-1 rounded-lg transition-smooth"
+              className="p-1 rounded-[8px] transition-smooth"
               style={{ color: "var(--tf-text-tertiary)" }}
             >
               <X size={18} />

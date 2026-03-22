@@ -2,6 +2,7 @@
 
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { useSidebar } from "@/hooks/use-sidebar";
 import { Modal } from "@/components/ui/modal";
 import { useQuadros } from "@/hooks/use-quadros";
 import { useWorkspaces } from "@/hooks/use-workspaces";
@@ -60,7 +61,7 @@ function WebhookConfigInline({ repoDb, workspaceId }: { repoDb: Repositorio; wor
   }, [workspaceId]);
 
   return (
-    <div className="max-w-xl rounded-xl p-5" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}>
+    <div className="max-w-xl rounded-[14px] p-5" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}>
       <RepoWebhookConfig
         repoId={repoDb.id}
         colunas={todasColunas}
@@ -114,14 +115,13 @@ function ModalConectarRepoLocal({
   return (
     <Modal aberto={aberto} onFechar={onFechar} titulo="Conectar repositório" className="max-w-md">
       <div className="space-y-3">
-        <div className="flex gap-1 p-0.5 rounded-lg" style={{ background: "var(--tf-bg-secondary)" }}>
+        <div className="flex gap-1 p-0.5 rounded-[8px]" style={{ background: "var(--tf-bg-secondary)" }}>
           {(["lista", "manual"] as const).map((m) => (
             <button key={m} onClick={() => setModo(m)}
-              className="flex-1 py-1.5 text-xs font-semibold rounded-md transition-smooth"
+              className="flex-1 py-1.5 text-xs font-semibold rounded-[8px] transition-smooth"
               style={{
                 background: modo === m ? "var(--tf-surface)" : "transparent",
                 color: modo === m ? "var(--tf-text)" : "var(--tf-text-tertiary)",
-                boxShadow: modo === m ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
               }}
             >{m === "lista" ? "Meus Repos" : "Manual"}</button>
           ))}
@@ -132,7 +132,7 @@ function ModalConectarRepoLocal({
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--tf-text-tertiary)" }} />
               <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar repositório..."
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg outline-none" style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} />
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-[8px] outline-none" style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} />
             </div>
             <div className="max-h-[320px] overflow-y-auto space-y-1" style={{ scrollbarWidth: "thin" }}>
               {carregando ? (
@@ -145,12 +145,12 @@ function ModalConectarRepoLocal({
                 </p>
               ) : filtrados.map((r) => (
                 <button key={r.id} onClick={() => onConectar(r.owner, r.name)}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-smooth group"
+                  className="w-full flex items-center gap-3 p-2.5 rounded-[8px] text-left transition-smooth group"
                   style={{ border: "1px solid transparent" }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = "var(--tf-bg-secondary)"; e.currentTarget.style.borderColor = "var(--tf-border)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; }}
                 >
-                  <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0" style={{ background: "var(--tf-accent-light)" }}>
+                  <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "var(--tf-accent-light)" }}>
                     <GitBranch size={14} style={{ color: "var(--tf-accent)" }} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -160,7 +160,7 @@ function ModalConectarRepoLocal({
                     </div>
                     {r.description && <p className="text-[11px] truncate mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>{r.description}</p>}
                   </div>
-                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-md opacity-0 group-hover:opacity-100" style={{ background: "var(--tf-accent)", color: "#fff" }}>
+                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-[8px] opacity-0 group-hover:opacity-100" style={{ background: "var(--tf-accent)", color: "#fff" }}>
                     Conectar
                   </span>
                 </button>
@@ -170,11 +170,11 @@ function ModalConectarRepoLocal({
         ) : (
           <>
             <input value={manualInput} onChange={(e) => setManualInput(e.target.value)} placeholder="owner/repo ou URL do GitHub"
-              className="w-full px-3 py-2 text-sm rounded-lg outline-none" style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
+              className="w-full px-3 py-2 text-sm rounded-[8px] outline-none" style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
               onKeyDown={(e) => { if (e.key === "Enter") { const p = parsearRepo(manualInput); if (p) onConectar(p.owner, p.nome); } }} />
             <button onClick={() => { const p = parsearRepo(manualInput); if (p) onConectar(p.owner, p.nome); }}
               disabled={!manualInput || !parsearRepo(manualInput)}
-              className="w-full py-2.5 text-sm font-semibold text-white rounded-lg disabled:opacity-40" style={{ background: "var(--tf-accent)" }}>
+              className="w-full py-2.5 text-sm font-semibold text-white rounded-[8px] disabled:opacity-40" style={{ background: "var(--tf-accent)" }}>
               Conectar
             </button>
           </>
@@ -190,11 +190,11 @@ function RepoCard({ owner, nome, onAbrir, onDesconectar }: { owner: string; nome
 
   return (
     <div
-      className="flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 cursor-pointer group hover:shadow-md"
+      className="flex items-center gap-4 p-4 rounded-[14px] border transition-all duration-200 cursor-pointer group"
       style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
       onClick={onAbrir}
     >
-      <div className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--tf-accent-light)" }}>
+      <div className="w-12 h-12 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "var(--tf-accent-light)" }}>
         <GitBranch size={22} style={{ color: "var(--tf-accent-text)" }} />
       </div>
       <div className="flex-1 min-w-0">
@@ -223,7 +223,7 @@ function RepoCard({ owner, nome, onAbrir, onDesconectar }: { owner: string; nome
       </div>
       <button
         onClick={(e) => { e.stopPropagation(); onDesconectar(); }}
-        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all"
+        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-[8px] transition-all"
         style={{ color: "var(--tf-text-tertiary)" }}
         title="Desconectar"
       >
@@ -243,7 +243,7 @@ export default function ReposPage() {
   const workspace = workspaces.find((ws) => ws.id === workspaceId);
 
   // Sidebar
-  const [sidebarAberta, setSidebarAberta] = useState(true);
+  const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
 
   // Modal conectar
   const [modalConectar, setModalConectar] = useState(false);
@@ -276,16 +276,16 @@ export default function ReposPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col" style={{ background: "var(--tf-bg)" }}>
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar
-          quadros={quadros}
-          onNovoQuadro={() => {}}
-          aberta={sidebarAberta}
-          onToggle={() => setSidebarAberta(!sidebarAberta)}
-        />
-        <main className="flex-1 overflow-auto p-6">
+    <div className="h-screen flex overflow-hidden" style={{ background: "var(--tf-bg)" }}>
+      <Sidebar
+        quadros={quadros}
+        onNovoQuadro={() => {}}
+        aberta={sidebarAberta}
+        onToggle={toggleSidebar}
+      />
+      <div className="flex-1 flex flex-col overflow-hidden px-4">
+        <Header />
+        <main className="flex-1 overflow-y-auto rounded-[32px] mb-4 p-8" style={{ background: "var(--tf-surface)" }}>
           {!repoAberto ? (
             /* ═══ LISTA DE REPOS ═══ */
             <div className="max-w-4xl mx-auto space-y-6">
@@ -310,7 +310,7 @@ export default function ReposPage() {
                 </div>
                 <button
                   onClick={() => setModalConectar(true)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg transition-smooth hover:opacity-90"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-[8px] transition-smooth hover:opacity-90"
                   style={{ background: "var(--tf-accent)" }}
                 >
                   <Plus size={16} /> Conectar
@@ -319,8 +319,8 @@ export default function ReposPage() {
 
               {/* Lista */}
               {repositorios.length === 0 ? (
-                <div className="text-center py-20 rounded-xl border" style={{ borderColor: "var(--tf-border)", background: "var(--tf-surface)" }}>
-                  <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "var(--tf-accent-light)" }}>
+                <div className="text-center py-20 rounded-[14px] border" style={{ borderColor: "var(--tf-border)", background: "var(--tf-surface)" }}>
+                  <div className="w-16 h-16 rounded-[14px] mx-auto mb-4 flex items-center justify-center" style={{ background: "var(--tf-accent-light)" }}>
                     <GitBranch size={28} style={{ color: "var(--tf-accent-text)" }} />
                   </div>
                   <p className="text-base font-semibold" style={{ color: "var(--tf-text)" }}>Nenhum repositório conectado</p>
@@ -329,7 +329,7 @@ export default function ReposPage() {
                   </p>
                   <button
                     onClick={() => setModalConectar(true)}
-                    className="mt-5 px-5 py-2.5 text-sm font-semibold text-white rounded-lg transition-smooth hover:opacity-90"
+                    className="mt-5 px-5 py-2.5 text-sm font-semibold text-white rounded-[8px] transition-smooth hover:opacity-90"
                     style={{ background: "var(--tf-accent)" }}
                   >
                     Conectar repositório
@@ -362,7 +362,7 @@ export default function ReposPage() {
               <div className="flex items-center gap-3 pb-4 border-b" style={{ borderColor: "var(--tf-border)" }}>
                 <button
                   onClick={() => { setRepoAberto(null); setArquivoAberto(null); }}
-                  className="p-1.5 rounded-lg transition-smooth hover:opacity-70"
+                  className="p-1.5 rounded-[8px] transition-smooth hover:opacity-70"
                   style={{ color: "var(--tf-text-tertiary)" }}
                 >
                   <ArrowLeft size={18} />
@@ -375,7 +375,7 @@ export default function ReposPage() {
                   {/* Clone button */}
                   <button
                     onClick={copiarClone}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-smooth border"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[8px] transition-smooth border"
                     style={{ color: "var(--tf-text-secondary)", borderColor: "var(--tf-border)", background: "var(--tf-surface)" }}
                   >
                     {copiado ? <Check size={12} /> : <Copy size={12} />}
@@ -386,7 +386,7 @@ export default function ReposPage() {
                     href={`https://github.com/${repoAberto.owner}/${repoAberto.nome}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-smooth border"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[8px] transition-smooth border"
                     style={{ color: "var(--tf-text-secondary)", borderColor: "var(--tf-border)", background: "var(--tf-surface)" }}
                   >
                     <ExternalLink size={12} /> GitHub
@@ -438,7 +438,7 @@ export default function ReposPage() {
                     <div className="flex items-center gap-2 mb-3">
                       <GitBranch size={14} style={{ color: "var(--tf-text-tertiary)" }} />
                       <span className="text-xs font-medium" style={{ color: "var(--tf-text-tertiary)" }}>Branch:</span>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-md" style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-[8px]" style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}>
                         {branch}
                       </span>
                     </div>

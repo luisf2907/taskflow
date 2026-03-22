@@ -2,7 +2,7 @@
 
 import { ComentarioComAutor, Membro } from "@/types";
 import { MessageSquare, Send, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Avatar } from "./avatar";
 
 interface ComentariosProps {
@@ -21,9 +21,9 @@ function tempoRelativo(data: string): string {
   const dias = Math.floor(diff / 86400000);
 
   if (minutos < 1) return "agora";
-  if (minutos < 60) return `há ${minutos}min`;
-  if (horas < 24) return `há ${horas}h`;
-  if (dias < 7) return `há ${dias}d`;
+  if (minutos < 60) return `${minutos}min atrás`;
+  if (horas < 24) return `${horas}h atrás`;
+  if (dias < 7) return `${dias}d atrás`;
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 }
 
@@ -34,112 +34,133 @@ export function Comentarios({
   onExcluir,
 }: ComentariosProps) {
   const [texto, setTexto] = useState("");
-  const [autorId, setAutorId] = useState<string | undefined>(membros[0]?.id);
+  const [focado, setFocado] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   function handleEnviar() {
     if (!texto.trim()) return;
-    onCriar(texto.trim(), autorId);
+    onCriar(texto.trim(), membros[0]?.id);
     setTexto("");
+    setFocado(false);
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 text-sm font-semibold text-[var(--trello-text)]">
-        <MessageSquare size={16} />
-        Comentários e atividade
+    <div>
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-4">
+        <MessageSquare size={15} style={{ color: "var(--tf-text-tertiary)" }} />
+        <h3 className="text-[13px] font-semibold" style={{ color: "var(--tf-text)" }}>
+          Comentários
+        </h3>
+        {comentarios.length > 0 && (
+          <span
+            className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+            style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}
+          >
+            {comentarios.length}
+          </span>
+        )}
       </div>
 
-      {/* Novo comentário */}
-      <div className="space-y-2">
-        {membros.length > 0 && (
-          <select
-            value={autorId || ""}
-            onChange={(e) => setAutorId(e.target.value || undefined)}
-            className="w-full px-2 py-1.5 text-xs rounded-[3px] outline-none text-[var(--trello-text)]"
-            style={{
-              background: "var(--trello-card)",
-              borderWidth: 1,
-              borderStyle: "solid",
-              borderColor: "var(--trello-border)",
-            }}
-          >
-            <option value="">Anônimo</option>
-            {membros.map((m) => (
-              <option key={m.id} value={m.id}>
-                Comentar como {m.nome}
-              </option>
-            ))}
-          </select>
-        )}
-        <div className="flex gap-2">
-          <input
+      {/* Input area */}
+      <div className="mb-5">
+        <div
+          className="rounded-[14px] overflow-hidden"
+          style={{
+            background: "var(--tf-bg-secondary)",
+            border: focado ? "2px solid var(--tf-accent)" : "2px solid transparent",
+            transition: "border-color 0.15s ease",
+          }}
+        >
+          <textarea
+            ref={inputRef}
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            placeholder="Escrever um comentário..."
-            className="flex-1 px-3 py-2 text-sm rounded-[3px] outline-none focus:ring-2 focus:ring-[var(--trello-blue)] transition-smooth text-[var(--trello-text)]"
-            style={{
-              background: "var(--trello-card)",
-              borderWidth: 1,
-              borderStyle: "solid",
-              borderColor: "var(--trello-border)",
-            }}
-            onKeyDown={(e) => e.key === "Enter" && handleEnviar()}
+            onFocus={() => setFocado(true)}
+            onBlur={() => { if (!texto.trim()) setFocado(false); }}
+            placeholder="Escreva um comentário..."
+            className="w-full bg-transparent px-4 py-3 text-[13px] resize-none outline-none leading-relaxed"
+            style={{ color: "var(--tf-text)", minHeight: focado ? "80px" : "44px", transition: "min-height 0.2s ease" }}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEnviar(); } }}
           />
-          <button
-            onClick={handleEnviar}
-            disabled={!texto.trim()}
-            className="p-2 rounded-[3px] bg-[#0C66E4] text-white hover:bg-[#0055CC] disabled:opacity-40 disabled:cursor-not-allowed transition-smooth"
-          >
-            <Send size={16} />
-          </button>
+
+          {/* Send bar */}
+          {focado && (
+            <div className="flex items-center justify-between px-4 pb-3">
+              <p className="text-[10px]" style={{ color: "var(--tf-text-tertiary)" }}>
+                Enter para enviar · Shift+Enter para quebrar linha
+              </p>
+              <button
+                onClick={handleEnviar}
+                disabled={!texto.trim()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-white rounded-[8px] disabled:opacity-30"
+                style={{ background: "var(--tf-accent)", transition: "opacity 0.15s ease" }}
+              >
+                <Send size={12} />
+                Enviar
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Lista de comentários */}
-      <div className="space-y-3">
-        {comentarios.map((comentario) => {
-          const autor = comentario.membros;
-          return (
-            <div key={comentario.id} className="flex gap-2.5 group">
-              {autor ? (
-                <Avatar membro={autor} tamanho="sm" />
-              ) : (
-                <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white font-semibold shrink-0 ring-2 ring-[var(--trello-card)]"
-                  style={{ background: "var(--trello-border)" }}
-                >
-                  ?
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-[var(--trello-text)]">
-                    {autor?.nome || "Anônimo"}
-                  </span>
-                  <span className="text-xs text-[var(--trello-text-subtle)]">
-                    {tempoRelativo(comentario.criado_em)}
-                  </span>
-                  <button
-                    onClick={() => onExcluir(comentario.id)}
-                    className="p-0.5 rounded-[3px] text-[var(--trello-text-subtle)] opacity-0 group-hover:opacity-100 hover:text-[#C9372C] transition-all ml-auto"
+      {/* Comments list */}
+      {comentarios.length > 0 ? (
+        <div className="space-y-1">
+          {comentarios.map((comentario) => {
+            const autor = comentario.membros;
+            return (
+              <div
+                key={comentario.id}
+                className="flex gap-3 p-3 rounded-[14px] group hover:bg-[var(--tf-bg-secondary)]"
+                style={{ transition: "background 0.15s ease" }}
+              >
+                {autor ? (
+                  <div className="shrink-0 mt-0.5">
+                    <Avatar membro={autor} tamanho="sm" />
+                  </div>
+                ) : (
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5"
+                    style={{ background: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}
                   >
-                    <Trash2 size={12} />
-                  </button>
+                    ?
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-[12px] font-semibold" style={{ color: "var(--tf-text)" }}>
+                      {autor?.nome || "Anônimo"}
+                    </span>
+                    <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>
+                      {tempoRelativo(comentario.criado_em)}
+                    </span>
+                    <button
+                      onClick={() => onExcluir(comentario.id)}
+                      className="p-1 rounded-[4px] opacity-0 group-hover:opacity-100 ml-auto hover:bg-[var(--tf-danger-bg)]"
+                      style={{ color: "var(--tf-text-tertiary)", transition: "opacity 0.15s ease, background 0.15s ease" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                  <p className="text-[13px] break-words leading-relaxed whitespace-pre-wrap" style={{ color: "var(--tf-text-secondary)" }}>
+                    {comentario.texto}
+                  </p>
                 </div>
-                <p className="text-sm text-[var(--trello-text)] mt-0.5 break-words">
-                  {comentario.texto}
-                </p>
               </div>
-            </div>
-          );
-        })}
-
-        {comentarios.length === 0 && (
-          <p className="text-xs text-[var(--trello-text-subtle)] italic text-center py-4">
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-center py-6">
+          <MessageSquare size={20} className="mx-auto mb-2 opacity-20" style={{ color: "var(--tf-text-tertiary)" }} />
+          <p className="text-[12px]" style={{ color: "var(--tf-text-tertiary)" }}>
             Nenhum comentário ainda
           </p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

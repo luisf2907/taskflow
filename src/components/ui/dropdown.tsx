@@ -26,7 +26,7 @@ export function Dropdown({ trigger, children, className }: DropdownProps) {
       <div onClick={() => setAberto(!aberto)}>{trigger}</div>
       {aberto && (
         <div
-          className={cn("absolute right-0 mt-1 min-w-[180px] rounded-xl py-1.5 shadow-lg z-50 border", className)}
+          className={cn("absolute right-0 mt-1 min-w-[180px] rounded-[14px] py-1.5 z-50 border", className)}
           style={{ background: "var(--tf-surface-raised)", borderColor: "var(--tf-border)" }}
         >
           <div onClick={() => setAberto(false)}>{children}</div>
@@ -48,7 +48,7 @@ export function DropdownItem({ children, onClick, perigo, className }: DropdownI
     <button
       onClick={onClick}
       className={cn(
-        "w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-smooth rounded-md mx-1",
+        "w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-smooth rounded-[8px] mx-1",
         className
       )}
       style={{

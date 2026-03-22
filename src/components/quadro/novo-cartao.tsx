@@ -28,7 +28,7 @@ export const NovoCartao = memo(function NovoCartao({ onCriar }: NovoCartaoProps)
     return (
       <button
         onClick={() => setAtivo(true)}
-        className="flex items-center gap-1.5 w-full px-2.5 py-1.5 text-[13px] rounded-lg transition-smooth"
+        className="flex items-center gap-1.5 w-full px-2.5 py-1.5 text-[13px] rounded-[8px] transition-smooth"
         style={{ color: "var(--tf-text-tertiary)" }}
         onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
@@ -58,7 +58,7 @@ export const NovoCartao = memo(function NovoCartao({ onCriar }: NovoCartaoProps)
       <div className="flex items-center gap-1.5">
         <button
           onClick={handleSubmit}
-          className="px-3 py-1.5 text-xs font-semibold text-white rounded-lg transition-smooth"
+          className="px-3 py-1.5 text-xs font-semibold text-white rounded-[8px] transition-smooth"
           style={{ background: "var(--tf-accent)" }}
         >
           Adicionar

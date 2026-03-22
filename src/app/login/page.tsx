@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
-import { Github, Kanban, Loader2, Mail } from "lucide-react";
+import { Github, Kanban, Loader2, Mail, ArrowRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
@@ -35,23 +35,17 @@ function LoginContent() {
         const { error } = await supabase.auth.signUp({
           email,
           password: senha,
-          options: {
-            data: { full_name: nome },
-          },
+          options: { data: { full_name: nome } },
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password: senha,
-        });
+        const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
         if (error) throw error;
       }
       router.push("/");
       router.refresh();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erro desconhecido";
-      setErro(message);
+      setErro(err instanceof Error ? err.message : "Erro desconhecido");
     } finally {
       setCarregando(false);
     }
@@ -60,7 +54,6 @@ function LoginContent() {
   async function handleGithubLogin() {
     setErro("");
     setCarregando(true);
-
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
       options: {
@@ -68,183 +61,162 @@ function LoginContent() {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-
     if (error) {
       setErro(error.message);
       setCarregando(false);
     }
   }
 
+  const inputClass = "w-full px-4 py-3 rounded-[14px] text-[14px] outline-none transition-all duration-150";
+
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
       style={{ background: "var(--tf-bg)" }}
     >
+      {/* Background decoration */}
       <div
-        className="w-full max-w-sm rounded-2xl p-8"
-        style={{
-          background: "var(--tf-surface)",
-          border: "1px solid var(--tf-border)",
-          boxShadow: "var(--tf-shadow-lg)",
-        }}
-      >
+        className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full opacity-[0.07] blur-3xl pointer-events-none"
+        style={{ background: "var(--tf-accent)" }}
+      />
+      <div
+        className="absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-[0.05] blur-3xl pointer-events-none"
+        style={{ background: "var(--tf-accent-yellow)" }}
+      />
+
+      <div className="w-full max-w-[420px] relative z-10">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2.5 mb-8">
+        <div className="flex items-center justify-center gap-3 mb-10">
           <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            className="w-11 h-11 rounded-[14px] flex items-center justify-center"
             style={{ background: "var(--tf-accent)" }}
           >
-            <Kanban size={18} className="text-white" />
+            <Kanban size={22} className="text-white" strokeWidth={2.5} />
           </div>
           <span
-            className="text-xl font-bold tracking-tight"
+            className="text-2xl font-black tracking-tight"
             style={{ color: "var(--tf-text)" }}
           >
             Taskflow
           </span>
         </div>
 
-        <h1
-          className="text-lg font-semibold text-center mb-6"
-          style={{ color: "var(--tf-text)" }}
+        {/* Card */}
+        <div
+          className="rounded-[32px] overflow-hidden"
+          style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
         >
-          {modo === "login" ? "Entrar na sua conta" : "Criar conta"}
-        </h1>
+          {/* Header */}
+          <div className="px-8 pt-8 pb-2">
+            <h1 className="text-xl font-black tracking-tight" style={{ color: "var(--tf-text)" }}>
+              {modo === "login" ? "Bem-vindo de volta" : "Criar sua conta"}
+            </h1>
+            <p className="text-[13px] mt-1" style={{ color: "var(--tf-text-tertiary)" }}>
+              {modo === "login"
+                ? "Entre para continuar de onde parou."
+                : "Comece a organizar seus projetos."}
+            </p>
+          </div>
 
-        {/* GitHub OAuth */}
-        <button
-          onClick={handleGithubLogin}
-          disabled={carregando}
-          className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-smooth mb-4"
-          style={{
-            background: "var(--tf-text)",
-            color: "var(--tf-bg)",
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.opacity = "0.9")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.opacity = "1")
-          }
-        >
-          <Github size={17} />
-          Continuar com GitHub
-        </button>
+          <div className="px-8 pb-8 pt-4 space-y-5">
+            {/* GitHub OAuth */}
+            <button
+              onClick={handleGithubLogin}
+              disabled={carregando}
+              className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 rounded-[14px] text-[14px] font-semibold transition-all duration-150 hover:opacity-90 disabled:opacity-50"
+              style={{ background: "var(--tf-text)", color: "var(--tf-surface)" }}
+            >
+              <Github size={18} />
+              Continuar com GitHub
+            </button>
 
-        {/* Divisor */}
-        <div className="flex items-center gap-3 my-5">
-          <div className="flex-1 h-px" style={{ background: "var(--tf-border)" }} />
-          <span className="text-xs" style={{ color: "var(--tf-text-tertiary)" }}>
-            ou
-          </span>
-          <div className="flex-1 h-px" style={{ background: "var(--tf-border)" }} />
+            {/* Divider */}
+            <div className="flex items-center gap-4">
+              <div className="flex-1 h-px" style={{ background: "var(--tf-border)" }} />
+              <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-tertiary)" }}>
+                ou
+              </span>
+              <div className="flex-1 h-px" style={{ background: "var(--tf-border)" }} />
+            </div>
+
+            {/* Email form */}
+            <form onSubmit={handleEmailAuth} className="space-y-3">
+              {modo === "cadastro" && (
+                <input
+                  type="text"
+                  placeholder="Seu nome"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  required
+                  className={inputClass}
+                  style={{ background: "var(--tf-bg-secondary)", border: "2px solid transparent", color: "var(--tf-text)" }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "transparent")}
+                />
+              )}
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className={inputClass}
+                style={{ background: "var(--tf-bg-secondary)", border: "2px solid transparent", color: "var(--tf-text)" }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "transparent")}
+              />
+              <input
+                type="password"
+                placeholder="Senha"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                required
+                minLength={6}
+                className={inputClass}
+                style={{ background: "var(--tf-bg-secondary)", border: "2px solid transparent", color: "var(--tf-text)" }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "transparent")}
+              />
+
+              {erro && (
+                <div
+                  className="text-[12px] px-4 py-2.5 rounded-[8px] font-medium"
+                  style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}
+                >
+                  {erro}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={carregando}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-[14px] text-[14px] font-semibold text-white transition-all duration-150 hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
+                style={{ background: "var(--tf-accent)" }}
+              >
+                {carregando ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : modo === "login" ? (
+                  <>
+                    Entrar
+                    <ArrowRight size={16} />
+                  </>
+                ) : (
+                  <>
+                    Criar conta
+                    <ArrowRight size={16} />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
         </div>
 
-        {/* Email form */}
-        <form onSubmit={handleEmailAuth} className="space-y-3">
-          {modo === "cadastro" && (
-            <input
-              type="text"
-              placeholder="Seu nome"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              required
-              className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-smooth"
-              style={{
-                background: "var(--tf-bg)",
-                border: "1px solid var(--tf-border)",
-                color: "var(--tf-text)",
-              }}
-              onFocus={(e) =>
-                (e.currentTarget.style.borderColor = "var(--tf-accent)")
-              }
-              onBlur={(e) =>
-                (e.currentTarget.style.borderColor = "var(--tf-border)")
-              }
-            />
-          )}
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-smooth"
-            style={{
-              background: "var(--tf-bg)",
-              border: "1px solid var(--tf-border)",
-              color: "var(--tf-text)",
-            }}
-            onFocus={(e) =>
-              (e.currentTarget.style.borderColor = "var(--tf-accent)")
-            }
-            onBlur={(e) =>
-              (e.currentTarget.style.borderColor = "var(--tf-border)")
-            }
-          />
-          <input
-            type="password"
-            placeholder="Senha"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            required
-            minLength={6}
-            className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-smooth"
-            style={{
-              background: "var(--tf-bg)",
-              border: "1px solid var(--tf-border)",
-              color: "var(--tf-text)",
-            }}
-            onFocus={(e) =>
-              (e.currentTarget.style.borderColor = "var(--tf-accent)")
-            }
-            onBlur={(e) =>
-              (e.currentTarget.style.borderColor = "var(--tf-border)")
-            }
-          />
-
-          {erro && (
-            <p
-              className="text-xs px-1"
-              style={{ color: "var(--tf-danger)" }}
-            >
-              {erro}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={carregando}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-smooth"
-            style={{ background: "var(--tf-accent)" }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "var(--tf-accent-hover)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "var(--tf-accent)")
-            }
-          >
-            {carregando ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Mail size={16} />
-            )}
-            {modo === "login" ? "Entrar" : "Criar conta"}
-          </button>
-        </form>
-
-        {/* Toggle modo */}
-        <p
-          className="text-xs text-center mt-5"
-          style={{ color: "var(--tf-text-secondary)" }}
-        >
+        {/* Toggle mode */}
+        <p className="text-[13px] text-center mt-6" style={{ color: "var(--tf-text-secondary)" }}>
           {modo === "login" ? "Não tem conta?" : "Já tem conta?"}{" "}
           <button
-            onClick={() => {
-              setModo(modo === "login" ? "cadastro" : "login");
-              setErro("");
-            }}
-            className="font-medium underline underline-offset-2"
+            onClick={() => { setModo(modo === "login" ? "cadastro" : "login"); setErro(""); }}
+            className="font-semibold transition-all duration-150 hover:underline underline-offset-2"
             style={{ color: "var(--tf-accent)" }}
           >
             {modo === "login" ? "Cadastre-se" : "Fazer login"}

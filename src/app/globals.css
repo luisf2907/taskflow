@@ -3,95 +3,101 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ============================================
-   TASKFLOW — "Warm Obsidian" Design System
-   A warm, tactile aesthetic: charcoal + cream + amber
+   TASKFLOW — Design System
+   Clean, minimal teal + mint aesthetic
    ============================================ */
 
 :root {
-  /* Warm neutrals */
-  --tf-bg: #EDE8E2;
-  --tf-bg-secondary: #E5DFD8;
+  /* Cool mint/blue-gray neutrals */
+  --tf-bg: #E4F0EE;
+  --tf-bg-secondary: #DAE8E6;
   --tf-surface: #FFFFFF;
-  --tf-surface-hover: #F5F2EE;
+  --tf-surface-hover: #F7F9F9;
   --tf-surface-raised: #FFFFFF;
 
   /* Text */
-  --tf-text: #2D2A26;
-  --tf-text-secondary: #6B6560;
-  --tf-text-tertiary: #9C958E;
+  --tf-text: #1C2B29;
+  --tf-text-secondary: #5A6D6A;
+  --tf-text-tertiary: #849C98;
 
   /* Borders */
-  --tf-border: #E8E3DD;
-  --tf-border-subtle: #F0ECE7;
+  --tf-border: #E1EBE9;
+  --tf-border-subtle: #EDF4F3;
 
-  /* Accent — warm amber */
-  --tf-accent: #C4841D;
-  --tf-accent-hover: #A86E15;
-  --tf-accent-light: #FEF3E2;
-  --tf-accent-text: #92600E;
+  /* Accent — Primary Teal + Yellow */
+  --tf-accent: #00857A;
+  --tf-accent-hover: #006D63;
+  --tf-accent-light: #E0F2F1;
+  --tf-accent-text: #005F55;
+
+  --tf-accent-yellow: #FBD051;
+  --tf-accent-yellow-hover: #EBBF41;
 
   /* Status */
-  --tf-success: #3D8B37;
-  --tf-success-bg: #EDF7EC;
-  --tf-danger: #C13515;
-  --tf-danger-bg: #FEF0EC;
-  --tf-warning: #B58105;
-  --tf-warning-bg: #FEF8E8;
+  --tf-success: #00857A;
+  --tf-success-bg: #E0F2F1;
+  --tf-danger: #D84D4D;
+  --tf-danger-bg: #FBEDED;
+  --tf-warning: #8DA03B;
+  --tf-warning-bg: #F4F9DD;
 
   /* Column */
-  --tf-column: #F5F2EE;
+  --tf-column: #F5F9F8;
 
   /* Header */
-  --tf-header: #2D2A26;
-  --tf-header-text: #FAF8F5;
+  --tf-header: #E4F0EE;
+  --tf-header-text: #1C2B29;
 
-  /* Shadows */
-  --tf-shadow-sm: 0 1px 2px rgba(45, 42, 38, 0.06);
-  --tf-shadow: 0 1px 3px rgba(45, 42, 38, 0.08), 0 1px 2px rgba(45, 42, 38, 0.06);
-  --tf-shadow-md: 0 4px 6px rgba(45, 42, 38, 0.06), 0 2px 4px rgba(45, 42, 38, 0.04);
-  --tf-shadow-lg: 0 10px 25px rgba(45, 42, 38, 0.1), 0 4px 10px rgba(45, 42, 38, 0.05);
+  /* Shadows — very subtle */
+  --tf-shadow-sm: 0 1px 3px rgba(28, 43, 41, 0.04);
+  --tf-shadow: 0 2px 8px rgba(28, 43, 41, 0.05);
+  --tf-shadow-md: 0 4px 16px rgba(28, 43, 41, 0.06);
+  --tf-shadow-lg: 0 8px 24px rgba(28, 43, 41, 0.08);
 }
 
 .dark {
-  --tf-bg: #141210;
-  --tf-bg-secondary: #1A1816;
-  --tf-surface: #2A2724;
-  --tf-surface-hover: #322F2C;
-  --tf-surface-raised: #2F2C29;
+  --tf-bg: #141A19;
+  --tf-bg-secondary: #18201E;
+  --tf-surface: #222B29;
+  --tf-surface-hover: #2B3633;
+  --tf-surface-raised: #283330;
 
-  --tf-text: #E8E3DD;
-  --tf-text-secondary: #A39B93;
-  --tf-text-tertiary: #756D65;
+  --tf-text: #E1EBE9;
+  --tf-text-secondary: #9DB5AF;
+  --tf-text-tertiary: #67857E;
 
-  --tf-border: #3D3935;
-  --tf-border-subtle: #332F2B;
+  --tf-border: #33423F;
+  --tf-border-subtle: #293633;
 
-  --tf-accent: #E8A838;
-  --tf-accent-hover: #F0B94A;
-  --tf-accent-light: #3D3019;
-  --tf-accent-text: #E8A838;
+  --tf-accent: #00857A;
+  --tf-accent-hover: #00A396;
+  --tf-accent-light: #163632;
+  --tf-accent-text: #4DD0C4;
 
-  --tf-success: #5CB85C;
-  --tf-success-bg: #1E2E1E;
+  --tf-accent-yellow: #FBD051;
+  --tf-accent-yellow-hover: #FCE18A;
+
+  --tf-success: #00857A;
+  --tf-success-bg: #163632;
   --tf-danger: #E55B3C;
-  --tf-danger-bg: #2E1E1A;
+  --tf-danger-bg: #3E1E1E;
   --tf-warning: #D4A017;
   --tf-warning-bg: #2E2A1A;
 
-  --tf-column: #221F1C;
+  --tf-column: #1D2624;
 
-  --tf-header: #141210;
-  --tf-header-text: #E8E3DD;
+  --tf-header: #141A19;
+  --tf-header-text: #E1EBE9;
 
-  --tf-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --tf-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
-  --tf-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
-  --tf-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.2);
+  --tf-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
+  --tf-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --tf-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --tf-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 /* Scrollbar */
 * { scrollbar-width: thin; scrollbar-color: var(--tf-border) transparent; }
-*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar { width: 5px; height: 5px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb { background: var(--tf-border); border-radius: 99px; }
 *::-webkit-scrollbar-thumb:hover { background: var(--tf-text-tertiary); }
@@ -105,38 +111,24 @@ body {
 
 .column-surface {
   background: var(--tf-column);
-  border-radius: 12px;
-  border: 1px solid var(--tf-border);
-  box-shadow: var(--tf-shadow-sm);
+  border-radius: 20px;
+  border: 1px solid var(--tf-border-subtle);
 }
 
 .card-surface {
   background: var(--tf-surface);
-  border: 1px solid var(--tf-border);
-  border-radius: 8px;
-  box-shadow: var(--tf-shadow);
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: 14px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
 .card-surface:hover {
-  border-color: var(--tf-accent);
-  box-shadow: var(--tf-shadow-md);
+  border-color: var(--tf-border);
 }
 
 /* ---- TRANSITIONS ---- */
 .transition-smooth {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ---- SIDEBAR COLLAPSE ---- */
-.sidebar-expanded {
-  width: 260px;
-  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.sidebar-collapsed {
-  width: 0px;
-  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
 }
 
 /* ---- LABEL PILLS ---- */
@@ -153,8 +145,20 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  opacity: 0.04;
+  opacity: 0.03;
   background-image: radial-gradient(circle at 1px 1px, var(--tf-text) 0.5px, transparent 0);
   background-size: 24px 24px;
   pointer-events: none;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
 }

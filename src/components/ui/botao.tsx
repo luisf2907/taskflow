@@ -21,7 +21,7 @@ const Botao = forwardRef<HTMLButtonElement, BotaoProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-smooth cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
+          "inline-flex items-center justify-center gap-2 rounded-[8px] font-medium transition-smooth cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
           {
             "text-xs px-3 py-1.5": tamanho === "sm",
             "text-sm px-4 py-2": tamanho === "md",

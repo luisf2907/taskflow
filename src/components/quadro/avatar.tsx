@@ -44,7 +44,6 @@ export function Avatar({ membro, tamanho = "md", className }: AvatarProps) {
           className
         )}
         style={{
-          boxShadow: "0 0 0 2px var(--tf-surface)",
         }}
       />
     );
@@ -59,7 +58,6 @@ export function Avatar({ membro, tamanho = "md", className }: AvatarProps) {
       )}
       style={{
         backgroundColor: membro.cor_avatar,
-        boxShadow: "0 0 0 2px var(--tf-surface)",
       }}
       title={membro.nome}
     >
@@ -91,7 +89,6 @@ export function GrupoAvatar({ membros, max = 3, tamanho = "sm" }: GrupoAvatarPro
           )}
           style={{
             background: "var(--tf-text-tertiary)",
-            boxShadow: "0 0 0 2px var(--tf-surface)",
           }}
         >
           +{restante}

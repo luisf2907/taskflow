@@ -9,7 +9,7 @@ const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>
       <input
         ref={ref}
         className={cn(
-          "w-full rounded-lg px-3 py-2 text-sm outline-none transition-smooth disabled:opacity-50",
+          "w-full rounded-[8px] px-3 py-2 text-sm outline-none transition-smooth disabled:opacity-50",
           className
         )}
         style={{

@@ -21,9 +21,9 @@ function diasEntre(d1: Date, d2: Date) {
 // ─── Stat Card ───
 function StatCard({ label, valor, sub, icone: Icon, cor }: { label: string; valor: string; sub: string; icone: React.ElementType; cor?: string }) {
   return (
-    <div className="rounded-xl border p-4" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+    <div className="rounded-[14px] border p-4" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
       <div className="flex items-center gap-2 mb-2">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: cor ? `${cor}20` : "var(--tf-accent-light)" }}>
+        <div className="w-7 h-7 rounded-[8px] flex items-center justify-center" style={{ background: cor ? `${cor}20` : "var(--tf-accent-light)" }}>
           <Icon size={14} style={{ color: cor || "var(--tf-accent)" }} />
         </div>
         <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-tertiary)" }}>{label}</p>
@@ -211,10 +211,10 @@ function BurndownChart({ sprint, cards }: { sprint: Quadro; cards: CartaoBacklog
   }
 
   return (
-    <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+    <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Burndown — {sprint.nome}</h3>
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-bold" style={{ background: `${statusCor}20`, color: statusCor }}>
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-[8px] text-[11px] font-bold" style={{ background: `${statusCor}20`, color: statusCor }}>
           {status === "adiantado" ? <TrendingUp size={12} /> : <Flame size={12} />}
           {pontosRestantes} pts restantes · {status}
         </div>
@@ -393,7 +393,7 @@ export function MetricasWorkspace({ sprints, cartoesDaSprint, backlogPuro, etiqu
   }
 
   return (
-    <div className="space-y-5 max-w-5xl mx-auto py-2">
+    <div className="space-y-5 py-2">
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard icone={TrendingUp} label="Velocity média" valor={`${velocityMedia} pts`} sub={`${sprintsConcl.length} sprints concluídas`} cor="#60A5FA" />
@@ -408,34 +408,36 @@ export function MetricasWorkspace({ sprints, cartoesDaSprint, backlogPuro, etiqu
       )}
 
       {/* ── Linha: Velocity Trend + Distribuição por Status ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Velocity Trend */}
-        {velocityTrend.length >= 2 && (
-          <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
-            <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
-              <TrendingUp size={14} className="inline mr-1.5" style={{ color: "var(--tf-accent)" }} />
-              Velocity Trend
-            </h3>
-            <LineChart dados={velocityTrend} />
-          </div>
-        )}
-
-        {/* Distribuição por Status (donut) */}
-        {statusData.length > 0 && (
-          <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
-            <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
-              <Layers size={14} className="inline mr-1.5" style={{ color: "var(--tf-accent)" }} />
-              Distribuição por Status
-            </h3>
-            <div className="flex justify-center py-2">
-              <DonutChart segmentos={statusData} />
+      {(velocityTrend.length >= 2 || statusData.length > 0) && (
+        <div className={`grid gap-4 ${velocityTrend.length >= 2 && statusData.length > 0 ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"}`}>
+          {/* Velocity Trend */}
+          {velocityTrend.length >= 2 && (
+            <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+              <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
+                <TrendingUp size={14} className="inline mr-1.5" style={{ color: "var(--tf-accent)" }} />
+                Velocity Trend
+              </h3>
+              <LineChart dados={velocityTrend} />
             </div>
-          </div>
-        )}
-      </div>
+          )}
+
+          {/* Distribuição por Status (donut) */}
+          {statusData.length > 0 && (
+            <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+              <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
+                <Layers size={14} className="inline mr-1.5" style={{ color: "var(--tf-accent)" }} />
+                Distribuição por Status
+              </h3>
+              <div className="flex justify-center py-2">
+                <DonutChart segmentos={statusData} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Velocity por Sprint (barras) ── */}
-      <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+      <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
         <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
           <BarChart3 size={14} className="inline mr-1.5" style={{ color: "var(--tf-accent)" }} />
           Velocity por Sprint
@@ -444,13 +446,13 @@ export function MetricasWorkspace({ sprints, cartoesDaSprint, backlogPuro, etiqu
           {velocityData.map((v, i) => (
             <div key={i} className="flex items-center gap-3">
               <span className="text-[12px] font-medium w-28 truncate text-right" style={{ color: "var(--tf-text-secondary)" }}>{v.nome}</span>
-              <div className="flex-1 h-7 rounded-md overflow-hidden relative" style={{ background: "var(--tf-bg-secondary)" }}>
+              <div className="flex-1 h-7 rounded-[8px] overflow-hidden relative" style={{ background: "var(--tf-bg-secondary)" }}>
                 <div
-                  className="absolute inset-y-0 left-0 rounded-md opacity-20"
+                  className="absolute inset-y-0 left-0 rounded-[8px] opacity-20"
                   style={{ width: `${Math.max((v.totalPontos / maxVelocity) * 100, 4)}%`, background: v.status === "ativa" ? "var(--tf-accent)" : "#4BCE97" }}
                 />
                 <div
-                  className="absolute inset-y-0 left-0 rounded-md flex items-center px-2 transition-all duration-700"
+                  className="absolute inset-y-0 left-0 rounded-[8px] flex items-center px-2 transition-all duration-700"
                   style={{ width: `${Math.max((v.pontosConcluidos / maxVelocity) * 100, v.pontosConcluidos > 0 ? 4 : 0)}%`, background: v.status === "ativa" ? "var(--tf-accent)" : "#4BCE97" }}
                 >
                   {v.pontosConcluidos > 0 && <span className="text-[11px] font-bold text-white whitespace-nowrap">{v.pontosConcluidos} pts</span>}
@@ -466,7 +468,7 @@ export function MetricasWorkspace({ sprints, cartoesDaSprint, backlogPuro, etiqu
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Cards por Membro */}
         {membroData.length > 0 && (
-          <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+          <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
             <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
               <Users size={14} className="inline mr-1.5" style={{ color: "var(--tf-accent)" }} />
               Carga por Membro {sprintAtiva ? `— ${sprintAtiva.nome}` : ""}
@@ -482,8 +484,12 @@ export function MetricasWorkspace({ sprints, cartoesDaSprint, backlogPuro, etiqu
                     <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>{m.concluidos}/{m.cards} cards · {m.pontos} pts</span>
                   </div>
                   <div className="flex gap-0.5 ml-8">
-                    <div className="h-4 rounded-l-md transition-all duration-500" style={{ width: `${(m.concluidos / maxMembroCards) * 100}%`, background: "#4BCE97", minWidth: m.concluidos > 0 ? 4 : 0 }} />
-                    <div className="h-4 rounded-r-md transition-all duration-500" style={{ width: `${((m.cards - m.concluidos) / maxMembroCards) * 100}%`, background: "var(--tf-accent)", opacity: 0.4, minWidth: (m.cards - m.concluidos) > 0 ? 4 : 0 }} />
+                    {m.concluidos > 0 && (
+                      <div className={`h-4 transition-all duration-500 ${m.concluidos === m.cards ? "rounded-full" : "rounded-l-full"}`} style={{ width: `${(m.concluidos / maxMembroCards) * 100}%`, background: "#4BCE97", minWidth: 4 }} />
+                    )}
+                    {m.cards - m.concluidos > 0 && (
+                      <div className={`h-4 transition-all duration-500 ${m.concluidos === 0 ? "rounded-full" : "rounded-r-full"}`} style={{ width: `${((m.cards - m.concluidos) / maxMembroCards) * 100}%`, background: "var(--tf-accent)", opacity: 0.4, minWidth: 4 }} />
+                    )}
                   </div>
                 </div>
               ))}
@@ -503,7 +509,7 @@ export function MetricasWorkspace({ sprints, cartoesDaSprint, backlogPuro, etiqu
 
         {/* Sprint Completion Rate */}
         {completionData.length > 0 && (
-          <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+          <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
             <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
               <Target size={14} className="inline mr-1.5" style={{ color: "var(--tf-accent)" }} />
               Taxa de Conclusão por Sprint
@@ -530,7 +536,7 @@ export function MetricasWorkspace({ sprints, cartoesDaSprint, backlogPuro, etiqu
 
       {/* ── Distribuição por Etiqueta ── */}
       {etiquetaStats.length > 0 && (
-        <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+        <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
           <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>Distribuição por Etiqueta</h3>
           <div className="space-y-2">
             {etiquetaStats.map((e, i) => (

@@ -2,7 +2,9 @@
 
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { cn } from "@/lib/utils";
 import { Modal } from "@/components/ui/modal";
+import { useSidebar } from "@/hooks/use-sidebar";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { useQuadros } from "@/hooks/use-quadros";
 import { useWorkspaces } from "@/hooks/use-workspaces";
@@ -39,6 +41,7 @@ import {
   Calendar,
   ChevronRight,
   Folder,
+  Kanban,
   Gauge,
   GripVertical,
   Inbox,
@@ -121,10 +124,10 @@ function ModalConectarRepo({
     <Modal aberto={aberto} onFechar={onFechar} titulo="Conectar repositório" className="max-w-md">
       <div className="space-y-3">
         {/* Toggle modo */}
-        <div className="flex gap-1 p-0.5 rounded-lg" style={{ background: "var(--tf-bg-secondary)" }}>
+        <div className="flex gap-1 p-0.5 rounded-[8px]" style={{ background: "var(--tf-bg-secondary)" }}>
           <button
             onClick={() => setModo("lista")}
-            className="flex-1 py-1.5 text-xs font-semibold rounded-md transition-smooth"
+            className="flex-1 py-1.5 text-xs font-semibold rounded-[8px] transition-smooth"
             style={{
               background: modo === "lista" ? "var(--tf-surface)" : "transparent",
               color: modo === "lista" ? "var(--tf-text)" : "var(--tf-text-tertiary)",
@@ -135,7 +138,7 @@ function ModalConectarRepo({
           </button>
           <button
             onClick={() => setModo("manual")}
-            className="flex-1 py-1.5 text-xs font-semibold rounded-md transition-smooth"
+            className="flex-1 py-1.5 text-xs font-semibold rounded-[8px] transition-smooth"
             style={{
               background: modo === "manual" ? "var(--tf-surface)" : "transparent",
               color: modo === "manual" ? "var(--tf-text)" : "var(--tf-text-tertiary)",
@@ -155,7 +158,7 @@ function ModalConectarRepo({
                 value={repoInput}
                 onChange={(e) => setRepoInput(e.target.value)}
                 placeholder="Buscar repositório..."
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg outline-none transition-smooth"
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
                 style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }}
               />
             </div>
@@ -182,7 +185,7 @@ function ModalConectarRepo({
                   <button
                     key={r.id}
                     onClick={() => onConectar(r.owner, r.name)}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-smooth group"
+                    className="w-full flex items-center gap-3 p-2.5 rounded-[8px] text-left transition-smooth group"
                     style={{ border: "1px solid transparent" }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = "var(--tf-bg-secondary)";
@@ -193,7 +196,7 @@ function ModalConectarRepo({
                       e.currentTarget.style.borderColor = "transparent";
                     }}
                   >
-                    <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0" style={{ background: "var(--tf-accent-light)" }}>
+                    <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "var(--tf-accent-light)" }}>
                       <GitBranch size={14} style={{ color: "var(--tf-accent)" }} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -219,7 +222,7 @@ function ModalConectarRepo({
                       </div>
                     </div>
                     <span
-                      className="text-[11px] font-semibold px-2.5 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-smooth"
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth"
                       style={{ background: "var(--tf-accent)", color: "#fff" }}
                     >
                       Conectar
@@ -238,7 +241,7 @@ function ModalConectarRepo({
                 value={repoInput}
                 onChange={(e) => setRepoInput(e.target.value)}
                 placeholder="https://github.com/owner/repo ou owner/repo"
-                className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-smooth"
+                className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
                 style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -253,7 +256,7 @@ function ModalConectarRepo({
             </div>
 
             {repoInput && parsearRepo(repoInput) && (
-              <div className="p-3 rounded-lg border" style={{ background: "var(--tf-bg-secondary)", borderColor: "var(--tf-border)" }}>
+              <div className="p-3 rounded-[8px] border" style={{ background: "var(--tf-bg-secondary)", borderColor: "var(--tf-border)" }}>
                 <div className="flex items-center gap-2">
                   <GitBranch size={16} style={{ color: "var(--tf-accent)" }} />
                   <span className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>
@@ -269,7 +272,7 @@ function ModalConectarRepo({
                 if (parsed) onConectar(parsed.owner, parsed.nome);
               }}
               disabled={!repoInput || !parsearRepo(repoInput)}
-              className="w-full py-2.5 text-sm font-semibold text-white rounded-lg transition-smooth disabled:opacity-40"
+              className="w-full py-2.5 text-sm font-semibold text-white rounded-[8px] transition-smooth disabled:opacity-40"
               style={{ background: "var(--tf-accent)" }}
             >
               Conectar
@@ -291,7 +294,7 @@ function WebhookConfigWrapper({ repoId, repoDb, sprintId }: { repoId: string; re
   const { colunas } = useColunas(sprintId ?? "");
 
   return (
-    <div className="max-w-xl rounded-xl p-5" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}>
+    <div className="max-w-xl rounded-[14px] p-5" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}>
       {!sprintId ? (
         <p className="text-xs" style={{ color: "var(--tf-text-secondary)" }}>
           Crie um sprint primeiro para poder configurar as colunas do webhook.
@@ -317,11 +320,11 @@ function RepoCard({ owner, nome, onAbrir, onDesconectar }: { owner: string; nome
 
   return (
     <div
-      className="flex items-center gap-4 p-4 rounded-xl border transition-smooth cursor-pointer group"
+      className="flex items-center gap-4 p-4 rounded-[14px] border transition-smooth cursor-pointer group"
       style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
       onClick={onAbrir}
     >
-      <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--tf-accent-light)" }}>
+      <div className="w-10 h-10 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "var(--tf-accent-light)" }}>
         <GitBranch size={20} style={{ color: "var(--tf-accent-text)" }} />
       </div>
       <div className="flex-1 min-w-0">
@@ -345,7 +348,7 @@ function RepoCard({ owner, nome, onAbrir, onDesconectar }: { owner: string; nome
       )}
       <button
         onClick={(e) => { e.stopPropagation(); onDesconectar(); }}
-        className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-smooth"
+        className="p-1.5 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth"
         style={{ color: "var(--tf-danger)" }}
         title="Desconectar"
       >
@@ -395,10 +398,8 @@ function BacklogRow({
   return (
     <div
       ref={setDragRef}
-      className={`flex items-center gap-3 px-4 py-2.5 transition-smooth group cursor-pointer ${!isLast ? "border-b" : ""} ${isDragging ? "opacity-30" : ""}`}
+      className={`flex items-center gap-3 px-5 py-3 rounded-[14px] transition-all duration-300 ease-out group cursor-pointer border hover:-translate-y-0.5 ${isDragging ? "opacity-30 scale-95" : ""}`}
       style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
-      onMouseEnter={(e) => { if (!isDragging) e.currentTarget.style.background = "var(--tf-surface-hover)"; }}
-      onMouseLeave={(e) => { if (!isDragging) e.currentTarget.style.background = "var(--tf-surface)"; }}
       onClick={onClick}
     >
       {/* Drag handle */}
@@ -430,7 +431,7 @@ function BacklogRow({
 
       {/* Status (coluna) */}
       {tarefa.coluna_nome && (
-        <span className="text-[11px] px-2 py-0.5 rounded-md shrink-0" style={{
+        <span className="text-[11px] px-2 py-0.5 rounded-[8px] shrink-0" style={{
           background: tarefa.concluido ? "var(--tf-success-bg)" : "var(--tf-bg-secondary)",
           color: tarefa.concluido ? "var(--tf-success)" : "var(--tf-text-tertiary)",
           fontWeight: tarefa.concluido ? 600 : 400,
@@ -450,7 +451,7 @@ function BacklogRow({
       {seletor ? (
         <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
           <select
-            className="text-[12px] px-2 py-1 rounded-md outline-none"
+            className="text-[12px] px-2 py-1 rounded-[8px] outline-none"
             style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }}
             defaultValue=""
             onChange={(e) => {
@@ -471,7 +472,7 @@ function BacklogRow({
       ) : noSprint ? (
         <button
           onClick={(e) => { e.stopPropagation(); setSeletor(true); }}
-          className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-smooth shrink-0"
+          className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth shrink-0"
           style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}
         >
           <ArrowRight size={10} /> Mover pra sprint
@@ -479,7 +480,7 @@ function BacklogRow({
       ) : (
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 shrink-0" onClick={(e) => e.stopPropagation()}>
           <select
-            className="text-[11px] px-1.5 py-0.5 rounded-md outline-none transition-smooth"
+            className="text-[11px] px-1.5 py-0.5 rounded-[8px] outline-none transition-smooth"
             style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text-secondary)" }}
             defaultValue=""
             onChange={(e) => {
@@ -504,7 +505,7 @@ function BacklogRow({
       {/* Excluir */}
       <button
         onClick={(e) => { e.stopPropagation(); onExcluir(tarefa.id); }}
-        className="p-1 rounded-md opacity-0 group-hover:opacity-100 transition-smooth shrink-0"
+        className="p-1 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth shrink-0"
         style={{ color: "var(--tf-text-tertiary)" }}
         title="Excluir tarefa"
       >
@@ -522,7 +523,7 @@ function BacklogPuroDropZone({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={setNodeRef}
-      className="rounded-2xl transition-all duration-200 min-h-[80px]"
+      className="rounded-[14px] transition-all duration-200 min-h-[80px]"
       style={{
         padding: isOver ? "12px" : "0",
         border: isOver ? "2px solid var(--tf-accent)" : "2px solid transparent",
@@ -548,7 +549,7 @@ function SprintDropZone({ sprintId, sprintNome, cor, children }: {
   return (
     <div
       ref={setNodeRef}
-      className="rounded-2xl transition-all duration-200 min-h-[80px]"
+      className="rounded-[14px] transition-all duration-200 min-h-[80px]"
       style={{
         padding: isOver ? "12px" : "0",
         border: isOver ? `2px solid ${cor}` : "2px solid transparent",
@@ -577,7 +578,7 @@ export default function PaginaWorkspace() {
   const [convidando, setConvidando] = useState(false);
 
   const workspace = workspaces.find((w) => w.id === workspaceId);
-  const [sidebarAberta, setSidebarAberta] = useState(true);
+  const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
   const [abaAtiva, setAbaAtiva] = useState<"backlog" | "sprints" | "metricas" | "config">("sprints");
 
   // Repositórios
@@ -745,7 +746,7 @@ export default function PaginaWorkspace() {
 
   if (!workspace) {
     return (
-      <div className="h-full flex flex-col">
+      <div className="h-full flex overflow-hidden" style={{ background: "var(--tf-bg)" }}>
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "var(--tf-accent)", borderTopColor: "transparent" }} />
@@ -756,34 +757,68 @@ export default function PaginaWorkspace() {
 
   function SprintCard({ sprint, tipo }: { sprint: Quadro; tipo: "ativa" | "planejada" | "concluida" }) {
     const dias = diasRestantes(sprint.data_fim);
+    const statusLabel = tipo === "ativa" ? "Ativa" : tipo === "concluida" ? "Concluída" : "Planejada";
+    const statusColor = tipo === "ativa" ? "var(--tf-success)" : tipo === "concluida" ? "var(--tf-text-tertiary)" : "var(--tf-warning)";
+    const statusBg = tipo === "ativa" ? "var(--tf-success-bg)" : tipo === "concluida" ? "var(--tf-bg-secondary)" : "var(--tf-warning-bg)";
 
     return (
       <div
-        className="rounded-xl border p-4 transition-smooth"
-        style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
+        className="group rounded-[20px] p-5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
+        style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
+        onClick={() => router.push(`/quadro/${sprint.id}`)}
       >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-3 h-8 rounded-full" style={{ background: sprint.cor }} />
-            <div>
-              <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>{sprint.nome}</h3>
-              {sprint.data_inicio && sprint.data_fim && (
-                <p className="text-[11px] mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>
-                  {formatarData(sprint.data_inicio)} → {formatarData(sprint.data_fim)}
-                  {dias !== null && tipo === "ativa" && (
-                    <span className="ml-1.5 font-semibold" style={{ color: dias <= 2 ? "var(--tf-danger)" : dias <= 5 ? "var(--tf-warning)" : "var(--tf-success)" }}>
-                      · {dias > 0 ? `${dias}d restantes` : dias === 0 ? "Último dia!" : `${Math.abs(dias)}d atrasada`}
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
+        <div className="flex items-start gap-4">
+          {/* Left: icon */}
+          <div
+            className="w-10 h-10 rounded-[14px] flex items-center justify-center shrink-0 mt-0.5"
+            style={{ background: sprint.cor }}
+          >
+            <Kanban size={18} className="text-white" />
           </div>
-          <div className="flex items-center gap-1">
+
+          {/* Center: info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-[14px] font-bold truncate" style={{ color: "var(--tf-text)" }}>
+                {sprint.nome}
+              </h3>
+              <span
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide shrink-0"
+                style={{ background: statusBg, color: statusColor }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor }} />
+                {statusLabel}
+              </span>
+            </div>
+
+            {sprint.data_inicio && sprint.data_fim && (
+              <p className="text-[12px] flex items-center gap-1.5" style={{ color: "var(--tf-text-tertiary)" }}>
+                <Calendar size={11} />
+                {formatarData(sprint.data_inicio)} → {formatarData(sprint.data_fim)}
+                {dias !== null && tipo === "ativa" && (
+                  <span
+                    className="font-bold"
+                    style={{ color: dias <= 2 ? "var(--tf-danger)" : dias <= 5 ? "var(--tf-warning)" : "var(--tf-accent)" }}
+                  >
+                    · {dias > 0 ? `${dias}d` : dias === 0 ? "Hoje!" : `${Math.abs(dias)}d atrasada`}
+                  </span>
+                )}
+              </p>
+            )}
+
+            {sprint.meta && (
+              <p className="text-[12px] mt-1.5 leading-relaxed truncate" style={{ color: "var(--tf-text-secondary)" }}>
+                {sprint.meta}
+              </p>
+            )}
+          </div>
+
+          {/* Right: actions */}
+          <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
             {tipo === "planejada" && (
               <button
                 onClick={() => ativarSprint(sprint.id)}
-                className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-white rounded-md transition-smooth"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white rounded-full transition-all duration-150 hover:shadow-md"
                 style={{ background: "var(--tf-success)" }}
               >
                 <Play size={10} /> Ativar
@@ -792,17 +827,24 @@ export default function PaginaWorkspace() {
             {tipo === "ativa" && (
               <button
                 onClick={() => concluirSprint(sprint.id)}
-                className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-white rounded-md transition-smooth"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white rounded-full transition-all duration-150 hover:shadow-md"
                 style={{ background: "var(--tf-accent)" }}
               >
                 <CheckCircle2 size={10} /> Concluir
               </button>
             )}
             <Dropdown
-              trigger={<button className="p-1 rounded-md transition-smooth" style={{ color: "var(--tf-text-tertiary)" }}><MoreHorizontal size={16} /></button>}
+              trigger={
+                <button
+                  className="p-1.5 rounded-[8px] opacity-0 group-hover:opacity-100 transition-all duration-150 hover:bg-[var(--tf-surface-hover)]"
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                >
+                  <MoreHorizontal size={16} />
+                </button>
+              }
             >
               <DropdownItem onClick={() => router.push(`/quadro/${sprint.id}`)}>
-                <ChevronRight size={14} /> Abrir board
+                <ArrowRight size={14} /> Abrir board
               </DropdownItem>
               <DropdownItem perigo onClick={() => excluirQuadro(sprint.id)}>
                 <Trash2 size={14} /> Excluir sprint
@@ -810,82 +852,82 @@ export default function PaginaWorkspace() {
             </Dropdown>
           </div>
         </div>
-
-        {sprint.meta && (
-          <div className="flex items-start gap-2 mb-3 ml-5">
-            <Target size={12} className="mt-0.5 shrink-0" style={{ color: "var(--tf-text-tertiary)" }} />
-            <p className="text-[12px] leading-relaxed" style={{ color: "var(--tf-text-secondary)" }}>{sprint.meta}</p>
-          </div>
-        )}
-
-        <div className="flex items-center gap-3 ml-5">
-          <button
-            onClick={() => router.push(`/quadro/${sprint.id}`)}
-            className="text-[12px] font-medium transition-smooth"
-            style={{ color: "var(--tf-accent-text)" }}
-          >
-            Abrir board →
-          </button>
-        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <Header />
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar quadros={quadros} onNovoQuadro={() => setModalSprint(true)} aberta={sidebarAberta} onToggle={() => setSidebarAberta(!sidebarAberta)} />
+    <div className="h-full flex overflow-hidden lg:gap-4 pb-4" style={{ background: "var(--tf-bg)" }}>
+      {iniciado && (
+        <Sidebar quadros={quadros} onNovoQuadro={() => setModalSprint(true)} aberta={sidebarAberta} onToggle={toggleSidebar} />
+      )}
 
-        <main className="flex-1 overflow-y-auto" style={{ background: "var(--tf-bg)" }}>
-          {/* Workspace Header */}
-          <div className="border-b px-8 py-5" style={{ borderColor: "var(--tf-border)" }}>
-            <div className="max-w-4xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: workspace.cor }}>
-                  <Folder size={20} className="text-white" />
+      <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
+        <Header />
+        <main className="flex-1 overflow-y-auto pb-4 no-scrollbar" style={{ background: "transparent" }}>
+
+          {/* GRID ÚNICO — hero + conteúdo alinhados */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            {/* HERO CARD — ocupa toda a largura do grid */}
+            <div
+              className="col-span-full relative overflow-hidden rounded-[32px] border transition-smooth"
+              style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
+            >
+              <div className="relative z-10 px-8 lg:px-12 pt-10 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-8">
+                <div className="flex items-center gap-6">
+                  <div className="w-20 h-20 rounded-[20px] flex items-center justify-center shrink-0 transition-transform duration-300 hover:scale-105" style={{ background: workspace.cor }}>
+                    <Folder size={32} className="text-white" strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl lg:text-4xl font-black tracking-tight" style={{ color: "var(--tf-text)" }}>{workspace.nome}</h1>
+                    <p className="text-[15px] font-medium mt-2" style={{ color: "var(--tf-text-tertiary)" }}>
+                      {workspace.descricao || "Sem descrição"} • {sprintsDoWorkspace.length} sprints totais
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold" style={{ color: "var(--tf-text)" }}>{workspace.nome}</h1>
-                  {workspace.descricao && (
-                    <p className="text-[13px]" style={{ color: "var(--tf-text-tertiary)" }}>{workspace.descricao}</p>
-                  )}
+
+                <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+                  <button
+                    onClick={() => setModalSprint(true)}
+                    className="flex items-center gap-2 px-5 py-3 text-[14px] font-bold rounded-[20px] transition-all hover:-translate-y-0.5"
+                    style={{ background: "var(--tf-accent-yellow)", color: "var(--tf-text)" }}
+                  >
+                    <Plus size={18} strokeWidth={2.5} /> Nova Sprint
+                  </button>
                 </div>
               </div>
-              <button
-                onClick={() => setModalSprint(true)}
-                className="flex items-center gap-2 px-3.5 py-2 text-[13px] font-semibold text-white rounded-lg transition-smooth"
-                style={{ background: "var(--tf-accent)" }}
-              >
-                <Plus size={15} /> Nova Sprint
-              </button>
+
+              {/* TABS INTEGRADAS */}
+              <div className="relative z-10 flex flex-wrap items-center gap-2 px-8 lg:px-12 pt-4 pb-6 mt-2 border-t" style={{ borderColor: `${workspace.cor}20` }}>
+                {[
+                  { id: "backlog" as const, label: "Backlog & Quadro", icon: Inbox },
+                  { id: "sprints" as const, label: "Sprints", icon: Calendar },
+                  { id: "metricas" as const, label: "Métricas", icon: BarChart3 },
+                  { id: "config" as const, label: "Ajustes", icon: Settings },
+                ].map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => setAbaAtiva(id)}
+                    className={cn(
+                      "flex items-center gap-2 px-5 py-2.5 text-[14px] font-bold rounded-[14px] transition-all duration-300",
+                      abaAtiva === id
+                        ? "shadow-[0_4px_12px_rgba(0,0,0,0.08)] scale-105"
+                        : "hover:scale-105 hover:-translate-y-0.5"
+                    )}
+                    style={{
+                      background: abaAtiva === id ? "var(--tf-accent-light)" : "transparent",
+                      color: abaAtiva === id ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
+                    }}
+                  >
+                    <Icon size={16} strokeWidth={abaAtiva === id ? 2.5 : 2} /> {label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Tabs */}
-            <div className="max-w-4xl mx-auto flex gap-1 mt-4">
-              {[
-                { id: "backlog" as const, label: "Backlog", icon: Inbox },
-                { id: "sprints" as const, label: "Sprints", icon: Calendar },
-                { id: "metricas" as const, label: "Métricas", icon: BarChart3 },
-                { id: "config" as const, label: "Configurações", icon: Settings },
-              ].map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setAbaAtiva(id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium rounded-lg transition-smooth"
-                  style={{
-                    background: abaAtiva === id ? "var(--tf-accent-light)" : "transparent",
-                    color: abaAtiva === id ? "var(--tf-accent-text)" : "var(--tf-text-tertiary)",
-                  }}
-                >
-                  <Icon size={14} /> {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="max-w-4xl mx-auto px-8 py-6 space-y-6">
+              {/* COLUNA PRINCIPAL DA ABA (ESQUERDA 75%) */}
+              <div className="lg:col-span-8 xl:col-span-9 flex flex-col space-y-6">
 
             {/* ═══ ABA BACKLOG ═══ */}
             {abaAtiva === "backlog" && (
@@ -898,7 +940,7 @@ export default function PaginaWorkspace() {
                   {!criandoTarefa && (
                     <button
                       onClick={() => setCriandoTarefa(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold text-white rounded-lg transition-smooth"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold text-white rounded-[8px] transition-smooth"
                       style={{ background: "var(--tf-accent)" }}
                     >
                       <Plus size={14} /> Nova tarefa
@@ -908,13 +950,13 @@ export default function PaginaWorkspace() {
 
                 {/* Form criar tarefa */}
                 {criandoTarefa && (
-                  <div className="rounded-xl border p-4 space-y-3" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                  <div className="rounded-[20px] border p-5 space-y-3" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)",  }}>
                     <div className="flex gap-3">
                       <input
                         value={novaTarefa}
                         onChange={(e) => setNovaTarefa(e.target.value)}
                         placeholder="Título da tarefa..."
-                        className="flex-1 px-3 py-2 text-sm rounded-lg outline-none transition-smooth"
+                        className="flex-1 px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
                         style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
                         onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
                         onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
@@ -925,15 +967,15 @@ export default function PaginaWorkspace() {
                         value={novaTarefaPeso}
                         onChange={(e) => setNovaTarefaPeso(e.target.value.replace(/\D/g, ""))}
                         placeholder="Pts"
-                        className="w-16 px-3 py-2 text-sm rounded-lg outline-none transition-smooth text-center"
+                        className="w-16 px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth text-center"
                         style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
                       />
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={handleCriarTarefa} disabled={!novaTarefa.trim()} className="px-4 py-1.5 text-sm font-semibold text-white rounded-lg disabled:opacity-40 transition-smooth" style={{ background: "var(--tf-accent)" }}>
+                      <button onClick={handleCriarTarefa} disabled={!novaTarefa.trim()} className="px-4 py-1.5 text-sm font-semibold text-white rounded-[8px] disabled:opacity-40 transition-smooth" style={{ background: "var(--tf-accent)" }}>
                         Criar
                       </button>
-                      <button onClick={() => { setCriandoTarefa(false); setNovaTarefa(""); setNovaTarefaPeso(""); }} className="px-4 py-1.5 text-sm rounded-lg transition-smooth" style={{ color: "var(--tf-text-secondary)" }}>
+                      <button onClick={() => { setCriandoTarefa(false); setNovaTarefa(""); setNovaTarefaPeso(""); }} className="px-4 py-1.5 text-sm rounded-[8px] transition-smooth" style={{ color: "var(--tf-text-secondary)" }}>
                         Cancelar
                       </button>
                     </div>
@@ -950,13 +992,13 @@ export default function PaginaWorkspace() {
                       </h3>
                     </div>
                     {backlogPuro.length > 0 ? (
-                      <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--tf-border)" }}>
+                      <div className="flex flex-col gap-2.5">
                         {backlogPuro.map((tarefa, i) => (
                           <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === backlogPuro.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
                         ))}
                       </div>
                     ) : (
-                      <div className="rounded-xl border-2 border-dashed py-4 text-center text-[12px]" style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}>
+                      <div className="rounded-[20px] border-2 border-dashed py-6 text-center text-[12px]" style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}>
                         Arraste tarefas aqui para remover da sprint
                       </div>
                     )}
@@ -982,13 +1024,13 @@ export default function PaginaWorkspace() {
                           </span>
                         </div>
                         {tarefas.length > 0 ? (
-                          <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--tf-border)" }}>
+                          <div className="flex flex-col gap-2.5">
                             {tarefas.map((tarefa, i) => (
                               <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
                             ))}
                           </div>
                         ) : (
-                          <div className="rounded-xl border-2 border-dashed py-4 text-center text-[12px]" style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}>
+                          <div className="rounded-[20px] border-2 border-dashed py-6 text-center text-[12px]" style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}>
                             Arraste tarefas do backlog para cá
                           </div>
                         )}
@@ -1010,7 +1052,7 @@ export default function PaginaWorkspace() {
                         </h3>
                         <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>concluída</span>
                       </div>
-                      <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--tf-border)" }}>
+                      <div className="flex flex-col gap-2.5 opacity-80 mix-blend-luminosity">
                         {tarefas.map((tarefa, i) => (
                           <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
                         ))}
@@ -1025,7 +1067,7 @@ export default function PaginaWorkspace() {
                     <Inbox size={32} className="mx-auto mb-3" style={{ color: "var(--tf-text-tertiary)" }} />
                     <h3 className="text-base font-bold mb-1" style={{ color: "var(--tf-text)" }}>Backlog vazio</h3>
                     <p className="text-sm mb-4" style={{ color: "var(--tf-text-tertiary)" }}>Crie tarefas e depois associe a sprints</p>
-                    <button onClick={() => setCriandoTarefa(true)} className="px-4 py-2 text-sm font-semibold text-white rounded-lg" style={{ background: "var(--tf-accent)" }}>
+                    <button onClick={() => setCriandoTarefa(true)} className="px-4 py-2 text-sm font-semibold text-white rounded-[8px]" style={{ background: "var(--tf-accent)" }}>
                       Criar primeira tarefa
                     </button>
                   </div>
@@ -1035,7 +1077,7 @@ export default function PaginaWorkspace() {
                 <DragOverlay>
                   {arrastando && (
                     <div
-                      className="flex items-center gap-3 px-4 py-2.5 rounded-xl shadow-lg border"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-[14px] border"
                       style={{ background: "var(--tf-surface)", borderColor: "var(--tf-accent)", minWidth: 280 }}
                     >
                       <GripVertical size={14} style={{ color: "var(--tf-text-tertiary)" }} />
@@ -1101,7 +1143,7 @@ export default function PaginaWorkspace() {
                     <Calendar size={32} className="mx-auto mb-3" style={{ color: "var(--tf-text-tertiary)" }} />
                     <h3 className="text-base font-bold mb-1" style={{ color: "var(--tf-text)" }}>Nenhuma sprint</h3>
                     <p className="text-sm mb-4" style={{ color: "var(--tf-text-tertiary)" }}>Crie sua primeira sprint para começar a planejar</p>
-                    <button onClick={() => setModalSprint(true)} className="px-4 py-2 text-sm font-semibold text-white rounded-lg" style={{ background: "var(--tf-accent)" }}>
+                    <button onClick={() => setModalSprint(true)} className="px-4 py-2 text-sm font-semibold text-white rounded-[8px]" style={{ background: "var(--tf-accent)" }}>
                       Criar sprint
                     </button>
                   </div>
@@ -1121,8 +1163,8 @@ export default function PaginaWorkspace() {
             )}
 
             {abaAtiva === "config" && (
-              <section className="space-y-6">
-                <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+              <section className="grid grid-cols-1 2xl:grid-cols-2 gap-6 items-start">
+                <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Informações</h3>
                     {!editandoConfig && (
@@ -1135,15 +1177,15 @@ export default function PaginaWorkspace() {
                     <div className="space-y-3">
                       <div>
                         <label className="text-[12px] font-semibold mb-1 block" style={{ color: "var(--tf-text-secondary)" }}>Nome</label>
-                        <input value={wsNome} onChange={(e) => setWsNome(e.target.value)} className="w-full px-3 py-2 text-sm rounded-lg outline-none" style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-accent)", color: "var(--tf-text)" }} />
+                        <input value={wsNome} onChange={(e) => setWsNome(e.target.value)} className="w-full px-3 py-2 text-sm rounded-[8px] outline-none" style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-accent)", color: "var(--tf-text)" }} />
                       </div>
                       <div>
                         <label className="text-[12px] font-semibold mb-1 block" style={{ color: "var(--tf-text-secondary)" }}>Descrição</label>
-                        <input value={wsDescricao} onChange={(e) => setWsDescricao(e.target.value)} placeholder="Descrição do workspace" className="w-full px-3 py-2 text-sm rounded-lg outline-none" style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }} />
+                        <input value={wsDescricao} onChange={(e) => setWsDescricao(e.target.value)} placeholder="Descrição do workspace" className="w-full px-3 py-2 text-sm rounded-[8px] outline-none" style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }} />
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={salvarConfig} className="px-4 py-1.5 text-sm font-semibold text-white rounded-lg" style={{ background: "var(--tf-accent)" }}>Salvar</button>
-                        <button onClick={() => setEditandoConfig(false)} className="px-4 py-1.5 text-sm rounded-lg" style={{ color: "var(--tf-text-secondary)" }}>Cancelar</button>
+                        <button onClick={salvarConfig} className="px-4 py-1.5 text-sm font-semibold text-white rounded-[8px]" style={{ background: "var(--tf-accent)" }}>Salvar</button>
+                        <button onClick={() => setEditandoConfig(false)} className="px-4 py-1.5 text-sm rounded-[8px]" style={{ color: "var(--tf-text-secondary)" }}>Cancelar</button>
                       </div>
                     </div>
                   ) : (
@@ -1156,7 +1198,7 @@ export default function PaginaWorkspace() {
                 </div>
 
                 {/* ─── Equipe ─── */}
-                <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                <div className="rounded-[14px] border p-5 2xl:col-span-2" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
                   <div className="flex items-center gap-2 mb-4">
                     <Users size={16} style={{ color: "var(--tf-accent)" }} />
                     <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Equipe</h3>
@@ -1173,7 +1215,7 @@ export default function PaginaWorkspace() {
                         value={emailConvite}
                         onChange={(e) => { setEmailConvite(e.target.value); setErroConvite(null); }}
                         placeholder="Email do membro para convidar..."
-                        className="w-full pl-9 pr-3 py-2 text-sm rounded-lg outline-none transition-smooth"
+                        className="w-full pl-9 pr-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
                         style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }}
                         onKeyDown={async (e) => {
                           if (e.key === "Enter" && emailConvite.trim()) {
@@ -1198,7 +1240,7 @@ export default function PaginaWorkspace() {
                         setConvidando(false);
                       }}
                       disabled={convidando || !emailConvite.trim()}
-                      className="px-4 py-2 text-sm font-semibold text-white rounded-lg transition-smooth disabled:opacity-40"
+                      className="px-4 py-2 text-sm font-semibold text-white rounded-[8px] transition-smooth disabled:opacity-40"
                       style={{ background: "var(--tf-accent)" }}
                     >
                       {convidando ? "..." : "Convidar"}
@@ -1206,7 +1248,7 @@ export default function PaginaWorkspace() {
                   </div>
 
                   {erroConvite && (
-                    <p className="text-xs mb-3 px-3 py-2 rounded-lg" style={{ background: "#ef444420", color: "#ef4444" }}>
+                    <p className="text-xs mb-3 px-3 py-2 rounded-[8px]" style={{ background: "#ef444420", color: "#ef4444" }}>
                       {erroConvite}
                     </p>
                   )}
@@ -1221,7 +1263,7 @@ export default function PaginaWorkspace() {
                       wsUsuarios.map((u) => (
                         <div
                           key={u.id}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-smooth group"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-[8px] transition-smooth group"
                           onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-bg-secondary)")}
                           onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                         >
@@ -1258,7 +1300,7 @@ export default function PaginaWorkspace() {
 
                           {/* Badge papel */}
                           <span
-                            className="flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-md shrink-0"
+                            className="flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-[8px] shrink-0"
                             style={{
                               background: u.papel === "admin" ? "var(--tf-accent-light)" : "var(--tf-bg-secondary)",
                               color: u.papel === "admin" ? "var(--tf-accent-text)" : "var(--tf-text-tertiary)",
@@ -1272,7 +1314,7 @@ export default function PaginaWorkspace() {
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-smooth">
                             <button
                               onClick={() => alterarPapel(u.id, u.papel === "admin" ? "membro" : "admin")}
-                              className="p-1.5 rounded-md transition-smooth"
+                              className="p-1.5 rounded-[8px] transition-smooth"
                               style={{ color: "var(--tf-text-tertiary)" }}
                               title={u.papel === "admin" ? "Tornar membro" : "Tornar admin"}
                               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-accent)")}
@@ -1282,7 +1324,7 @@ export default function PaginaWorkspace() {
                             </button>
                             <button
                               onClick={() => removerUsuario(u.id)}
-                              className="p-1.5 rounded-md transition-smooth"
+                              className="p-1.5 rounded-[8px] transition-smooth"
                               style={{ color: "var(--tf-text-tertiary)" }}
                               title="Remover do workspace"
                               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
@@ -1297,7 +1339,7 @@ export default function PaginaWorkspace() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Colunas padrão</h3>
@@ -1330,7 +1372,7 @@ export default function PaginaWorkspace() {
                             className="p-1 rounded text-[12px] disabled:opacity-20"
                             style={{ color: "var(--tf-text-tertiary)" }}
                           >↓</button>
-                          <span className="flex-1 px-3 py-1.5 text-[13px] rounded-lg" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text)" }}>
+                          <span className="flex-1 px-3 py-1.5 text-[13px] rounded-[8px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text)" }}>
                             {col}
                           </span>
                           <button
@@ -1353,14 +1395,14 @@ export default function PaginaWorkspace() {
                             }
                           }}
                           placeholder="Nova coluna..."
-                          className="flex-1 px-3 py-1.5 text-[13px] rounded-lg outline-none transition-smooth"
+                          className="flex-1 px-3 py-1.5 text-[13px] rounded-[8px] outline-none transition-smooth"
                           style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
                           onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
                           onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
                         />
                         <button
                           onClick={() => { if (novaColunaInput.trim()) { setColunasEdit([...colunasEdit, novaColunaInput.trim()]); setNovaColunaInput(""); } }}
-                          className="px-3 py-1.5 text-[12px] font-medium rounded-lg transition-smooth"
+                          className="px-3 py-1.5 text-[12px] font-medium rounded-[8px] transition-smooth"
                           style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}
                         >
                           <Plus size={14} />
@@ -1369,14 +1411,14 @@ export default function PaginaWorkspace() {
                       <div className="flex gap-2 mt-3">
                         <button
                           onClick={async () => { await atualizarWs(workspace.id, { colunas_padrao: colunasEdit }); setEditandoColunas(false); }}
-                          className="px-4 py-1.5 text-sm font-semibold text-white rounded-lg transition-smooth"
+                          className="px-4 py-1.5 text-sm font-semibold text-white rounded-[8px] transition-smooth"
                           style={{ background: "var(--tf-accent)" }}
                         >
                           Salvar
                         </button>
                         <button
                           onClick={() => { setEditandoColunas(false); setNovaColunaInput(""); }}
-                          className="px-4 py-1.5 text-sm rounded-lg transition-smooth"
+                          className="px-4 py-1.5 text-sm rounded-[8px] transition-smooth"
                           style={{ color: "var(--tf-text-secondary)" }}
                         >
                           Cancelar
@@ -1386,7 +1428,7 @@ export default function PaginaWorkspace() {
                   ) : (
                     <div className="flex flex-wrap gap-2">
                       {workspace.colunas_padrao?.map((col, i) => (
-                        <span key={i} className="px-3 py-1.5 text-[12px] font-medium rounded-lg" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}>
+                        <span key={i} className="px-3 py-1.5 text-[12px] font-medium rounded-[8px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}>
                           {col}
                         </span>
                       ))}
@@ -1397,18 +1439,232 @@ export default function PaginaWorkspace() {
                   )}
                 </div>
 
-                <div className="rounded-xl border p-5" style={{ background: "var(--tf-danger-bg)", borderColor: "var(--tf-danger)" }}>
-                  <h3 className="text-sm font-bold mb-2" style={{ color: "var(--tf-danger)" }}>Zona de perigo</h3>
-                  <p className="text-[12px] mb-3" style={{ color: "var(--tf-text-secondary)" }}>Excluir este workspace. Os quadros/sprints ficarão como avulsos.</p>
+                <div className="rounded-[20px] border p-6 transition-smooth 2xl:col-span-2" style={{ background: "var(--tf-danger-bg)", borderColor: "var(--tf-danger)" }}>
+                  <h3 className="text-sm font-bold mb-2 flex items-center gap-2" style={{ color: "var(--tf-danger)" }}><Trash2 size={16}/> Zona de perigo</h3>
+                  <p className="text-[13px] mb-4 font-medium" style={{ color: "var(--tf-danger)" }}>Excluir este workspace. Os quadros/sprints ficarão como avulsos soltos.</p>
                   <button
                     onClick={async () => { await excluirWs(workspaceId); router.push("/"); }}
-                    className="px-4 py-1.5 text-sm font-semibold text-white rounded-lg" style={{ background: "var(--tf-danger)" }}
+                    className="px-5 py-2.5 text-[13px] font-bold text-white rounded-[14px] transition-smooth hover:-translate-y-0.5" style={{ background: "var(--tf-danger)" }}
                   >
-                    Excluir workspace
+                    Excluir Workspace Permanentemente
                   </button>
                 </div>
               </section>
             )}
+          </div>
+
+          {/* COLUNA LATERAL (DIREITA 25%) - SIDEKICK PANEL */}
+          <div className="hidden lg:flex lg:col-span-4 xl:col-span-3 flex-col gap-5 min-w-0">
+
+            {/* ─── BACKLOG: Sprint Ativa + Equipe ─── */}
+            {abaAtiva === "backlog" && (
+              <>
+                {sprintAtiva && (
+                  <div className="rounded-[20px] p-5 border transition-smooth overflow-hidden" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                    <h3 className="text-[11px] font-black uppercase tracking-widest mb-4 flex items-center gap-2" style={{ color: "var(--tf-success)" }}>
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ background: "var(--tf-success)" }}>
+                        <div className="w-2 h-2 rounded-full animate-ping" style={{ background: "var(--tf-success)" }} />
+                      </div>
+                      Sprint Ativa
+                    </h3>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-2.5 h-8 rounded-full shrink-0" style={{ background: sprintAtiva.cor }} />
+                      <div className="min-w-0">
+                        <p className="text-[14px] font-bold truncate" style={{ color: "var(--tf-text)" }}>{sprintAtiva.nome}</p>
+                        {sprintAtiva.data_inicio && sprintAtiva.data_fim && (
+                          <p className="text-[11px] mt-0.5 truncate" style={{ color: "var(--tf-text-tertiary)" }}>
+                            {formatarData(sprintAtiva.data_inicio)} → {formatarData(sprintAtiva.data_fim)}
+                            {(() => { const d = diasRestantes(sprintAtiva.data_fim); return d !== null ? <span className="font-bold ml-1" style={{ color: d <= 2 ? "var(--tf-danger)" : d <= 5 ? "var(--tf-warning)" : "var(--tf-success)" }}>· {d > 0 ? `${d}d` : d === 0 ? "Hoje!" : `${Math.abs(d)}d atrás`}</span> : null; })()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {sprintAtiva.meta && (
+                      <p className="text-[11px] mb-3 leading-relaxed line-clamp-2 pl-[22px]" style={{ color: "var(--tf-text-secondary)" }}>{sprintAtiva.meta}</p>
+                    )}
+                    {/* Mini progress */}
+                    {(() => {
+                      const tarefas = cartoesDaSprint(sprintAtiva.id);
+                      const total = tarefas.length;
+                      const pct = total > 0 ? Math.round((tarefas.filter(t => t.coluna_nome?.toLowerCase().includes("conclu") || t.coluna_nome?.toLowerCase().includes("done")).length / total) * 100) : 0;
+                      return total > 0 ? (
+                        <div className="pl-[22px]">
+                          <div className="flex justify-between text-[10px] font-bold mb-1.5" style={{ color: "var(--tf-text-tertiary)" }}>
+                            <span>{pct}% concluído</span>
+                            <span>{total} tarefas</span>
+                          </div>
+                          <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "var(--tf-bg-secondary)" }}>
+                            <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: sprintAtiva.cor }} />
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+                    <button
+                      onClick={() => setAbaAtiva("sprints")}
+                      className="w-full text-center mt-4 text-[11px] font-bold transition-smooth hover:underline"
+                      style={{ color: "var(--tf-accent-text)" }}
+                    >
+                      Ver detalhes →
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ─── SPRINTS: Gráfico de progresso da sprint ativa ─── */}
+            {abaAtiva === "sprints" && (
+              <>
+                {sprintAtiva ? (
+                  <div className="rounded-[20px] p-5 border transition-smooth overflow-hidden" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                    <h3 className="text-[11px] font-black uppercase tracking-widest mb-5 flex items-center gap-2" style={{ color: "var(--tf-text-tertiary)" }}>
+                      <Gauge size={13} /> Progresso da Sprint
+                    </h3>
+                    {(() => {
+                      const tarefas = cartoesDaSprint(sprintAtiva.id);
+                      const total = tarefas.length;
+                      const done = tarefas.filter(t => t.coluna_nome?.toLowerCase().includes("conclu") || t.coluna_nome?.toLowerCase().includes("done")).length;
+                      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                      const dias = diasRestantes(sprintAtiva.data_fim);
+                      return (
+                        <div className="space-y-5">
+                          {/* Circular-ish progress */}
+                          <div className="flex items-center justify-center">
+                            <div className="relative w-28 h-28">
+                              <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
+                                <circle cx="60" cy="60" r="52" fill="none" stroke="var(--tf-bg-secondary)" strokeWidth="10" />
+                                <circle cx="60" cy="60" r="52" fill="none" stroke={sprintAtiva.cor} strokeWidth="10" strokeLinecap="round" strokeDasharray={`${pct * 3.27} 327`} className="transition-all duration-1000" />
+                              </svg>
+                              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-[24px] font-black tracking-tight" style={{ color: "var(--tf-text)" }}>{pct}%</span>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Stats */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="text-center p-3 rounded-[14px]" style={{ background: "var(--tf-bg-secondary)" }}>
+                              <p className="text-[18px] font-black" style={{ color: "var(--tf-text)" }}>{done}/{total}</p>
+                              <p className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>Tarefas</p>
+                            </div>
+                            <div className="text-center p-3 rounded-[14px]" style={{ background: "var(--tf-bg-secondary)" }}>
+                              <p className="text-[18px] font-black" style={{ color: dias !== null && dias <= 2 ? "var(--tf-danger)" : "var(--tf-text)" }}>{dias !== null ? (dias > 0 ? `${dias}d` : dias === 0 ? "Hoje" : `−${Math.abs(dias)}d`) : "—"}</p>
+                              <p className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>Restantes</p>
+                            </div>
+                          </div>
+                          {/* Sprint name */}
+                          <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: "var(--tf-border)" }}>
+                            <div className="w-2 h-5 rounded-full shrink-0" style={{ background: sprintAtiva.cor }} />
+                            <p className="text-[12px] font-bold truncate" style={{ color: "var(--tf-text)" }}>{sprintAtiva.nome}</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <div className="rounded-[20px] p-5 border transition-smooth text-center" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                    <Gauge size={28} className="mx-auto mb-3 opacity-30" style={{ color: "var(--tf-text-secondary)" }} />
+                    <p className="text-[13px] font-bold" style={{ color: "var(--tf-text-secondary)" }}>Nenhuma sprint ativa</p>
+                    <p className="text-[11px] mt-1" style={{ color: "var(--tf-text-tertiary)" }}>Ative uma sprint para ver o progresso aqui.</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ─── MÉTRICAS: Resumo rápido ─── */}
+            {abaAtiva === "metricas" && (
+              <div className="rounded-[20px] p-5 border transition-smooth overflow-hidden" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                <h3 className="text-[11px] font-black uppercase tracking-widest mb-5 flex items-center gap-2" style={{ color: "var(--tf-text-tertiary)" }}>
+                  <Zap size={13} /> Resumo Rápido
+                </h3>
+                {(() => {
+                  const allTarefas = sprintsDoWorkspace.flatMap(s => cartoesDaSprint(s.id));
+                  const total = allTarefas.length + backlogPuro.length;
+                  const done = allTarefas.filter(t => t.coluna_nome?.toLowerCase().includes("conclu") || t.coluna_nome?.toLowerCase().includes("done")).length;
+                  const totalSprints = sprintsDoWorkspace.length;
+                  const velocity = totalSprints > 0 ? (done / totalSprints).toFixed(1) : "—";
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3.5 rounded-[14px]" style={{ background: "var(--tf-bg-secondary)" }}>
+                        <span className="text-[12px] font-bold" style={{ color: "var(--tf-text-secondary)" }}>Total tarefas</span>
+                        <span className="text-[16px] font-black" style={{ color: "var(--tf-text)" }}>{total}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3.5 rounded-[14px]" style={{ background: "var(--tf-success-bg)" }}>
+                        <span className="text-[12px] font-bold" style={{ color: "var(--tf-success)" }}>Concluídas</span>
+                        <span className="text-[16px] font-black" style={{ color: "var(--tf-success)" }}>{done}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3.5 rounded-[14px]" style={{ background: "var(--tf-accent-light)" }}>
+                        <span className="text-[12px] font-bold" style={{ color: "var(--tf-accent-text)" }}>Velocity</span>
+                        <span className="text-[16px] font-black" style={{ color: "var(--tf-accent-text)" }}>{velocity}<span className="text-[10px] font-bold ml-0.5">/sprint</span></span>
+                      </div>
+                      <div className="flex items-center justify-between p-3.5 rounded-[14px]" style={{ background: "var(--tf-bg-secondary)" }}>
+                        <span className="text-[12px] font-bold" style={{ color: "var(--tf-text-secondary)" }}>No backlog</span>
+                        <span className="text-[16px] font-black" style={{ color: "var(--tf-text)" }}>{backlogPuro.length}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* ─── AJUSTES: Dicas do workspace ─── */}
+            {abaAtiva === "config" && (
+              <div className="rounded-[20px] p-5 border transition-smooth overflow-hidden" style={{ background: "var(--tf-accent-light)", borderColor: "var(--tf-accent)" }}>
+                <h3 className="text-[13px] font-bold mb-3 flex items-center gap-2" style={{ color: "var(--tf-accent-text)" }}><Zap size={15} /> Workspace Avançado</h3>
+                <div className="space-y-3">
+                  <p className="text-[12px] leading-relaxed font-medium" style={{ color: "var(--tf-accent-text)" }}>
+                    Gerencie membros, permissões e integrações com GitHub na aba de repositórios.
+                  </p>
+                  <div className="flex items-center gap-2 text-[11px] font-bold pt-2 border-t" style={{ borderColor: "var(--tf-accent)", color: "var(--tf-accent-text)" }}>
+                    <GitBranch size={12} />
+                    <span>{repositorios.length} {repositorios.length === 1 ? "repo conectado" : "repos conectados"}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ─── EQUIPE (visível em todas as abas exceto config) ─── */}
+            {abaAtiva !== "config" && (
+              <div className="rounded-[20px] p-5 border transition-smooth overflow-hidden" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-[13px] font-bold tracking-tight" style={{ color: "var(--tf-text)" }}>Equipe</h3>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-[8px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}>
+                    {wsUsuarios.length}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  {wsUsuarios.slice(0, 4).map((u) => (
+                    <div key={u.id} className="flex items-center gap-2.5 min-w-0">
+                      {u.perfis?.avatar_url ? (
+                        <img src={u.perfis.avatar_url} alt={u.perfis.nome || ""} className="w-8 h-8 rounded-full shrink-0" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-[14px] flex items-center justify-center text-[11px] font-black shrink-0" style={{ background: "var(--tf-accent)", color: "white" }}>
+                          {(u.perfis?.nome || u.perfis?.email || "?").charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-bold truncate leading-tight" style={{ color: "var(--tf-text)" }}>{u.perfis?.nome || u.perfis?.email || "Usuário"}</p>
+                        <p className="text-[10px] truncate font-medium" style={{ color: "var(--tf-text-tertiary)" }}>{u.papel === "admin" ? "Admin" : "Membro"}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {wsUsuarios.length > 4 && (
+                    <button onClick={() => setAbaAtiva("config")} className="text-[11px] font-bold text-left hover:underline transition-smooth" style={{ color: "var(--tf-accent-text)" }}>
+                      +{wsUsuarios.length - 4} mais
+                    </button>
+                  )}
+                  {wsUsuarios.length === 0 && (
+                    <p className="text-[12px] font-medium" style={{ color: "var(--tf-text-tertiary)" }}>Nenhum membro.</p>
+                  )}
+                </div>
+
+                <button onClick={() => setAbaAtiva("config")} className="w-full mt-4 flex items-center justify-center gap-2 py-2 text-[12px] font-bold rounded-[14px] border-2 border-dashed transition-smooth hover:bg-[var(--tf-surface-hover)]" style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)" }}>
+                  <Plus size={13} /> Convidar
+                </button>
+              </div>
+            )}
+
+          </div>
+
           </div>
         </main>
       </div>
@@ -1441,29 +1697,29 @@ export default function PaginaWorkspace() {
       {/* Modal: Nova Sprint */}
       <Modal aberto={modalSprint} onFechar={() => setModalSprint(false)} titulo="Criar nova sprint">
         <div className="space-y-4">
-          <div className="h-16 rounded-xl flex items-center px-4 gap-3" style={{ background: `linear-gradient(145deg, ${sprintCor}, ${sprintCor}bb)` }}>
+          <div className="h-16 rounded-[14px] flex items-center px-4 gap-3" style={{ background: `linear-gradient(145deg, ${sprintCor}, ${sprintCor}bb)` }}>
             <Calendar size={20} className="text-white/70" />
             <span className="text-white font-bold">{sprintNome || "Nome da sprint"}</span>
           </div>
 
           <div>
             <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Nome da sprint</label>
-            <input value={sprintNome} onChange={(e) => setSprintNome(e.target.value)} placeholder="Ex: Sprint 14" className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }} onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")} onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")} autoFocus />
+            <input value={sprintNome} onChange={(e) => setSprintNome(e.target.value)} placeholder="Ex: Sprint 14" className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }} onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")} onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")} autoFocus />
           </div>
 
           <div>
             <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Meta / Objetivo (opcional)</label>
-            <input value={sprintMeta} onChange={(e) => setSprintMeta(e.target.value)} placeholder="O que queremos alcançar nessa sprint?" className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }} onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")} onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")} />
+            <input value={sprintMeta} onChange={(e) => setSprintMeta(e.target.value)} placeholder="O que queremos alcançar nessa sprint?" className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }} onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")} onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Início</label>
-              <input type="date" value={sprintInicio} onChange={(e) => setSprintInicio(e.target.value)} className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }} />
+              <input type="date" value={sprintInicio} onChange={(e) => setSprintInicio(e.target.value)} className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }} />
             </div>
             <div>
               <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Fim</label>
-              <input type="date" value={sprintFim} onChange={(e) => setSprintFim(e.target.value)} className="w-full px-3 py-2 text-sm rounded-lg outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }} />
+              <input type="date" value={sprintFim} onChange={(e) => setSprintFim(e.target.value)} className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }} />
             </div>
           </div>
 
@@ -1471,12 +1727,12 @@ export default function PaginaWorkspace() {
             <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Cor</label>
             <div className="flex flex-wrap gap-2">
               {CORES_QUADRO.map((cor) => (
-                <button key={cor} onClick={() => setSprintCor(cor)} className={`w-9 h-7 rounded-lg transition-smooth ${sprintCor === cor ? "ring-2 ring-offset-2 scale-110" : "hover:scale-105"}`} style={{ backgroundColor: cor }} />
+                <button key={cor} onClick={() => setSprintCor(cor)} className={`w-9 h-7 rounded-[8px] transition-smooth ${sprintCor === cor ? "ring-2 ring-offset-2 scale-110" : "hover:scale-105"}`} style={{ backgroundColor: cor }} />
               ))}
             </div>
           </div>
 
-          <button onClick={handleCriarSprint} disabled={!sprintNome.trim()} className="w-full py-2.5 text-sm font-semibold text-white rounded-lg transition-smooth disabled:opacity-40" style={{ background: "var(--tf-accent)" }}>
+          <button onClick={handleCriarSprint} disabled={!sprintNome.trim()} className="w-full py-2.5 text-sm font-semibold text-white rounded-[8px] transition-smooth disabled:opacity-40" style={{ background: "var(--tf-accent)" }}>
             Criar sprint
           </button>
         </div>

@@ -104,56 +104,27 @@ function obterDataReferencia(pr: GitHubPR): string {
 function SkeletonItem() {
   return (
     <div
-      style={{
-        padding: "14px 16px",
-        borderBottom: "1px solid var(--tf-border)",
-        display: "flex",
-        flexDirection: "column",
-        gap: "8px",
-      }}
+      className="px-4 py-3.5 flex flex-col gap-2"
+      style={{ borderBottom: "1px solid var(--tf-border)" }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <div className="flex items-center gap-2.5">
         <div
-          style={{
-            width: "50px",
-            height: "14px",
-            borderRadius: "4px",
-            background: "var(--tf-border)",
-            opacity: 0.5,
-            animation: "pulse 1.5s ease-in-out infinite",
-          }}
+          className="w-[50px] h-3.5 rounded-[4px] opacity-50 animate-pulse"
+          style={{ background: "var(--tf-border)" }}
         />
         <div
-          style={{
-            width: "60%",
-            height: "16px",
-            borderRadius: "4px",
-            background: "var(--tf-border)",
-            opacity: 0.5,
-            animation: "pulse 1.5s ease-in-out infinite",
-          }}
+          className="w-[60%] h-4 rounded-[4px] opacity-50 animate-pulse"
+          style={{ background: "var(--tf-border)" }}
         />
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <div className="flex items-center gap-2">
         <div
-          style={{
-            width: "20px",
-            height: "20px",
-            borderRadius: "50%",
-            background: "var(--tf-border)",
-            opacity: 0.5,
-            animation: "pulse 1.5s ease-in-out infinite",
-          }}
+          className="w-5 h-5 rounded-full opacity-50 animate-pulse"
+          style={{ background: "var(--tf-border)" }}
         />
         <div
-          style={{
-            width: "80px",
-            height: "12px",
-            borderRadius: "4px",
-            background: "var(--tf-border)",
-            opacity: 0.5,
-            animation: "pulse 1.5s ease-in-out infinite",
-          }}
+          className="w-20 h-3 rounded-[4px] opacity-50 animate-pulse"
+          style={{ background: "var(--tf-border)" }}
         />
       </div>
     </div>
@@ -210,83 +181,43 @@ function PRItem({ pr, repoId, onAcao, onAbrir }: { pr: GitHubPR; repoId?: string
   return (
     <div
       onClick={onAbrir}
-      style={{
-        padding: "14px 16px",
-        borderBottom: "1px solid var(--tf-border)",
-        cursor: onAbrir ? "pointer" : "default",
-        display: "flex",
-        flexDirection: "column",
-        gap: "8px",
-        transition: "background 0.15s",
-      }}
+      className={`px-4 py-3.5 flex flex-col gap-2 transition-[background] duration-150 ${onAbrir ? "cursor-pointer" : "cursor-default"}`}
+      style={{ borderBottom: "1px solid var(--tf-border)" }}
       onMouseEnter={(e) =>
         (e.currentTarget.style.background = "var(--tf-bg-secondary)")
       }
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >
       {/* Linha principal: número + título + link */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          gap: "10px",
-        }}
-      >
+      <div className="flex items-start gap-2.5">
         <span
-          style={{
-            color: status.cor,
-            display: "flex",
-            alignItems: "center",
-            flexShrink: 0,
-            marginTop: "2px",
-          }}
+          className="flex items-center shrink-0 mt-0.5"
+          style={{ color: status.cor }}
         >
           {status.icone}
         </span>
 
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "baseline",
-              gap: "8px",
-              flexWrap: "wrap",
-            }}
-          >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2 flex-wrap">
             <span
-              style={{
-                fontFamily: "monospace",
-                fontSize: "13px",
-                color: "var(--tf-text-tertiary)",
-                flexShrink: 0,
-              }}
+              className="font-mono text-[13px] shrink-0"
+              style={{ color: "var(--tf-text-tertiary)" }}
             >
               #{pr.number}
             </span>
             <span
-              style={{
-                fontWeight: 600,
-                fontSize: "14px",
-                color: "var(--tf-text)",
-                lineHeight: 1.4,
-              }}
+              className="font-semibold text-sm leading-[1.4]"
+              style={{ color: "var(--tf-text)" }}
             >
               {pr.title}
             </span>
 
             {pr.draft && (
               <span
+                className="inline-flex items-center gap-1 text-[11px] font-medium rounded-full px-2 py-px shrink-0"
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  fontSize: "11px",
-                  fontWeight: 500,
                   color: "var(--tf-text-tertiary)",
                   background: "var(--tf-border)",
-                  borderRadius: "10px",
-                  padding: "1px 8px",
-                  flexShrink: 0,
                 }}
               >
                 <FileEdit size={10} />
@@ -297,22 +228,12 @@ function PRItem({ pr, repoId, onAcao, onAbrir }: { pr: GitHubPR; repoId?: string
 
           {/* Labels */}
           {pr.labels.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "4px",
-                marginTop: "6px",
-              }}
-            >
+            <div className="flex flex-wrap gap-1 mt-1.5">
               {pr.labels.map((label) => (
                 <span
                   key={label.name}
+                  className="text-[11px] font-medium rounded-full px-2 py-px"
                   style={{
-                    fontSize: "11px",
-                    fontWeight: 500,
-                    borderRadius: "10px",
-                    padding: "1px 8px",
                     background: `#${label.color}22`,
                     color: `#${label.color}`,
                     border: `1px solid #${label.color}44`,
@@ -329,14 +250,8 @@ function PRItem({ pr, repoId, onAcao, onAbrir }: { pr: GitHubPR; repoId?: string
           href={pr.html_url}
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            color: "var(--tf-text-tertiary)",
-            flexShrink: 0,
-            marginTop: "2px",
-            display: "flex",
-            alignItems: "center",
-            transition: "color 0.15s",
-          }}
+          className="shrink-0 mt-0.5 flex items-center transition-[color] duration-150"
+          style={{ color: "var(--tf-text-tertiary)" }}
           onMouseEnter={(e) =>
             (e.currentTarget.style.color = "var(--tf-accent)")
           }
@@ -350,38 +265,19 @@ function PRItem({ pr, repoId, onAcao, onAbrir }: { pr: GitHubPR; repoId?: string
       </div>
 
       {/* Linha de metadados */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          paddingLeft: "24px",
-          flexWrap: "wrap",
-        }}
-      >
+      <div className="flex items-center gap-3 pl-6 flex-wrap">
         {/* Autor */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "5px",
-          }}
-        >
+        <div className="flex items-center gap-[5px]">
           <img
             src={pr.user.avatar_url}
             alt={pr.user.login}
             width={20}
             height={20}
-            style={{
-              borderRadius: "50%",
-              flexShrink: 0,
-            }}
+            className="rounded-full shrink-0"
           />
           <span
-            style={{
-              fontSize: "12px",
-              color: "var(--tf-text-secondary)",
-            }}
+            className="text-xs"
+            style={{ color: "var(--tf-text-secondary)" }}
           >
             {pr.user.login}
           </span>
@@ -389,57 +285,36 @@ function PRItem({ pr, repoId, onAcao, onAbrir }: { pr: GitHubPR; repoId?: string
 
         {/* Status badge */}
         <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "4px",
-            fontSize: "11px",
-            fontWeight: 500,
-            color: status.cor,
-          }}
+          className="inline-flex items-center gap-1 text-[11px] font-medium"
+          style={{ color: status.cor }}
         >
           {status.label}
         </span>
 
         {/* Tempo */}
         <span
-          style={{
-            fontSize: "12px",
-            color: "var(--tf-text-tertiary)",
-          }}
+          className="text-xs"
+          style={{ color: "var(--tf-text-tertiary)" }}
         >
           {tempo}
         </span>
 
         {/* Branches */}
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            fontSize: "11px",
-            color: "var(--tf-text-tertiary)",
-          }}
+          className="flex items-center gap-1 text-[11px]"
+          style={{ color: "var(--tf-text-tertiary)" }}
         >
           <GitBranch size={11} />
           <span
-            style={{
-              fontFamily: "monospace",
-              background: "var(--tf-bg-secondary)",
-              borderRadius: "4px",
-              padding: "0 4px",
-            }}
+            className="font-mono rounded-[4px] px-1"
+            style={{ background: "var(--tf-bg-secondary)" }}
           >
             {pr.head.ref}
           </span>
           <ArrowRight size={10} />
           <span
-            style={{
-              fontFamily: "monospace",
-              background: "var(--tf-bg-secondary)",
-              borderRadius: "4px",
-              padding: "0 4px",
-            }}
+            className="font-mono rounded-[4px] px-1"
+            style={{ background: "var(--tf-bg-secondary)" }}
           >
             {pr.base.ref}
           </span>
@@ -447,24 +322,15 @@ function PRItem({ pr, repoId, onAcao, onAbrir }: { pr: GitHubPR; repoId?: string
 
         {/* Botões de ação para PRs abertas */}
         {ehAberta && repoId && (
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "auto" }}>
+          <div className="flex items-center gap-1.5 ml-auto">
             <button
               onClick={(e) => { e.stopPropagation(); handleAcaoPR("merge", e); }}
               disabled={!!executando}
+              className="flex items-center gap-1 px-2.5 py-[3px] rounded-[8px] border-none text-[11px] font-semibold text-white transition-all duration-150"
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                padding: "3px 10px",
-                borderRadius: "6px",
-                border: "none",
                 cursor: executando ? "not-allowed" : "pointer",
-                fontSize: "11px",
-                fontWeight: 600,
-                color: "#fff",
                 background: executando === "merge" ? "#16a34a88" : "#16a34a",
                 opacity: executando && executando !== "merge" ? 0.4 : 1,
-                transition: "all 0.15s",
               }}
             >
               {executando === "merge" ? "..." : "✓ Merge"}
@@ -472,20 +338,12 @@ function PRItem({ pr, repoId, onAcao, onAbrir }: { pr: GitHubPR; repoId?: string
             <button
               onClick={(e) => { e.stopPropagation(); handleAcaoPR("close", e); }}
               disabled={!!executando}
+              className="flex items-center gap-1 px-2.5 py-[3px] rounded-[8px] text-[11px] font-semibold bg-transparent transition-all duration-150"
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                padding: "3px 10px",
-                borderRadius: "6px",
                 border: "1px solid var(--tf-border)",
                 cursor: executando ? "not-allowed" : "pointer",
-                fontSize: "11px",
-                fontWeight: 600,
                 color: "var(--tf-danger, #ef4444)",
-                background: "transparent",
                 opacity: executando && executando !== "close" ? 0.4 : 1,
-                transition: "all 0.15s",
               }}
             >
               {executando === "close" ? "..." : "✗ Fechar"}
@@ -495,8 +353,8 @@ function PRItem({ pr, repoId, onAcao, onAbrir }: { pr: GitHubPR; repoId?: string
       </div>
 
       {erroAcao && (
-        <div style={{ paddingLeft: "24px" }}>
-          <span style={{ fontSize: "11px", color: "#ef4444" }}>{erroAcao}</span>
+        <div className="pl-6">
+          <span className="text-[11px] text-[#ef4444]">{erroAcao}</span>
         </div>
       )}
     </div>
@@ -531,73 +389,48 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
   return (
     <>
       <div
+        className="flex flex-col rounded-[8px] overflow-hidden"
         style={{
-          display: "flex",
-          flexDirection: "column",
           border: "1px solid var(--tf-border)",
-          borderRadius: "8px",
-          overflow: "hidden",
           background: "var(--tf-surface)",
         }}
       >
         {/* Cabeçalho com abas */}
         <div
+          className="flex items-center gap-0.5 px-3 py-2"
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "2px",
-            padding: "8px 12px",
             borderBottom: "1px solid var(--tf-border)",
             background: "var(--tf-bg-secondary)",
           }}
         >
           <GitPullRequest
             size={16}
-            style={{
-              color: "var(--tf-text-secondary)",
-              marginRight: "8px",
-            }}
+            className="mr-2"
+            style={{ color: "var(--tf-text-secondary)" }}
           />
           <span
-            style={{
-              fontSize: "13px",
-              fontWeight: 600,
-              color: "var(--tf-text)",
-              marginRight: "12px",
-            }}
+            className="text-[13px] font-semibold mr-3"
+            style={{ color: "var(--tf-text)" }}
           >
             Pull Requests
           </span>
 
           <div
-            style={{
-              display: "flex",
-              gap: "2px",
-              background: "var(--tf-bg)",
-              borderRadius: "6px",
-              padding: "2px",
-            }}
+            className="flex gap-0.5 rounded-[8px] p-0.5"
+            style={{ background: "var(--tf-bg)" }}
           >
             {ABAS.map((a) => (
               <button
                 key={a.valor}
                 onClick={() => setAba(a.valor)}
+                className={`px-3 py-1 rounded-[4px] border-none cursor-pointer text-xs transition-all duration-150 ${aba === a.valor ? "font-semibold" : "font-normal"}`}
                 style={{
-                  padding: "4px 12px",
-                  borderRadius: "4px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: aba === a.valor ? 600 : 400,
                   color:
                     aba === a.valor
                       ? "var(--tf-text)"
                       : "var(--tf-text-tertiary)",
                   background:
                     aba === a.valor ? "var(--tf-surface)" : "transparent",
-                  boxShadow:
-                    aba === a.valor ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
-                  transition: "all 0.15s",
                 }}
               >
                 {a.rotulo}
@@ -605,9 +438,12 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
             ))}
           </div>
 
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
+          <div className="ml-auto flex items-center gap-1.5">
             {!carregando && (
-              <span style={{ fontSize: "12px", color: "var(--tf-text-tertiary)" }}>
+              <span
+                className="text-xs"
+                style={{ color: "var(--tf-text-tertiary)" }}
+              >
                 {prs.length} {prs.length === 1 ? "PR" : "PRs"}
               </span>
             )}
@@ -615,17 +451,8 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
             <button
               onClick={() => revalidar()}
               title="Recarregar PRs"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                padding: "4px",
-                borderRadius: "4px",
-                border: "none",
-                cursor: "pointer",
-                color: "var(--tf-text-tertiary)",
-                background: "transparent",
-                transition: "color 0.15s",
-              }}
+              className="flex items-center p-1 rounded-[4px] border-none cursor-pointer bg-transparent transition-[color] duration-150"
+              style={{ color: "var(--tf-text-tertiary)" }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-text)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
             >
@@ -635,20 +462,8 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
             {repoId && (
               <button
                 onClick={() => setModalCriar(true)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  padding: "4px 10px",
-                  borderRadius: "6px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "#fff",
-                  background: "var(--tf-accent)",
-                  transition: "opacity 0.15s",
-                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-[8px] border-none cursor-pointer text-xs font-semibold text-white transition-[opacity] duration-150"
+                style={{ background: "var(--tf-accent)" }}
               >
                 <Plus size={13} /> Criar PR
               </button>
@@ -667,17 +482,11 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
             </>
           ) : prs.length === 0 ? (
             <div
-              style={{
-                padding: "40px 16px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "8px",
-                color: "var(--tf-text-tertiary)",
-              }}
+              className="px-4 py-10 flex flex-col items-center gap-2"
+              style={{ color: "var(--tf-text-tertiary)" }}
             >
-              <Inbox size={32} style={{ opacity: 0.4 }} />
-              <span style={{ fontSize: "14px" }}>
+              <Inbox size={32} className="opacity-40" />
+              <span className="text-sm">
                 Nenhuma pull request{" "}
                 {aba === "open"
                   ? "aberta"
@@ -688,20 +497,8 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
               {repoId && (
                 <button
                   onClick={() => setModalCriar(true)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    padding: "8px 16px",
-                    borderRadius: "8px",
-                    border: "none",
-                    cursor: "pointer",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "#fff",
-                    background: "var(--tf-accent)",
-                    marginTop: "8px",
-                  }}
+                  className="flex items-center gap-1 px-4 py-2 rounded-[8px] border-none cursor-pointer text-[13px] font-semibold text-white mt-2"
+                  style={{ background: "var(--tf-accent)" }}
                 >
                   <Plus size={14} /> Criar Pull Request
                 </button>

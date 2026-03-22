@@ -16,13 +16,17 @@ export function useCartaoMembros(cartaoId: string | null) {
       .from("cartao_membros")
       .select("membro_id")
       .eq("cartao_id", cartaoId);
-    return (data || []).map((d) => d.membro_id);
+    return [...new Set((data || []).map((d) => d.membro_id))];
   });
 
   async function adicionar(membroId: string) {
     if (!cartaoId || !key) return;
+    if (membroIds.includes(membroId)) return;
     globalMutate(key, [...membroIds, membroId], false);
-    await supabase.from("cartao_membros").insert({ cartao_id: cartaoId, membro_id: membroId });
+    await supabase.from("cartao_membros").upsert(
+      { cartao_id: cartaoId, membro_id: membroId },
+      { onConflict: "cartao_id,membro_id" }
+    );
   }
 
   async function remover(membroId: string) {

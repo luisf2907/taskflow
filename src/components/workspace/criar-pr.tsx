@@ -231,14 +231,14 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               href={sucesso.html_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg text-white"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-[8px] text-white"
               style={{ background: "var(--tf-accent)" }}
             >
               <ExternalLink size={13} /> Ver no GitHub
             </a>
             <button
               onClick={onFechar}
-              className="px-4 py-2 text-xs font-semibold rounded-lg"
+              className="px-4 py-2 text-xs font-semibold rounded-[8px]"
               style={{ color: "var(--tf-text-secondary)", border: "1px solid var(--tf-border)" }}
             >
               Fechar
@@ -267,7 +267,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
                 <select
                   value={head}
                   onChange={(e) => setHead(e.target.value)}
-                  className="w-full appearance-none text-sm px-3 py-2 rounded-lg border pr-8"
+                  className="w-full appearance-none text-sm px-3 py-2 rounded-[8px] border pr-8"
                   style={{
                     background: "var(--tf-bg)",
                     borderColor: "var(--tf-border)",
@@ -293,7 +293,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               <select
                 value={base}
                 onChange={(e) => setBase(e.target.value)}
-                className="w-full appearance-none text-sm px-3 py-2 rounded-lg border pr-8"
+                className="w-full appearance-none text-sm px-3 py-2 rounded-[8px] border pr-8"
                 style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text)" }}
               >
                 {branches.map((b) => (
@@ -314,7 +314,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               placeholder="Ex: feat: adicionar autenticação OAuth"
-              className="w-full text-sm px-3 py-2 rounded-lg border"
+              className="w-full text-sm px-3 py-2 rounded-[8px] border"
               style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text)" }}
             />
           </div>
@@ -329,7 +329,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               onChange={(e) => setDescricao(e.target.value)}
               placeholder="Descreva as mudanças..."
               rows={3}
-              className="w-full text-sm px-3 py-2 rounded-lg border resize-none"
+              className="w-full text-sm px-3 py-2 rounded-[8px] border resize-none"
               style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text)" }}
             />
           </div>
@@ -341,7 +341,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               Vincular a um card <span style={{ color: "var(--tf-text-tertiary)" }}>(opcional — será movido para Review)</span>
             </label>
             {cardEscolhido ? (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ background: "var(--tf-bg)", borderColor: "var(--tf-accent)" }}>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-[8px] border" style={{ background: "var(--tf-bg)", borderColor: "var(--tf-accent)" }}>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate" style={{ color: "var(--tf-text)" }}>{cardEscolhido.titulo}</p>
                   {cardEscolhido.coluna_nome && (
@@ -356,14 +356,14 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               <div className="relative">
                 <button
                   onClick={() => setMostrarCards(!mostrarCards)}
-                  className="w-full text-left text-sm px-3 py-2 rounded-lg border"
+                  className="w-full text-left text-sm px-3 py-2 rounded-[8px] border"
                   style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}
                 >
                   {carregandoCards ? "Carregando cards..." : "Selecionar card..."}
                 </button>
                 {mostrarCards && (
                   <div
-                    className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border shadow-lg"
+                    className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto rounded-[8px] border"
                     style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)", scrollbarWidth: "thin" }}
                   >
                     {cards.length === 0 ? (
@@ -410,7 +410,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
                     return (
                       <span
                         key={userId}
-                        className="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md"
+                        className="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-[8px]"
                         style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}
                       >
                         {m.avatar_url ? (
@@ -431,7 +431,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
 
               <button
                 onClick={() => setMostrarReviewers(!mostrarReviewers)}
-                className="w-full text-left text-sm px-3 py-2 rounded-lg border"
+                className="w-full text-left text-sm px-3 py-2 rounded-[8px] border"
                 style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}
               >
                 Adicionar reviewer...
@@ -439,7 +439,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
 
               {mostrarReviewers && (
                 <div
-                  className="mt-1 max-h-40 overflow-y-auto rounded-lg border"
+                  className="mt-1 max-h-40 overflow-y-auto rounded-[8px] border"
                   style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)", scrollbarWidth: "thin" }}
                 >
                   {membrosComGithub
@@ -479,7 +479,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
 
           {/* Erro */}
           {erro && (
-            <div className="text-xs px-3 py-2 rounded-lg" style={{ background: "#ef444420", color: "#ef4444" }}>
+            <div className="text-xs px-3 py-2 rounded-[8px]" style={{ background: "#ef444420", color: "#ef4444" }}>
               {erro}
             </div>
           )}
@@ -488,7 +488,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
           <button
             onClick={handleCriar}
             disabled={criando || !head || !titulo.trim() || carregandoBranches}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white rounded-lg transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white rounded-[8px] transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: "var(--tf-accent)" }}
           >
             {criando ? (

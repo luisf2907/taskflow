@@ -57,7 +57,7 @@ async function fetchCartoes(quadroId: string): Promise<CartaoComResumo[]> {
   return data.map(({ colunas: _, cartao_etiquetas, cartao_membros, ...cartao }) => ({
     ...(cartao as Cartao),
     etiqueta_ids: (cartao_etiquetas || []).map((ce: { etiqueta_id: string }) => ce.etiqueta_id),
-    membro_ids: (cartao_membros || []).map((cm: { membro_id: string }) => cm.membro_id),
+    membro_ids: [...new Set((cartao_membros || []).map((cm: { membro_id: string }) => cm.membro_id))] as string[],
     total_checklist_itens: checklistResumo[cartao.id]?.total || 0,
     total_checklist_concluidos: checklistResumo[cartao.id]?.concluidos || 0,
     total_anexos: anexoContagem[cartao.id] || 0,
