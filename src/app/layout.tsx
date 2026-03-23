@@ -1,4 +1,5 @@
 import { AuthListener } from "@/components/auth-listener";
+import { CommandPalette } from "@/components/command-palette";
 import { SWRProvider } from "@/components/swr-provider";
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
@@ -40,6 +41,7 @@ export default function RootLayout({
       >
         <SWRProvider>
           <AuthListener />
+          <CommandPalette />
           {children}
         </SWRProvider>
       </body>

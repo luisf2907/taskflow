@@ -42,11 +42,14 @@ export function Header() {
           <input
             type="text"
             placeholder="Search a task..."
-            className="bg-transparent border-none outline-none w-full text-[14px] font-bold placeholder:font-bold transition-colors"
+            className="bg-transparent border-none outline-none w-full text-[14px] font-bold placeholder:font-bold transition-colors cursor-pointer"
             style={{ color: "var(--tf-text)" }}
+            readOnly
+            onClick={() => window.dispatchEvent(new Event("open-command-palette"))}
+            onFocus={() => window.dispatchEvent(new Event("open-command-palette"))}
           />
           <span className="text-[11px] font-black px-2 py-1 rounded-[14px] ml-2 tracking-widest uppercase" style={{ background: "var(--tf-surface)", color: "var(--tf-text-secondary)" }}>
-            ⌘S
+            ⌘K
           </span>
         </div>
       </div>

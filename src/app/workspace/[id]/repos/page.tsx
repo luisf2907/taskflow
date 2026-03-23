@@ -283,7 +283,7 @@ export default function ReposPage() {
         aberta={sidebarAberta}
         onToggle={toggleSidebar}
       />
-      <div className="flex-1 flex flex-col overflow-hidden px-4">
+      <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
         <Header />
         <main className="flex-1 overflow-y-auto rounded-[32px] mb-4 p-8" style={{ background: "var(--tf-surface)" }}>
           {!repoAberto ? (

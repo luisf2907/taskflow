@@ -19,16 +19,47 @@ export function useDashboardMetrics() {
   useEffect(() => {
     async function fetchMetrics() {
       try {
-        // Fetch recently updated cards across the platform
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { setLoading(false); return; }
+
+        // Find all membros entries for this user (across workspaces/boards)
+        const { data: meusMembros } = await supabase
+          .from("membros")
+          .select("id")
+          .eq("user_id", user.id);
+
+        if (!meusMembros || meusMembros.length === 0) {
+          setLoading(false);
+          return;
+        }
+
+        const meusMembroIds = meusMembros.map((m) => m.id);
+
+        // Find cards assigned to me via cartao_membros
+        const { data: meusCartaoMembros } = await supabase
+          .from("cartao_membros")
+          .select("cartao_id")
+          .in("membro_id", meusMembroIds);
+
+        if (!meusCartaoMembros || meusCartaoMembros.length === 0) {
+          setLoading(false);
+          return;
+        }
+
+        const meusCartaoIds = [...new Set(meusCartaoMembros.map((cm) => cm.cartao_id))];
+
+        // Fetch those cards with column info
         const { data: cartoesData } = await supabase
           .from("cartoes")
           .select(`
-            id, 
-            titulo, 
-            atualizado_em, 
+            id,
+            titulo,
+            atualizado_em,
             coluna_id,
             colunas!inner ( nome, quadro_id )
           `)
+          .in("id", meusCartaoIds)
           .order("atualizado_em", { ascending: false })
           .limit(8);
 

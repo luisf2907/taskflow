@@ -194,3 +194,21 @@ export interface WorkspaceUsuario {
   criado_em: string;
   perfis?: Perfil;
 }
+
+// =============================================
+// AUTOMAÇÕES
+// =============================================
+export type TriggerTipo = "card_moved_to_column" | "card_created" | "pr_merged" | "pr_opened";
+export type AcaoTipo = "move_to_column" | "assign_member" | "add_label";
+
+export interface Automacao {
+  id: string;
+  workspace_id: string;
+  nome: string;
+  trigger_tipo: TriggerTipo;
+  trigger_config: Record<string, string>;
+  acao_tipo: AcaoTipo;
+  acao_config: Record<string, string>;
+  ativo: boolean;
+  criado_em: string;
+}

@@ -22,6 +22,9 @@ import { RepoBranches } from "@/components/workspace/repo-branches";
 import { RepoPRs } from "@/components/workspace/repo-prs";
 import { RepoWebhookConfig } from "@/components/workspace/repo-webhook-config";
 import { MetricasWorkspace } from "@/components/workspace/metricas";
+import { TimelineView } from "@/components/workspace/timeline-view";
+import { AutomacoesConfig } from "@/components/workspace/automacoes-config";
+import { supabase } from "@/lib/supabase/client";
 import { useColunas } from "@/hooks/use-colunas";
 import { usePRSync } from "@/hooks/use-pr-sync";
 import { useWorkspaceUsuarios } from "@/hooks/use-workspace-usuarios";
@@ -579,7 +582,7 @@ export default function PaginaWorkspace() {
 
   const workspace = workspaces.find((w) => w.id === workspaceId);
   const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
-  const [abaAtiva, setAbaAtiva] = useState<"backlog" | "sprints" | "metricas" | "config">("sprints");
+  const [abaAtiva, setAbaAtiva] = useState<"backlog" | "sprints" | "timeline" | "metricas" | "config">("sprints");
 
   // Repositórios
   const { repositorios, conectar: conectarRepo, desconectar: desconectarRepo } = useRepositorios(workspaceId);
@@ -672,6 +675,20 @@ export default function PaginaWorkspace() {
     () => quadros.filter((q) => q.workspace_id === workspaceId),
     [quadros, workspaceId]
   );
+
+  // Buscar todas as colunas de todos os quadros do workspace (para automações)
+  const [todasColunas, setTodasColunas] = useState<import("@/types").Coluna[]>([]);
+  useEffect(() => {
+    if (sprintsDoWorkspace.length === 0) return;
+    (async () => {
+      const { data } = await supabase
+        .from("colunas")
+        .select("*")
+        .in("quadro_id", sprintsDoWorkspace.map((q) => q.id))
+        .order("posicao");
+      if (data) setTodasColunas(data as import("@/types").Coluna[]);
+    })();
+  }, [sprintsDoWorkspace]);
 
   const sprintAtiva = sprintsDoWorkspace.find((q) => q.status_sprint === "ativa");
   const sprintsPlanejadas = sprintsDoWorkspace.filter((q) => q.status_sprint === "planejada");
@@ -857,7 +874,7 @@ export default function PaginaWorkspace() {
   }
 
   return (
-    <div className="h-full flex overflow-hidden lg:gap-4 pb-4" style={{ background: "var(--tf-bg)" }}>
+    <div className="h-full flex overflow-hidden" style={{ background: "var(--tf-bg)" }}>
       {iniciado && (
         <Sidebar quadros={quadros} onNovoQuadro={() => setModalSprint(true)} aberta={sidebarAberta} onToggle={toggleSidebar} />
       )}
@@ -903,6 +920,7 @@ export default function PaginaWorkspace() {
                 {[
                   { id: "backlog" as const, label: "Backlog & Quadro", icon: Inbox },
                   { id: "sprints" as const, label: "Sprints", icon: Calendar },
+                  { id: "timeline" as const, label: "Timeline", icon: Clock },
                   { id: "metricas" as const, label: "Métricas", icon: BarChart3 },
                   { id: "config" as const, label: "Ajustes", icon: Settings },
                 ].map(({ id, label, icon: Icon }) => (
@@ -1149,6 +1167,15 @@ export default function PaginaWorkspace() {
                   </div>
                 )}
               </>
+            )}
+
+            {/* ═══ ABA TIMELINE ═══ */}
+            {abaAtiva === "timeline" && (
+              <TimelineView
+                sprints={sprintsDoWorkspace}
+                cartoesDaSprint={cartoesDaSprint}
+                onSprintClick={(id) => router.push(`/quadro/${id}`)}
+              />
             )}
 
             {/* ═══ ABA MÉTRICAS ═══ */}
@@ -1441,6 +1468,16 @@ export default function PaginaWorkspace() {
                       ))
                     )}
                   </div>
+                </div>
+
+                {/* Automações */}
+                <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                  <AutomacoesConfig
+                    workspaceId={workspaceId}
+                    colunas={todasColunas}
+                    membros={membrosWs}
+                    etiquetas={etiquetasWs}
+                  />
                 </div>
 
                 <div className="rounded-[20px] border p-6 transition-smooth" style={{ background: "var(--tf-danger-bg)", borderColor: "var(--tf-danger)" }}>

@@ -195,8 +195,8 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
             <BarraFiltros filtros={filtros} onChange={setFiltros} etiquetas={etiquetas} membros={membros} />
           </div>
 
-          <div className="flex-1 overflow-x-auto pb-6 no-scrollbar">
-            <div className="flex gap-4 items-start h-full">
+          <div className="flex-1 overflow-x-auto overflow-y-hidden pb-6 no-scrollbar">
+            <div className="flex gap-4 items-start h-full pt-1">
               <SortableContext
                 items={colunaIds}
                 strategy={horizontalListSortingStrategy}

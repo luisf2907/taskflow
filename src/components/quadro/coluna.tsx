@@ -57,7 +57,7 @@ export function Coluna({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex flex-col w-[290px] min-w-[290px] max-w-[290px] shrink-0 max-h-[calc(100vh-180px)] column-surface",
+        "flex flex-col w-[290px] min-w-[290px] max-w-[290px] shrink-0 max-h-full column-surface",
         isDragging && "opacity-50"
       )}
     >

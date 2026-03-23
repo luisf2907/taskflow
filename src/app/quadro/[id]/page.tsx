@@ -14,6 +14,8 @@ import {
   CheckCircle2,
   ChevronRight,
   Folder,
+  Maximize2,
+  Minimize2,
   MoreHorizontal,
   Pause,
   Pencil,
@@ -51,6 +53,7 @@ export default function PaginaQuadro() {
   const [nome, setNome] = useState("");
   const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
   const [modalConfig, setModalConfig] = useState(false);
+  const [telaCheia, setTelaCheia] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Campos editáveis da sprint
@@ -59,6 +62,16 @@ export default function PaginaQuadro() {
   const [editFim, setEditFim] = useState("");
 
   const dias = quadro ? diasRestantes(quadro.data_fim) : null;
+
+  // Escape sai do fullscreen
+  useEffect(() => {
+    if (!telaCheia) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setTelaCheia(false);
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [telaCheia]);
   const isSprint = !!quadro?.workspace_id;
 
   useEffect(() => {
@@ -116,13 +129,20 @@ export default function PaginaQuadro() {
 
   return (
     <div className="h-full flex overflow-hidden" style={{ background: "var(--tf-bg)" }}>
-      {iniciado && (
+      {iniciado && !telaCheia && (
         <Sidebar quadros={quadros} onNovoQuadro={() => router.push("/")} aberta={sidebarAberta} onToggle={toggleSidebar} />
       )}
 
-      <div className="flex-1 flex flex-col overflow-hidden px-4">
-        <Header />
-        <div className="flex-1 flex flex-col overflow-hidden rounded-[32px] mb-4" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}>
+      <div className={`flex-1 flex flex-col overflow-hidden ${telaCheia ? "p-3" : "px-2 lg:px-4"}`}>
+        {!telaCheia && <Header />}
+        <div
+          className="flex-1 flex flex-col overflow-hidden rounded-[32px]"
+          style={{
+            background: "var(--tf-surface)",
+            border: "1px solid var(--tf-border)",
+            marginBottom: telaCheia ? 0 : 16,
+          }}
+        >
           {/* Board header */}
           {quadro && (
             <div className="shrink-0">
@@ -244,6 +264,14 @@ export default function PaginaQuadro() {
                       <Settings size={16} />
                     </button>
                   )}
+                  <button
+                    onClick={() => setTelaCheia(!telaCheia)}
+                    className="p-2 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
+                    style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+                    title={telaCheia ? "Sair do modo foco (Esc)" : "Modo foco"}
+                  >
+                    {telaCheia ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                  </button>
                   <Dropdown
                     trigger={
                       <button

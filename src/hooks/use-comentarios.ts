@@ -15,7 +15,7 @@ export function useComentarios(cartaoId: string | null) {
     if (!cartaoId) return [];
     const { data } = await supabase
       .from("comentarios")
-      .select("*, membros(id, nome, cor_avatar)")
+      .select("*, membros(id, nome, cor_avatar, avatar_url)")
       .eq("cartao_id", cartaoId)
       .order("criado_em", { ascending: false });
     return (data || []) as ComentarioComAutor[];
@@ -26,7 +26,7 @@ export function useComentarios(cartaoId: string | null) {
     const { data } = await supabase
       .from("comentarios")
       .insert({ cartao_id: cartaoId, membro_id: membroId || null, texto })
-      .select("*, membros(id, nome, cor_avatar)")
+      .select("*, membros(id, nome, cor_avatar, avatar_url)")
       .single();
     if (data && key) {
       globalMutate(key, [data as ComentarioComAutor, ...comentarios], false);

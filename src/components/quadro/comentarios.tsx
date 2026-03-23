@@ -1,8 +1,9 @@
 "use client";
 
+import { useAuth } from "@/hooks/use-auth";
 import { ComentarioComAutor, Membro } from "@/types";
 import { MessageSquare, Send, Trash2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Avatar } from "./avatar";
 
 interface ComentariosProps {
@@ -33,13 +34,20 @@ export function Comentarios({
   onCriar,
   onExcluir,
 }: ComentariosProps) {
+  const { user } = useAuth();
   const [texto, setTexto] = useState("");
   const [focado, setFocado] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Encontrar o membro que corresponde ao usuário logado
+  const meuMembro = useMemo(() => {
+    if (!user) return membros[0];
+    return membros.find((m) => m.user_id === user.id) || membros[0];
+  }, [membros, user]);
+
   function handleEnviar() {
     if (!texto.trim()) return;
-    onCriar(texto.trim(), membros[0]?.id);
+    onCriar(texto.trim(), meuMembro?.id);
     setTexto("");
     setFocado(false);
   }
