@@ -318,7 +318,7 @@ export function DetalheCartao({
                 <PainelPR
                   cartao={cartao}
                   onRefresh={onRefresh}
-                  onAtualizar={(campos) => { onAtualizar(cartao.id, campos); onRefresh(); }}
+                  onAtualizar={async (campos) => { await onAtualizar(cartao.id, campos); onRefresh(); }}
                   painelAberto={painelAberto === "pr"}
                 />
               )}
@@ -721,7 +721,7 @@ function PainelPR({
             <GitPullRequest size={15} style={{ color: statusCor }} />
             <span className="text-[13px] font-semibold" style={{ color: "var(--tf-text)" }}>
               PR #{cartao.pr_numero}
-              {prInfo && !carregandoInfo && (
+              {prInfo && !carregandoInfo && prInfo.title && !prInfo.title.startsWith(`PR #${cartao.pr_numero}`) && (
                 <span className="font-normal ml-1" style={{ color: "var(--tf-text-secondary)" }}>
                   {prInfo.title}
                 </span>

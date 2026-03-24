@@ -149,7 +149,11 @@ export async function POST(request: NextRequest) {
       const historico = Array.isArray(cardAtual?.pr_historico) ? cardAtual.pr_historico : [];
 
       const updateData: Record<string, unknown> = {
-        pr_status: "merged",
+        pr_numero: null,
+        pr_url: null,
+        pr_status: null,
+        pr_repo_id: null,
+        pr_autor: null,
         pr_historico: [...historico, historicoEntry],
         atualizado_em: new Date().toISOString(),
       };
@@ -193,7 +197,11 @@ export async function POST(request: NextRequest) {
       const historico = Array.isArray(cardAtual?.pr_historico) ? cardAtual.pr_historico : [];
 
       const updateData: Record<string, unknown> = {
-        pr_status: "closed",
+        pr_numero: null,
+        pr_url: null,
+        pr_status: null,
+        pr_repo_id: null,
+        pr_autor: null,
         pr_historico: [...historico, historicoEntry],
         atualizado_em: new Date().toISOString(),
       };

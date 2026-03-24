@@ -100,35 +100,47 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, action: "card_created" });
   }
 
-  // PR fechado → mover card
+  // PR fechado → salvar no histórico e desvincular
   if (action === "closed") {
     const merged = pull_request.merged === true;
     const targetColumn = merged ? repo.coluna_done_id : repo.coluna_doing_id;
     const status = merged ? "merged" : "closed";
 
-    if (targetColumn) {
-      await service
-        .from("cartoes")
-        .update({
-          pr_status: status,
-          coluna_id: targetColumn,
-          atualizado_em: new Date().toISOString(),
-        })
-        .eq("pr_repo_id", repo.id)
-        .eq("pr_numero", pull_request.number);
-    } else {
-      // Só atualizar status se coluna alvo não configurada
-      await service
-        .from("cartoes")
-        .update({
-          pr_status: status,
-          atualizado_em: new Date().toISOString(),
-        })
-        .eq("pr_repo_id", repo.id)
-        .eq("pr_numero", pull_request.number);
+    // Buscar card vinculado para salvar no histórico
+    const { data: cardVinculado } = await service
+      .from("cartoes")
+      .select("id, pr_numero, pr_url, pr_autor, pr_historico")
+      .eq("pr_repo_id", repo.id)
+      .eq("pr_numero", pull_request.number)
+      .single();
+
+    if (cardVinculado) {
+      const historico = Array.isArray(cardVinculado.pr_historico) ? cardVinculado.pr_historico : [];
+      const historicoEntry = {
+        numero: pull_request.number,
+        url: pull_request.html_url,
+        status,
+        autor: pull_request.user?.login || "unknown",
+        data: new Date().toISOString(),
+      };
+
+      const updateData: Record<string, unknown> = {
+        pr_numero: null,
+        pr_url: null,
+        pr_status: null,
+        pr_repo_id: null,
+        pr_autor: null,
+        pr_historico: [...historico, historicoEntry],
+        atualizado_em: new Date().toISOString(),
+      };
+      if (targetColumn) {
+        updateData.coluna_id = targetColumn;
+      }
+
+      await service.from("cartoes").update(updateData).eq("id", cardVinculado.id);
     }
 
-    return NextResponse.json({ ok: true, action: "card_moved", status });
+    return NextResponse.json({ ok: true, action: "card_updated", status });
   }
 
   return NextResponse.json({ ok: true, action: "ignored" });
