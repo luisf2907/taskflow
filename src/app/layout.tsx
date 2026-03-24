@@ -1,6 +1,7 @@
 import { AuthListener } from "@/components/auth-listener";
 import { CommandPalette } from "@/components/command-palette";
 import { SWRProvider } from "@/components/swr-provider";
+import { ToastContainer } from "@/components/ui/toast";
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
@@ -43,6 +44,7 @@ export default function RootLayout({
           <AuthListener />
           <CommandPalette />
           {children}
+          <ToastContainer />
         </SWRProvider>
       </body>
     </html>

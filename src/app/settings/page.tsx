@@ -6,6 +6,7 @@ import { useSidebar } from "@/hooks/use-sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuadros } from "@/hooks/use-quadros";
 import { supabase } from "@/lib/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import {
   Check,
   Github,
@@ -52,7 +53,7 @@ export default function SettingsPage() {
       },
     });
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
       setConectandoGithub(false);
     }
   }
