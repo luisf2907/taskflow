@@ -145,24 +145,10 @@ function PRItem({ pr, repoId, onAcao, onAbrir }: { pr: GitHubPR; repoId?: string
     setErroAcao(null);
 
     try {
-      // Buscar card vinculado a este PR
-      const { data: card } = await supabase
-        .from("cartoes")
-        .select("id")
-        .eq("pr_repo_id", repoId)
-        .eq("pr_numero", pr.number)
-        .single();
-
-      if (!card) {
-        setErroAcao("Nenhum card vinculado a este PR");
-        setExecutando(null);
-        return;
-      }
-
       const res = await fetch("/api/pr-actions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, cardId: card.id }),
+        body: JSON.stringify({ action, repoId, prNumber: pr.number }),
       });
 
       const data = await res.json();

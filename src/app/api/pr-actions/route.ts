@@ -5,10 +5,15 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  const { action, cardId, mergeMethod, commitTitle, commitMessage, comment } = await request.json();
+  const { action, cardId, repoId, prNumber, mergeMethod, commitTitle, commitMessage, comment } = await request.json();
 
-  if (!action || !cardId || !["merge", "close"].includes(action)) {
+  if (!action || !["merge", "close"].includes(action)) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  // Precisa de cardId OU (repoId + prNumber)
+  if (!cardId && (!repoId || !prNumber)) {
+    return NextResponse.json({ error: "Forneça cardId ou repoId+prNumber" }, { status: 400 });
   }
 
   // 1. Auth
@@ -35,26 +40,59 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  // 2. Buscar card com info do repo
-  const { data: card } = await supabase
-    .from("cartoes")
-    .select("id, pr_numero, pr_url, pr_status, pr_repo_id, pr_autor")
-    .eq("id", cardId)
-    .single();
+  // 2. Resolver card e repo info
+  let card: { id: string; pr_numero: number | null; pr_url: string | null; pr_status: string | null; pr_repo_id: string | null; pr_autor: string | null } | null = null;
+  let repo: { owner: string; nome: string; coluna_done_id: string | null; coluna_doing_id: string | null } | null = null;
+  let prNum: number;
 
-  if (!card?.pr_numero || !card.pr_repo_id) {
-    return NextResponse.json({ error: "Este card não está vinculado a um PR" }, { status: 400 });
-  }
+  if (cardId) {
+    // Fluxo original: buscar card e repo a partir do card
+    const { data: cardData } = await supabase
+      .from("cartoes")
+      .select("id, pr_numero, pr_url, pr_status, pr_repo_id, pr_autor")
+      .eq("id", cardId)
+      .single();
 
-  // Buscar info do repo
-  const { data: repo } = await supabase
-    .from("repositorios")
-    .select("owner, nome, coluna_done_id, coluna_doing_id")
-    .eq("id", card.pr_repo_id)
-    .single();
+    if (!cardData?.pr_numero || !cardData.pr_repo_id) {
+      return NextResponse.json({ error: "Este card não está vinculado a um PR" }, { status: 400 });
+    }
+    card = cardData;
+    prNum = cardData.pr_numero;
 
-  if (!repo) {
-    return NextResponse.json({ error: "Repositório não encontrado" }, { status: 404 });
+    const { data: repoData } = await supabase
+      .from("repositorios")
+      .select("owner, nome, coluna_done_id, coluna_doing_id")
+      .eq("id", cardData.pr_repo_id)
+      .single();
+
+    if (!repoData) {
+      return NextResponse.json({ error: "Repositório não encontrado" }, { status: 404 });
+    }
+    repo = repoData;
+  } else {
+    // Novo fluxo: buscar repo direto, tentar achar card se existir
+    prNum = prNumber;
+
+    const { data: repoData } = await supabase
+      .from("repositorios")
+      .select("owner, nome, coluna_done_id, coluna_doing_id")
+      .eq("id", repoId)
+      .single();
+
+    if (!repoData) {
+      return NextResponse.json({ error: "Repositório não encontrado" }, { status: 404 });
+    }
+    repo = repoData;
+
+    // Tentar encontrar card vinculado (não obrigatório)
+    const { data: cardData } = await supabase
+      .from("cartoes")
+      .select("id, pr_numero, pr_url, pr_status, pr_repo_id, pr_autor")
+      .eq("pr_repo_id", repoId)
+      .eq("pr_numero", prNumber)
+      .single();
+
+    card = cardData || null;
   }
 
   // 3. Buscar token GitHub do user
@@ -81,7 +119,7 @@ export async function POST(request: NextRequest) {
 
   // 4. Executar ação no GitHub
   if (action === "merge") {
-    const result = await mergePR(repo.owner, repo.nome, card.pr_numero, token, {
+    const result = await mergePR(repo.owner, repo.nome, prNum, token, {
       mergeMethod: mergeMethod || "merge",
       commitTitle: commitTitle || undefined,
       commitMessage: commitMessage || undefined,
@@ -93,43 +131,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Salvar no histórico e mover card para Done
-    const historicoEntry = {
-      numero: card.pr_numero,
-      url: card.pr_url,
-      status: "merged",
-      autor: card.pr_autor || "unknown",
-      data: new Date().toISOString(),
-    };
+    // Atualizar card se existir
+    if (card) {
+      const historicoEntry = {
+        numero: prNum,
+        url: card.pr_url,
+        status: "merged",
+        autor: card.pr_autor || "unknown",
+        data: new Date().toISOString(),
+      };
 
-    // Buscar histórico existente
-    const { data: cardAtual } = await supabase
-      .from("cartoes")
-      .select("pr_historico")
-      .eq("id", cardId)
-      .single();
-    const historico = Array.isArray(cardAtual?.pr_historico) ? cardAtual.pr_historico : [];
+      const { data: cardAtual } = await supabase
+        .from("cartoes")
+        .select("pr_historico")
+        .eq("id", card.id)
+        .single();
+      const historico = Array.isArray(cardAtual?.pr_historico) ? cardAtual.pr_historico : [];
 
-    const updateData: Record<string, unknown> = {
-      pr_status: "merged",
-      pr_historico: [...historico, historicoEntry],
-      atualizado_em: new Date().toISOString(),
-    };
-    if (repo.coluna_done_id) {
-      updateData.coluna_id = repo.coluna_done_id;
+      const updateData: Record<string, unknown> = {
+        pr_status: "merged",
+        pr_historico: [...historico, historicoEntry],
+        atualizado_em: new Date().toISOString(),
+      };
+      if (repo.coluna_done_id) {
+        updateData.coluna_id = repo.coluna_done_id;
+      }
+      await supabase.from("cartoes").update(updateData).eq("id", card.id);
     }
-    await supabase.from("cartoes").update(updateData).eq("id", cardId);
 
     return NextResponse.json({ ok: true, status: "merged" });
   }
 
   if (action === "close") {
-    // Adicionar comentário de rejeição se fornecido
     if (comment) {
-      await addPRComment(repo.owner, repo.nome, card.pr_numero, comment, token);
+      await addPRComment(repo.owner, repo.nome, prNum, comment, token);
     }
 
-    const result = await closePR(repo.owner, repo.nome, card.pr_numero, token);
+    const result = await closePR(repo.owner, repo.nome, prNum, token);
     if (result.error) {
       return NextResponse.json(
         { error: `Falha ao fechar PR: ${result.error}` },
@@ -137,31 +175,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Salvar no histórico e mover card para Doing
-    const historicoEntry = {
-      numero: card.pr_numero,
-      url: card.pr_url,
-      status: "closed",
-      autor: card.pr_autor || "unknown",
-      data: new Date().toISOString(),
-    };
+    // Atualizar card se existir
+    if (card) {
+      const historicoEntry = {
+        numero: prNum,
+        url: card.pr_url,
+        status: "closed",
+        autor: card.pr_autor || "unknown",
+        data: new Date().toISOString(),
+      };
 
-    const { data: cardAtual } = await supabase
-      .from("cartoes")
-      .select("pr_historico")
-      .eq("id", cardId)
-      .single();
-    const historico = Array.isArray(cardAtual?.pr_historico) ? cardAtual.pr_historico : [];
+      const { data: cardAtual } = await supabase
+        .from("cartoes")
+        .select("pr_historico")
+        .eq("id", card.id)
+        .single();
+      const historico = Array.isArray(cardAtual?.pr_historico) ? cardAtual.pr_historico : [];
 
-    const updateData: Record<string, unknown> = {
-      pr_status: "closed",
-      pr_historico: [...historico, historicoEntry],
-      atualizado_em: new Date().toISOString(),
-    };
-    if (repo.coluna_doing_id) {
-      updateData.coluna_id = repo.coluna_doing_id;
+      const updateData: Record<string, unknown> = {
+        pr_status: "closed",
+        pr_historico: [...historico, historicoEntry],
+        atualizado_em: new Date().toISOString(),
+      };
+      if (repo.coluna_doing_id) {
+        updateData.coluna_id = repo.coluna_doing_id;
+      }
+      await supabase.from("cartoes").update(updateData).eq("id", card.id);
     }
-    await supabase.from("cartoes").update(updateData).eq("id", cardId);
 
     return NextResponse.json({ ok: true, status: "closed" });
   }
