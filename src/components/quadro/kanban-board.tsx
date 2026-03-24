@@ -83,7 +83,7 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
   );
 
   const handleCriarCartao = useCallback(
-    (colunaId: string, titulo: string) => criarCartao(colunaId, titulo),
+    (colunaId: string, titulo: string, peso?: number | null) => criarCartao(colunaId, titulo, peso),
     [criarCartao]
   );
 

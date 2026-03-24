@@ -13,20 +13,32 @@ export interface Toast {
 
 // Module-level state (survives re-renders, shared across components)
 let toasts: Toast[] = [];
-let listeners: Set<() => void> = new Set();
+const listeners: Set<() => void> = new Set();
+const EMPTY: Toast[] = [];
 
 function emit() {
   listeners.forEach((l) => l());
 }
 
+function subscribe(cb: () => void) {
+  listeners.add(cb);
+  return () => { listeners.delete(cb); };
+}
+
+function getSnapshot() {
+  return toasts;
+}
+
+function getServerSnapshot() {
+  return EMPTY;
+}
+
 function addToast(type: ToastType, message: string) {
   const id = Math.random().toString(36).slice(2, 9);
   toasts = [...toasts, { id, type, message, createdAt: Date.now() }];
-  // Max 3 visible
   if (toasts.length > 3) toasts = toasts.slice(-3);
   emit();
 
-  // Auto-dismiss after 4s
   setTimeout(() => {
     removeToast(id);
   }, 4000);
@@ -46,14 +58,6 @@ export const toast = {
 
 // Hook
 export function useToast() {
-  const currentToasts = useSyncExternalStore(
-    useCallback((cb: () => void) => {
-      listeners.add(cb);
-      return () => listeners.delete(cb);
-    }, []),
-    () => toasts,
-    () => [] // SSR
-  );
-
+  const currentToasts = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   return { toasts: currentToasts, remove: removeToast };
 }

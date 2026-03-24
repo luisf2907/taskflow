@@ -75,11 +75,13 @@ export function useCartoes(quadroId: string) {
       .sort((a, b) => a.posicao - b.posicao);
   }
 
-  const criar = useCallback(async function criarCartao(colunaId: string, titulo: string) {
+  const criar = useCallback(async function criarCartao(colunaId: string, titulo: string, peso?: number | null) {
     const posicao = cartoes.filter((c) => c.coluna_id === colunaId).length;
+    const insert: Record<string, unknown> = { coluna_id: colunaId, titulo, posicao };
+    if (peso != null) insert.peso = peso;
     const { data } = await supabase
       .from("cartoes")
-      .insert({ coluna_id: colunaId, titulo, posicao })
+      .insert(insert)
       .select()
       .single();
     if (data) {

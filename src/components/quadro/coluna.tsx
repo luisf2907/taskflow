@@ -19,7 +19,7 @@ interface ColunaProps {
   cartoes: CartaoComResumo[];
   etiquetas: Etiqueta[];
   membros: Membro[];
-  onCriarCartao: (colunaId: string, titulo: string) => void;
+  onCriarCartao: (colunaId: string, titulo: string, peso?: number | null) => void;
   onCartaoClick: (cartao: CartaoComResumo) => void;
   onRenomear: (nome: string) => void;
   onExcluir: () => void;
@@ -41,7 +41,7 @@ export function Coluna({
   const pesoTotal = cartoes.reduce((acc, c) => acc + (c.peso || 0), 0);
 
   const handleCriarCartao = useCallback(
-    (titulo: string) => onCriarCartao(coluna.id, titulo),
+    (titulo: string, peso?: number | null) => onCriarCartao(coluna.id, titulo, peso),
     [onCriarCartao, coluna.id]
   );
 
