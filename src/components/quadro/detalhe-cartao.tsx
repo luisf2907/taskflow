@@ -26,7 +26,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Anexos } from "./anexos";
 import { Avatar } from "./avatar";
 import { ChecklistComponent } from "./checklist";
@@ -60,6 +60,16 @@ export function DetalheCartao({
   const [descricao, setDescricao] = useState("");
   const [editandoDescricao, setEditandoDescricao] = useState(false);
   const [painelAberto, setPainelAberto] = useState<Painel>(null);
+  const painelRef = useRef<HTMLDivElement>(null);
+
+  // Scroll suave até o painel quando abrir
+  useEffect(() => {
+    if (painelAberto && painelRef.current) {
+      setTimeout(() => {
+        painelRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 50);
+    }
+  }, [painelAberto]);
 
   const [pesoLocal, setPesoLocal] = useState<number | null>(null);
   const [dataLocal, setDataLocal] = useState<string | null>(null);
@@ -224,6 +234,7 @@ export function DetalheCartao({
               </div>
 
               {/* INLINE PANELS */}
+              <div ref={painelRef} />
               {painelAberto === "etiquetas" && (
                 <div className="p-4 rounded-[14px]" style={{ background: "var(--tf-bg-secondary)" }}>
                   <SeletorEtiquetas etiquetas={etiquetas} selecionadas={etiquetaIds} onToggle={toggleEtiqueta} onCriar={onCriarEtiqueta} onExcluir={onExcluirEtiqueta} />
