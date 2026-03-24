@@ -8,6 +8,7 @@ import { useQuadros } from "@/hooks/use-quadros";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
+  Camera,
   Check,
   Github,
   Loader2,
@@ -17,20 +18,48 @@ import {
   Shield,
   Sun,
   User,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function SettingsPage() {
-  const { user, perfil, temGithub, logout, carregando } = useAuth();
+  const { user, perfil, temGithub, logout, carregando, refresh } = useAuth();
   const { quadros } = useQuadros();
   const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
   const [conectandoGithub, setConectandoGithub] = useState(false);
+  const [fotoGithub, setFotoGithub] = useState<string | null>(null);
+  const [salvandoFoto, setSalvandoFoto] = useState(false);
 
   // Theme
   const [tema, setTema] = useState<"light" | "dark">("light");
   useEffect(() => {
     setTema(document.documentElement.classList.contains("dark") ? "dark" : "light");
   }, []);
+
+  // Detectar foto do GitHub após conexão
+  useEffect(() => {
+    if (!user || !temGithub || perfil?.avatar_url) return;
+    const githubIdentity = user.identities?.find((i) => i.provider === "github");
+    const avatarUrl = githubIdentity?.identity_data?.avatar_url as string | undefined;
+    if (avatarUrl) setFotoGithub(avatarUrl);
+  }, [user, temGithub, perfil]);
+
+  async function usarFotoGithub() {
+    if (!user || !fotoGithub) return;
+    setSalvandoFoto(true);
+    const { error } = await supabase
+      .from("perfis")
+      .update({ avatar_url: fotoGithub })
+      .eq("id", user.id);
+    if (error) {
+      toast.error("Não foi possível atualizar a foto.");
+    } else {
+      toast.success("Foto de perfil atualizada!");
+      refresh();
+    }
+    setSalvandoFoto(false);
+    setFotoGithub(null);
+  }
 
   function toggleTema(t: "light" | "dark") {
     setTema(t);
@@ -181,8 +210,8 @@ export default function SettingsPage() {
                     <button
                       onClick={conectarGithub}
                       disabled={conectandoGithub}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-[14px] text-[13px] font-semibold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-50"
-                      style={{ background: "var(--tf-text)" }}
+                      className="flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-[14px] text-[13px] font-semibold transition-all duration-150 hover:opacity-80 disabled:opacity-50"
+                      style={{ background: "var(--tf-surface)", color: "var(--tf-text)", border: "1px solid var(--tf-border)" }}
                     >
                       {conectandoGithub ? (
                         <Loader2 size={14} className="animate-spin" />
@@ -195,6 +224,56 @@ export default function SettingsPage() {
                 )}
               </div>
             </section>
+
+            {/* ── Foto do GitHub (banner condicional) ── */}
+            {fotoGithub && (
+              <section>
+                <div
+                  className="rounded-[20px] p-6 flex items-center gap-5"
+                  style={{ background: "var(--tf-accent-light)", border: "1px solid var(--tf-accent)" }}
+                >
+                  <div className="relative shrink-0">
+                    <img
+                      src={fotoGithub}
+                      alt="Foto do GitHub"
+                      className="w-14 h-14 rounded-full object-cover"
+                      style={{ border: "2px solid var(--tf-accent)" }}
+                    />
+                    <div
+                      className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ background: "var(--tf-accent)" }}
+                    >
+                      <Camera size={11} className="text-white" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-bold" style={{ color: "var(--tf-accent-text)" }}>
+                      Usar foto do GitHub?
+                    </p>
+                    <p className="text-[12px] mt-0.5" style={{ color: "var(--tf-text-secondary)" }}>
+                      Encontramos sua foto de perfil do GitHub.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={usarFotoGithub}
+                      disabled={salvandoFoto}
+                      className="px-4 py-2 rounded-[14px] text-[12px] font-semibold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-50"
+                      style={{ background: "var(--tf-accent)" }}
+                    >
+                      {salvandoFoto ? "Salvando..." : "Usar"}
+                    </button>
+                    <button
+                      onClick={() => setFotoGithub(null)}
+                      className="p-1.5 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
+                      style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* ── Aparência ── */}
             <section className="space-y-4">
