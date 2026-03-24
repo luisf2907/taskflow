@@ -15,6 +15,7 @@ import {
   ChevronRight,
   ExternalLink,
   Gauge,
+  GitBranch,
   GitPullRequest,
   Loader2,
   MoreHorizontal,
@@ -50,7 +51,7 @@ interface DetalheCartaoProps {
   onRefresh: () => void;
 }
 
-type Painel = "etiquetas" | "membros" | "data" | "peso" | "pr" | null;
+type Painel = "etiquetas" | "membros" | "data" | "peso" | "pr" | "branch" | null;
 
 export function DetalheCartao({
   cartao, etiquetas, membros, quadroId, onFechar, onAtualizar, onExcluir,
@@ -259,6 +260,40 @@ export function DetalheCartao({
                 </div>
               )}
 
+              {painelAberto === "branch" && (
+                <div className="p-4 rounded-[14px]" style={{ background: "var(--tf-bg-secondary)" }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "var(--tf-text-tertiary)" }}>
+                    Branch
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <GitBranch size={14} style={{ color: "var(--tf-text-tertiary)" }} />
+                    <input
+                      value={cartao.branch || ""}
+                      onChange={(e) => {
+                        const val = e.target.value.trim() || null;
+                        onAtualizar(cartao.id, { branch: val });
+                      }}
+                      placeholder="feature/minha-branch"
+                      className="flex-1 px-3 py-2 text-[13px] font-mono rounded-[8px] outline-none"
+                      style={{ background: "var(--tf-surface)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
+                      onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
+                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
+                    />
+                  </div>
+                  {cartao.branch && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        onClick={() => onAtualizar(cartao.id, { branch: null })}
+                        className="text-[11px] font-medium hover:underline"
+                        style={{ color: "var(--tf-text-tertiary)" }}
+                      >
+                        Limpar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* ── DESCRIPTION ── */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -463,6 +498,19 @@ export function DetalheCartao({
               )}
 
               <PropertyRow
+                icon={<GitBranch size={14} />}
+                label="Branch"
+                onClick={() => setPainelAberto(painelAberto === "branch" ? null : "branch")}
+                active={painelAberto === "branch"}
+              >
+                {cartao.branch ? (
+                  <span className="text-[11px] font-mono font-medium truncate max-w-[100px]" style={{ color: "var(--tf-text-secondary)" }}>
+                    {cartao.branch}
+                  </span>
+                ) : null}
+              </PropertyRow>
+
+              <PropertyRow
                 icon={<CheckSquare size={14} />}
                 label="Checklist"
                 onClick={() => criarChecklist()}
@@ -557,7 +605,7 @@ function PainelPR({
   const [carregandoInfo, setCarregandoInfo] = useState(false);
   const [confirmDesvincular, setConfirmDesvincular] = useState(false);
   const [vinculando, setVinculando] = useState(false);
-  const [prsDisponiveis, setPrsDisponiveis] = useState<{ number: number; title: string; html_url: string; user: { login: string } }[]>([]);
+  const [prsDisponiveis, setPrsDisponiveis] = useState<{ number: number; title: string; html_url: string; user: { login: string }; head?: { ref: string } }[]>([]);
   const [carregandoPrs, setCarregandoPrs] = useState(false);
   const [repoInfo, setRepoInfo] = useState<{ id: string; owner: string; nome: string } | null>(null);
   const [buscaPR, setBuscaPR] = useState("");
@@ -664,15 +712,20 @@ function PainelPR({
     setPrInfo(null);
   }
 
-  function handleVincular(pr: { number: number; title: string; html_url: string; user: { login: string } }) {
+  function handleVincular(pr: { number: number; title: string; html_url: string; user: { login: string }; head?: { ref: string } }) {
     if (!repoInfo) return;
-    onAtualizar({
+    const campos: Record<string, unknown> = {
       pr_numero: pr.number,
       pr_url: pr.html_url,
       pr_status: "open",
       pr_repo_id: repoInfo.id,
       pr_autor: pr.user.login,
-    });
+    };
+    // Auto-link branch from PR
+    if (pr.head?.ref) {
+      campos.branch = pr.head.ref;
+    }
+    onAtualizar(campos);
     setVinculando(false);
     setBuscaPR("");
   }

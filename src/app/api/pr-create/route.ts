@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
       pr_status: "open",
       pr_repo_id: repo.id,
       pr_autor: pr.user?.login || user.email || "unknown",
+      branch: pr.head?.ref || null,
       atualizado_em: new Date().toISOString(),
     };
     if (colunaReviewId) {
@@ -125,6 +126,7 @@ export async function POST(request: NextRequest) {
         pr_status: "open",
         pr_repo_id: repo.id,
         pr_autor: pr.user?.login || user.email || "unknown",
+        branch: pr.head?.ref || null,
       },
       { onConflict: "pr_repo_id,pr_numero" }
     );

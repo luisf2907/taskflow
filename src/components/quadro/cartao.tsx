@@ -9,6 +9,7 @@ import {
   Calendar,
   CheckSquare,
   Gauge,
+  GitBranch,
   GitPullRequest,
   Paperclip,
 } from "lucide-react";
@@ -36,7 +37,7 @@ export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
   const temChecklist = cartao.total_checklist_itens > 0;
   const checklistCompleto = temChecklist && cartao.total_checklist_concluidos === cartao.total_checklist_itens;
   const temPR = !!cartao.pr_numero;
-  const temIndicadores = cartao.data_entrega || cartao.descricao || temChecklist || cartao.total_anexos > 0 || cartao.peso || membrosDoCartao.length > 0 || temPR;
+  const temIndicadores = cartao.data_entrega || cartao.descricao || temChecklist || cartao.total_anexos > 0 || cartao.peso || membrosDoCartao.length > 0 || temPR || cartao.branch;
 
   return (
     <div
@@ -83,6 +84,17 @@ export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
             >
               <GitPullRequest size={10} />
               #{cartao.pr_numero}
+            </span>
+          )}
+
+          {cartao.branch && (
+            <span
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-[4px] text-[10px] font-mono font-medium truncate max-w-[120px]"
+              style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}
+              title={cartao.branch}
+            >
+              <GitBranch size={9} />
+              {cartao.branch}
             </span>
           )}
 
