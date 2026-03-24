@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
         pr_repo_id: repo.id,
         pr_autor: pull_request.user.login,
         branch: pull_request.head?.ref || null,
+        branch_repo_id: repo.id,
       },
       { onConflict: "pr_repo_id,pr_numero" }
     );

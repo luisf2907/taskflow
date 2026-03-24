@@ -60,6 +60,7 @@ export interface Cartao {
   pr_autor: string | null;
   pr_historico: PRHistorico[] | null;
   branch: string | null;
+  branch_repo_id: string | null;
   criado_em: string;
   atualizado_em: string;
 }
