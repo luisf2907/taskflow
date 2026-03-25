@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { registrarAtividade } from "@/lib/atividades";
 import { Quadro, StatusSprint } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 
@@ -71,6 +72,9 @@ export function useQuadros() {
         (atual || []).map((q) => (q.id === id ? data : q)),
         { revalidate: false }
       );
+      if (campos.status_sprint) {
+        registrarAtividade({ quadroId: id, acao: "sprint_status", entidade: "sprint", detalhes: { status: campos.status_sprint } });
+      }
     }
     return data;
   }

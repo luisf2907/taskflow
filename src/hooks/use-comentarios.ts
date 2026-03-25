@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { registrarAtividade } from "@/lib/atividades";
 import { ComentarioComAutor } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 
@@ -30,6 +31,7 @@ export function useComentarios(cartaoId: string | null) {
       .single();
     if (data && key) {
       globalMutate(key, [data as ComentarioComAutor, ...comentarios], false);
+      registrarAtividade({ cartaoId, acao: "comentar", entidade: "comentario" });
     }
     return data;
   }
@@ -44,6 +46,7 @@ export function useComentarios(cartaoId: string | null) {
   async function excluir(id: string) {
     if (key) globalMutate(key, comentarios.filter((c) => c.id !== id), false);
     await supabase.from("comentarios").delete().eq("id", id);
+    if (cartaoId) registrarAtividade({ cartaoId, acao: "excluir", entidade: "comentario" });
   }
 
   function buscar() { if (key) globalMutate(key); }

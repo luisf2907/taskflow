@@ -24,11 +24,13 @@ import { RepoWebhookConfig } from "@/components/workspace/repo-webhook-config";
 import { MetricasWorkspace } from "@/components/workspace/metricas";
 import { TimelineView } from "@/components/workspace/timeline-view";
 import { AutomacoesConfig } from "@/components/workspace/automacoes-config";
+import AtividadesFeed from "@/components/workspace/atividades-feed";
+import { useRealtimeWorkspace } from "@/hooks/use-realtime";
 import { supabase } from "@/lib/supabase/client";
 import { useColunas } from "@/hooks/use-colunas";
 import { usePRSync } from "@/hooks/use-pr-sync";
 import { useWorkspaceUsuarios } from "@/hooks/use-workspace-usuarios";
-import { Users, Mail, Shield, Crown, UserMinus } from "lucide-react";
+import { Users, Mail, Shield, Crown, UserMinus, Activity } from "lucide-react";
 import { Quadro, StatusSprint } from "@/types";
 import {
   DndContext,
@@ -582,7 +584,8 @@ export default function PaginaWorkspace() {
 
   const workspace = workspaces.find((w) => w.id === workspaceId);
   const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
-  const [abaAtiva, setAbaAtiva] = useState<"backlog" | "sprints" | "timeline" | "metricas" | "config">("sprints");
+  const [abaAtiva, setAbaAtiva] = useState<"backlog" | "sprints" | "timeline" | "metricas" | "config" | "atividade">("sprints");
+  useRealtimeWorkspace(workspaceId);
 
   // Repositórios
   const { repositorios, conectar: conectarRepo, desconectar: desconectarRepo } = useRepositorios(workspaceId);
@@ -923,6 +926,7 @@ export default function PaginaWorkspace() {
                   { id: "timeline" as const, label: "Timeline", icon: Clock },
                   { id: "metricas" as const, label: "Métricas", icon: BarChart3 },
                   { id: "config" as const, label: "Ajustes", icon: Settings },
+                  { id: "atividade" as const, label: "Atividade", icon: Activity },
                 ].map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
@@ -1187,6 +1191,10 @@ export default function PaginaWorkspace() {
                 etiquetas={etiquetasWs}
                 membros={membrosWs}
               />
+            )}
+
+            {abaAtiva === "atividade" && (
+              <AtividadesFeed workspaceId={workspaceId} />
             )}
 
             {abaAtiva === "config" && (

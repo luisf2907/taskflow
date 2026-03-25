@@ -28,6 +28,7 @@ import {
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useRealtimeBoard } from "@/hooks/use-realtime";
 
 function diasRestantes(dataFim: string | null): number | null {
   if (!dataFim) return null;
@@ -47,6 +48,7 @@ export default function PaginaQuadro() {
   const { quadros, atualizar, excluir } = useQuadros();
   const { workspaces } = useWorkspaces();
   const quadro = quadros.find((q) => q.id === quadroId);
+  useRealtimeBoard(quadroId);
   const workspace = quadro?.workspace_id ? workspaces.find((w) => w.id === quadro.workspace_id) : null;
 
   const [editandoNome, setEditandoNome] = useState(false);

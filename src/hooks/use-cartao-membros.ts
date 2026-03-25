@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { registrarAtividade } from "@/lib/atividades";
 import useSWR, { mutate as globalMutate } from "swr";
 
 function chave(cartaoId: string | null) {
@@ -27,12 +28,14 @@ export function useCartaoMembros(cartaoId: string | null) {
       { cartao_id: cartaoId, membro_id: membroId },
       { onConflict: "cartao_id,membro_id" }
     );
+    registrarAtividade({ cartaoId, acao: "atribuir", entidade: "membro", detalhes: { tipo: "adicionar" } });
   }
 
   async function remover(membroId: string) {
     if (!cartaoId || !key) return;
     globalMutate(key, membroIds.filter((id) => id !== membroId), false);
     await supabase.from("cartao_membros").delete().eq("cartao_id", cartaoId).eq("membro_id", membroId);
+    registrarAtividade({ cartaoId, acao: "atribuir", entidade: "membro", detalhes: { tipo: "remover" } });
   }
 
   async function toggle(membroId: string) {

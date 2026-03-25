@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { registrarAtividade } from "@/lib/atividades";
 import { Cartao } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useCallback } from "react";
@@ -95,6 +96,7 @@ export function useCartoes(quadroId: string) {
         total_anexos: 0,
       };
       globalMutate(key, [...cartoes, enriquecido], false);
+      registrarAtividade({ quadroId, cartaoId: data.id, acao: "criar", entidade: "cartao", detalhes: { titulo: data.titulo } });
     }
     return data;
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,22 +118,31 @@ export function useCartoes(quadroId: string) {
       .single();
     if (data) {
       globalMutate(key, cartoes.map((c) => (c.id === id ? { ...c, ...data } : c)), false);
+      registrarAtividade({ quadroId, cartaoId: id, acao: "atualizar", entidade: "cartao", detalhes: { campos: Object.keys(campos) } });
     }
     return data;
   }
 
   async function excluir(id: string) {
+    const cartao = cartoes.find((c) => c.id === id);
+    const titulo = cartao?.titulo;
     globalMutate(key, cartoes.filter((c) => c.id !== id), false);
     await supabase.from("cartoes").delete().eq("id", id);
+    registrarAtividade({ quadroId, cartaoId: id, acao: "excluir", entidade: "cartao", detalhes: { titulo } });
   }
 
   async function mover(cartaoId: string, novaColunaId: string, novaPosicao: number) {
+    const cartao = cartoes.find((c) => c.id === cartaoId);
+    const oldColunaId = cartao?.coluna_id;
     globalMutate(
       key,
       cartoes.map((c) => c.id === cartaoId ? { ...c, coluna_id: novaColunaId, posicao: novaPosicao } : c),
       false
     );
     await supabase.from("cartoes").update({ coluna_id: novaColunaId, posicao: novaPosicao }).eq("id", cartaoId);
+    if (oldColunaId && oldColunaId !== novaColunaId) {
+      registrarAtividade({ quadroId, cartaoId, acao: "mover", entidade: "cartao", detalhes: { titulo: cartao?.titulo, coluna_origem_id: oldColunaId, coluna_destino_id: novaColunaId } });
+    }
   }
 
   async function reordenarNaColuna(colunaId: string, cartoesOrdenados: CartaoComResumo[]) {

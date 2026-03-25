@@ -214,3 +214,29 @@ export interface Automacao {
   ativo: boolean;
   criado_em: string;
 }
+
+// =============================================
+// ATIVIDADES (Activity Log)
+// =============================================
+export type AcaoAtividade =
+  | "criar" | "mover" | "atualizar" | "excluir"
+  | "comentar" | "atribuir" | "etiquetar" | "sprint_status";
+
+export type EntidadeAtividade =
+  | "cartao" | "coluna" | "comentario" | "membro" | "etiqueta" | "sprint";
+
+export interface Atividade {
+  id: string;
+  workspace_id: string | null;
+  quadro_id: string | null;
+  cartao_id: string | null;
+  user_id: string;
+  acao: AcaoAtividade;
+  entidade: EntidadeAtividade;
+  detalhes: Record<string, unknown>;
+  criado_em: string;
+}
+
+export interface AtividadeComAutor extends Atividade {
+  perfis: Perfil | null;
+}

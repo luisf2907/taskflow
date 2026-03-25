@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { registrarAtividade } from "@/lib/atividades";
 import { Coluna } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 
@@ -27,7 +28,10 @@ export function useColunas(quadroId: string) {
       .insert({ nome, quadro_id: quadroId, posicao })
       .select()
       .single();
-    if (data) globalMutate(key, [...colunas, data], false);
+    if (data) {
+      globalMutate(key, [...colunas, data], false);
+      registrarAtividade({ quadroId, acao: "criar", entidade: "coluna", detalhes: { nome } });
+    }
     return data;
   }
 
@@ -40,13 +44,19 @@ export function useColunas(quadroId: string) {
       .eq("id", id)
       .select()
       .single();
-    if (data) globalMutate(key, colunas.map((c) => (c.id === id ? data : c)), false);
+    if (data) {
+      globalMutate(key, colunas.map((c) => (c.id === id ? data : c)), false);
+      registrarAtividade({ quadroId, acao: "atualizar", entidade: "coluna", detalhes: { campos: Object.keys(campos) } });
+    }
     return data;
   }
 
   async function excluir(id: string) {
+    const coluna = colunas.find((c) => c.id === id);
+    const nome = coluna?.nome;
     globalMutate(key, colunas.filter((c) => c.id !== id), false);
     await supabase.from("colunas").delete().eq("id", id);
+    registrarAtividade({ quadroId, acao: "excluir", entidade: "coluna", detalhes: { nome } });
   }
 
   async function reordenar(colunasReordenadas: Coluna[]) {

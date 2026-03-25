@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { registrarAtividade } from "@/lib/atividades";
 import useSWR, { mutate as globalMutate } from "swr";
 
 function chave(cartaoId: string | null) {
@@ -23,12 +24,14 @@ export function useCartaoEtiquetas(cartaoId: string | null) {
     if (!cartaoId || !key) return;
     globalMutate(key, [...etiquetaIds, etiquetaId], false);
     await supabase.from("cartao_etiquetas").insert({ cartao_id: cartaoId, etiqueta_id: etiquetaId });
+    registrarAtividade({ cartaoId, acao: "etiquetar", entidade: "etiqueta", detalhes: { tipo: "adicionar" } });
   }
 
   async function remover(etiquetaId: string) {
     if (!cartaoId || !key) return;
     globalMutate(key, etiquetaIds.filter((id) => id !== etiquetaId), false);
     await supabase.from("cartao_etiquetas").delete().eq("cartao_id", cartaoId).eq("etiqueta_id", etiquetaId);
+    registrarAtividade({ cartaoId, acao: "etiquetar", entidade: "etiqueta", detalhes: { tipo: "remover" } });
   }
 
   async function toggle(etiquetaId: string) {
