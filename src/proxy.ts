@@ -31,16 +31,23 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Landing page (/) is always public
+  if (pathname === "/") {
+    return response;
+  }
+
+  // Logged-in users visiting /login go to dashboard
+  if (user && pathname.startsWith("/login")) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // Protected routes: redirect to login if not authenticated
   if (
     !user &&
     !pathname.startsWith("/login") &&
     !pathname.startsWith("/auth")
   ) {
     return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  if (user && pathname.startsWith("/login")) {
-    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return response;

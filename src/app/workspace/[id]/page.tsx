@@ -1484,7 +1484,7 @@ export default function PaginaWorkspace() {
                   <h3 className="text-sm font-bold mb-2 flex items-center gap-2" style={{ color: "var(--tf-danger)" }}><Trash2 size={16}/> Zona de perigo</h3>
                   <p className="text-[13px] mb-4 font-medium" style={{ color: "var(--tf-danger)" }}>Excluir este workspace. Os quadros/sprints ficarão como avulsos soltos.</p>
                   <button
-                    onClick={async () => { await excluirWs(workspaceId); router.push("/"); }}
+                    onClick={async () => { await excluirWs(workspaceId); router.push("/dashboard"); }}
                     className="px-5 py-2.5 text-[13px] font-bold text-white rounded-[14px] transition-smooth hover:-translate-y-0.5" style={{ background: "var(--tf-danger)" }}
                   >
                     Excluir Workspace Permanentemente

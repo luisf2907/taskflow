@@ -72,7 +72,7 @@ function LoginContent() {
         const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
         if (error) throw error;
       }
-      router.push("/");
+      router.push("/dashboard");
       router.refresh();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro desconhecido";

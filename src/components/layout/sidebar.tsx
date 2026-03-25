@@ -101,7 +101,7 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
         <div className={cn("py-3 flex-1 flex flex-col sidebar-item", aberta ? "px-3" : "px-0 items-center")}>
           {/* Logo */}
           <div className={cn("flex items-center mb-4 mt-1", aberta ? "justify-between px-1" : "justify-center flex-col gap-4")}>
-            <Link href="/" className="flex items-center gap-3" title={!aberta ? "Home" : undefined}>
+            <Link href="/dashboard" className="flex items-center gap-3" title={!aberta ? "Home" : undefined}>
               <div
                 className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
                 style={{ background: "var(--tf-accent)" }}

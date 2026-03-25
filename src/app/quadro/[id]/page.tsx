@@ -130,7 +130,7 @@ export default function PaginaQuadro() {
   return (
     <div className="h-full flex overflow-hidden" style={{ background: "var(--tf-bg)" }}>
       {iniciado && !telaCheia && (
-        <Sidebar quadros={quadros} onNovoQuadro={() => router.push("/")} aberta={sidebarAberta} onToggle={toggleSidebar} />
+        <Sidebar quadros={quadros} onNovoQuadro={() => router.push("/dashboard")} aberta={sidebarAberta} onToggle={toggleSidebar} />
       )}
 
       <div className={`flex-1 flex flex-col overflow-hidden ${telaCheia ? "p-3" : "px-2 lg:px-4"}`}>

@@ -64,6 +64,12 @@
   --tf-text-lg: 15px;
   --tf-text-xl: 17px;
   --tf-text-2xl: 22px;
+  --tf-text-3xl: 36px;
+  --tf-text-4xl: 48px;
+  --tf-text-5xl: 60px;
+
+  /* Header glass (RGB for rgba()) */
+  --tf-header-rgb: 255, 255, 255;
 
   /* Shadows — very subtle */
   --tf-shadow-sm: 0 1px 3px rgba(28, 43, 41, 0.04);
@@ -105,6 +111,8 @@
 
   --tf-header: #141A19;
   --tf-header-text: #E1EBE9;
+
+  --tf-header-rgb: 34, 43, 41;
 
   --tf-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
   --tf-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -207,6 +215,25 @@ body {
   0% { opacity: 0; clip-path: inset(0 0 100% 0); transform: translateY(-4px); }
   100% { opacity: 1; clip-path: inset(0 0 0 0); transform: translateY(0); }
 }
+
+/* ---- LANDING PAGE ---- */
+@keyframes landing-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes landing-float-delay {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes landing-fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.landing-float { animation: landing-float 6s ease-in-out infinite; }
+.landing-float-delay { animation: landing-float-delay 5s ease-in-out 1s infinite; }
+.landing-fade-up { animation: landing-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.landing-fade-up-2 { animation: landing-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards; opacity: 0; }
+.landing-fade-up-3 { animation: landing-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards; opacity: 0; }
 
 /* ---- SIDEBAR TRANSITIONS ---- */
 .sidebar-ease {
