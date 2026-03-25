@@ -19,6 +19,38 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+function QuadroLink({ quadro, aberta, pathname }: { quadro: Quadro; aberta: boolean; pathname: string }) {
+  const ativo = pathname === `/quadro/${quadro.id}`;
+  return (
+    <Link
+      href={`/quadro/${quadro.id}`}
+      data-active={ativo && aberta}
+      className={cn(
+        "sidebar-item sidebar-link flex items-center group",
+        aberta ? "gap-2.5 px-2 py-1.5 rounded-[14px] text-[13px] w-full" : "justify-center w-[44px] h-[44px] rounded-[14px] mx-auto relative",
+        ativo ? "font-semibold" : ""
+      )}
+      style={{
+        background: ativo && aberta ? "var(--tf-accent-light)" : "transparent",
+        color: ativo ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
+      }}
+      title={!aberta ? quadro.nome : undefined}
+    >
+      <div
+        className={cn(
+          "flex items-center justify-center shrink-0 sidebar-item",
+          aberta ? "w-5 h-5 rounded-[8px]" : "w-7 h-7 rounded-[8px]",
+          ativo && !aberta && "ring-2 ring-[var(--tf-accent)] ring-offset-2 ring-offset-[var(--tf-surface)]"
+        )}
+        style={{ background: quadro.cor }}
+      >
+        <Kanban size={aberta ? 10 : 14} className="text-white/90" strokeWidth={2.5} />
+      </div>
+      {aberta && <span className="sidebar-fade truncate">{quadro.nome}</span>}
+    </Link>
+  );
+}
+
 interface SidebarProps {
   quadros: Quadro[];
   onNovoQuadro: () => void;
@@ -54,59 +86,7 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
     });
   }
 
-  function QuadroLink({ quadro }: { quadro: Quadro }) {
-    const ativo = pathname === `/quadro/${quadro.id}`;
-    return (
-      <Link
-        href={`/quadro/${quadro.id}`}
-        className={cn(
-          "sidebar-item flex items-center group",
-          aberta ? "gap-2.5 px-2 py-1.5 rounded-[14px] text-[13px] w-full" : "justify-center w-[44px] h-[44px] rounded-[14px] mx-auto relative",
-          ativo ? "font-semibold" : ""
-        )}
-        style={{
-          background: ativo && aberta ? "var(--tf-accent-light)" : "transparent",
-          color: ativo ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
-        }}
-        title={!aberta ? quadro.nome : undefined}
-        onMouseEnter={(e) => { if (!ativo || !aberta) e.currentTarget.style.background = "var(--tf-surface-hover)"; }}
-        onMouseLeave={(e) => { if (!ativo || !aberta) e.currentTarget.style.background = (ativo && aberta) ? "var(--tf-accent-light)" : "transparent"; }}
-      >
-        <div
-          className={cn(
-            "flex items-center justify-center shrink-0 sidebar-item",
-            aberta ? "w-5 h-5 rounded-[8px]" : "w-7 h-7 rounded-[8px]",
-            ativo && !aberta && "ring-2 ring-[var(--tf-accent)] ring-offset-2 ring-offset-[var(--tf-surface)]"
-          )}
-          style={{ background: quadro.cor }}
-        >
-          <Kanban size={aberta ? 10 : 14} className="text-white/90" strokeWidth={2.5} />
-        </div>
-        {aberta && <span className="sidebar-fade truncate">{quadro.nome}</span>}
-      </Link>
-    );
-  }
-
   return (
-    <>
-      <style>{`
-        .sidebar-ease {
-          transition: width 500ms cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        .sidebar-item {
-          transition: all 500ms cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        .sidebar-fade {
-          transition: opacity 400ms cubic-bezier(0.25, 1, 0.5, 1), transform 400ms cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        .sidebar-sub {
-          transition: max-height 400ms cubic-bezier(0.25, 1, 0.5, 1), opacity 300ms cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        .sidebar-chevron {
-          transition: transform 400ms cubic-bezier(0.25, 1, 0.5, 1);
-        }
-      `}</style>
-
       <aside
         className={cn(
           "sidebar-ease flex flex-col shrink-0 overflow-y-auto overflow-x-hidden mt-3.5 mb-3 mx-0 lg:ml-3 rounded-[32px] relative z-40",
@@ -142,6 +122,7 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
               onClick={onToggle}
               className="p-1.5 rounded-[8px] sidebar-item hover:bg-[var(--tf-surface-hover)]"
               style={{ color: "var(--tf-text-tertiary)" }}
+              aria-label={aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
               title={aberta ? "Recolher" : "Expandir"}
             >
               {aberta ? <SidebarClose size={16} strokeWidth={1.8} /> : <SidebarOpen size={16} strokeWidth={1.8} />}
@@ -154,7 +135,7 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
                 Workspace
               </span>
             )}
-            <button onClick={onNovoQuadro} className={cn("p-1.5 rounded-[8px] sidebar-item hover:bg-[var(--tf-surface-hover)]", !aberta && "bg-[var(--tf-bg-secondary)] text-[var(--tf-text-secondary)]")} style={aberta ? { color: "var(--tf-text-tertiary)" } : {}} title="Novo quadro">
+            <button onClick={onNovoQuadro} aria-label="Criar novo quadro" className={cn("p-1.5 rounded-[8px] sidebar-item hover:bg-[var(--tf-surface-hover)]", !aberta && "bg-[var(--tf-bg-secondary)] text-[var(--tf-text-secondary)]")} style={aberta ? { color: "var(--tf-text-tertiary)" } : {}} title="Novo quadro">
               <Plus size={15} />
             </button>
           </div>
@@ -170,12 +151,12 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
                 <div key={ws.id} className={cn(!aberta && "w-full flex flex-col items-center gap-2")}>
                   <button
                     onClick={() => { if (aberta) toggleWs(ws.id); else router.push(`/workspace/${ws.id}`); }}
+                    aria-expanded={expanded}
+                    aria-label={`Workspace ${ws.nome}`}
                     className={cn(
-                      "sidebar-item flex items-center text-left group",
+                      "sidebar-item flex items-center text-left group hover-surface",
                       aberta ? "gap-2.5 w-full px-2 py-1.5 rounded-[14px]" : "justify-center rounded-[14px] w-[44px] h-[44px]"
                     )}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     title={!aberta ? ws.nome : undefined}
                   >
                     <div
@@ -213,16 +194,15 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
                       <>
                         <Link
                           href={`/workspace/${ws.id}`}
+                          data-active={pathname === `/workspace/${ws.id}` && !pathname.includes("/repos")}
                           className={cn(
-                            "sidebar-item flex items-center group relative",
+                            "sidebar-item sidebar-link flex items-center group relative",
                             aberta ? "gap-3 px-2 py-[6px] rounded-[8px] text-[13px] font-medium" : "justify-center rounded-[14px] w-[44px] h-[44px] mx-auto"
                           )}
                           style={{
                             background: pathname === `/workspace/${ws.id}` && !pathname.includes("/repos") && aberta ? "var(--tf-accent-light)" : "transparent",
                             color: pathname === `/workspace/${ws.id}` && !pathname.includes("/repos") ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
                           }}
-                          onMouseEnter={(e) => { if (pathname !== `/workspace/${ws.id}`) e.currentTarget.style.background = "var(--tf-surface-hover)"; }}
-                          onMouseLeave={(e) => { if (pathname !== `/workspace/${ws.id}`) e.currentTarget.style.background = "transparent"; }}
                           title={!aberta ? "Hub do Workspace" : undefined}
                         >
                           <LayoutDashboard size={15} strokeWidth={pathname === `/workspace/${ws.id}` && !pathname.includes("/repos") ? 2.5 : 2} />
@@ -231,16 +211,15 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
 
                         <Link
                           href={`/workspace/${ws.id}/repos`}
+                          data-active={pathname === `/workspace/${ws.id}/repos`}
                           className={cn(
-                            "sidebar-item flex items-center group relative",
+                            "sidebar-item sidebar-link flex items-center group relative",
                             aberta ? "gap-3 px-2 py-[6px] rounded-[8px] text-[13px] font-medium" : "justify-center rounded-[14px] w-[44px] h-[44px] mx-auto"
                           )}
                           style={{
                             background: pathname === `/workspace/${ws.id}/repos` && aberta ? "var(--tf-accent-light)" : "transparent",
                             color: pathname === `/workspace/${ws.id}/repos` ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
                           }}
-                          onMouseEnter={(e) => { if (pathname !== `/workspace/${ws.id}/repos`) e.currentTarget.style.background = "var(--tf-surface-hover)"; }}
-                          onMouseLeave={(e) => { if (pathname !== `/workspace/${ws.id}/repos`) e.currentTarget.style.background = "transparent"; }}
                           title={!aberta ? "Repositórios" : undefined}
                         >
                           <GitBranch size={15} strokeWidth={pathname === `/workspace/${ws.id}/repos` ? 2.5 : 2} />
@@ -249,7 +228,7 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
                       </>
                     )}
 
-                    {wsQuadros.length > 0 && wsQuadros.map((q) => <QuadroLink key={q.id} quadro={q} />)}
+                    {wsQuadros.length > 0 && wsQuadros.map((q) => <QuadroLink key={q.id} quadro={q} aberta={aberta} pathname={pathname} />)}
                   </div>
                 </div>
               );
@@ -270,13 +249,12 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
                   <div className="mb-2 w-4 h-[2px] rounded-full" style={{ background: "var(--tf-border)" }} />
                 )}
                 <div className={cn(aberta ? "mt-0.5 space-y-0.5" : "flex flex-col gap-1 w-full")}>
-                  {quadrosAvulsos.map((q) => <QuadroLink key={q.id} quadro={q} />)}
+                  {quadrosAvulsos.map((q) => <QuadroLink key={q.id} quadro={q} aberta={aberta} pathname={pathname} />)}
                 </div>
               </div>
             )}
           </nav>
         </div>
       </aside>
-    </>
   );
 }

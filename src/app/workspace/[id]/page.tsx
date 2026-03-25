@@ -908,7 +908,7 @@ export default function PaginaWorkspace() {
                   <button
                     onClick={() => setModalSprint(true)}
                     className="flex items-center gap-2 px-5 py-3 text-[14px] font-bold rounded-[20px] transition-all hover:-translate-y-0.5"
-                    style={{ background: "var(--tf-accent-yellow)", color: "var(--tf-text)" }}
+                    style={{ background: "var(--tf-accent-yellow)", color: "#1C2B29" }}
                   >
                     <Plus size={18} strokeWidth={2.5} /> Nova Sprint
                   </button>

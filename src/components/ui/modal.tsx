@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 interface ModalProps {
   aberto: boolean;
@@ -14,18 +14,59 @@ interface ModalProps {
 
 export function Modal({ aberto, onFechar, titulo, children, className }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap: cycle Tab within the modal
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onFechar();
+        return;
+      }
+
+      if (e.key !== "Tab" || !dialogRef.current) return;
+
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input:not([disabled]), select, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [onFechar]
+  );
 
   useEffect(() => {
-    function handleEsc(e: KeyboardEvent) { if (e.key === "Escape") onFechar(); }
     if (aberto) {
-      document.addEventListener("keydown", handleEsc);
+      document.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
+
+      // Auto-focus the dialog on open
+      requestAnimationFrame(() => {
+        const firstFocusable = dialogRef.current?.querySelector<HTMLElement>(
+          'a[href], button:not([disabled]), textarea, input:not([disabled]), select, [tabindex]:not([tabindex="-1"])'
+        );
+        firstFocusable?.focus();
+      });
     }
     return () => {
-      document.removeEventListener("keydown", handleEsc);
+      document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [aberto, onFechar]);
+  }, [aberto, handleKeyDown]);
 
   if (!aberto) return null;
 
@@ -36,6 +77,10 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
       onClick={(e) => { if (e.target === overlayRef.current) onFechar(); }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={titulo || "Modal"}
         className={cn("rounded-[32px] w-full max-w-lg mx-4 border my-auto", className)}
         style={{
           background: "var(--tf-surface)",
@@ -53,6 +98,7 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
             <h2 className="text-base font-semibold" style={{ color: "var(--tf-text)" }}>{titulo}</h2>
             <button
               onClick={onFechar}
+              aria-label="Fechar modal"
               className="p-1 rounded-[8px] transition-smooth"
               style={{ color: "var(--tf-text-tertiary)" }}
             >
