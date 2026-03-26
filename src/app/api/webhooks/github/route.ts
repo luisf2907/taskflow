@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { applyRateLimit, sanitize } from "@/lib/api-utils";
+import { executarAutomacoes } from "@/lib/automacoes-executor";
 
 function verifySignature(
   payload: string,
@@ -20,19 +22,40 @@ function verifySignature(
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit webhooks: 60 per minute per IP
+  const limited = applyRateLimit(request, "webhook", { maxRequests: 60 });
+  if (limited) return limited;
+
   const body = await request.text();
   const event = request.headers.get("X-GitHub-Event");
   const signature = request.headers.get("X-Hub-Signature-256") || "";
 
-  // Só processar eventos de pull_request
   if (event !== "pull_request") {
     return NextResponse.json({ ok: true, skipped: true });
   }
 
-  const payload = JSON.parse(body);
-  const { repository, pull_request, action } = payload;
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(body);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
 
-  if (!repository || !pull_request) {
+  const { repository, pull_request, action } = payload as {
+    repository?: { owner?: { login?: string }; name?: string };
+    pull_request?: {
+      number?: number;
+      title?: string;
+      body?: string;
+      html_url?: string;
+      merged?: boolean;
+      user?: { login?: string };
+      head?: { ref?: string };
+    };
+    action?: string;
+  };
+
+  if (!repository?.owner?.login || !repository?.name || !pull_request?.number) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
@@ -42,80 +65,113 @@ export async function POST(request: NextRequest) {
     { auth: { persistSession: false } }
   );
 
-  // Buscar repo no banco
-  const { data: repo } = await service
+  // Find all workspace repos matching this GitHub repo (workspace isolation)
+  const { data: repos } = await service
     .from("repositorios")
     .select("id, workspace_id, coluna_review_id, coluna_done_id, coluna_doing_id, webhook_secret")
     .eq("owner", repository.owner.login)
-    .eq("nome", repository.name)
-    .single();
+    .eq("nome", repository.name);
 
-  if (!repo) {
+  if (!repos || repos.length === 0) {
     return NextResponse.json({ error: "Repo not connected" }, { status: 404 });
   }
 
-  // Verificar assinatura se webhook_secret configurado
-  if (repo.webhook_secret) {
+  const results = [];
+
+  for (const repo of repos) {
+    // SECURITY: webhook_secret is MANDATORY
+    if (!repo.webhook_secret) {
+      results.push({ workspace: repo.workspace_id, error: "Webhook secret not configured" });
+      continue;
+    }
+
     if (!verifySignature(body, signature, repo.webhook_secret)) {
-      return NextResponse.json(
-        { error: "Invalid signature" },
-        { status: 403 }
-      );
-    }
-  }
-
-  // PR aberto ou reaberto → criar card na coluna Review
-  if (action === "opened" || action === "reopened") {
-    if (!repo.coluna_review_id) {
-      return NextResponse.json(
-        { error: "No review column configured for this repo" },
-        { status: 400 }
-      );
+      results.push({ workspace: repo.workspace_id, error: "Invalid signature" });
+      continue;
     }
 
-    // Contar cards para posição
-    const { count } = await service
-      .from("cartoes")
-      .select("id", { count: "exact", head: true })
-      .eq("coluna_id", repo.coluna_review_id);
+    // === PR opened/reopened → create card in Review column ===
+    if (action === "opened" || action === "reopened") {
+      if (!repo.coluna_review_id) {
+        results.push({ workspace: repo.workspace_id, action: "skipped", reason: "no_review_column" });
+        continue;
+      }
 
-    // Upsert (criar ou atualizar) usando pr_repo_id + pr_numero
-    await service.from("cartoes").upsert(
-      {
-        coluna_id: repo.coluna_review_id,
-        titulo: `PR #${pull_request.number}: ${pull_request.title}`,
-        descricao: pull_request.body || `Pull request por ${pull_request.user.login}`,
-        posicao: count || 0,
-        pr_numero: pull_request.number,
-        pr_url: pull_request.html_url,
-        pr_status: "open",
-        pr_repo_id: repo.id,
-        pr_autor: pull_request.user.login,
-        branch: pull_request.head?.ref || null,
-        branch_repo_id: repo.id,
-      },
-      { onConflict: "pr_repo_id,pr_numero" }
-    );
+      const { count } = await service
+        .from("cartoes")
+        .select("id", { count: "exact", head: true })
+        .eq("coluna_id", repo.coluna_review_id);
 
-    return NextResponse.json({ ok: true, action: "card_created" });
-  }
+      const { data: card, error: upsertErr } = await service.from("cartoes").upsert(
+        {
+          coluna_id: repo.coluna_review_id,
+          titulo: sanitize(`PR #${pull_request.number}: ${pull_request.title || ""}`, 500),
+          descricao: sanitize(pull_request.body || `Pull request por ${pull_request.user?.login || "unknown"}`, 5000),
+          posicao: count || 0,
+          pr_numero: pull_request.number,
+          pr_url: sanitize(pull_request.html_url, 2000),
+          pr_status: "open",
+          pr_repo_id: repo.id,
+          pr_autor: sanitize(pull_request.user?.login, 100),
+          branch: sanitize(pull_request.head?.ref, 200),
+          branch_repo_id: repo.id,
+        },
+        { onConflict: "pr_repo_id,pr_numero" }
+      ).select("id").single();
 
-  // PR fechado → salvar no histórico e desvincular
-  if (action === "closed") {
-    const merged = pull_request.merged === true;
-    const targetColumn = merged ? repo.coluna_done_id : repo.coluna_doing_id;
-    const status = merged ? "merged" : "closed";
+      // Fire pr_opened automations
+      if (card) {
+        const { data: automacoes } = await service
+          .from("automacoes")
+          .select("*")
+          .eq("workspace_id", repo.workspace_id)
+          .eq("ativo", true);
+        if (automacoes && automacoes.length > 0) {
+          await executarAutomacoes(service, automacoes, {
+            tipo: "pr_opened",
+            config: {},
+            cartao_id: card.id,
+          });
+        }
+      }
 
-    // Buscar card vinculado para salvar no histórico
-    const { data: cardVinculado } = await service
-      .from("cartoes")
-      .select("id, pr_numero, pr_url, pr_autor, pr_historico")
-      .eq("pr_repo_id", repo.id)
-      .eq("pr_numero", pull_request.number)
-      .single();
+      results.push({
+        workspace: repo.workspace_id,
+        action: upsertErr ? "error" : "card_created",
+        ...(upsertErr && { error: upsertErr.message }),
+      });
+      continue;
+    }
 
-    if (cardVinculado) {
+    // === PR closed → save history, fire automations (no hardcoded move) ===
+    if (action === "closed") {
+      const merged = pull_request.merged === true;
+      const status = merged ? "merged" : "closed";
+
+      const { data: cardVinculado } = await service
+        .from("cartoes")
+        .select("id, pr_numero, pr_url, pr_autor, pr_historico")
+        .eq("pr_repo_id", repo.id)
+        .eq("pr_numero", pull_request.number!)
+        .single();
+
+      if (!cardVinculado) {
+        results.push({ workspace: repo.workspace_id, action: "no_card_found" });
+        continue;
+      }
+
+      // DUPLICATION GUARD: check if this PR was already processed
       const historico = Array.isArray(cardVinculado.pr_historico) ? cardVinculado.pr_historico : [];
+      const jaProcessado = historico.some(
+        (h: { numero?: number; status?: string }) =>
+          h.numero === pull_request.number && (h.status === "merged" || h.status === "closed")
+      );
+      if (jaProcessado) {
+        results.push({ workspace: repo.workspace_id, action: "already_processed" });
+        continue;
+      }
+
+      // Save to history and clear PR fields
       const historicoEntry = {
         numero: pull_request.number,
         url: pull_request.html_url,
@@ -133,19 +189,48 @@ export async function POST(request: NextRequest) {
         pr_historico: [...historico, historicoEntry],
         atualizado_em: new Date().toISOString(),
       };
-      if (targetColumn) {
-        updateData.coluna_id = targetColumn;
-      }
-      // Set completion date on merge
+
+      // Set data_conclusao on merge (this is a data field, not a "move")
       if (merged) {
         updateData.data_conclusao = new Date().toISOString();
       }
 
-      await service.from("cartoes").update(updateData).eq("id", cardVinculado.id);
+      const { error: updateErr } = await service
+        .from("cartoes")
+        .update(updateData)
+        .eq("id", cardVinculado.id);
+
+      // Fire automations — pr_merged or pr_closed
+      if (!updateErr) {
+        const { data: automacoes } = await service
+          .from("automacoes")
+          .select("*")
+          .eq("workspace_id", repo.workspace_id)
+          .eq("ativo", true);
+        if (automacoes && automacoes.length > 0) {
+          await executarAutomacoes(service, automacoes, {
+            tipo: merged ? "pr_merged" : "pr_closed",
+            config: {},
+            cartao_id: cardVinculado.id,
+          });
+        }
+      }
+
+      results.push({
+        workspace: repo.workspace_id,
+        action: updateErr ? "error" : "card_updated",
+        status,
+        ...(updateErr && { error: updateErr.message }),
+      });
+      continue;
     }
 
-    return NextResponse.json({ ok: true, action: "card_updated", status });
+    results.push({ workspace: repo.workspace_id, action: "ignored" });
   }
 
-  return NextResponse.json({ ok: true, action: "ignored" });
+  if (results.length > 0 && results.every((r) => r.error?.includes("signature") || r.error?.includes("secret"))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
+  return NextResponse.json({ ok: true, results });
 }

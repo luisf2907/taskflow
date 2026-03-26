@@ -1,14 +1,22 @@
-import { createServerClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { buscarBranchesAuth } from "@/lib/github/client";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { validateBody, applyRateLimit } from "@/lib/api-utils";
+
+const schema = z.object({
+  owner: z.string().min(1).max(200),
+  repo: z.string().min(1).max(200),
+});
 
 export async function POST(request: NextRequest) {
-  const { owner, repo } = await request.json();
+  // Rate limit: 30 per minute per IP
+  const limited = applyRateLimit(request, "branches", { maxRequests: 30 });
+  if (limited) return limited;
 
-  if (!owner || !repo) {
-    return NextResponse.json({ error: "owner e repo são obrigatórios" }, { status: 400 });
-  }
+  const parsed = await validateBody(request, schema);
+  if ("error" in parsed) return parsed.error;
+  const { owner, repo } = parsed.data;
 
   // Auth
   const supabase = await createServerClient();
@@ -36,7 +44,7 @@ export async function POST(request: NextRequest) {
 
   if (result.error) {
     return NextResponse.json(
-      { error: `Erro ao buscar branches: ${result.error}` },
+      { error: "Erro ao buscar branches" },
       { status: result.status }
     );
   }

@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 
 interface RepoWebhookConfigProps {
   repoId: string;
+  workspaceId: string;
   colunas: Coluna[];
   webhookSecret: string | null;
   colunaReviewId: string | null;
@@ -24,6 +25,7 @@ interface RepoWebhookConfigProps {
 
 export function RepoWebhookConfig({
   repoId,
+  workspaceId,
   colunas,
   webhookSecret: secretInicial,
   colunaReviewId: reviewInicial,
@@ -69,6 +71,62 @@ export function RepoWebhookConfig({
       coluna_done_id: doneId || null,
       coluna_doing_id: doingId || null,
     }).eq("id", repoId);
+
+    // Create default automations for any mapped columns that don't have automations yet
+    if (workspaceId && (doneId || reviewId || doingId)) {
+      const { data: existentes } = await supabase
+        .from("automacoes")
+        .select("trigger_tipo")
+        .eq("workspace_id", workspaceId)
+        .in("trigger_tipo", ["pr_merged", "pr_opened", "pr_closed"]);
+
+      const existingTriggers = new Set((existentes || []).map((e) => e.trigger_tipo));
+      const defaults = [];
+
+      // PR merged → move to Done column
+      if (doneId && !existingTriggers.has("pr_merged")) {
+        defaults.push({
+          workspace_id: workspaceId,
+          nome: "PR merged → Concluído",
+          trigger_tipo: "pr_merged",
+          trigger_config: {},
+          acao_tipo: "move_to_column",
+          acao_config: { coluna_id: doneId },
+          ativo: true,
+        });
+      }
+
+      // PR opened → move to Review column
+      if (reviewId && !existingTriggers.has("pr_opened")) {
+        defaults.push({
+          workspace_id: workspaceId,
+          nome: "PR aberto → Review",
+          trigger_tipo: "pr_opened",
+          trigger_config: {},
+          acao_tipo: "move_to_column",
+          acao_config: { coluna_id: reviewId },
+          ativo: true,
+        });
+      }
+
+      // PR closed (without merge) → move to Doing/A Fazer column
+      if (doingId && !existingTriggers.has("pr_closed")) {
+        defaults.push({
+          workspace_id: workspaceId,
+          nome: "PR fechado → Em Andamento",
+          trigger_tipo: "pr_closed",
+          trigger_config: {},
+          acao_tipo: "move_to_column",
+          acao_config: { coluna_id: doingId },
+          ativo: true,
+        });
+      }
+
+      if (defaults.length > 0) {
+        await supabase.from("automacoes").insert(defaults);
+      }
+    }
+
     setSalvando(false);
     onSalvar();
   }

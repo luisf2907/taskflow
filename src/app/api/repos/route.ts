@@ -1,7 +1,7 @@
-import { createServerClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { githubAuthFetch } from "@/lib/github/client";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { applyRateLimit } from "@/lib/api-utils";
 
 interface GitHubRepoAPI {
   id: number;
@@ -19,7 +19,11 @@ interface GitHubRepoAPI {
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Rate limit: 10 per minute per IP
+  const limited = applyRateLimit(request, "repos", { maxRequests: 10 });
+  if (limited) return limited;
+
   // Auth
   const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -42,7 +46,7 @@ export async function GET() {
     );
   }
 
-  // Buscar repos do user (inclui privados) — paginado, até 100
+  // Buscar repos do user
   const result = await githubAuthFetch<GitHubRepoAPI[]>(
     "/user/repos?per_page=100&sort=updated&direction=desc&type=all",
     tokenData.provider_token
@@ -50,7 +54,7 @@ export async function GET() {
 
   if (result.error) {
     return NextResponse.json(
-      { error: `Erro ao buscar repositórios: ${result.error}` },
+      { error: "Erro ao buscar repositórios" },
       { status: result.status }
     );
   }

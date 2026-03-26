@@ -1,15 +1,27 @@
-import { createServerClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { applyRateLimit } from "@/lib/api-utils";
 
 const GITHUB_BASE = "https://api.github.com";
+
+// Allowed GitHub API path prefixes to prevent abuse
+const ALLOWED_PREFIXES = ["/repos/", "/user/"];
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
+  // Rate limit: 30 per minute per IP
+  const limited = applyRateLimit(request, "github-proxy", { maxRequests: 30 });
+  if (limited) return limited;
+
   const { path } = await params;
-  const githubPath = "/" + path.join("/");
+  const githubPath = "/" + path.map(encodeURIComponent).join("/");
+
+  // SECURITY: Only allow known GitHub API paths
+  if (!ALLOWED_PREFIXES.some((prefix) => githubPath.startsWith(prefix))) {
+    return NextResponse.json({ error: "Forbidden path" }, { status: 403 });
+  }
 
   // Checar se quer conteúdo raw via query param _raw=1
   const wantRaw = request.nextUrl.searchParams.get("_raw") === "1";
@@ -47,9 +59,8 @@ export async function GET(
     const res = await fetch(`${GITHUB_BASE}${fullPath}`, { headers });
 
     if (!res.ok) {
-      const err = await res.text().catch(() => res.statusText);
       return NextResponse.json(
-        { error: err || "GitHub API error" },
+        { error: "GitHub API error" },
         { status: res.status }
       );
     }

@@ -201,7 +201,7 @@ export interface WorkspaceUsuario {
 // =============================================
 // AUTOMAÇÕES
 // =============================================
-export type TriggerTipo = "card_moved_to_column" | "card_created" | "pr_merged" | "pr_opened";
+export type TriggerTipo = "card_moved_to_column" | "card_created" | "pr_merged" | "pr_opened" | "pr_closed";
 export type AcaoTipo = "move_to_column" | "assign_member" | "add_label";
 
 export interface Automacao {

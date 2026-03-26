@@ -64,6 +64,7 @@ function WebhookConfigInline({ repoDb, workspaceId }: { repoDb: Repositorio; wor
     <div className="max-w-xl rounded-[14px] p-5" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}>
       <RepoWebhookConfig
         repoId={repoDb.id}
+        workspaceId={workspaceId}
         colunas={todasColunas}
         webhookSecret={repoDb.webhook_secret ?? null}
         colunaReviewId={repoDb.coluna_review_id ?? null}

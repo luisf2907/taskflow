@@ -1,46 +1,32 @@
-import { createServerClient } from "@supabase/ssr";
-import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { validateBody, applyRateLimit } from "@/lib/api-utils";
+
+const schema = z.object({
+  owner: z.string().min(1).max(200),
+  repo: z.string().min(1).max(200),
+  prNumber: z.number().int().positive(),
+});
 
 export async function POST(request: NextRequest) {
-  const { owner, repo, prNumber } = await request.json();
+  // Rate limit: 30 per minute per IP
+  const limited = applyRateLimit(request, "pr-info", { maxRequests: 30 });
+  if (limited) return limited;
 
-  if (!owner || !repo || !prNumber) {
-    return NextResponse.json({ error: "Missing params" }, { status: 400 });
-  }
+  const parsed = await validateBody(request, schema);
+  if ("error" in parsed) return parsed.error;
+  const { owner, repo, prNumber } = parsed.data;
 
   // Auth
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch { /* read-only */ }
-        },
-      },
-    }
-  );
-
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
   // Get GitHub token
-  const service = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-  );
-
+  const service = createServiceClient();
   const { data: tokenData } = await service
     .from("github_tokens")
     .select("provider_token")
@@ -53,12 +39,15 @@ export async function POST(request: NextRequest) {
 
   // Fetch PR from GitHub
   try {
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}`, {
-      headers: {
-        Authorization: `Bearer ${tokenData.provider_token}`,
-        Accept: "application/vnd.github.v3+json",
-      },
-    });
+    const res = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${prNumber}`,
+      {
+        headers: {
+          Authorization: `Bearer ${tokenData.provider_token}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+      }
+    );
 
     if (!res.ok) {
       return NextResponse.json({ title: null, state: null }, { status: 200 });

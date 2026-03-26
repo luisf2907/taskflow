@@ -1,44 +1,33 @@
-import { createServerClient } from "@supabase/ssr";
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { buscarPRsAuth } from "@/lib/github/client";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { validateBody, applyRateLimit } from "@/lib/api-utils";
+
+const schema = z.object({
+  repoId: z.string().uuid(),
+});
 
 export async function POST(request: NextRequest) {
-  const { repoId } = await request.json();
+  // Rate limit: 5 syncs per minute per IP
+  const limited = applyRateLimit(request, "pr-sync", { maxRequests: 5 });
+  if (limited) return limited;
 
-  if (!repoId) {
-    return NextResponse.json({ error: "repoId required" }, { status: 400 });
-  }
+  const parsed = await validateBody(request, schema);
+  if ("error" in parsed) return parsed.error;
+  const { repoId } = parsed.data;
 
   // Auth
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch { /* read-only context */ }
-        },
-      },
-    }
-  );
-
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Buscar repo
+  // Buscar repo (RLS filters by workspace membership)
   const { data: repo } = await supabase
     .from("repositorios")
-    .select("id, owner, nome, coluna_review_id")
+    .select("id, owner, nome, coluna_review_id, workspace_id")
     .eq("id", repoId)
     .single();
 
@@ -46,13 +35,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Repo not configured" }, { status: 400 });
   }
 
-  // Buscar token
-  const service = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-  );
+  // SECURITY: Explicit workspace membership check
+  const { count: memberCount } = await supabase
+    .from("workspace_usuarios")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", repo.workspace_id)
+    .eq("user_id", user.id);
 
+  if (!memberCount || memberCount === 0) {
+    return NextResponse.json({ error: "Sem permissão neste workspace" }, { status: 403 });
+  }
+
+  // Buscar token
+  const service = createServiceClient();
   const { data: tokenData } = await service
     .from("github_tokens")
     .select("provider_token")
@@ -100,8 +95,8 @@ export async function POST(request: NextRequest) {
 
   const cardsParaCriar = novos.map((pr, idx) => ({
     coluna_id: repo.coluna_review_id,
-    titulo: `PR #${pr.number}: ${pr.title}`,
-    descricao: pr.body || `Pull request por ${pr.user.login}`,
+    titulo: `PR #${pr.number}: ${pr.title}`.slice(0, 500),
+    descricao: (pr.body || `Pull request por ${pr.user.login}`).slice(0, 5000),
     posicao: (count || 0) + idx,
     pr_numero: pr.number,
     pr_url: pr.html_url,

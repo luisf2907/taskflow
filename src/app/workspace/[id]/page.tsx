@@ -295,7 +295,7 @@ const CORES_QUADRO = [
 ];
 
 // ─── Webhook Config Wrapper ───
-function WebhookConfigWrapper({ repoId, repoDb, sprintId }: { repoId: string; repoDb: { webhook_secret?: string | null; coluna_review_id?: string | null; coluna_done_id?: string | null; coluna_doing_id?: string | null }; sprintId: string | undefined }) {
+function WebhookConfigWrapper({ repoId, repoDb, sprintId, workspaceId }: { repoId: string; repoDb: { webhook_secret?: string | null; coluna_review_id?: string | null; coluna_done_id?: string | null; coluna_doing_id?: string | null }; sprintId: string | undefined; workspaceId: string }) {
   const { colunas } = useColunas(sprintId ?? "");
 
   return (
@@ -307,6 +307,7 @@ function WebhookConfigWrapper({ repoId, repoDb, sprintId }: { repoId: string; re
       ) : (
         <RepoWebhookConfig
           repoId={repoId}
+          workspaceId={workspaceId}
           colunas={colunas}
           webhookSecret={repoDb.webhook_secret ?? null}
           colunaReviewId={repoDb.coluna_review_id ?? null}

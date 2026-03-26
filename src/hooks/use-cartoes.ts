@@ -101,16 +101,23 @@ export function useCartoes(quadroId: string) {
       registrarAtividade({ quadroId, cartaoId: data.id, acao: "criar", entidade: "cartao", detalhes: { titulo: data.titulo } });
 
       // Execute automations for card_created
-      const { data: automacoes } = await supabase
-        .from("automacoes")
-        .select("*")
-        .eq("quadro_id", quadroId);
-      if (automacoes && automacoes.length > 0) {
-        await executarAutomacoes(supabase, automacoes, {
-          tipo: "card_created",
-          config: {},
-          cartao_id: data.id,
-        });
+      const { data: quadro } = await supabase
+        .from("quadros")
+        .select("workspace_id")
+        .eq("id", quadroId)
+        .single();
+      if (quadro?.workspace_id) {
+        const { data: automacoes } = await supabase
+          .from("automacoes")
+          .select("*")
+          .eq("workspace_id", quadro.workspace_id);
+        if (automacoes && automacoes.length > 0) {
+          await executarAutomacoes(supabase, automacoes, {
+            tipo: "card_created",
+            config: {},
+            cartao_id: data.id,
+          });
+        }
       }
     }
     return data;
@@ -198,16 +205,23 @@ export function useCartoes(quadroId: string) {
       registrarAtividade({ quadroId, cartaoId, acao: "mover", entidade: "cartao", detalhes: { titulo: cartao?.titulo, coluna_origem_id: oldColunaId, coluna_destino_id: novaColunaId } });
 
       // Execute automations for card_moved_to_column
-      const { data: automacoes } = await supabase
-        .from("automacoes")
-        .select("*")
-        .eq("quadro_id", quadroId);
-      if (automacoes && automacoes.length > 0) {
-        await executarAutomacoes(supabase, automacoes, {
-          tipo: "card_moved_to_column",
-          config: { coluna_id: novaColunaId },
-          cartao_id: cartaoId,
-        });
+      const { data: quadro } = await supabase
+        .from("quadros")
+        .select("workspace_id")
+        .eq("id", quadroId)
+        .single();
+      if (quadro?.workspace_id) {
+        const { data: automacoes } = await supabase
+          .from("automacoes")
+          .select("*")
+          .eq("workspace_id", quadro.workspace_id);
+        if (automacoes && automacoes.length > 0) {
+          await executarAutomacoes(supabase, automacoes, {
+            tipo: "card_moved_to_column",
+            config: { coluna_id: novaColunaId },
+            cartao_id: cartaoId,
+          });
+        }
       }
     }
   }

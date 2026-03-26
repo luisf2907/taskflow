@@ -1,17 +1,27 @@
-import { createServerClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { createPR, requestReviewers } from "@/lib/github/client";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { validateBody, applyRateLimit, sanitize } from "@/lib/api-utils";
+
+const schema = z.object({
+  repoId: z.string().uuid(),
+  title: z.string().min(1).max(500),
+  head: z.string().min(1).max(200),
+  base: z.string().min(1).max(200),
+  body: z.string().max(10000).optional(),
+  cardId: z.string().uuid().optional(),
+  reviewers: z.array(z.string().max(100)).max(20).optional(),
+});
 
 export async function POST(request: NextRequest) {
-  const { repoId, title, head, base, body, cardId, reviewers } = await request.json();
+  // Rate limit: 10 PR creates per minute per IP
+  const limited = applyRateLimit(request, "pr-create", { maxRequests: 10 });
+  if (limited) return limited;
 
-  if (!repoId || !title || !head || !base) {
-    return NextResponse.json(
-      { error: "repoId, title, head e base são obrigatórios" },
-      { status: 400 }
-    );
-  }
+  const parsed = await validateBody(request, schema);
+  if ("error" in parsed) return parsed.error;
+  const { repoId, title, head, base, body, cardId, reviewers } = parsed.data;
 
   // Auth
   const supabase = await createServerClient();
@@ -20,7 +30,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  // Buscar repo
+  // Buscar repo (RLS already filters by workspace membership)
   const { data: repo } = await supabase
     .from("repositorios")
     .select("id, owner, nome, coluna_review_id, workspace_id")
@@ -29,6 +39,17 @@ export async function POST(request: NextRequest) {
 
   if (!repo) {
     return NextResponse.json({ error: "Repositório não encontrado" }, { status: 404 });
+  }
+
+  // SECURITY: Explicit workspace membership check (defense-in-depth)
+  const { count: memberCount } = await supabase
+    .from("workspace_usuarios")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", repo.workspace_id)
+    .eq("user_id", user.id);
+
+  if (!memberCount || memberCount === 0) {
+    return NextResponse.json({ error: "Sem permissão neste workspace" }, { status: 403 });
   }
 
   // Buscar token GitHub
@@ -52,10 +73,10 @@ export async function POST(request: NextRequest) {
   const result = await createPR(
     repo.owner,
     repo.nome,
-    title,
+    sanitize(title, 500),
     head,
     base,
-    body || "",
+    sanitize(body || "", 10000),
     token
   );
 
@@ -73,10 +94,9 @@ export async function POST(request: NextRequest) {
     await requestReviewers(repo.owner, repo.nome, pr.number, reviewers, token);
   }
 
-  // Encontrar coluna Review — primeiro tenta a configurada, senão busca por nome
+  // Encontrar coluna Review
   let colunaReviewId = repo.coluna_review_id;
   if (!colunaReviewId) {
-    // Buscar quadros do workspace
     const { data: quadros } = await service
       .from("quadros")
       .select("id")
@@ -84,7 +104,6 @@ export async function POST(request: NextRequest) {
 
     if (quadros && quadros.length > 0) {
       const quadroIds = quadros.map((q) => q.id);
-      // Buscar coluna com nome parecido com "Review"
       const { data: colunaReview } = await service
         .from("colunas")
         .select("id")
@@ -98,7 +117,17 @@ export async function POST(request: NextRequest) {
 
   // Vincular a card existente OU criar card novo
   if (cardId) {
-    // Atualizar card existente com dados do PR e mover para Review
+    // SECURITY: Verify card exists and belongs to user's workspace (via RLS)
+    const { data: existingCard } = await supabase
+      .from("cartoes")
+      .select("id")
+      .eq("id", cardId)
+      .single();
+
+    if (!existingCard) {
+      return NextResponse.json({ error: "Card não encontrado ou sem permissão" }, { status: 404 });
+    }
+
     const updateData: Record<string, unknown> = {
       pr_numero: pr.number,
       pr_url: pr.html_url,
@@ -114,13 +143,12 @@ export async function POST(request: NextRequest) {
     }
     await service.from("cartoes").update(updateData).eq("id", cardId);
   } else if (colunaReviewId) {
-    // Criar card novo automaticamente
     await service.from("cartoes").upsert(
       {
         coluna_id: colunaReviewId,
         workspace_id: repo.workspace_id,
-        titulo: `PR #${pr.number}: ${pr.title}`,
-        descricao: pr.body || null,
+        titulo: sanitize(`PR #${pr.number}: ${pr.title}`, 500),
+        descricao: sanitize(pr.body || "", 5000),
         posicao: 0,
         pr_numero: pr.number,
         pr_url: pr.html_url,
@@ -128,7 +156,7 @@ export async function POST(request: NextRequest) {
         pr_repo_id: repo.id,
         pr_autor: pr.user?.login || user.email || "unknown",
         branch: pr.head?.ref || null,
-      branch_repo_id: repo.id,
+        branch_repo_id: repo.id,
       },
       { onConflict: "pr_repo_id,pr_numero" }
     );

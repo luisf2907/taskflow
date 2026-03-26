@@ -17,6 +17,7 @@ const TRIGGER_LABELS: Record<TriggerTipo, string> = {
   card_created: "Card criado",
   pr_merged: "PR mergeado",
   pr_opened: "PR aberto",
+  pr_closed: "PR fechado (sem merge)",
 };
 
 const ACAO_LABELS: Record<AcaoTipo, string> = {
