@@ -25,7 +25,8 @@ async function fetchBacklog(workspaceId: string): Promise<CartaoBacklog[]> {
       .select("*, cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)")
       .is("coluna_id", null)
       .eq("workspace_id", workspaceId)
-      .order("criado_em", { ascending: false }),
+      .order("criado_em", { ascending: false })
+      .limit(300),
     supabase
       .from("quadros")
       .select("id, nome")
@@ -52,7 +53,8 @@ async function fetchBacklog(workspaceId: string): Promise<CartaoBacklog[]> {
         .select("*, colunas(id, nome, quadro_id), cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)")
         .not("coluna_id", "is", null)
         .in("colunas.quadro_id", quadroIds)
-        .order("posicao"),
+        .order("posicao")
+        .limit(500),
     ]);
 
     const ultimaColunaPorQuadro: Record<string, string> = {};

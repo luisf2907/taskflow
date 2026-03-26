@@ -8,7 +8,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Gauge, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { Dropdown, DropdownItem } from "../ui/dropdown";
 import { Cartao } from "./cartao";
 import { NovoCartao } from "./novo-cartao";
@@ -25,7 +25,7 @@ interface ColunaProps {
   onExcluir: () => void;
 }
 
-export function Coluna({
+export const Coluna = memo(function Coluna({
   coluna, index, cartoes, etiquetas, membros,
   onCriarCartao, onCartaoClick, onRenomear, onExcluir,
 }: ColunaProps) {
@@ -38,7 +38,7 @@ export function Coluna({
   });
 
   const style = { transform: CSS.Transform.toString(transform), transition };
-  const pesoTotal = cartoes.reduce((acc, c) => acc + (c.peso || 0), 0);
+  const pesoTotal = useMemo(() => cartoes.reduce((acc, c) => acc + (c.peso || 0), 0), [cartoes]);
 
   const handleCriarCartao = useCallback(
     (titulo: string, peso?: number | null) => onCriarCartao(coluna.id, titulo, peso),
@@ -141,4 +141,4 @@ export function Coluna({
       </div>
     </div>
   );
-}
+});

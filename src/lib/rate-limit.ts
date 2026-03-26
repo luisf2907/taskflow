@@ -1,12 +1,17 @@
 const rateMap = new Map<string, { count: number; resetAt: number }>();
 
-// Clean up expired entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, val] of rateMap) {
-    if (now > val.resetAt) rateMap.delete(key);
-  }
-}, 60_000);
+let cleanupStarted = false;
+
+function ensureCleanup() {
+  if (cleanupStarted) return;
+  cleanupStarted = true;
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, val] of rateMap) {
+      if (now > val.resetAt) rateMap.delete(key);
+    }
+  }, 60_000);
+}
 
 /**
  * Simple in-memory rate limiter per key.
@@ -16,6 +21,7 @@ export function rateLimit(
   key: string,
   { maxRequests = 20, windowMs = 60_000 } = {}
 ): { ok: boolean; retryAfter?: number } {
+  ensureCleanup();
   const now = Date.now();
   const entry = rateMap.get(key);
 

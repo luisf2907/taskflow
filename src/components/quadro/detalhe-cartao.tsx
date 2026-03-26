@@ -27,7 +27,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Anexos } from "./anexos";
 import { Avatar } from "./avatar";
 import { ChecklistComponent } from "./checklist";
@@ -137,13 +137,15 @@ export function DetalheCartao({
 
   if (!cartao) return null;
 
-  const etiquetasDoCartao = etiquetas.filter((e) => etiquetaIds.includes(e.id));
-  const membrosDoCartao = membros.filter((m) => membroIds.includes(m.id));
+  const etiquetasDoCartao = useMemo(() => etiquetas.filter((e) => etiquetaIds.includes(e.id)), [etiquetas, etiquetaIds]);
+  const membrosDoCartao = useMemo(() => membros.filter((m) => membroIds.includes(m.id)), [membros, membroIds]);
   const dataStatus = statusData(dataLocal);
 
-  const totalItens = checklists.reduce((sum, cl) => sum + cl.checklist_itens.length, 0);
-  const totalConcluidos = checklists.reduce((sum, cl) => sum + cl.checklist_itens.filter((i) => i.concluido).length, 0);
-  const percentual = totalItens > 0 ? Math.round((totalConcluidos / totalItens) * 100) : 0;
+  const { totalItens, totalConcluidos, percentual } = useMemo(() => {
+    const itens = checklists.reduce((sum, cl) => sum + cl.checklist_itens.length, 0);
+    const concluidos = checklists.reduce((sum, cl) => sum + cl.checklist_itens.filter((i) => i.concluido).length, 0);
+    return { totalItens: itens, totalConcluidos: concluidos, percentual: itens > 0 ? Math.round((concluidos / itens) * 100) : 0 };
+  }, [checklists]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto">

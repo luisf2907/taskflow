@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Membro } from "@/types";
+import Image from "next/image";
 
 interface AvatarProps {
   membro: Membro;
@@ -32,7 +33,7 @@ export function Avatar({ membro, tamanho = "md", className }: AvatarProps) {
 
   if (temFoto) {
     return (
-      <img
+      <Image
         src={membro.avatar_url!}
         alt={membro.nome}
         title={membro.nome}
@@ -43,8 +44,7 @@ export function Avatar({ membro, tamanho = "md", className }: AvatarProps) {
           TAMANHOS[tamanho],
           className
         )}
-        style={{
-        }}
+        loading="lazy"
       />
     );
   }

@@ -5,6 +5,21 @@ import { supabase } from "@/lib/supabase/client";
 import { mutate as globalMutate } from "swr";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
+// Debounced mutate to batch rapid-fire realtime events
+function createDebouncedMutate(delay = 300) {
+  const timers = new Map<string, ReturnType<typeof setTimeout>>();
+  return (key: string) => {
+    const existing = timers.get(key);
+    if (existing) clearTimeout(existing);
+    timers.set(key, setTimeout(() => {
+      timers.delete(key);
+      globalMutate(key);
+    }, delay));
+  };
+}
+
+const debouncedMutate = createDebouncedMutate(300);
+
 export function useRealtimeBoard(quadroId: string | null) {
   const channelRef = useRef<RealtimeChannel | null>(null);
 
@@ -17,14 +32,19 @@ export function useRealtimeBoard(quadroId: string | null) {
         "postgres_changes",
         { event: "*", schema: "public", table: "colunas", filter: `quadro_id=eq.${quadroId}` },
         () => {
-          globalMutate(`colunas-${quadroId}`);
+          debouncedMutate(`colunas-${quadroId}`);
         }
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "cartoes" },
-        () => {
-          globalMutate(`cartoes-${quadroId}`);
+        (payload) => {
+          // Only refetch if the card belongs to this board (check via coluna relationship)
+          const rec = (payload.new || payload.old) as Record<string, unknown> | undefined;
+          if (rec) {
+            // Always debounce to batch rapid events
+            debouncedMutate(`cartoes-${quadroId}`);
+          }
         }
       )
       .on(
@@ -35,7 +55,7 @@ export function useRealtimeBoard(quadroId: string | null) {
             (payload.new as Record<string, unknown>)?.cartao_id ||
             (payload.old as Record<string, unknown>)?.cartao_id;
           if (cartaoId) {
-            globalMutate(`comentarios-${cartaoId}`);
+            debouncedMutate(`comentarios-${cartaoId}`);
           }
         }
       )
@@ -61,21 +81,21 @@ export function useRealtimeWorkspace(workspaceId: string | null) {
         "postgres_changes",
         { event: "*", schema: "public", table: "quadros", filter: `workspace_id=eq.${workspaceId}` },
         () => {
-          globalMutate("quadros");
+          debouncedMutate("quadros");
         }
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "atividades", filter: `workspace_id=eq.${workspaceId}` },
         () => {
-          globalMutate(`atividades-${workspaceId}`);
+          debouncedMutate(`atividades-${workspaceId}`);
         }
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "cartoes", filter: `workspace_id=eq.${workspaceId}` },
         () => {
-          globalMutate(`backlog-${workspaceId}`);
+          debouncedMutate(`backlog-${workspaceId}`);
         }
       )
       .subscribe();
@@ -100,7 +120,7 @@ export function useRealtimeAtividades(quadroId: string | null) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "atividades", filter: `quadro_id=eq.${quadroId}` },
         () => {
-          globalMutate(`atividades-quadro-${quadroId}`);
+          debouncedMutate(`atividades-quadro-${quadroId}`);
         }
       )
       .subscribe();

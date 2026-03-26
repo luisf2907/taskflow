@@ -69,13 +69,22 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
   const [filtros, setFiltros] = useState<Filtros>({ texto: "", etiquetaIds: [], membroIds: [] });
   const [alertaBloqueio, setAlertaBloqueio] = useState<string | null>(null);
 
+  const cartoesFiltradosPorColuna = useMemo(() => {
+    const textoLower = filtros.texto.toLowerCase();
+    const map: Record<string, CartaoComResumo[]> = {};
+    for (const coluna of colunas) {
+      map[coluna.id] = cartoesDaColuna(coluna.id).filter((card) => {
+        if (textoLower && !card.titulo.toLowerCase().includes(textoLower)) return false;
+        if (filtros.etiquetaIds.length > 0 && !filtros.etiquetaIds.some((id) => card.etiqueta_ids.includes(id))) return false;
+        if (filtros.membroIds.length > 0 && !filtros.membroIds.some((id) => card.membro_ids.includes(id))) return false;
+        return true;
+      });
+    }
+    return map;
+  }, [colunas, filtros, cartoesDaColuna]);
+
   function cartoesFiltrados(colunaId: string) {
-    return cartoesDaColuna(colunaId).filter((card) => {
-      if (filtros.texto && !card.titulo.toLowerCase().includes(filtros.texto.toLowerCase())) return false;
-      if (filtros.etiquetaIds.length > 0 && !filtros.etiquetaIds.some((id) => card.etiqueta_ids.includes(id))) return false;
-      if (filtros.membroIds.length > 0 && !filtros.membroIds.some((id) => card.membro_ids.includes(id))) return false;
-      return true;
-    });
+    return cartoesFiltradosPorColuna[colunaId] || [];
   }
 
   const colunaIds = useMemo(

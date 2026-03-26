@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   GitPullRequest,
   GitMerge,
@@ -225,12 +226,13 @@ function PRItem({ pr, onAbrir }: { pr: GitHubPR; repoId?: string; onAcao?: () =>
       <div className="flex items-center gap-3 pl-6 flex-wrap">
         {/* Autor */}
         <div className="flex items-center gap-[5px]">
-          <img
+          <Image
             src={pr.user.avatar_url}
             alt={pr.user.login}
             width={20}
             height={20}
             className="rounded-full shrink-0"
+            loading="lazy"
           />
           <span
             className="text-xs"

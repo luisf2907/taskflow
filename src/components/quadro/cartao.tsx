@@ -14,6 +14,7 @@ import {
   GitPullRequest,
   Paperclip,
 } from "lucide-react";
+import { memo, useMemo } from "react";
 import { CartaoComResumo } from "@/hooks/use-cartoes";
 import { formatarData, statusData } from "./seletor-data";
 import { GrupoAvatar } from "./avatar";
@@ -25,15 +26,15 @@ interface CartaoProps {
   onClick: () => void;
 }
 
-export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
+export const Cartao = memo(function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
   const {
     attributes, listeners, setNodeRef, transform, transition, isDragging,
   } = useSortable({ id: cartao.id, data: { type: "cartao", cartao } });
 
   const style = { transform: CSS.Transform.toString(transform), transition };
 
-  const etiquetasDoCartao = etiquetas.filter((e) => cartao.etiqueta_ids.includes(e.id));
-  const membrosDoCartao = membros.filter((m) => cartao.membro_ids.includes(m.id));
+  const etiquetasDoCartao = useMemo(() => etiquetas.filter((e) => cartao.etiqueta_ids.includes(e.id)), [etiquetas, cartao.etiqueta_ids]);
+  const membrosDoCartao = useMemo(() => membros.filter((m) => cartao.membro_ids.includes(m.id)), [membros, cartao.membro_ids]);
   const dataStatus = statusData(cartao.data_entrega);
   const temChecklist = cartao.total_checklist_itens > 0;
   const checklistCompleto = temChecklist && cartao.total_checklist_concluidos === cartao.total_checklist_itens;
@@ -170,4 +171,4 @@ export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
       )}
     </div>
   );
-}
+});

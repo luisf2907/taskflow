@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import useSWR from "swr";
 
 export type RecentTask = {
   id: string;
@@ -11,85 +11,74 @@ export type RecentTask = {
   atualizado_em: string;
 };
 
-export function useDashboardMetrics() {
-  const [recentTasks, setRecentTasks] = useState<RecentTask[]>([]);
-  const [tasksDoneToday, setTasksDoneToday] = useState(0);
-  const [loading, setLoading] = useState(true);
+async function fetchMetrics(): Promise<{ recentTasks: RecentTask[]; tasksDoneToday: number }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { recentTasks: [], tasksDoneToday: 0 };
 
-  useEffect(() => {
-    async function fetchMetrics() {
-      try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setLoading(false); return; }
+  // Single chain: membros → cartao_membros → cartoes in 2 parallel queries
+  const { data: meusMembros } = await supabase
+    .from("membros")
+    .select("id")
+    .eq("user_id", user.id);
 
-        // Find all membros entries for this user (across workspaces/boards)
-        const { data: meusMembros } = await supabase
-          .from("membros")
-          .select("id")
-          .eq("user_id", user.id);
+  if (!meusMembros?.length) return { recentTasks: [], tasksDoneToday: 0 };
 
-        if (!meusMembros || meusMembros.length === 0) {
-          setLoading(false);
-          return;
-        }
+  const meusMembroIds = meusMembros.map((m) => m.id);
 
-        const meusMembroIds = meusMembros.map((m) => m.id);
+  const { data: meusCartaoMembros } = await supabase
+    .from("cartao_membros")
+    .select("cartao_id")
+    .in("membro_id", meusMembroIds);
 
-        // Find cards assigned to me via cartao_membros
-        const { data: meusCartaoMembros } = await supabase
-          .from("cartao_membros")
-          .select("cartao_id")
-          .in("membro_id", meusMembroIds);
+  if (!meusCartaoMembros?.length) return { recentTasks: [], tasksDoneToday: 0 };
 
-        if (!meusCartaoMembros || meusCartaoMembros.length === 0) {
-          setLoading(false);
-          return;
-        }
+  const meusCartaoIds = [...new Set(meusCartaoMembros.map((cm) => cm.cartao_id))].slice(0, 50);
 
-        const meusCartaoIds = [...new Set(meusCartaoMembros.map((cm) => cm.cartao_id))];
+  const { data: cartoesData } = await supabase
+    .from("cartoes")
+    .select("id, titulo, atualizado_em, coluna_id, colunas!inner(nome, quadro_id)")
+    .in("id", meusCartaoIds)
+    .order("atualizado_em", { ascending: false })
+    .limit(8);
 
-        // Fetch those cards with column info
-        const { data: cartoesData } = await supabase
-          .from("cartoes")
-          .select(`
-            id,
-            titulo,
-            atualizado_em,
-            coluna_id,
-            colunas!inner ( nome, quadro_id )
-          `)
-          .in("id", meusCartaoIds)
-          .order("atualizado_em", { ascending: false })
-          .limit(8);
+  if (!cartoesData) return { recentTasks: [], tasksDoneToday: 0 };
 
-        if (cartoesData) {
-          const mapTasks = cartoesData.map((c: any) => ({
-            id: c.id,
-            titulo: c.titulo,
-            coluna_nome: c.colunas?.nome || "Coluna",
-            quadro_id: c.colunas?.quadro_id || "",
-            atualizado_em: c.atualizado_em,
-          }));
-          setRecentTasks(mapTasks);
+  const today = new Date().toISOString().split("T")[0];
+  let doneToday = 0;
 
-          // Count how many are in "Done" or "Concluído" today
-          const today = new Date().toISOString().split("T")[0];
-          const doneToday = mapTasks.filter(
-            (t) =>
-              t.atualizado_em.startsWith(today) &&
-              (t.coluna_nome.toLowerCase().includes("conclu") || t.coluna_nome.toLowerCase().includes("done"))
-          ).length;
-          setTasksDoneToday(doneToday);
-        }
-      } catch (err) {
-        console.error("Dashboard metrics error:", err);
-      } finally {
-        setLoading(false);
-      }
+  const recentTasks = cartoesData.map((c: Record<string, unknown>) => {
+    const colunas = c.colunas as { nome: string; quadro_id: string } | null;
+    const colunaNome = colunas?.nome || "Coluna";
+    const atualizadoEm = c.atualizado_em as string;
+
+    if (
+      atualizadoEm.startsWith(today) &&
+      (colunaNome.toLowerCase().includes("conclu") || colunaNome.toLowerCase().includes("done"))
+    ) {
+      doneToday++;
     }
-    fetchMetrics();
-  }, []);
 
-  return { recentTasks, tasksDoneToday, loadingMetrics: loading };
+    return {
+      id: c.id as string,
+      titulo: c.titulo as string,
+      coluna_nome: colunaNome,
+      quadro_id: colunas?.quadro_id || "",
+      atualizado_em: atualizadoEm,
+    };
+  });
+
+  return { recentTasks, tasksDoneToday: doneToday };
+}
+
+export function useDashboardMetrics() {
+  const { data, isLoading } = useSWR("dashboard-metrics", fetchMetrics, {
+    dedupingInterval: 60000,
+    revalidateOnFocus: false,
+  });
+
+  return {
+    recentTasks: data?.recentTasks || [],
+    tasksDoneToday: data?.tasksDoneToday || 0,
+    loadingMetrics: isLoading,
+  };
 }

@@ -25,36 +25,40 @@ async function fetchCartoes(quadroId: string): Promise<CartaoComResumo[]> {
     .from("cartoes")
     .select("*, colunas!inner(quadro_id), cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)")
     .eq("colunas.quadro_id", quadroId)
-    .order("posicao");
+    .order("posicao")
+    .limit(500);
 
   if (!data) return [];
 
   const cartaoIds = data.map((c) => c.id);
 
-  const [checklistsRes, anexosRes] = await Promise.all([
-    cartaoIds.length > 0
-      ? supabase.from("checklists").select("cartao_id, checklist_itens(concluido)").in("cartao_id", cartaoIds)
-      : { data: [] },
-    cartaoIds.length > 0
-      ? supabase.from("anexos").select("cartao_id").in("cartao_id", cartaoIds)
-      : { data: [] },
+  // Batch IN queries in chunks of 100 to avoid Supabase URL length limits
+  async function batchIn<T>(table: string, select: string, ids: string[]): Promise<T[]> {
+    if (ids.length === 0) return [];
+    const chunks: string[][] = [];
+    for (let i = 0; i < ids.length; i += 100) chunks.push(ids.slice(i, i + 100));
+    const results = await Promise.all(
+      chunks.map((chunk) => supabase.from(table).select(select).in("cartao_id", chunk))
+    );
+    return results.flatMap((r) => (r.data || []) as T[]);
+  }
+
+  const [checklistsData, anexosData] = await Promise.all([
+    batchIn<{ cartao_id: string; checklist_itens: { concluido: boolean }[] }>("checklists", "cartao_id, checklist_itens(concluido)", cartaoIds),
+    batchIn<{ cartao_id: string }>("anexos", "cartao_id", cartaoIds),
   ]);
 
   const checklistResumo: Record<string, { total: number; concluidos: number }> = {};
-  if (checklistsRes.data) {
-    for (const cl of checklistsRes.data) {
-      const itens = (cl.checklist_itens || []) as { concluido: boolean }[];
-      if (!checklistResumo[cl.cartao_id]) checklistResumo[cl.cartao_id] = { total: 0, concluidos: 0 };
-      checklistResumo[cl.cartao_id].total += itens.length;
-      checklistResumo[cl.cartao_id].concluidos += itens.filter((i) => i.concluido).length;
-    }
+  for (const cl of checklistsData) {
+    const itens = (cl.checklist_itens || []) as { concluido: boolean }[];
+    if (!checklistResumo[cl.cartao_id]) checklistResumo[cl.cartao_id] = { total: 0, concluidos: 0 };
+    checklistResumo[cl.cartao_id].total += itens.length;
+    checklistResumo[cl.cartao_id].concluidos += itens.filter((i) => i.concluido).length;
   }
 
   const anexoContagem: Record<string, number> = {};
-  if (anexosRes.data) {
-    for (const a of anexosRes.data) {
-      anexoContagem[a.cartao_id] = (anexoContagem[a.cartao_id] || 0) + 1;
-    }
+  for (const a of anexosData) {
+    anexoContagem[a.cartao_id] = (anexoContagem[a.cartao_id] || 0) + 1;
   }
 
   return data.map(({ colunas: _, cartao_etiquetas, cartao_membros, ...cartao }) => ({
