@@ -136,6 +136,10 @@ export async function POST(request: NextRequest) {
       if (targetColumn) {
         updateData.coluna_id = targetColumn;
       }
+      // Set completion date on merge
+      if (merged) {
+        updateData.data_conclusao = new Date().toISOString();
+      }
 
       await service.from("cartoes").update(updateData).eq("id", cardVinculado.id);
     }

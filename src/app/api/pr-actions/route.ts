@@ -159,6 +159,7 @@ export async function POST(request: NextRequest) {
       };
       if (repo.coluna_done_id) {
         updateData.coluna_id = repo.coluna_done_id;
+        updateData.data_conclusao = new Date().toISOString();
       }
       await supabase.from("cartoes").update(updateData).eq("id", card.id);
     }

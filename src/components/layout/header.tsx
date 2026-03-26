@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/layout/notification-bell";
 
 export function Header() {
   const { tema, alternar } = useTema();
@@ -93,6 +94,9 @@ export function Header() {
 
       {/* Right side: Tools & Profile */}
       <div className="flex items-center gap-2 sm:gap-4">
+        {/* Notifications */}
+        {user && <NotificationBell />}
+
         {/* Toggle Theme */}
         <button
           onClick={alternar}

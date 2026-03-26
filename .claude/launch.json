@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "nextjs-dev",
-      "runtimeExecutable": "C:\\Program Files\\nodejs\\npm.cmd",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "npx next dev"],
       "port": 3000
     }
   ]

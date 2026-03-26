@@ -26,7 +26,8 @@ import {
   Activity
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import OnboardingWizard from "@/components/onboarding/onboarding-wizard";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 
 const CORES_QUADRO = [
@@ -72,9 +73,19 @@ export default function PaginaInicial() {
   const [wsCor, setWsCor] = useState(CORES_WORKSPACE[0]);
   const [editandoWs, setEditandoWs] = useState<Workspace | null>(null);
 
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
   const router = useRouter();
   const carregando = carregandoQuadros || carregandoWs;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const done = localStorage.getItem('tf_onboarding_done');
+    if (!done && workspaces.length === 0 && quadros.length === 0) {
+      setShowOnboarding(true);
+    }
+  }, [workspaces, quadros]);
 
   // Quadros agrupados por workspace
   const quadrosPorWorkspace = useMemo(() => {
@@ -310,6 +321,19 @@ export default function PaginaInicial() {
 
   return (
     <div className="h-full flex overflow-hidden lg:flex-row flex-col" style={{ background: "var(--tf-bg)" }}>
+      {showOnboarding && (
+        <OnboardingWizard
+          onComplete={(wsId) => {
+            setShowOnboarding(false);
+            localStorage.setItem('tf_onboarding_done', 'true');
+            router.push(`/workspace/${wsId}`);
+          }}
+          onSkip={() => {
+            setShowOnboarding(false);
+            localStorage.setItem('tf_onboarding_done', 'true');
+          }}
+        />
+      )}
       {iniciado && (
         <Sidebar
           quadros={quadros}

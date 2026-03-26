@@ -61,6 +61,7 @@ export interface Cartao {
   pr_historico: PRHistorico[] | null;
   branch: string | null;
   branch_repo_id: string | null;
+  data_conclusao: string | null;
   criado_em: string;
   atualizado_em: string;
 }
@@ -239,4 +240,18 @@ export interface Atividade {
 
 export interface AtividadeComAutor extends Atividade {
   perfis: Perfil | null;
+}
+
+// =============================================
+// NOTIFICAÇÕES
+// =============================================
+export interface Notificacao {
+  id: string;
+  user_id: string;
+  titulo: string;
+  mensagem: string | null;
+  tipo: string;
+  lida: boolean;
+  link: string | null;
+  criado_em: string;
 }

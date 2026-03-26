@@ -2,6 +2,8 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { registrarAtividade } from "@/lib/atividades";
+import { executarAutomacoes } from "@/lib/automacoes-executor";
+import { criarNotificacao } from "@/lib/notificacoes";
 import { Cartao } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useCallback } from "react";
@@ -97,6 +99,19 @@ export function useCartoes(quadroId: string) {
       };
       globalMutate(key, [...cartoes, enriquecido], false);
       registrarAtividade({ quadroId, cartaoId: data.id, acao: "criar", entidade: "cartao", detalhes: { titulo: data.titulo } });
+
+      // Execute automations for card_created
+      const { data: automacoes } = await supabase
+        .from("automacoes")
+        .select("*")
+        .eq("quadro_id", quadroId);
+      if (automacoes && automacoes.length > 0) {
+        await executarAutomacoes(supabase, automacoes, {
+          tipo: "card_created",
+          config: {},
+          cartao_id: data.id,
+        });
+      }
     }
     return data;
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -140,8 +155,60 @@ export function useCartoes(quadroId: string) {
       false
     );
     await supabase.from("cartoes").update({ coluna_id: novaColunaId, posicao: novaPosicao }).eq("id", cartaoId);
+
+    // Set or clear data_conclusao based on whether destination is the last column
+    const { data: colunas } = await supabase
+      .from("colunas")
+      .select("id, posicao")
+      .eq("quadro_id", quadroId)
+      .order("posicao", { ascending: false })
+      .limit(1);
+    const ultimaColunaId = colunas?.[0]?.id;
+
+    if (novaColunaId === ultimaColunaId) {
+      await supabase.from("cartoes").update({ data_conclusao: new Date().toISOString() }).eq("id", cartaoId);
+
+      // Notify card members about completion
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && cartao) {
+        // Notify all members of the card
+        const { data: membros } = await supabase
+          .from("cartao_membros")
+          .select("membro_id")
+          .eq("cartao_id", cartaoId);
+        const memberIds = membros?.map((m) => m.membro_id) || [];
+        // Also notify the card creator if not already a member
+        const notifyIds = new Set(memberIds);
+        notifyIds.add(user.id); // self-notification for activity feed
+        for (const uid of notifyIds) {
+          criarNotificacao({
+            userId: uid,
+            titulo: `Tarefa concluída: ${cartao.titulo}`,
+            mensagem: "O cartão foi movido para Concluído.",
+            tipo: "sucesso",
+            link: `/quadro/${quadroId}`,
+          });
+        }
+      }
+    } else {
+      await supabase.from("cartoes").update({ data_conclusao: null }).eq("id", cartaoId);
+    }
+
     if (oldColunaId && oldColunaId !== novaColunaId) {
       registrarAtividade({ quadroId, cartaoId, acao: "mover", entidade: "cartao", detalhes: { titulo: cartao?.titulo, coluna_origem_id: oldColunaId, coluna_destino_id: novaColunaId } });
+
+      // Execute automations for card_moved_to_column
+      const { data: automacoes } = await supabase
+        .from("automacoes")
+        .select("*")
+        .eq("quadro_id", quadroId);
+      if (automacoes && automacoes.length > 0) {
+        await executarAutomacoes(supabase, automacoes, {
+          tipo: "card_moved_to_column",
+          config: { coluna_id: novaColunaId },
+          cartao_id: cartaoId,
+        });
+      }
     }
   }
 

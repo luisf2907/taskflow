@@ -49,12 +49,21 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
     [onFechar]
   );
 
+  // Register keyboard handler
   useEffect(() => {
     if (aberto) {
       document.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [aberto, handleKeyDown]);
 
-      // Auto-focus the dialog on open
+  // Auto-focus only on initial open (not on re-renders)
+  useEffect(() => {
+    if (aberto) {
       requestAnimationFrame(() => {
         const firstFocusable = dialogRef.current?.querySelector<HTMLElement>(
           'a[href], button:not([disabled]), textarea, input:not([disabled]), select, [tabindex]:not([tabindex="-1"])'
@@ -62,11 +71,8 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
         firstFocusable?.focus();
       });
     }
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [aberto, handleKeyDown]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aberto]);
 
   if (!aberto) return null;
 

@@ -7,6 +7,7 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   AlignLeft,
   Calendar,
+  CalendarCheck,
   CheckSquare,
   Gauge,
   GitBranch,
@@ -110,6 +111,17 @@ export function Cartao({ cartao, etiquetas, membros, onClick }: CartaoProps) {
             >
               <Calendar size={10} />
               {formatarData(cartao.data_entrega)}
+            </span>
+          )}
+
+          {cartao.data_conclusao && (
+            <span
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-[4px] text-[10px] font-bold"
+              style={{ background: "var(--tf-success-bg)", color: "var(--tf-success)" }}
+              title={`Concluído em ${formatarData(cartao.data_conclusao)}`}
+            >
+              <CalendarCheck size={10} />
+              {formatarData(cartao.data_conclusao)}
             </span>
           )}
 
