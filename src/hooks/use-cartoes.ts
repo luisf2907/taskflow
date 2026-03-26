@@ -153,9 +153,24 @@ export function useCartoes(quadroId: string) {
     registrarAtividade({ quadroId, cartaoId: id, acao: "excluir", entidade: "cartao", detalhes: { titulo } });
   }
 
-  async function mover(cartaoId: string, novaColunaId: string, novaPosicao: number) {
+  async function mover(cartaoId: string, novaColunaId: string, novaPosicao: number): Promise<{ blocked?: boolean; reason?: string }> {
     const cartao = cartoes.find((c) => c.id === cartaoId);
     const oldColunaId = cartao?.coluna_id;
+
+    // Block moving to last column (done) if card has an open PR
+    if (cartao?.pr_numero && cartao.pr_status === "open") {
+      const { data: colunas } = await supabase
+        .from("colunas")
+        .select("id, posicao")
+        .eq("quadro_id", quadroId)
+        .order("posicao", { ascending: false })
+        .limit(1);
+      const ultimaColunaId = colunas?.[0]?.id;
+      if (novaColunaId === ultimaColunaId) {
+        return { blocked: true, reason: "Faça merge ou feche o PR antes de concluir este card." };
+      }
+    }
+
     globalMutate(
       key,
       cartoes.map((c) => c.id === cartaoId ? { ...c, coluna_id: novaColunaId, posicao: novaPosicao } : c),
@@ -224,6 +239,7 @@ export function useCartoes(quadroId: string) {
         }
       }
     }
+    return {};
   }
 
   async function reordenarNaColuna(colunaId: string, cartoesOrdenados: CartaoComResumo[]) {

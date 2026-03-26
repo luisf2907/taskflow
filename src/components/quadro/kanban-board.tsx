@@ -67,6 +67,7 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
   const [cartaoArrastando, setCartaoArrastando] =
     useState<CartaoComResumo | null>(null);
   const [filtros, setFiltros] = useState<Filtros>({ texto: "", etiquetaIds: [], membroIds: [] });
+  const [alertaBloqueio, setAlertaBloqueio] = useState<string | null>(null);
 
   function cartoesFiltrados(colunaId: string) {
     return cartoesDaColuna(colunaId).filter((card) => {
@@ -106,7 +107,7 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
     }
   }
 
-  function handleDragOver(event: DragOverEvent) {
+  async function handleDragOver(event: DragOverEvent) {
     const { active, over } = event;
     if (!over) return;
 
@@ -124,7 +125,11 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
         const indiceAlvo = cartoesAlvo.findIndex(
           (c) => c.id === cartaoAlvo.id
         );
-        mover(cartaoAtivo.id, cartaoAlvo.coluna_id, indiceAlvo);
+        const result = await mover(cartaoAtivo.id, cartaoAlvo.coluna_id, indiceAlvo);
+        if (result?.blocked) {
+          setAlertaBloqueio(result.reason || "Ação bloqueada.");
+          setTimeout(() => setAlertaBloqueio(null), 4000);
+        }
       }
     }
 
@@ -132,7 +137,11 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
       const colunaAlvo = overData.coluna;
       if (cartaoAtivo.coluna_id !== colunaAlvo.id) {
         const cartoesAlvo = cartoesDaColuna(colunaAlvo.id);
-        mover(cartaoAtivo.id, colunaAlvo.id, cartoesAlvo.length);
+        const result = await mover(cartaoAtivo.id, colunaAlvo.id, cartoesAlvo.length);
+        if (result?.blocked) {
+          setAlertaBloqueio(result.reason || "Ação bloqueada.");
+          setTimeout(() => setAlertaBloqueio(null), 4000);
+        }
       }
     }
   }
@@ -182,6 +191,25 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
 
   return (
     <>
+      {/* Toast de bloqueio */}
+      {alertaBloqueio && (
+        <div
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-[12px] text-sm font-semibold shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2"
+          style={{
+            background: "var(--tf-danger, #ef4444)",
+            color: "#fff",
+          }}
+        >
+          <span>⚠</span>
+          {alertaBloqueio}
+          <button
+            onClick={() => setAlertaBloqueio(null)}
+            className="ml-2 p-0.5 rounded-full bg-white/20 hover:bg-white/30 border-none cursor-pointer text-white text-xs leading-none"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}

@@ -314,7 +314,7 @@ export function DetalheCartao({
               </div>
 
               {/* ── PULL REQUEST ── */}
-              {(cartao.pr_numero || painelAberto === "pr") && (
+              {(cartao.pr_numero || painelAberto === "pr" || (Array.isArray(cartao.pr_historico) && cartao.pr_historico.length > 0)) && (
                 <PainelPR
                   cartao={cartao}
                   onRefresh={onRefresh}

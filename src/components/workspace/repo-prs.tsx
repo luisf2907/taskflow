@@ -18,7 +18,7 @@ import { CriarPR } from "./criar-pr";
 import { PRDetalhe } from "./pr-detalhe";
 import useSWR from "swr";
 import type { GitHubPR } from "@/types/github";
-import { supabase } from "@/lib/supabase/client";
+
 
 interface RepoPRsProps {
   owner: string;
@@ -131,38 +131,9 @@ function SkeletonItem() {
   );
 }
 
-function PRItem({ pr, repoId, onAcao, onAbrir }: { pr: GitHubPR; repoId?: string; onAcao?: () => void; onAbrir?: () => void }) {
+function PRItem({ pr, onAbrir }: { pr: GitHubPR; repoId?: string; onAcao?: () => void; onAbrir?: () => void }) {
   const status = obterStatus(pr);
   const tempo = obterDataReferencia(pr);
-  const [executando, setExecutando] = useState<"merge" | "close" | null>(null);
-  const [erroAcao, setErroAcao] = useState<string | null>(null);
-  const ehAberta = pr.state === "open" && !pr.merged_at;
-
-  async function handleAcaoPR(action: "merge" | "close", e: React.MouseEvent) {
-    e.stopPropagation();
-    if (!repoId) return;
-    setExecutando(action);
-    setErroAcao(null);
-
-    try {
-      const res = await fetch("/api/pr-actions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, repoId, prNumber: pr.number }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setErroAcao(data.error || "Erro ao executar ação");
-      } else {
-        onAcao?.();
-      }
-    } catch {
-      setErroAcao("Erro de conexão");
-    } finally {
-      setExecutando(null);
-    }
-  }
 
   return (
     <div
@@ -306,43 +277,14 @@ function PRItem({ pr, repoId, onAcao, onAbrir }: { pr: GitHubPR; repoId?: string
           </span>
         </div>
 
-        {/* Botões de ação para PRs abertas */}
-        {ehAberta && repoId && (
-          <div className="flex items-center gap-1.5 ml-auto">
-            <button
-              onClick={(e) => { e.stopPropagation(); handleAcaoPR("merge", e); }}
-              disabled={!!executando}
-              className="flex items-center gap-1 px-2.5 py-[3px] rounded-[8px] border-none text-[11px] font-semibold text-white transition-all duration-150"
-              style={{
-                cursor: executando ? "not-allowed" : "pointer",
-                background: executando === "merge" ? "#16a34a88" : "#16a34a",
-                opacity: executando && executando !== "merge" ? 0.4 : 1,
-              }}
-            >
-              {executando === "merge" ? "..." : "✓ Merge"}
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); handleAcaoPR("close", e); }}
-              disabled={!!executando}
-              className="flex items-center gap-1 px-2.5 py-[3px] rounded-[8px] text-[11px] font-semibold bg-transparent transition-all duration-150"
-              style={{
-                border: "1px solid var(--tf-border)",
-                cursor: executando ? "not-allowed" : "pointer",
-                color: "var(--tf-danger, #ef4444)",
-                opacity: executando && executando !== "close" ? 0.4 : 1,
-              }}
-            >
-              {executando === "close" ? "..." : "✗ Fechar"}
-            </button>
-          </div>
+        {/* Indicador visual para PRs abertas */}
+        {pr.state === "open" && !pr.merged_at && (
+          <span className="ml-auto text-[11px] font-medium" style={{ color: "var(--tf-text-tertiary)" }}>
+            Clique para abrir →
+          </span>
         )}
       </div>
 
-      {erroAcao && (
-        <div className="pl-6">
-          <span className="text-[11px] text-[#ef4444]">{erroAcao}</span>
-        </div>
-      )}
     </div>
   );
 }
