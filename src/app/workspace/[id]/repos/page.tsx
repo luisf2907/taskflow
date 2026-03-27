@@ -249,6 +249,7 @@ export default function ReposPage() {
   // Modal conectar
   const [modalConectar, setModalConectar] = useState(false);
   const [repoInput, setRepoInput] = useState("");
+  const [confirmDesconectarId, setConfirmDesconectarId] = useState<string | null>(null);
 
   // Repo aberto
   const [repoAberto, setRepoAberto] = useState<{ owner: string; nome: string } | null>(null);
@@ -350,7 +351,7 @@ export default function ReposPage() {
                         setCaminhoNavegacao("");
                         setSubAba("arquivos");
                       }}
-                      onDesconectar={() => desconectarRepo(repo.id)}
+                      onDesconectar={() => setConfirmDesconectarId(repo.id)}
                     />
                   ))}
                 </div>
@@ -503,6 +504,31 @@ export default function ReposPage() {
           setModalConectar(false);
         }}
       />
+
+      {/* Confirm disconnect repo */}
+      {confirmDesconectarId && (
+        <Modal aberto onFechar={() => setConfirmDesconectarId(null)} titulo="Desconectar repositório">
+          <p className="text-[13px] mb-4" style={{ color: "var(--tf-text-secondary)" }}>
+            Tem certeza? Webhooks e automações vinculadas serão removidos.
+          </p>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => setConfirmDesconectarId(null)}
+              className="px-4 py-2 text-[13px] font-medium rounded-[10px]"
+              style={{ color: "var(--tf-text-secondary)", background: "var(--tf-bg-secondary)" }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => { desconectarRepo(confirmDesconectarId); setConfirmDesconectarId(null); }}
+              className="px-4 py-2 text-[13px] font-bold text-white rounded-[10px]"
+              style={{ background: "var(--tf-danger)" }}
+            >
+              Sim, desconectar
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

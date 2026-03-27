@@ -61,6 +61,7 @@ export function DetalheCartao({
   const [descricao, setDescricao] = useState("");
   const [editandoDescricao, setEditandoDescricao] = useState(false);
   const [painelAberto, setPainelAberto] = useState<Painel>(null);
+  const [confirmExcluirCard, setConfirmExcluirCard] = useState(false);
   const painelRef = useRef<HTMLDivElement>(null);
 
   // Scroll suave até o painel quando abrir
@@ -524,14 +525,38 @@ export function DetalheCartao({
 
               {/* Danger */}
               <div className="pt-4 mt-4 border-t" style={{ borderColor: "var(--tf-border)" }}>
-                <button
-                  onClick={() => { onExcluir(cartao.id); onFechar(); }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-[12px] font-medium rounded-[8px] hover:bg-[var(--tf-danger-bg)]"
-                  style={{ color: "var(--tf-danger)", transition: "background 0.15s ease" }}
-                >
-                  <Trash2 size={13} />
-                  Excluir cartão
-                </button>
+                {!confirmExcluirCard ? (
+                  <button
+                    onClick={() => setConfirmExcluirCard(true)}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-[12px] font-medium rounded-[8px] hover:bg-[var(--tf-danger-bg)]"
+                    style={{ color: "var(--tf-danger)", transition: "background 0.15s ease" }}
+                  >
+                    <Trash2 size={13} />
+                    Excluir cartão
+                  </button>
+                ) : (
+                  <div className="p-3 rounded-[10px]" style={{ background: "var(--tf-danger-bg)" }}>
+                    <p className="text-[12px] font-semibold mb-2" style={{ color: "var(--tf-danger)" }}>
+                      Tem certeza? Checklists, anexos e comentários serão perdidos.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { onExcluir(cartao.id); onFechar(); }}
+                        className="px-3 py-1.5 text-[11px] font-bold text-white rounded-[8px]"
+                        style={{ background: "var(--tf-danger)" }}
+                      >
+                        Sim, excluir
+                      </button>
+                      <button
+                        onClick={() => setConfirmExcluirCard(false)}
+                        className="px-3 py-1.5 text-[11px] font-medium rounded-[8px]"
+                        style={{ color: "var(--tf-text-secondary)", background: "var(--tf-bg-secondary)" }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
             </div>

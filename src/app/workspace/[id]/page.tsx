@@ -586,6 +586,9 @@ export default function PaginaWorkspace() {
   const workspace = workspaces.find((w) => w.id === workspaceId);
   const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
   const [abaAtiva, setAbaAtiva] = useState<"backlog" | "sprints" | "timeline" | "metricas" | "config" | "atividade">("sprints");
+  const [confirmExcluirWs, setConfirmExcluirWs] = useState(false);
+  const [confirmExcluirSprintId, setConfirmExcluirSprintId] = useState<string | null>(null);
+  const [confirmRemoverMembroId, setConfirmRemoverMembroId] = useState<string | null>(null);
   useRealtimeWorkspace(workspaceId);
 
   // Repositórios
@@ -867,7 +870,7 @@ export default function PaginaWorkspace() {
               <DropdownItem onClick={() => router.push(`/quadro/${sprint.id}`)}>
                 <ArrowRight size={14} /> Abrir board
               </DropdownItem>
-              <DropdownItem perigo onClick={() => excluirQuadro(sprint.id)}>
+              <DropdownItem perigo onClick={() => setConfirmExcluirSprintId(sprint.id)}>
                 <Trash2 size={14} /> Excluir sprint
               </DropdownItem>
             </Dropdown>
@@ -1463,7 +1466,7 @@ export default function PaginaWorkspace() {
                               <Shield size={13} />
                             </button>
                             <button
-                              onClick={() => removerUsuario(u.id)}
+                              onClick={() => setConfirmRemoverMembroId(u.id)}
                               className="p-1.5 rounded-[8px] transition-smooth"
                               style={{ color: "var(--tf-text-tertiary)" }}
                               title="Remover do workspace"
@@ -1492,12 +1495,30 @@ export default function PaginaWorkspace() {
                 <div className="rounded-[20px] border p-6 transition-smooth" style={{ background: "var(--tf-danger-bg)", borderColor: "var(--tf-danger)" }}>
                   <h3 className="text-sm font-bold mb-2 flex items-center gap-2" style={{ color: "var(--tf-danger)" }}><Trash2 size={16}/> Zona de perigo</h3>
                   <p className="text-[13px] mb-4 font-medium" style={{ color: "var(--tf-danger)" }}>Excluir este workspace. Os quadros/sprints ficarão como avulsos soltos.</p>
-                  <button
-                    onClick={async () => { await excluirWs(workspaceId); router.push("/dashboard"); }}
-                    className="px-5 py-2.5 text-[13px] font-bold text-white rounded-[14px] transition-smooth hover:-translate-y-0.5" style={{ background: "var(--tf-danger)" }}
-                  >
-                    Excluir Workspace Permanentemente
-                  </button>
+                  {!confirmExcluirWs ? (
+                    <button
+                      onClick={() => setConfirmExcluirWs(true)}
+                      className="px-5 py-2.5 text-[13px] font-bold text-white rounded-[14px] transition-smooth hover:-translate-y-0.5" style={{ background: "var(--tf-danger)" }}
+                    >
+                      Excluir Workspace Permanentemente
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <span className="text-[12px] font-semibold" style={{ color: "var(--tf-danger)" }}>Confirmar exclusão?</span>
+                      <button
+                        onClick={async () => { await excluirWs(workspaceId); router.push("/dashboard"); }}
+                        className="px-4 py-2 text-[12px] font-bold text-white rounded-[10px]" style={{ background: "var(--tf-danger)" }}
+                      >
+                        Sim, excluir
+                      </button>
+                      <button
+                        onClick={() => setConfirmExcluirWs(false)}
+                        className="px-4 py-2 text-[12px] font-medium rounded-[10px]" style={{ color: "var(--tf-text-secondary)", background: "var(--tf-bg-secondary)" }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  )}
                 </div>
               </section>
             )}
@@ -1801,6 +1822,56 @@ export default function PaginaWorkspace() {
           setRepoInput("");
         }}
       />
+
+      {/* Confirm delete sprint */}
+      {confirmExcluirSprintId && (
+        <Modal aberto onFechar={() => setConfirmExcluirSprintId(null)} titulo="Excluir sprint">
+          <p className="text-[13px] mb-4" style={{ color: "var(--tf-text-secondary)" }}>
+            Tem certeza? Os cards deste sprint irão para o backlog. Esta ação não pode ser desfeita.
+          </p>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => setConfirmExcluirSprintId(null)}
+              className="px-4 py-2 text-[13px] font-medium rounded-[10px]"
+              style={{ color: "var(--tf-text-secondary)", background: "var(--tf-bg-secondary)" }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={async () => { await excluirQuadro(confirmExcluirSprintId); setConfirmExcluirSprintId(null); }}
+              className="px-4 py-2 text-[13px] font-bold text-white rounded-[10px]"
+              style={{ background: "var(--tf-danger)" }}
+            >
+              Sim, excluir
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Confirm remove member */}
+      {confirmRemoverMembroId && (
+        <Modal aberto onFechar={() => setConfirmRemoverMembroId(null)} titulo="Remover membro">
+          <p className="text-[13px] mb-4" style={{ color: "var(--tf-text-secondary)" }}>
+            Tem certeza que deseja remover este membro do workspace?
+          </p>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => setConfirmRemoverMembroId(null)}
+              className="px-4 py-2 text-[13px] font-medium rounded-[10px]"
+              style={{ color: "var(--tf-text-secondary)", background: "var(--tf-bg-secondary)" }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={async () => { await removerUsuario(confirmRemoverMembroId); setConfirmRemoverMembroId(null); }}
+              className="px-4 py-2 text-[13px] font-bold text-white rounded-[10px]"
+              style={{ background: "var(--tf-danger)" }}
+            >
+              Sim, remover
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

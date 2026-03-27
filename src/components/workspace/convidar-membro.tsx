@@ -27,6 +27,7 @@ export function ConvidarMembro({
     useWorkspaceUsuarios(workspaceId);
   const [email, setEmail] = useState("");
   const [erro, setErro] = useState("");
+  const [confirmRemoverId, setConfirmRemoverId] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
 
   if (!aberto) return null;
@@ -199,7 +200,7 @@ export function ConvidarMembro({
                   {u.papel === "admin" ? "Admin" : "Membro"}
                 </button>
                 <button
-                  onClick={() => remover(u.id)}
+                  onClick={() => setConfirmRemoverId(u.id)}
                   className="p-1 rounded transition-smooth"
                   style={{ color: "var(--tf-text-tertiary)" }}
                   onMouseEnter={(e) =>
@@ -216,6 +217,34 @@ export function ConvidarMembro({
           ))}
         </div>
       </div>
+
+      {/* Confirm remove member */}
+      {confirmRemoverId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setConfirmRemoverId(null)}>
+          <div className="p-5 rounded-[16px] max-w-sm w-full mx-4" style={{ background: "var(--tf-surface)" }} onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-[14px] font-bold mb-2" style={{ color: "var(--tf-text)" }}>Remover membro</h3>
+            <p className="text-[13px] mb-4" style={{ color: "var(--tf-text-secondary)" }}>
+              Tem certeza que deseja remover este membro do workspace?
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setConfirmRemoverId(null)}
+                className="px-4 py-2 text-[12px] font-medium rounded-[10px]"
+                style={{ color: "var(--tf-text-secondary)", background: "var(--tf-bg-secondary)" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => { remover(confirmRemoverId); setConfirmRemoverId(null); }}
+                className="px-4 py-2 text-[12px] font-bold text-white rounded-[10px]"
+                style={{ background: "var(--tf-danger)" }}
+              >
+                Sim, remover
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
