@@ -39,15 +39,15 @@ export class ErrorBoundary extends Component<Props, State> {
           >
             <AlertTriangle size={24} style={{ color: "var(--tf-danger)" }} />
           </div>
-          <div className="text-center">
+          <div className="text-center max-w-sm">
             <p className="text-[15px] font-bold" style={{ color: "var(--tf-text)" }}>
               Algo deu errado
             </p>
-            <p className="text-[13px] mt-1 max-w-sm" style={{ color: "var(--tf-text-tertiary)" }}>
+            <p className="text-[13px] mt-1" style={{ color: "var(--tf-text-tertiary)" }}>
               Ocorreu um erro inesperado. Tente recarregar a página.
             </p>
             {this.state.error && (
-              <p className="text-[11px] mt-2 font-mono max-w-md truncate" style={{ color: "var(--tf-text-tertiary)" }}>
+              <p className="text-[11px] mt-2 font-mono truncate" style={{ color: "var(--tf-text-tertiary)" }}>
                 {this.state.error.message}
               </p>
             )}
