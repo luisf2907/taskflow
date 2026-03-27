@@ -54,6 +54,10 @@ export function useColunas(quadroId: string) {
   async function excluir(id: string) {
     const coluna = colunas.find((c) => c.id === id);
     const nome = coluna?.nome;
+
+    // Move cards desta coluna para backlog (coluna_id = null) antes de deletar
+    await supabase.from("cartoes").update({ coluna_id: null }).eq("coluna_id", id);
+
     globalMutate(key, colunas.filter((c) => c.id !== id), false);
     await supabase.from("colunas").delete().eq("id", id);
     registrarAtividade({ quadroId, acao: "excluir", entidade: "coluna", detalhes: { nome } });

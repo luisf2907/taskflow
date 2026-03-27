@@ -39,9 +39,11 @@ function addToast(type: ToastType, message: string) {
   if (toasts.length > 3) toasts = toasts.slice(-3);
   emit();
 
+  // Erros ficam mais tempo visíveis
+  const duration = type === "error" ? 6000 : 4000;
   setTimeout(() => {
     removeToast(id);
-  }, 4000);
+  }, duration);
 }
 
 function removeToast(id: string) {

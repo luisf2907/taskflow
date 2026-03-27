@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import { Anexo } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useState } from "react";
@@ -33,6 +34,7 @@ export function useAnexos(cartaoId: string | null) {
     const { error: uploadError } = await supabase.storage.from("anexos").upload(path, file);
     if (uploadError) {
       console.error("Erro no upload:", uploadError);
+      toast.error(`Erro ao enviar arquivo: ${uploadError.message}`);
       setEnviando(false);
       return;
     }

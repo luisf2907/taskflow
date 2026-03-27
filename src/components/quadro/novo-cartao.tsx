@@ -13,20 +13,27 @@ export const NovoCartao = memo(function NovoCartao({ onCriar }: NovoCartaoProps)
   const [titulo, setTitulo] = useState("");
   const [peso, setPeso] = useState<number | null>(null);
   const [mostrarPeso, setMostrarPeso] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (ativo && inputRef.current) inputRef.current.focus();
   }, [ativo]);
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const t = titulo.trim();
-    if (!t) return;
-    onCriar(t, peso);
-    setTitulo("");
-    setPeso(null);
-    setMostrarPeso(false);
-    inputRef.current?.focus();
+    if (!t || enviando) return;
+    if (t.length > 500) return;
+    setEnviando(true);
+    try {
+      onCriar(t, peso);
+      setTitulo("");
+      setPeso(null);
+      setMostrarPeso(false);
+      inputRef.current?.focus();
+    } finally {
+      setEnviando(false);
+    }
   }
 
   function handleCancel() {
@@ -65,6 +72,7 @@ export const NovoCartao = memo(function NovoCartao({ onCriar }: NovoCartaoProps)
         className="w-full card-surface px-3 py-2 text-[13px] resize-none outline-none"
         style={{ color: "var(--tf-text)" }}
         rows={3}
+        maxLength={500}
         autoFocus
       />
 
@@ -78,10 +86,11 @@ export const NovoCartao = memo(function NovoCartao({ onCriar }: NovoCartaoProps)
       <div className="flex items-center gap-1.5">
         <button
           onClick={handleSubmit}
-          className="px-3 py-1.5 text-xs font-semibold text-white rounded-[8px] transition-smooth"
+          disabled={enviando || !titulo.trim()}
+          className="px-3 py-1.5 text-xs font-semibold text-white rounded-[8px] transition-smooth disabled:opacity-40"
           style={{ background: "var(--tf-accent)" }}
         >
-          Adicionar
+          {enviando ? "Criando..." : "Adicionar"}
         </button>
 
         {/* Toggle story points */}

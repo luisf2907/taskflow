@@ -31,6 +31,7 @@ export const Coluna = memo(function Coluna({
 }: ColunaProps) {
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(coluna.nome);
+  const [confirmExcluir, setConfirmExcluir] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -57,7 +58,7 @@ export const Coluna = memo(function Coluna({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex flex-col w-[290px] min-w-[290px] max-w-[290px] shrink-0 max-h-full column-surface",
+        "relative flex flex-col w-[290px] min-w-[290px] max-w-[290px] shrink-0 max-h-full column-surface",
         isDragging && "opacity-50"
       )}
     >
@@ -120,7 +121,7 @@ export const Coluna = memo(function Coluna({
             <DropdownItem onClick={() => { setEditando(true); setTimeout(() => inputRef.current?.focus(), 50); }}>
               <Pencil size={14} /> Renomear
             </DropdownItem>
-            <DropdownItem perigo onClick={onExcluir}>
+            <DropdownItem perigo onClick={() => setConfirmExcluir(true)}>
               <Trash2 size={14} /> Excluir coluna
             </DropdownItem>
           </Dropdown>
@@ -139,6 +140,38 @@ export const Coluna = memo(function Coluna({
       <div className="px-2.5 pb-2.5 mt-1">
         <NovoCartao onCriar={handleCriarCartao} />
       </div>
+
+      {/* Confirmação de exclusão */}
+      {confirmExcluir && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[20px]" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}>
+          <div className="p-4 rounded-[14px] mx-4 space-y-3" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}>
+            <p className="text-[13px] font-bold" style={{ color: "var(--tf-text)" }}>
+              Excluir &quot;{coluna.nome}&quot;?
+            </p>
+            <p className="text-[12px]" style={{ color: "var(--tf-text-tertiary)" }}>
+              {cartoes.length > 0
+                ? `${cartoes.length} card${cartoes.length > 1 ? "s" : ""} nesta coluna também ${cartoes.length > 1 ? "serão excluídos" : "será excluído"}.`
+                : "Esta coluna está vazia."}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmExcluir(false)}
+                className="flex-1 px-3 py-2 text-[12px] font-semibold rounded-[8px]"
+                style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => { setConfirmExcluir(false); onExcluir(); }}
+                className="flex-1 px-3 py-2 text-[12px] font-semibold rounded-[8px] text-white"
+                style={{ background: "var(--tf-danger)" }}
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 });

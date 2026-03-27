@@ -23,6 +23,7 @@ export function useWorkspaces() {
     cor: string = "#C4841D",
     icone: string = "folder"
   ) {
+    if (!nome.trim()) return null;
     const { data: { user } } = await supabase.auth.getUser();
 
     const { data } = await supabase
@@ -46,6 +47,7 @@ export function useWorkspaces() {
   }
 
   async function atualizar(id: string, campos: Partial<Pick<Workspace, "nome" | "descricao" | "cor" | "icone" | "colunas_padrao">>) {
+    if (campos.nome !== undefined && !campos.nome.trim()) return null;
     // Optimistic
     globalMutate(
       CHAVE,

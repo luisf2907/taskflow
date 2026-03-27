@@ -1,6 +1,7 @@
 "use client";
 
 import { CartaoComResumo, useCartoes } from "@/hooks/use-cartoes";
+import { toast } from "@/hooks/use-toast";
 import { useColunas } from "@/hooks/use-colunas";
 import { useEtiquetasWorkspace } from "@/hooks/use-etiquetas-workspace";
 import { useMembrosWorkspace } from "@/hooks/use-membros-workspace";
@@ -134,10 +135,14 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
         const indiceAlvo = cartoesAlvo.findIndex(
           (c) => c.id === cartaoAlvo.id
         );
-        const result = await mover(cartaoAtivo.id, cartaoAlvo.coluna_id, indiceAlvo);
-        if (result?.blocked) {
-          setAlertaBloqueio(result.reason || "Ação bloqueada.");
-          setTimeout(() => setAlertaBloqueio(null), 4000);
+        try {
+          const result = await mover(cartaoAtivo.id, cartaoAlvo.coluna_id, indiceAlvo);
+          if (result?.blocked) {
+            setAlertaBloqueio(result.reason || "Ação bloqueada.");
+            setTimeout(() => setAlertaBloqueio(null), 4000);
+          }
+        } catch {
+          toast.error("Erro ao mover cartão. Tente novamente.");
         }
       }
     }
@@ -146,10 +151,14 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
       const colunaAlvo = overData.coluna;
       if (cartaoAtivo.coluna_id !== colunaAlvo.id) {
         const cartoesAlvo = cartoesDaColuna(colunaAlvo.id);
-        const result = await mover(cartaoAtivo.id, colunaAlvo.id, cartoesAlvo.length);
-        if (result?.blocked) {
-          setAlertaBloqueio(result.reason || "Ação bloqueada.");
-          setTimeout(() => setAlertaBloqueio(null), 4000);
+        try {
+          const result = await mover(cartaoAtivo.id, colunaAlvo.id, cartoesAlvo.length);
+          if (result?.blocked) {
+            setAlertaBloqueio(result.reason || "Ação bloqueada.");
+            setTimeout(() => setAlertaBloqueio(null), 4000);
+          }
+        } catch {
+          toast.error("Erro ao mover cartão. Tente novamente.");
         }
       }
     }

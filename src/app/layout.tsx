@@ -1,5 +1,6 @@
 import { AuthListener } from "@/components/auth-listener";
 import { CommandPalette } from "@/components/command-palette";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { SWRProvider } from "@/components/swr-provider";
 import { ToastContainer } from "@/components/ui/toast";
 import type { Metadata } from "next";
@@ -41,10 +42,12 @@ export default function RootLayout({
         className={`${dmSans.className} h-full antialiased`}
       >
         <SWRProvider>
-          <AuthListener />
-          <CommandPalette />
-          {children}
-          <ToastContainer />
+          <ErrorBoundary>
+            <AuthListener />
+            <CommandPalette />
+            {children}
+            <ToastContainer />
+          </ErrorBoundary>
         </SWRProvider>
       </body>
     </html>
