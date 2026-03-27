@@ -136,8 +136,6 @@ export function DetalheCartao({
 
   function handleFechar() { salvar(); onRefresh(); onFechar(); }
 
-  if (!cartao) return null;
-
   const etiquetasDoCartao = useMemo(() => etiquetas.filter((e) => etiquetaIds.includes(e.id)), [etiquetas, etiquetaIds]);
   const membrosDoCartao = useMemo(() => membros.filter((m) => membroIds.includes(m.id)), [membros, membroIds]);
   const dataStatus = statusData(dataLocal);
@@ -147,6 +145,8 @@ export function DetalheCartao({
     const concluidos = checklists.reduce((sum, cl) => sum + cl.checklist_itens.filter((i) => i.concluido).length, 0);
     return { totalItens: itens, totalConcluidos: concluidos, percentual: itens > 0 ? Math.round((concluidos / itens) * 100) : 0 };
   }, [checklists]);
+
+  if (!cartao) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto">
