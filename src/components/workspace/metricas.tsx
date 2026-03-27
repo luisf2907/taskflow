@@ -2,8 +2,8 @@
 
 import { CartaoBacklog } from "@/hooks/use-backlog";
 import { Etiqueta, Membro, Quadro } from "@/types";
-import { BarChart3, Flame, Target, TrendingUp, Users, Layers, CheckCircle2 } from "lucide-react";
-import { useMemo } from "react";
+import { BarChart3, Flame, Target, TrendingUp, Users, Layers, CheckCircle2, Clock, Timer, Download, Calendar } from "lucide-react";
+import { useMemo, useCallback } from "react";
 
 interface MetricasProps {
   sprints: Quadro[];
@@ -378,6 +378,108 @@ export function MetricasWorkspace({ sprints, cartoesDaSprint, backlogPuro, etiqu
     });
   }, [sprintsParaMetricas, cartoesDaSprint]);
 
+  // ── Lead Time (criado → concluído) ──
+  const leadTimeData = useMemo(() => {
+    const todosCards = sprints.flatMap((s) => cartoesDaSprint(s.id));
+    const concluidos = todosCards.filter((c) => c.concluido && c.data_conclusao && c.criado_em);
+    if (concluidos.length === 0) return { media: 0, mediana: 0, min: 0, max: 0, total: 0 };
+
+    const tempos = concluidos.map((c) => {
+      const dias = diasEntre(new Date(c.criado_em), new Date(c.data_conclusao!));
+      return Math.max(dias, 0);
+    }).sort((a, b) => a - b);
+
+    const soma = tempos.reduce((a, b) => a + b, 0);
+    const media = Math.round((soma / tempos.length) * 10) / 10;
+    const mediana = tempos.length % 2 === 0
+      ? (tempos[tempos.length / 2 - 1] + tempos[tempos.length / 2]) / 2
+      : tempos[Math.floor(tempos.length / 2)];
+
+    return { media, mediana: Math.round(mediana * 10) / 10, min: tempos[0], max: tempos[tempos.length - 1], total: tempos.length };
+  }, [sprints, cartoesDaSprint]);
+
+  // ── Cycle Time por Sprint ──
+  const cycleTimePerSprint = useMemo(() => {
+    return sprintsParaMetricas.map((s) => {
+      const cards = cartoesDaSprint(s.id);
+      const concluidos = cards.filter((c) => c.concluido && c.data_conclusao && c.criado_em);
+      if (concluidos.length === 0) return { label: s.nome, valor: 0 };
+
+      const tempos = concluidos.map((c) => Math.max(diasEntre(new Date(c.criado_em), new Date(c.data_conclusao!)), 0));
+      const media = Math.round((tempos.reduce((a, b) => a + b, 0) / tempos.length) * 10) / 10;
+      return { label: s.nome, valor: media };
+    });
+  }, [sprintsParaMetricas, cartoesDaSprint]);
+
+  // ── Throughput Semanal (cards concluídos por semana) ──
+  const throughputData = useMemo(() => {
+    const todosCards = sprints.flatMap((s) => cartoesDaSprint(s.id));
+    const concluidos = todosCards.filter((c) => c.concluido && c.data_conclusao);
+    if (concluidos.length === 0) return [];
+
+    // Agrupar por semana
+    const porSemana: Record<string, number> = {};
+    for (const c of concluidos) {
+      const data = new Date(c.data_conclusao!);
+      // Pegar segunda-feira da semana
+      const dia = data.getDay();
+      const segunda = new Date(data);
+      segunda.setDate(data.getDate() - (dia === 0 ? 6 : dia - 1));
+      const chave = segunda.toISOString().split("T")[0];
+      porSemana[chave] = (porSemana[chave] || 0) + 1;
+    }
+
+    // Ordenar e pegar as últimas 12 semanas
+    return Object.entries(porSemana)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-12)
+      .map(([semana, count]) => {
+        const d = new Date(semana);
+        const label = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+        return { label, valor: count };
+      });
+  }, [sprints, cartoesDaSprint]);
+
+  // ── Export CSV ──
+  const exportarCSV = useCallback(() => {
+    const todosCards = sprints.flatMap((s) => {
+      const cards = cartoesDaSprint(s.id);
+      return cards.map((c) => ({ ...c, sprint_nome: s.nome }));
+    });
+    const backlogCards = backlogPuro.map((c) => ({ ...c, sprint_nome: "Backlog" }));
+    const todos = [...todosCards, ...backlogCards];
+
+    const header = ["Título", "Sprint", "Coluna", "Peso (pts)", "Status", "Criado em", "Concluído em", "Lead Time (dias)", "Etiquetas", "Membros"];
+    const rows = todos.map((c) => {
+      const leadTime = c.concluido && c.data_conclusao && c.criado_em
+        ? Math.max(diasEntre(new Date(c.criado_em), new Date(c.data_conclusao)), 0)
+        : "";
+      const etqs = (c.etiqueta_ids || []).map((id) => etiquetas.find((e) => e.id === id)?.nome || "").filter(Boolean).join("; ");
+      const membs = (c.membro_ids || []).map((id) => membros.find((m) => m.id === id)?.nome || "").filter(Boolean).join("; ");
+      return [
+        `"${(c.titulo || "").replace(/"/g, '""')}"`,
+        `"${c.sprint_nome}"`,
+        `"${c.coluna_nome || "Backlog"}"`,
+        c.peso || 0,
+        c.concluido ? "Concluído" : "Pendente",
+        c.criado_em ? new Date(c.criado_em).toLocaleDateString("pt-BR") : "",
+        c.data_conclusao ? new Date(c.data_conclusao).toLocaleDateString("pt-BR") : "",
+        leadTime,
+        `"${etqs}"`,
+        `"${membs}"`,
+      ].join(",");
+    });
+
+    const csv = "\uFEFF" + [header.join(","), ...rows].join("\n"); // BOM para Excel reconhecer UTF-8
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `metricas-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [sprints, cartoesDaSprint, backlogPuro, etiquetas, membros]);
+
   const maxVelocity = Math.max(...velocityData.map((v) => v.totalPontos), 1);
   const maxEtCount = Math.max(...etiquetaStats.map((e) => e.count), 1);
   const maxMembroCards = Math.max(...membroData.map((m) => m.cards), 1);
@@ -394,10 +496,23 @@ export function MetricasWorkspace({ sprints, cartoesDaSprint, backlogPuro, etiqu
 
   return (
     <div className="space-y-5 py-2">
+      {/* ── Header com Export ── */}
+      <div className="flex items-center justify-end">
+        <button
+          onClick={exportarCSV}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-[8px] border"
+          style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)", background: "var(--tf-surface)", transition: "all 0.15s ease" }}
+        >
+          <Download size={13} /> Exportar CSV
+        </button>
+      </div>
+
       {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <StatCard icone={TrendingUp} label="Velocity média" valor={`${velocityMedia} pts`} sub={`${sprintsConcl.length} sprints concluídas`} cor="#60A5FA" />
         <StatCard icone={Target} label="Sprint ativa" valor={sprintAtiva?.nome || "—"} sub={`${ativaPontosConcluidos}/${ativaPontosTotal} pts · ${ativaProgresso}%`} cor="#4BCE97" />
+        <StatCard icone={Clock} label="Lead Time" valor={leadTimeData.total > 0 ? `${leadTimeData.media}d` : "—"} sub={leadTimeData.total > 0 ? `mediana ${leadTimeData.mediana}d · ${leadTimeData.total} cards` : "sem dados"} cor="#F59E0B" />
+        <StatCard icone={Timer} label="Min / Max" valor={leadTimeData.total > 0 ? `${leadTimeData.min}d / ${leadTimeData.max}d` : "—"} sub="lead time range" cor="#EC4899" />
         <StatCard icone={Layers} label="Total sprints" valor={`${sprints.length}`} sub={`${sprintsConcl.length} concluídas`} cor="#A78BFA" />
         <StatCard icone={CheckCircle2} label="Backlog" valor={`${backlogPuro.length}`} sub="tarefas sem sprint" cor="#FB923C" />
       </div>
@@ -405,6 +520,39 @@ export function MetricasWorkspace({ sprints, cartoesDaSprint, backlogPuro, etiqu
       {/* ── Burndown (sprint ativa) ── */}
       {sprintAtiva && ativaCards.length > 0 && (
         <BurndownChart sprint={sprintAtiva} cards={ativaCards} />
+      )}
+
+      {/* ── Throughput Semanal + Cycle Time por Sprint ── */}
+      {(throughputData.length >= 2 || cycleTimePerSprint.length >= 2) && (
+        <div className={`grid gap-4 ${throughputData.length >= 2 && cycleTimePerSprint.length >= 2 ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"}`}>
+          {/* Throughput Semanal */}
+          {throughputData.length >= 2 && (
+            <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+              <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
+                <Calendar size={14} className="inline mr-1.5" style={{ color: "#4BCE97" }} />
+                Throughput Semanal
+              </h3>
+              <LineChart dados={throughputData} />
+              <p className="text-[11px] mt-2" style={{ color: "var(--tf-text-tertiary)" }}>
+                Cards concluídos por semana (últimas {throughputData.length} semanas)
+              </p>
+            </div>
+          )}
+
+          {/* Cycle Time por Sprint */}
+          {cycleTimePerSprint.length >= 2 && (
+            <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+              <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
+                <Timer size={14} className="inline mr-1.5" style={{ color: "#EC4899" }} />
+                Cycle Time Médio por Sprint
+              </h3>
+              <LineChart dados={cycleTimePerSprint} />
+              <p className="text-[11px] mt-2" style={{ color: "var(--tf-text-tertiary)" }}>
+                Média de dias entre criação e conclusão
+              </p>
+            </div>
+          )}
+        </div>
       )}
 
       {/* ── Linha: Velocity Trend + Distribuição por Status ── */}
