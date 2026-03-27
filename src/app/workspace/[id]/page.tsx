@@ -771,7 +771,7 @@ export default function PaginaWorkspace() {
   if (!workspace) {
     return (
       <div className="h-full flex overflow-hidden" style={{ background: "var(--tf-bg)" }}>
-        <Header />
+        <Header onMenuMobile={toggleSidebar} />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "var(--tf-accent)", borderTopColor: "transparent" }} />
         </div>
@@ -887,7 +887,7 @@ export default function PaginaWorkspace() {
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
-        <Header />
+        <Header onMenuMobile={toggleSidebar} />
         <main className="flex-1 overflow-y-auto pb-4 no-scrollbar" style={{ background: "transparent" }}>
 
           {/* GRID ÚNICO — hero + conteúdo alinhados */}

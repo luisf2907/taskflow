@@ -87,10 +87,15 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
   }
 
   return (
+    <>
+      {/* Mobile overlay */}
+      {aberta && (
+        <div className="fixed inset-0 bg-black/40 z-30 lg:hidden" onClick={onToggle} />
+      )}
       <aside
         className={cn(
-          "sidebar-ease flex flex-col shrink-0 overflow-y-auto overflow-x-hidden mt-3.5 mb-3 mx-0 lg:ml-3 rounded-[32px] relative z-40",
-          aberta ? "w-[260px]" : "w-[68px]"
+          "sidebar-ease flex flex-col shrink-0 overflow-y-auto overflow-x-hidden mt-3.5 mb-3 mx-0 lg:ml-3 rounded-[32px] z-40",
+          aberta ? "w-[260px] fixed lg:relative inset-y-0 left-0 lg:inset-auto m-3 lg:mt-3.5 lg:mb-3 lg:ml-3" : "w-[68px] hidden lg:flex relative"
         )}
         style={{
           background: "var(--tf-surface)",
@@ -256,5 +261,6 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
           </nav>
         </div>
       </aside>
+    </>
   );
 }

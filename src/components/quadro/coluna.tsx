@@ -73,6 +73,7 @@ export const Coluna = memo(function Coluna({
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             onBlur={salvarNome}
+            maxLength={50}
             onKeyDown={(e) => {
               if (e.key === "Enter") salvarNome();
               if (e.key === "Escape") { setNome(coluna.nome); setEditando(false); }

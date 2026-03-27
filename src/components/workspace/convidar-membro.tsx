@@ -35,9 +35,16 @@ export function ConvidarMembro({
   async function handleConvidar(e: React.FormEvent) {
     e.preventDefault();
     setErro("");
-    setCarregando(true);
 
-    const result = await convidar(email.trim());
+    const trimmed = email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmed)) {
+      setErro("Digite um email válido.");
+      return;
+    }
+
+    setCarregando(true);
+    const result = await convidar(trimmed);
     if (result.error) {
       setErro(result.error);
     } else {
@@ -92,6 +99,7 @@ export function ConvidarMembro({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              maxLength={100}
               className="flex-1 px-3 py-2 rounded-[8px] text-xs outline-none transition-smooth"
               style={{
                 background: "var(--tf-bg)",

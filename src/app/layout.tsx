@@ -1,6 +1,7 @@
 import { AuthListener } from "@/components/auth-listener";
 import { CommandPalette } from "@/components/command-palette";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { OfflineBanner } from "@/components/offline-banner";
 import { SWRProvider } from "@/components/swr-provider";
 import { ToastContainer } from "@/components/ui/toast";
 import type { Metadata } from "next";
@@ -45,6 +46,7 @@ export default function RootLayout({
           <ErrorBoundary>
             <AuthListener />
             <CommandPalette />
+            <OfflineBanner />
             {children}
             <ToastContainer />
           </ErrorBoundary>

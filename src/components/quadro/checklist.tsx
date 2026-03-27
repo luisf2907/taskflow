@@ -108,6 +108,7 @@ export function ChecklistComponent({
             value={novoItem}
             onChange={(e) => setNovoItem(e.target.value)}
             placeholder="Novo item..."
+            maxLength={200}
             className="w-full bg-transparent px-3 py-2.5 text-[13px] outline-none"
             style={{ color: "var(--tf-text)" }}
             autoFocus

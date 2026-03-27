@@ -136,7 +136,7 @@ export default function PaginaQuadro() {
       )}
 
       <div className={`flex-1 flex flex-col overflow-hidden ${telaCheia ? "p-3" : "px-2 lg:px-4"}`}>
-        {!telaCheia && <Header />}
+        {!telaCheia && <Header onMenuMobile={toggleSidebar} />}
         <div
           className="flex-1 flex flex-col overflow-hidden rounded-[32px]"
           style={{

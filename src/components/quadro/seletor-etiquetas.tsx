@@ -87,6 +87,7 @@ export function SeletorEtiquetas({
             value={novoNome}
             onChange={(e) => setNovoNome(e.target.value)}
             placeholder="Nome da etiqueta"
+            maxLength={30}
             className="w-full bg-transparent px-3 py-2.5 text-[13px] outline-none"
             style={{ color: "var(--tf-text)" }}
             autoFocus

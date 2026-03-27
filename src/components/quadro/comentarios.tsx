@@ -87,6 +87,7 @@ export function Comentarios({
             onFocus={() => setFocado(true)}
             onBlur={() => { if (!texto.trim()) setFocado(false); }}
             placeholder="Escreva um comentário..."
+            maxLength={2000}
             className="w-full bg-transparent px-4 py-3 text-[13px] resize-none outline-none leading-relaxed"
             style={{ color: "var(--tf-text)", minHeight: focado ? "80px" : "44px", transition: "min-height 0.2s ease" }}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEnviar(); } }}

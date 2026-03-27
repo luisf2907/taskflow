@@ -107,7 +107,7 @@ export default function SettingsPage() {
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
-        <Header />
+        <Header onMenuMobile={toggleSidebar} />
 
         <main
           className="flex-1 overflow-y-auto rounded-[32px] mb-4 no-scrollbar"

@@ -42,6 +42,7 @@ export function NovaColuna({ onCriar }: NovaColunaProps) {
         ref={inputRef}
         value={nome}
         onChange={(e) => setNome(e.target.value)}
+        maxLength={50}
         onKeyDown={(e) => {
           if (e.key === "Enter") handleSubmit();
           if (e.key === "Escape") setAtivo(false);

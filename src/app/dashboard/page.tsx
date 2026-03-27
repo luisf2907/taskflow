@@ -345,15 +345,31 @@ export default function PaginaInicial() {
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
-        <Header />
+        <Header onMenuMobile={toggleSidebar} />
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden mb-4 rounded-[32px] relative no-scrollbar flex flex-col xl:flex-row gap-8" style={{ background: "var(--tf-surface)" }}>
 
           {/* Main Left Content */}
           <div className="flex-1 px-8 pt-10 md:px-12 md:pt-12 flex flex-col relative">
             {carregando ? (
-              <div className="flex justify-center flex-1 items-center">
-                <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: "var(--tf-accent)", borderTopColor: "transparent" }} />
+              <div className="flex-1 space-y-8 animate-pulse pt-4">
+                {/* Hero skeleton */}
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-32 rounded-full" style={{ background: "var(--tf-bg-secondary)" }} />
+                  <div className="h-8 w-24 rounded-full" style={{ background: "var(--tf-bg-secondary)" }} />
+                </div>
+                {/* Cards skeleton */}
+                <div className="flex gap-4 overflow-hidden">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="rounded-[32px] h-[150px] min-w-[260px] flex-shrink-0" style={{ background: "var(--tf-bg-secondary)" }} />
+                  ))}
+                </div>
+                {/* Workspace skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="rounded-[32px] h-[220px]" style={{ background: "var(--tf-bg-secondary)" }} />
+                  ))}
+                </div>
               </div>
             ) : (
               <>

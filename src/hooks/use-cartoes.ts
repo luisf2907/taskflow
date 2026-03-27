@@ -129,21 +129,26 @@ export function useCartoes(quadroId: string) {
   }, [key, cartoes]);
 
   async function atualizar(id: string, campos: Partial<Cartao>) {
-    // Optimistic
+    const ts = new Date().toISOString();
+    // Optimistic — usa funcao pra pegar estado mais recente do cache (evita race condition)
     globalMutate(
       key,
-      cartoes.map((c) => (c.id === id ? { ...c, ...campos, atualizado_em: new Date().toISOString() } : c)),
-      false
+      (atual: Cartao[] | undefined) => (atual || []).map((c) => (c.id === id ? { ...c, ...campos, atualizado_em: ts } : c)),
+      { revalidate: false }
     );
 
     const { data } = await supabase
       .from("cartoes")
-      .update({ ...campos, atualizado_em: new Date().toISOString() })
+      .update({ ...campos, atualizado_em: ts })
       .eq("id", id)
       .select()
       .single();
     if (data) {
-      globalMutate(key, cartoes.map((c) => (c.id === id ? { ...c, ...data } : c)), false);
+      globalMutate(
+        key,
+        (atual: Cartao[] | undefined) => (atual || []).map((c) => (c.id === id ? { ...c, ...data } : c)),
+        { revalidate: false }
+      );
       registrarAtividade({ quadroId, cartaoId: id, acao: "atualizar", entidade: "cartao", detalhes: { campos: Object.keys(campos) } });
     }
     return data;
@@ -152,7 +157,11 @@ export function useCartoes(quadroId: string) {
   async function excluir(id: string) {
     const cartao = cartoes.find((c) => c.id === id);
     const titulo = cartao?.titulo;
-    globalMutate(key, cartoes.filter((c) => c.id !== id), false);
+    globalMutate(
+      key,
+      (atual: Cartao[] | undefined) => (atual || []).filter((c) => c.id !== id),
+      { revalidate: false }
+    );
     await supabase.from("cartoes").delete().eq("id", id);
     registrarAtividade({ quadroId, cartaoId: id, acao: "excluir", entidade: "cartao", detalhes: { titulo } });
   }
@@ -177,8 +186,8 @@ export function useCartoes(quadroId: string) {
 
     globalMutate(
       key,
-      cartoes.map((c) => c.id === cartaoId ? { ...c, coluna_id: novaColunaId, posicao: novaPosicao } : c),
-      false
+      (atual: Cartao[] | undefined) => (atual || []).map((c) => c.id === cartaoId ? { ...c, coluna_id: novaColunaId, posicao: novaPosicao } : c),
+      { revalidate: false }
     );
     await supabase.from("cartoes").update({ coluna_id: novaColunaId, posicao: novaPosicao }).eq("id", cartaoId);
 

@@ -2,14 +2,14 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { useTema } from "@/hooks/use-tema";
-import { LogOut, Moon, Sun, User } from "lucide-react";
+import { LogOut, Menu, Moon, Sun, User } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/layout/notification-bell";
 
-export function Header() {
+export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
   const { tema, alternar } = useTema();
   const { user, perfil, logout } = useAuth();
   const [menuAberto, setMenuAberto] = useState(false);
@@ -59,6 +59,18 @@ export function Header() {
       className="h-[68px] mt-3.5 px-4 md:px-12 xl:pl-12 xl:pr-10 rounded-[32px] flex items-center justify-between shrink-0 mb-3 z-30 relative"
       style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
     >
+      {/* Mobile menu button */}
+      {onMenuMobile && (
+        <button
+          onClick={onMenuMobile}
+          className="lg:hidden p-2 rounded-[14px] mr-2 hover:bg-[var(--tf-surface-hover)]"
+          style={{ color: "var(--tf-text-tertiary)" }}
+          aria-label="Abrir menu"
+        >
+          <Menu size={20} />
+        </button>
+      )}
+
       {/* Left side: Search bar */}
       <div className="hidden sm:block flex-1 max-w-sm">
         <div className="relative flex items-center w-full h-[44px] rounded-[20px] px-4 transition-colors" style={{ background: "var(--tf-bg-secondary)", border: "2px solid transparent" }}>

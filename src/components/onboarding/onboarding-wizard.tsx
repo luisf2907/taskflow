@@ -129,6 +129,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                   value={workspaceName}
                   onChange={(e) => setWorkspaceName(e.target.value)}
                   placeholder="Nome do workspace"
+                  maxLength={50}
                   className="w-full px-4 py-3 text-[15px] font-medium rounded-[14px] outline-none transition-all"
                   style={{
                     background: "var(--tf-bg)",

@@ -153,7 +153,7 @@ export function DetalheCartao({
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={handleFechar} />
 
       <div
-        className="relative rounded-[20px] w-full max-w-4xl my-8 mx-4 z-10 overflow-hidden"
+        className="relative rounded-[20px] w-full max-w-4xl my-8 mx-2 sm:mx-4 z-10 overflow-hidden"
         style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
       >
         {/* ─── TOP BAR ─── */}
@@ -200,16 +200,17 @@ export function DetalheCartao({
           </button>
         </div>
 
-        <div className="flex min-h-[480px]">
+        <div className="flex flex-col md:flex-row md:min-h-[480px]">
           {/* ═══ LEFT — Main Content ═══ */}
           <div className="flex-1 overflow-y-auto max-h-[75vh]">
-            <div className="px-8 pb-8 pt-2 space-y-6">
+            <div className="px-4 sm:px-8 pb-8 pt-2 space-y-6">
 
               {/* TITLE */}
               <input
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
                 onBlur={salvar}
+                maxLength={200}
                 className="w-full text-[22px] font-bold bg-transparent outline-none rounded-[8px] px-1 py-1 -mx-1"
                 style={{ color: "var(--tf-text)", border: "2px solid transparent", transition: "border-color 0.15s ease, background 0.15s ease" }}
                 onFocus={(e) => { e.currentTarget.style.borderColor = "var(--tf-accent)"; e.currentTarget.style.background = "var(--tf-bg-secondary)"; }}
@@ -291,6 +292,7 @@ export function DetalheCartao({
                       value={descricao}
                       onChange={(e) => setDescricao(e.target.value)}
                       placeholder="Adicione uma descrição..."
+                      maxLength={5000}
                       className="w-full rounded-[14px] px-4 py-3 text-sm resize-none outline-none min-h-[100px] leading-relaxed"
                       style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text)", border: "2px solid transparent", transition: "border-color 0.15s ease, background 0.15s ease" }}
                       autoFocus={editandoDescricao}
@@ -376,7 +378,7 @@ export function DetalheCartao({
 
           {/* ═══ RIGHT — Properties ═══ */}
           <div
-            className="w-[260px] shrink-0 border-l overflow-y-auto max-h-[75vh]"
+            className="w-full md:w-[260px] shrink-0 border-t md:border-t-0 md:border-l overflow-y-auto max-h-[50vh] md:max-h-[75vh]"
             style={{ borderColor: "var(--tf-border)" }}
           >
             <div className="p-5 space-y-1">
