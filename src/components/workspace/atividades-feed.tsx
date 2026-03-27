@@ -171,7 +171,7 @@ export default function AtividadesFeed({ workspaceId }: AtividadesFeedProps) {
     <div className="max-h-[650px] overflow-y-auto rounded-[20px] border p-4" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)", scrollbarWidth: "thin" }}>
       {grupos.map((grupo) => (
         <div key={grupo.label}>
-          <div className="sticky top-0 z-10 py-2 mb-1" style={{ background: "var(--tf-surface)" }}>
+          <div className="sticky top-0 z-10 py-2 mb-1 -mx-4 px-4" style={{ background: "var(--tf-surface)", backdropFilter: "blur(8px)" }}>
             <span className="text-[11px] font-bold uppercase tracking-widest px-2 py-1 rounded-full" style={{ color: "var(--tf-text-tertiary)", background: "var(--tf-bg-secondary)" }}>
               {grupo.label}
             </span>
