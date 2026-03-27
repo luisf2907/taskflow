@@ -34,6 +34,17 @@ export function useNotificacoes() {
     await supabase.from("notificacoes").update({ lida: true }).eq("user_id", user.id).eq("lida", false);
   }
 
+  async function apagar(id: string) {
+    globalMutate(key, notificacoes.filter((n) => n.id !== id), false);
+    await supabase.from("notificacoes").delete().eq("id", id);
+  }
+
+  async function limparTodas() {
+    if (!user) return;
+    globalMutate(key, [], false);
+    await supabase.from("notificacoes").delete().eq("user_id", user.id);
+  }
+
   // Realtime subscription for new notifications
   useEffect(() => {
     if (!user) return;
@@ -46,5 +57,5 @@ export function useNotificacoes() {
     return () => { supabase.removeChannel(channel); };
   }, [user, key]);
 
-  return { notificacoes, naoLidas, carregando, marcarComoLida, marcarTodasComoLidas };
+  return { notificacoes, naoLidas, carregando, marcarComoLida, marcarTodasComoLidas, apagar, limparTodas };
 }

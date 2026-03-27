@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 /**
  * Executa automações que combinam com o trigger dado.
  * Funciona tanto client-side (browser supabase) quanto server-side (service role).
+ * Registra logs de cada execução.
  */
 export async function executarAutomacoes(
   client: SupabaseClient,
@@ -12,6 +13,7 @@ export async function executarAutomacoes(
     tipo: string;
     config: Record<string, string>;
     cartao_id: string;
+    workspace_id?: string;
   }
 ) {
   const matching = automacoes.filter((a) => {
@@ -23,11 +25,25 @@ export async function executarAutomacoes(
       return a.trigger_config.coluna_id === trigger.config.coluna_id;
     }
 
-    // Triggers sem config específica (card_created, pr_merged, pr_opened)
+    // Triggers sem config específica (card_created, pr_merged, pr_opened, pr_closed)
     return true;
   });
 
+  // Buscar título do cartão para o log
+  let cartaoTitulo: string | null = null;
+  if (matching.length > 0) {
+    const { data: cartao } = await client
+      .from("cartoes")
+      .select("titulo")
+      .eq("id", trigger.cartao_id)
+      .maybeSingle();
+    cartaoTitulo = cartao?.titulo || null;
+  }
+
   for (const auto of matching) {
+    let sucesso = true;
+    let erro: string | null = null;
+
     try {
       switch (auto.acao_tipo) {
         case "move_to_column": {
@@ -44,7 +60,6 @@ export async function executarAutomacoes(
         case "assign_member": {
           const membroId = auto.acao_config.membro_id;
           if (membroId) {
-            // Verificar se já está atribuído
             const { data: existe } = await client
               .from("cartao_membros")
               .select("id")
@@ -64,7 +79,6 @@ export async function executarAutomacoes(
         case "add_label": {
           const etiquetaId = auto.acao_config.etiqueta_id;
           if (etiquetaId) {
-            // Verificar se já tem a etiqueta
             const { data: existe } = await client
               .from("cartao_etiquetas")
               .select("id")
@@ -82,7 +96,29 @@ export async function executarAutomacoes(
         }
       }
     } catch (err) {
+      sucesso = false;
+      erro = err instanceof Error ? err.message : String(err);
       console.error(`[Automação] Falha ao executar "${auto.nome}":`, err);
+    }
+
+    // Registrar log
+    const workspaceId = trigger.workspace_id || auto.workspace_id;
+    if (workspaceId) {
+      try {
+        await client.from("automacao_logs").insert({
+          automacao_id: auto.id,
+          automacao_nome: auto.nome,
+          trigger_tipo: auto.trigger_tipo,
+          acao_tipo: auto.acao_tipo,
+          cartao_id: trigger.cartao_id,
+          cartao_titulo: cartaoTitulo,
+          workspace_id: workspaceId,
+          sucesso,
+          erro,
+        });
+      } catch (logErr) {
+        console.error("[Automação] Falha ao registrar log:", logErr);
+      }
     }
   }
 }

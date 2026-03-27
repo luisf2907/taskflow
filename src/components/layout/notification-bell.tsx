@@ -1,7 +1,7 @@
 "use client";
 
 import { useNotificacoes } from "@/hooks/use-notificacoes";
-import { Bell, Check, CheckCheck } from "lucide-react";
+import { Bell, Check, CheckCheck, Trash2, X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 function tempoRelativo(data: string): string {
@@ -16,7 +16,7 @@ function tempoRelativo(data: string): string {
 }
 
 export function NotificationBell() {
-  const { notificacoes, naoLidas, marcarComoLida, marcarTodasComoLidas } = useNotificacoes();
+  const { notificacoes, naoLidas, marcarComoLida, marcarTodasComoLidas, apagar, limparTodas } = useNotificacoes();
   const [open, setOpen] = useState(false);
 
   return (
@@ -78,16 +78,28 @@ export function NotificationBell() {
               <span className="font-bold" style={{ fontSize: 14, color: "var(--tf-text)" }}>
                 Notificações
               </span>
-              {naoLidas > 0 && (
-                <button
-                  onClick={() => marcarTodasComoLidas()}
-                  className="flex items-center gap-1 font-medium"
-                  style={{ fontSize: 12, color: "var(--tf-accent)" }}
-                >
-                  <CheckCheck size={14} />
-                  Marcar todas
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {naoLidas > 0 && (
+                  <button
+                    onClick={() => marcarTodasComoLidas()}
+                    className="flex items-center gap-1 font-medium"
+                    style={{ fontSize: 12, color: "var(--tf-accent)" }}
+                  >
+                    <CheckCheck size={14} />
+                    Marcar todas
+                  </button>
+                )}
+                {notificacoes.length > 0 && (
+                  <button
+                    onClick={() => limparTodas()}
+                    className="flex items-center gap-1 font-medium"
+                    style={{ fontSize: 12, color: "var(--tf-danger)" }}
+                  >
+                    <Trash2 size={13} />
+                    Limpar
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* List */}
@@ -103,7 +115,7 @@ export function NotificationBell() {
                 notificacoes.map((n) => (
                   <div
                     key={n.id}
-                    className="flex items-start gap-3 px-4 py-3 cursor-pointer hover-surface transition-all"
+                    className="group flex items-start gap-3 px-4 py-3 cursor-pointer hover-surface transition-all"
                     style={{ borderBottom: "1px solid var(--tf-border-subtle)" }}
                     onClick={() => {
                       marcarComoLida(n.id);
@@ -142,6 +154,19 @@ export function NotificationBell() {
                         {tempoRelativo(n.criado_em)}
                       </div>
                     </div>
+
+                    {/* Delete button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        apagar(n.id);
+                      }}
+                      className="shrink-0 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)]"
+                      style={{ color: "var(--tf-text-tertiary)" }}
+                      title="Apagar notificação"
+                    >
+                      <X size={13} />
+                    </button>
                   </div>
                 ))
               )}

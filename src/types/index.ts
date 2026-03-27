@@ -255,3 +255,20 @@ export interface Notificacao {
   link: string | null;
   criado_em: string;
 }
+
+// =============================================
+// AUTOMAÇÃO LOGS
+// =============================================
+export interface AutomacaoLog {
+  id: string;
+  automacao_id: string;
+  automacao_nome: string;
+  trigger_tipo: string;
+  acao_tipo: string;
+  cartao_id: string | null;
+  cartao_titulo: string | null;
+  workspace_id: string;
+  sucesso: boolean;
+  erro: string | null;
+  criado_em: string;
+}
