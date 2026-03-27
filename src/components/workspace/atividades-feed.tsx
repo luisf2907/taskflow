@@ -15,22 +15,22 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 interface AtividadesFeedProps {
   workspaceId: string;
 }
 
 // ─── Icon + color mapping ───
-const ACAO_CONFIG: Record<string, { icon: typeof Plus; cor: string; corBg: string }> = {
-  criar: { icon: Plus, cor: "var(--tf-accent)", corBg: "var(--tf-accent-light)" },
-  mover: { icon: ArrowRight, cor: "#6366F1", corBg: "#EEF2FF" },
-  atualizar: { icon: Edit3, cor: "#F59E0B", corBg: "#FFFBEB" },
-  excluir: { icon: Trash2, cor: "var(--tf-danger)", corBg: "var(--tf-danger-bg)" },
-  comentar: { icon: MessageSquare, cor: "#3B82F6", corBg: "#EFF6FF" },
-  atribuir: { icon: Users, cor: "#8B5CF6", corBg: "#F5F3FF" },
-  etiquetar: { icon: Tag, cor: "#EC4899", corBg: "#FDF2F8" },
-  sprint_status: { icon: Zap, cor: "#F59E0B", corBg: "#FFFBEB" },
+const ACAO_CONFIG: Record<string, { icon: typeof Plus; cor: string }> = {
+  criar: { icon: Plus, cor: "var(--tf-accent)" },
+  mover: { icon: ArrowRight, cor: "#818CF8" },
+  atualizar: { icon: Edit3, cor: "#FBBF24" },
+  excluir: { icon: Trash2, cor: "var(--tf-danger)" },
+  comentar: { icon: MessageSquare, cor: "#60A5FA" },
+  atribuir: { icon: Users, cor: "#A78BFA" },
+  etiquetar: { icon: Tag, cor: "#F472B6" },
+  sprint_status: { icon: Zap, cor: "#FBBF24" },
 };
 
 function descreverAtividade(a: AtividadeComAutor): { texto: string; destaque?: string } {
@@ -106,6 +106,32 @@ function iniciais(nome: string | null): string {
   return nome.split(/\s+/).map(p => p[0]).join("").toUpperCase().slice(0, 2);
 }
 
+// ─── Avatar com fallback ───
+function AvatarAtividade({ nome, avatarUrl }: { nome: string | null; avatarUrl: string | null }) {
+  const [imgErro, setImgErro] = useState(false);
+  const showImg = avatarUrl && !imgErro;
+
+  return (
+    <div
+      className="w-7 h-7 min-w-[28px] rounded-full flex items-center justify-center overflow-hidden shrink-0"
+      style={{ background: "var(--tf-accent)" }}
+    >
+      {showImg ? (
+        <img
+          src={avatarUrl}
+          alt=""
+          className="w-full h-full object-cover"
+          onError={() => setImgErro(true)}
+        />
+      ) : (
+        <span className="text-[10px] font-bold text-white">
+          {iniciais(nome)}
+        </span>
+      )}
+    </div>
+  );
+}
+
 // ─── Component ───
 export default function AtividadesFeed({ workspaceId }: AtividadesFeedProps) {
   const { atividades, carregando } = useAtividadesWorkspace(workspaceId);
@@ -172,7 +198,7 @@ export default function AtividadesFeed({ workspaceId }: AtividadesFeedProps) {
                 {/* Icon */}
                 <div
                   className="w-8 h-8 min-w-[32px] rounded-[10px] flex items-center justify-center shrink-0"
-                  style={{ background: config.corBg }}
+                  style={{ background: `color-mix(in srgb, ${config.cor} 15%, transparent)` }}
                 >
                   <Icon size={14} style={{ color: config.cor }} strokeWidth={2.5} />
                 </div>
@@ -204,18 +230,7 @@ export default function AtividadesFeed({ workspaceId }: AtividadesFeedProps) {
                 </div>
 
                 {/* Avatar */}
-                <div
-                  className="w-7 h-7 min-w-[28px] rounded-full flex items-center justify-center overflow-hidden shrink-0"
-                  style={{ background: "var(--tf-accent)" }}
-                >
-                  {a.perfis?.avatar_url ? (
-                    <img src={a.perfis.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-[10px] font-bold text-white">
-                      {iniciais(a.perfis?.nome ?? null)}
-                    </span>
-                  )}
-                </div>
+                <AvatarAtividade nome={a.perfis?.nome ?? null} avatarUrl={a.perfis?.avatar_url ?? null} />
               </div>
             );
           })}
