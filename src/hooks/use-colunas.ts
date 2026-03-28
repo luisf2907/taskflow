@@ -22,6 +22,10 @@ export function useColunas(quadroId: string) {
   });
 
   async function criar(nome: string) {
+    // Check duplicata
+    const duplicata = colunas.some((c) => c.nome.toLowerCase().trim() === nome.toLowerCase().trim());
+    if (duplicata) return null; // Silently skip — UI should show feedback
+
     const posicao = colunas.length;
     const { data } = await supabase
       .from("colunas")

@@ -8,6 +8,7 @@ import { useSidebar } from "@/hooks/use-sidebar";
 import { useWorkspaces } from "@/hooks/use-workspaces";
 import { useDashboardMetrics } from "@/hooks/use-dashboard-metrics";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "@/hooks/use-toast";
 import { Workspace } from "@/types";
 import {
   ArrowRight,
@@ -155,8 +156,13 @@ export default function PaginaInicial() {
 
   async function handleSalvarWorkspace() {
     if (!editandoWs) return;
+    const nomeValidado = wsNome.trim();
+    if (!nomeValidado) {
+      toast.error("Nome do workspace não pode ser vazio.");
+      return;
+    }
     await atualizarWorkspace(editandoWs.id, {
-      nome: wsNome.trim() || editandoWs.nome,
+      nome: nomeValidado,
       descricao: wsDescricao.trim() || null,
       cor: wsCor,
     });

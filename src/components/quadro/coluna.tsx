@@ -114,6 +114,7 @@ export const Coluna = memo(function Coluna({
               <button
                 className="p-1 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
                 style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+                aria-label={`Opções da coluna ${coluna.nome}`}
               >
                 <MoreHorizontal size={16} />
               </button>

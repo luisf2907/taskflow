@@ -58,6 +58,7 @@ export function Anexos({ anexos, enviando, onUpload, onExcluir }: AnexosProps) {
           disabled={enviando}
           className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-[8px] disabled:opacity-40 hover:bg-[var(--tf-surface-hover)]"
           style={{ color: "var(--tf-text-secondary)", border: "1px dashed var(--tf-border)", transition: "background 0.15s ease" }}
+          aria-label="Anexar arquivo"
         >
           <Upload size={12} />
           {enviando ? "Enviando..." : "Anexar"}
@@ -73,6 +74,19 @@ export function Anexos({ anexos, enviando, onUpload, onExcluir }: AnexosProps) {
           }}
         />
       </div>
+
+      {/* Upload progress indicator */}
+      {enviando && (
+        <div className="mb-2 p-3 rounded-[8px] flex items-center gap-3" style={{ background: "var(--tf-bg-secondary)" }}>
+          <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin shrink-0" style={{ borderColor: "var(--tf-accent)", borderTopColor: "transparent" }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-medium" style={{ color: "var(--tf-text)" }}>Enviando arquivo...</p>
+            <div className="mt-1 h-1 rounded-full overflow-hidden" style={{ background: "var(--tf-border)" }}>
+              <div className="h-full rounded-full animate-pulse" style={{ background: "var(--tf-accent)", width: "60%" }} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {anexos.length > 0 ? (
         <div className="space-y-1">

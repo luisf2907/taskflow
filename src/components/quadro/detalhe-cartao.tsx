@@ -62,6 +62,13 @@ export function DetalheCartao({
   const [editandoDescricao, setEditandoDescricao] = useState(false);
   const [painelAberto, setPainelAberto] = useState<Painel>(null);
   const [confirmExcluirCard, setConfirmExcluirCard] = useState(false);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  // Store previously focused element on mount
+  useEffect(() => {
+    previousFocusRef.current = document.activeElement as HTMLElement;
+    return () => { previousFocusRef.current?.focus(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const painelRef = useRef<HTMLDivElement>(null);
 
   // Scroll suave até o painel quando abrir
@@ -195,6 +202,7 @@ export function DetalheCartao({
             onClick={handleFechar}
             className="p-1.5 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
             style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+            aria-label="Fechar detalhes do cartão"
           >
             <X size={18} />
           </button>

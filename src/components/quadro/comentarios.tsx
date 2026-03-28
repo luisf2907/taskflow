@@ -37,6 +37,7 @@ export function Comentarios({
   const { user } = useAuth();
   const [texto, setTexto] = useState("");
   const [focado, setFocado] = useState(false);
+  const [enviandoComentario, setEnviandoComentario] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Encontrar o membro que corresponde ao usuário logado
@@ -45,11 +46,17 @@ export function Comentarios({
     return membros.find((m) => m.user_id === user.id) || membros[0];
   }, [membros, user]);
 
-  function handleEnviar() {
+  async function handleEnviar() {
     if (!texto.trim()) return;
-    onCriar(texto.trim(), meuMembro?.id);
-    setTexto("");
-    setFocado(false);
+    if (!meuMembro?.id) return; // Impedir comentario sem autor
+    setEnviandoComentario(true);
+    try {
+      await onCriar(texto.trim(), meuMembro.id);
+      setTexto("");
+      setFocado(false);
+    } finally {
+      setEnviandoComentario(false);
+    }
   }
 
   return (
@@ -101,12 +108,16 @@ export function Comentarios({
               </p>
               <button
                 onClick={handleEnviar}
-                disabled={!texto.trim()}
+                disabled={!texto.trim() || enviandoComentario || !meuMembro?.id}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-white rounded-[8px] disabled:opacity-30"
                 style={{ background: "var(--tf-accent)", transition: "opacity 0.15s ease" }}
               >
-                <Send size={12} />
-                Enviar
+                {enviandoComentario ? (
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Send size={12} />
+                )}
+                {enviandoComentario ? "Enviando..." : "Enviar"}
               </button>
             </div>
           )}
@@ -150,6 +161,7 @@ export function Comentarios({
                       style={{ color: "var(--tf-text-tertiary)", transition: "opacity 0.15s ease, background 0.15s ease" }}
                       onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
                       onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
+                      aria-label="Excluir comentário"
                     >
                       <Trash2 size={12} />
                     </button>

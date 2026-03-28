@@ -168,7 +168,7 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
     const { active, over } = event;
     setCartaoArrastando(null);
 
-    if (!over) return;
+    if (!over || active.id === over.id) return;
 
     const activeData = active.data.current;
     const overData = over.data.current;
@@ -178,6 +178,13 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
       const cartaoAlvo = overData.cartao as CartaoComResumo;
 
       if (cartaoAtivo.id === cartaoAlvo.id) return;
+      // Skip if same column and same position
+      if (cartaoAtivo.coluna_id === cartaoAlvo.coluna_id) {
+        const cartoesCol = cartoesDaColuna(cartaoAtivo.coluna_id!);
+        const idxAtivo = cartoesCol.findIndex((c) => c.id === cartaoAtivo.id);
+        const idxAlvo = cartoesCol.findIndex((c) => c.id === cartaoAlvo.id);
+        if (idxAtivo === idxAlvo) return;
+      }
 
       const colunaId = cartaoAlvo.coluna_id;
       if (!colunaId) return;
