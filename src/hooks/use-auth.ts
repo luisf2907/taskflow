@@ -28,11 +28,23 @@ export function useAuth() {
     }
   );
 
-  const { data: temGithub } = useSWR(
+  const { data: temGithub, mutate: mutateGithub } = useSWR(
     user ? `has-github-${user.id}` : null,
     async () => {
+      // Check OAuth identity
       const identities = user?.identities ?? [];
-      return identities.some((i) => i.provider === "github");
+      const hasOAuth = identities.some((i) => i.provider === "github");
+      if (hasOAuth) return true;
+
+      // Check PAT via API
+      try {
+        const res = await fetch("/api/github-token");
+        if (!res.ok) return false;
+        const data = await res.json();
+        return data.connected === true;
+      } catch {
+        return false;
+      }
     }
   );
 
@@ -42,5 +54,13 @@ export function useAuth() {
     window.location.href = "/login";
   }
 
-  return { user, perfil, carregando, temGithub: temGithub ?? false, logout, refresh: mutate };
+  return {
+    user,
+    perfil,
+    carregando,
+    temGithub: temGithub ?? false,
+    logout,
+    refresh: mutate,
+    refreshGithub: mutateGithub,
+  };
 }
