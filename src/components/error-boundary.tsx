@@ -2,6 +2,7 @@
 
 import { Component, ReactNode } from "react";
 import { AlertTriangle, RotateCcw } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 interface Props {
   children: ReactNode;
@@ -24,7 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error("[ErrorBoundary]", error, info.componentStack);
+    logger.error(error.message, "ErrorBoundary", { stack: info.componentStack ?? undefined });
   }
 
   render() {

@@ -13,9 +13,23 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://taskflow.app";
+
 export const metadata: Metadata = {
-  title: "Taskflow",
-  description: "Gerencie seus projetos com quadros kanban",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Taskflow",
+    template: "%s | Taskflow",
+  },
+  description: "Gerencie seus projetos com quadros kanban, sprints e integração com GitHub.",
+  twitter: {
+    card: "summary_large_image",
+    title: "Taskflow",
+    description: "Gestão de tarefas para times que entregam.",
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

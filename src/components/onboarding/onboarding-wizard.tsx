@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Kanban, CheckCircle2 } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 interface OnboardingWizardProps {
   onComplete: (workspaceId: string) => void;
@@ -42,7 +43,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
       localStorage.setItem("tf_onboarding_done", "true");
       setStep(3);
     } catch (err) {
-      console.error("Erro ao criar workspace:", err);
+      logger.error(err instanceof Error ? err.message : String(err), "OnboardingWizard");
     } finally {
       setLoading(false);
     }

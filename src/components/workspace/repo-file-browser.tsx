@@ -5,6 +5,7 @@ import type { GitHubConteudo } from "@/types/github";
 import { BookOpen, ChevronRight, FileText, Folder } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 
 interface RepoFileBrowserProps {
@@ -286,6 +287,7 @@ function ReadmePreview({ owner, nome, path, branch }: { owner: string; nome: str
       <div style={{ padding: "20px 24px", color: "var(--tf-text)", lineHeight: 1.7 }}>
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeSanitize]}
           components={{
             h1: ({ children }) => (
               <h1 style={{ fontSize: 26, fontWeight: 700, marginTop: 20, marginBottom: 14, paddingBottom: 6, borderBottom: "1px solid var(--tf-border)", color: "var(--tf-text)" }}>{children}</h1>

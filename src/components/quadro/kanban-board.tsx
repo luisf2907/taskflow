@@ -21,12 +21,17 @@ import {
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Loader2 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
 import { BarraFiltros, Filtros } from "./barra-filtros";
 import { Cartao } from "./cartao";
 import { Coluna } from "./coluna";
-import { DetalheCartao } from "./detalhe-cartao";
 import { NovaColuna } from "./nova-coluna";
+
+const DetalheCartao = dynamic(
+  () => import("./detalhe-cartao").then((m) => m.DetalheCartao),
+  { ssr: false }
+);
 
 interface KanbanBoardProps {
   quadroId: string;
@@ -101,6 +106,21 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
   const handleCriarColuna = useCallback(
     (nome: string) => criarColuna(nome),
     [criarColuna]
+  );
+
+  const handleRenomearColuna = useCallback(
+    (colunaId: string, nome: string) => atualizarColuna(colunaId, { nome }),
+    [atualizarColuna]
+  );
+
+  const handleExcluirColuna = useCallback(
+    (colunaId: string) => excluirColuna(colunaId),
+    [excluirColuna]
+  );
+
+  const handleFecharDetalhe = useCallback(
+    () => setCartaoSelecionado(null),
+    []
   );
 
   const sensors = useSensors(
@@ -219,6 +239,8 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
       {/* Toast de bloqueio */}
       {alertaBloqueio && (
         <div
+          role="alert"
+          aria-live="assertive"
           className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-[12px] text-sm font-semibold shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2"
           style={{
             background: "var(--tf-danger, #ef4444)",
@@ -264,8 +286,8 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
                     membros={membros}
                     onCriarCartao={handleCriarCartao}
                     onCartaoClick={setCartaoSelecionado}
-                    onRenomear={(nome) => atualizarColuna(coluna.id, { nome })}
-                    onExcluir={() => excluirColuna(coluna.id)}
+                    onRenomear={(nome) => handleRenomearColuna(coluna.id, nome)}
+                    onExcluir={() => handleExcluirColuna(coluna.id)}
                   />
                 ))}
               </SortableContext>
@@ -293,7 +315,7 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
         etiquetas={etiquetas}
         membros={membros}
         quadroId={quadroId}
-        onFechar={() => setCartaoSelecionado(null)}
+        onFechar={handleFecharDetalhe}
         onAtualizar={atualizarCartao}
         onExcluir={excluirCartao}
         onCriarEtiqueta={criarEtiqueta}

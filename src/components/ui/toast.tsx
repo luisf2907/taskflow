@@ -22,6 +22,8 @@ export function ToastContainer() {
 
   return (
     <div
+      role="alert"
+      aria-live="polite"
       className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2.5"
       style={{ maxWidth: 380 }}
     >

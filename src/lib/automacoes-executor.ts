@@ -1,5 +1,6 @@
 import { Automacao } from "@/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { logger } from "@/lib/logger";
 
 /**
  * Executa automações que combinam com o trigger dado.
@@ -98,7 +99,7 @@ export async function executarAutomacoes(
     } catch (err) {
       sucesso = false;
       erro = err instanceof Error ? err.message : String(err);
-      console.error(`[Automação] Falha ao executar "${auto.nome}":`, err);
+      logger.error(err instanceof Error ? err.message : String(err), "Automacao", { nome: auto.nome });
     }
 
     // Registrar log
@@ -117,7 +118,7 @@ export async function executarAutomacoes(
           erro,
         });
       } catch (logErr) {
-        console.error("[Automação] Falha ao registrar log:", logErr);
+        logger.error(logErr instanceof Error ? logErr.message : String(logErr), "Automacao", { action: "registrar_log" });
       }
     }
   }

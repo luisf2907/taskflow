@@ -5,6 +5,7 @@ import { ArrowLeft, ExternalLink, FileCode, FileText, FileWarning, Download } fr
 import { useGitHubArquivo } from "@/hooks/use-github";
 import { extensaoParaLinguagem, ehBinario } from "@/lib/github/client";
 import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 
 interface RepoFileViewerProps {
@@ -173,6 +174,7 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
         <div className="markdown-body px-8 py-6 leading-[1.7]" style={{ color: "var(--tf-text)" }}>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeSanitize]}
             components={{
               h1: ({ children }) => (
                 <h1
