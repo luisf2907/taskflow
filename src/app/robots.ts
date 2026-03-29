@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://taskflow.app";
+  const raw = process.env.NEXT_PUBLIC_SITE_URL || "https://taskflow.app";
+  const siteUrl = raw.startsWith("http") ? raw : `https://${raw}`;
 
   return {
     rules: [
