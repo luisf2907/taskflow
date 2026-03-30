@@ -8,6 +8,7 @@ const envSchema = z.object({
 
 const serverEnvSchema = envSchema.extend({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  GEMINI_API_KEY: z.string().min(1).optional(),
 });
 
 function parsePublicEnv() {
@@ -33,6 +34,7 @@ function parseServerEnv() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   });
 
   if (!result.success) {

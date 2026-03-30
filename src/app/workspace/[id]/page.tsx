@@ -26,6 +26,7 @@ import { TimelineView } from "@/components/workspace/timeline-view";
 import { AutomacoesConfig } from "@/components/workspace/automacoes-config";
 import AtividadesFeed from "@/components/workspace/atividades-feed";
 import { PlanningPokerModal } from "@/components/planning-poker/planning-poker-modal";
+import { GerarCardsModal } from "@/components/ai/gerar-cards-modal";
 import { useRealtimeWorkspace } from "@/hooks/use-realtime";
 import { supabase } from "@/lib/supabase/client";
 import { useColunas } from "@/hooks/use-colunas";
@@ -70,6 +71,7 @@ import {
   X,
   Zap,
   Layers,
+  Sparkles,
 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -631,6 +633,9 @@ export default function PaginaWorkspace() {
   const [pokerAberto, setPokerAberto] = useState(false);
   const [pokerCartaoId, setPokerCartaoId] = useState<string | null>(null);
 
+  // IA
+  const [modalIA, setModalIA] = useState(false);
+
   const dndSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
@@ -999,6 +1004,14 @@ export default function PaginaWorkspace() {
                       title="Planning Poker"
                     >
                       <Layers size={14} /> Poker
+                    </button>
+                    <button
+                      onClick={() => setModalIA(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-[8px] transition-smooth"
+                      style={{ background: "linear-gradient(135deg, var(--tf-accent), #8B5CF6)", color: "#fff" }}
+                      title="Gerar cards com IA"
+                    >
+                      <Sparkles size={14} /> IA
                     </button>
                   </div>
                 </div>
@@ -1792,6 +1805,49 @@ export default function PaginaWorkspace() {
         onExcluirEtiqueta={excluirEtiquetaWs}
         onCriarMembro={criarMembroWs}
         onRefresh={buscarBacklog}
+      />
+
+      {/* Gerar Cards com IA */}
+      <GerarCardsModal
+        aberto={modalIA}
+        onFechar={() => setModalIA(false)}
+        workspaceId={workspaceId}
+        etiquetas={etiquetasWs}
+        onCriarCards={async (cards) => {
+          for (const card of cards) {
+            const criado = await criarTarefa(card.titulo, card.peso, card.descricao);
+            if (!criado) continue;
+
+            // Criar checklist com itens (se houver)
+            if (card.checklist && card.checklist.length > 0) {
+              const { data: checklist } = await supabase
+                .from("checklists")
+                .insert({ cartao_id: criado.id, titulo: "Criterios de aceitacao", posicao: 0 })
+                .select()
+                .single();
+
+              if (checklist) {
+                const itens = card.checklist.map((texto: string, idx: number) => ({
+                  checklist_id: checklist.id,
+                  texto,
+                  posicao: idx,
+                  concluido: false,
+                }));
+                await supabase.from("checklist_itens").insert(itens);
+              }
+            }
+
+            // Atribuir etiquetas (se houver)
+            if (card.etiqueta_ids && card.etiqueta_ids.length > 0) {
+              const inserts = card.etiqueta_ids.map((etiquetaId: string) => ({
+                cartao_id: criado.id,
+                etiqueta_id: etiquetaId,
+              }));
+              await supabase.from("cartao_etiquetas").insert(inserts);
+            }
+          }
+          buscarBacklog();
+        }}
       />
 
       {/* Planning Poker */}

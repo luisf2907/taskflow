@@ -77,10 +77,10 @@ export function PlanningPokerModal({
     await iniciarSessao(cartaoId);
   }, [iniciarSessao]);
 
-  const handleFechar = useCallback(async () => {
+  // Cancelar sessao (volta pro seletor, nao fecha o modal)
+  const handleCancelarSessao = useCallback(async () => {
     await fecharSessao();
-    onFechar();
-  }, [fecharSessao, onFechar]);
+  }, [fecharSessao]);
 
   const handleFinalizar = useCallback(async (valor: number) => {
     await finalizarSessao(valor);
@@ -115,7 +115,7 @@ export function PlanningPokerModal({
           onRevelar={revelarVotos}
           onResetar={resetarVotos}
           onFinalizar={handleFinalizar}
-          onFechar={handleFechar}
+          onFechar={handleCancelarSessao}
         />
       ) : (
         <SeletorCartao

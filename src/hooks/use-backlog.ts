@@ -111,11 +111,12 @@ export function useBacklog(workspaceId: string) {
   }
 
   // Criar tarefa no backlog (sem coluna, sem quadro)
-  async function criarTarefa(titulo: string, peso?: number) {
+  async function criarTarefa(titulo: string, peso?: number, descricao?: string) {
     const { data } = await supabase
       .from("cartoes")
       .insert({
         titulo,
+        descricao: descricao || null,
         workspace_id: workspaceId,
         coluna_id: null,
         posicao: 0,
@@ -131,6 +132,9 @@ export function useBacklog(workspaceId: string) {
         coluna_nome: null,
         quadro_nome: null,
         quadro_id: null,
+        concluido: false,
+        etiqueta_ids: [],
+        membro_ids: [],
       };
       globalMutate(key, [novo, ...cartoes], false);
     }
