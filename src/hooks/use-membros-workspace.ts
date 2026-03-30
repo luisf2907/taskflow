@@ -85,11 +85,11 @@ export function useMembrosWorkspace(workspaceId: string) {
 
       const { data: criados } = await supabase
         .from("membros")
-        .insert(inserts)
+        .upsert(inserts, { onConflict: "user_id,workspace_id", ignoreDuplicates: true })
         .select();
 
       if (criados && criados.length > 0) {
-        globalMutate(key, [...membros, ...criados], false);
+        globalMutate(key, [...membros, ...criados.filter((c) => !membrosExistentes.has(c.user_id))], false);
       }
     })();
   }, [carregando, workspaceId, membros, key]);

@@ -81,7 +81,7 @@ export function useChecklists(cartaoId: string | null) {
     await supabase.from("checklist_itens").delete().eq("id", itemId);
   }
 
-  function buscar() { if (key) globalMutate(key); }
+  function buscar() { setLocalData(null); if (key) globalMutate(key); }
 
   return { checklists, carregando, criarChecklist, excluirChecklist, criarItem, toggleItem, atualizarItem, excluirItem, buscar };
 }

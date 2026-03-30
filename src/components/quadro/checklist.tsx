@@ -29,7 +29,7 @@ export function ChecklistComponent({
   }
 
   return (
-    <div>
+    <div className="group/checklist">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-[13px] font-semibold" style={{ color: "var(--tf-text)" }}>
@@ -37,7 +37,7 @@ export function ChecklistComponent({
         </h4>
         <button
           onClick={() => onExcluirChecklist(checklist.id)}
-          className="p-1 rounded-[4px] opacity-0 group-hover:opacity-100 hover:bg-[var(--tf-danger-bg)]"
+          className="p-1 rounded-[4px] opacity-0 group-hover/checklist:opacity-100 hover:bg-[var(--tf-danger-bg)]"
           style={{ color: "var(--tf-text-tertiary)", transition: "opacity 0.15s ease, background 0.15s ease" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}

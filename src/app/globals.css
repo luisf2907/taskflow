@@ -2,6 +2,28 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Cursor pointer global — maozinha em todos os clicaveis */
+*:where(
+  button:not(:disabled),
+  a,
+  select:not(:disabled),
+  label[for],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  input[type="button"],
+  [role="button"],
+  [role="tab"],
+  [role="radio"],
+  [role="menuitem"],
+  [role="option"],
+  [role="switch"],
+  [tabindex="0"],
+  summary
+) {
+  cursor: pointer;
+}
+
 /* ============================================
    TASKFLOW — Design System
    Clean, minimal teal + mint aesthetic

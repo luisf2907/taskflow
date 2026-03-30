@@ -3,6 +3,7 @@ import { applyRateLimit, validateBody } from "@/lib/api-utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { parseAIResponse } from "@/lib/ai-json-repair";
 
 const schema = z.object({
   texto: z.string().min(3, "Texto muito curto").max(2000, "Texto muito longo (max 2000 caracteres)"),
@@ -92,21 +93,14 @@ export async function POST(request: NextRequest) {
 
     const responseText = result.response.text();
 
-    // Parse JSON response
+    // Parse JSON (com fallback via Gemini Flash Lite)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let cards: Array<Record<string, any>>;
-    try {
-      cards = JSON.parse(responseText);
-    } catch {
-      // Try extracting JSON from markdown code block
-      const jsonMatch = responseText.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) {
-        return NextResponse.json(
-          { error: "A IA retornou um formato invalido. Tente novamente." },
-          { status: 502 }
-        );
-      }
-      cards = JSON.parse(jsonMatch[0]);
+    const cards = await parseAIResponse<Array<Record<string, any>>>(responseText, "array", apiKey);
+    if (!cards) {
+      return NextResponse.json(
+        { error: "A IA retornou um formato invalido. Tente novamente." },
+        { status: 502 }
+      );
     }
 
     // Validate structure

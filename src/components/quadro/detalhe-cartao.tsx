@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from "@/lib/supabase/client";
 import { useAnexos } from "@/hooks/use-anexos";
 import { useCartaoEtiquetas } from "@/hooks/use-cartao-etiquetas";
 import { useCartaoMembros } from "@/hooks/use-cartao-membros";
@@ -20,6 +21,7 @@ import {
   Loader2,
   MoreHorizontal,
   Paperclip,
+  Sparkles,
   Tag,
   Trash2,
   User,
@@ -27,6 +29,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Anexos } from "./anexos";
 import { Avatar } from "./avatar";
@@ -62,6 +65,7 @@ export function DetalheCartao({
   const [editandoDescricao, setEditandoDescricao] = useState(false);
   const [painelAberto, setPainelAberto] = useState<Painel>(null);
   const [confirmExcluirCard, setConfirmExcluirCard] = useState(false);
+  const [melhorandoIA, setMelhorandoIA] = useState(false);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
   // Store previously focused element on mount
@@ -111,7 +115,7 @@ export function DetalheCartao({
     await toggleMembroBase(id);
   }
 
-  const { checklists, criarChecklist, excluirChecklist, criarItem, toggleItem, excluirItem } = useChecklists(cartao?.id || null);
+  const { checklists, criarChecklist, excluirChecklist, criarItem, toggleItem, excluirItem, buscar: buscarChecklists } = useChecklists(cartao?.id || null);
   const { comentarios, criar: criarComentario, excluir: excluirComentario } = useComentarios(cartao?.id || null);
   const { anexos, enviando, upload: uploadAnexo, excluir: excluirAnexo } = useAnexos(cartao?.id || null);
 
@@ -142,6 +146,97 @@ export function DetalheCartao({
   }
 
   function handleFechar() { salvar(); onRefresh(); onFechar(); }
+
+  async function melhorarComIA() {
+    if (!cartao || melhorandoIA) return;
+    setMelhorandoIA(true);
+    try {
+      const checklistItens = checklists.flatMap((cl) => cl.checklist_itens.map((i) => i.texto));
+      const res = await fetch("/api/ai/enhance-card", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          titulo: titulo,
+          descricao: descricao,
+          checklistItens,
+          etiquetaIdsAtuais: etiquetaIds,
+          etiquetasDisponiveis: etiquetas.map((e) => ({ id: e.id, nome: e.nome })),
+          peso: pesoLocal,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error || "Erro ao melhorar card"); return; }
+
+      // Atualizar descricao
+      if (data.descricao) {
+        setDescricao(data.descricao);
+        onAtualizar(cartao.id, { descricao: data.descricao });
+      }
+
+      // Adicionar novos itens de checklist (bulk insert)
+      if (data.checklist_novos && data.checklist_novos.length > 0) {
+        // Buscar checklist existente direto do banco para evitar estado stale
+        const { data: checklistsDB } = await supabase
+          .from("checklists")
+          .select("id, checklist_itens(id)")
+          .eq("cartao_id", cartao.id)
+          .order("posicao")
+          .limit(1);
+
+        let checklistId: string;
+        if (checklistsDB && checklistsDB.length > 0) {
+          checklistId = checklistsDB[0].id;
+          const basePos = Array.isArray(checklistsDB[0].checklist_itens) ? checklistsDB[0].checklist_itens.length : 0;
+          const itens = data.checklist_novos.map((texto: string, idx: number) => ({
+            checklist_id: checklistId,
+            texto,
+            posicao: basePos + idx,
+            concluido: false,
+          }));
+          await supabase.from("checklist_itens").insert(itens);
+        } else {
+          // Criar checklist + itens
+          const { data: novaChecklist } = await supabase
+            .from("checklists")
+            .insert({ cartao_id: cartao.id, titulo: "Criterios de aceitacao", posicao: 0 })
+            .select()
+            .single();
+          if (novaChecklist) {
+            const itens = data.checklist_novos.map((texto: string, idx: number) => ({
+              checklist_id: novaChecklist.id,
+              texto,
+              posicao: idx,
+              concluido: false,
+            }));
+            await supabase.from("checklist_itens").insert(itens);
+          }
+        }
+        buscarChecklists();
+      }
+
+      // Atualizar etiquetas (adicionar novas, nao remover existentes)
+      if (data.etiqueta_ids && data.etiqueta_ids.length > 0) {
+        for (const id of data.etiqueta_ids) {
+          if (!etiquetaIds.includes(id)) {
+            await toggleEtiqueta(id);
+          }
+        }
+      }
+
+      // Sugerir peso se nao tem
+      if (data.peso_sugerido && !pesoLocal) {
+        handleMudarPeso(data.peso_sugerido);
+      }
+
+      toast.success("Card melhorado com IA!");
+      onRefresh();
+    } catch {
+      toast.error("Erro de conexao com IA.");
+    } finally {
+      setMelhorandoIA(false);
+    }
+  }
 
   const etiquetasDoCartao = useMemo(() => etiquetas.filter((e) => etiquetaIds.includes(e.id)), [etiquetas, etiquetaIds]);
   const membrosDoCartao = useMemo(() => membros.filter((m) => membroIds.includes(m.id)), [membros, membroIds]);
@@ -509,6 +604,23 @@ export function DetalheCartao({
                   <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>+ Criar</span>
                 )}
               </PropertyRow>
+
+              {/* Melhorar com IA */}
+              <button
+                onClick={melhorarComIA}
+                disabled={melhorandoIA}
+                className="w-full flex items-center justify-between py-2.5 px-2 rounded-[8px] group hover:bg-[var(--tf-surface-hover)] disabled:opacity-50"
+                style={{ transition: "background 0.15s ease" }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span style={{ color: "var(--tf-accent)" }}>
+                    {melhorandoIA ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                  </span>
+                  <span className="text-[13px] font-medium" style={{ color: "var(--tf-accent-text)" }}>
+                    {melhorandoIA ? "Melhorando..." : "Melhorar com IA"}
+                  </span>
+                </div>
+              </button>
 
               {/* Activity summary */}
               {(anexos.length > 0 || comentarios.length > 0) && (

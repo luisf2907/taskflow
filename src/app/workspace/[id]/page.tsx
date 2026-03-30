@@ -1007,11 +1007,11 @@ export default function PaginaWorkspace() {
                     </button>
                     <button
                       onClick={() => setModalIA(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-[8px] transition-smooth"
-                      style={{ background: "linear-gradient(135deg, var(--tf-accent), #8B5CF6)", color: "#fff" }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-[8px] transition-smooth border"
+                      style={{ borderColor: "var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-surface)" }}
                       title="Gerar cards com IA"
                     >
-                      <Sparkles size={14} /> IA
+                      <Sparkles size={14} style={{ color: "var(--tf-accent)" }} /> IA
                     </button>
                   </div>
                 </div>
