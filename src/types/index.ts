@@ -272,3 +272,31 @@ export interface AutomacaoLog {
   erro: string | null;
   criado_em: string;
 }
+
+// =============================================
+// PLANNING POKER
+// =============================================
+export type PokerStatus = "votando" | "revelado" | "finalizado";
+
+export const POKER_VALORES = ["0", "1", "2", "3", "5", "8", "13", "21", "?", "cafe"] as const;
+export type PokerValor = (typeof POKER_VALORES)[number];
+
+export interface PokerSessao {
+  id: string;
+  workspace_id: string;
+  cartao_id: string;
+  criado_por: string;
+  status: PokerStatus;
+  resultado_final: number | null;
+  criado_em: string;
+  atualizado_em: string;
+}
+
+export interface PokerVoto {
+  id: string;
+  sessao_id: string;
+  membro_id: string;
+  user_id: string;
+  valor: string;
+  criado_em: string;
+}

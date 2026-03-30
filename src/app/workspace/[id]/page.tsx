@@ -25,6 +25,7 @@ import { MetricasWorkspace } from "@/components/workspace/metricas";
 import { TimelineView } from "@/components/workspace/timeline-view";
 import { AutomacoesConfig } from "@/components/workspace/automacoes-config";
 import AtividadesFeed from "@/components/workspace/atividades-feed";
+import { PlanningPokerModal } from "@/components/planning-poker/planning-poker-modal";
 import { useRealtimeWorkspace } from "@/hooks/use-realtime";
 import { supabase } from "@/lib/supabase/client";
 import { useColunas } from "@/hooks/use-colunas";
@@ -68,6 +69,7 @@ import {
   ExternalLink,
   X,
   Zap,
+  Layers,
 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -376,7 +378,7 @@ function formatarData(data: string | null): string {
 }
 
 function BacklogRow({
-  tarefa, sprints, etiquetas, isLast, onAssociar, onDesassociar, onMover, onExcluir, onClick,
+  tarefa, sprints, etiquetas, isLast, onAssociar, onDesassociar, onMover, onExcluir, onClick, onEstimar,
 }: {
   tarefa: CartaoBacklog;
   sprints: Quadro[];
@@ -387,6 +389,7 @@ function BacklogRow({
   onMover: (cartaoId: string, quadroIdOriginal: string, quadroIdNovo: string) => void;
   onExcluir: (cartaoId: string) => void;
   onClick: () => void;
+  onEstimar?: (cartaoId: string) => void;
 }) {
   const [seletor, setSeletor] = useState(false);
   const noSprint = !tarefa.coluna_id;
@@ -508,6 +511,18 @@ function BacklogRow({
         </div>
       )}
 
+      {/* Estimar com Poker */}
+      {onEstimar && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onEstimar(tarefa.id); }}
+          className="p-1 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth shrink-0"
+          style={{ color: "var(--tf-text-tertiary)" }}
+          title="Estimar com Planning Poker"
+        >
+          <Layers size={13} />
+        </button>
+      )}
+
       {/* Excluir */}
       <button
         onClick={(e) => { e.stopPropagation(); onExcluir(tarefa.id); }}
@@ -611,6 +626,10 @@ export default function PaginaWorkspace() {
   const [criandoTarefa, setCriandoTarefa] = useState(false);
   const [cartaoSelecionado, setCartaoSelecionado] = useState<CartaoComResumo | null>(null);
   const [arrastando, setArrastando] = useState<CartaoBacklog | null>(null);
+
+  // Planning Poker
+  const [pokerAberto, setPokerAberto] = useState(false);
+  const [pokerCartaoId, setPokerCartaoId] = useState<string | null>(null);
 
   const dndSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -963,15 +982,25 @@ export default function PaginaWorkspace() {
                   <h2 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>
                     Todas as tarefas do workspace
                   </h2>
-                  {!criandoTarefa && (
+                  <div className="flex items-center gap-2">
+                    {!criandoTarefa && (
+                      <button
+                        onClick={() => setCriandoTarefa(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold text-white rounded-[8px] transition-smooth"
+                        style={{ background: "var(--tf-accent)" }}
+                      >
+                        <Plus size={14} /> Nova tarefa
+                      </button>
+                    )}
                     <button
-                      onClick={() => setCriandoTarefa(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold text-white rounded-[8px] transition-smooth"
-                      style={{ background: "var(--tf-accent)" }}
+                      onClick={() => { setPokerCartaoId(null); setPokerAberto(true); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-[8px] transition-smooth border"
+                      style={{ borderColor: "var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-surface)" }}
+                      title="Planning Poker"
                     >
-                      <Plus size={14} /> Nova tarefa
+                      <Layers size={14} /> Poker
                     </button>
-                  )}
+                  </div>
                 </div>
 
                 {/* Form criar tarefa */}
@@ -1020,7 +1049,7 @@ export default function PaginaWorkspace() {
                     {backlogPuro.length > 0 ? (
                       <div className="flex flex-col gap-2.5">
                         {backlogPuro.map((tarefa, i) => (
-                          <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === backlogPuro.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
+                          <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === backlogPuro.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} onEstimar={(id) => { setPokerCartaoId(id); setPokerAberto(true); }} />
                         ))}
                       </div>
                     ) : (
@@ -1052,7 +1081,7 @@ export default function PaginaWorkspace() {
                         {tarefas.length > 0 ? (
                           <div className="flex flex-col gap-2.5">
                             {tarefas.map((tarefa, i) => (
-                              <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
+                              <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} onEstimar={(id) => { setPokerCartaoId(id); setPokerAberto(true); }} />
                             ))}
                           </div>
                         ) : (
@@ -1080,7 +1109,7 @@ export default function PaginaWorkspace() {
                       </div>
                       <div className="flex flex-col gap-2.5 opacity-80 mix-blend-luminosity">
                         {tarefas.map((tarefa, i) => (
-                          <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} />
+                          <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} onEstimar={(id) => { setPokerCartaoId(id); setPokerAberto(true); }} />
                         ))}
                       </div>
                     </section>
@@ -1763,6 +1792,14 @@ export default function PaginaWorkspace() {
         onExcluirEtiqueta={excluirEtiquetaWs}
         onCriarMembro={criarMembroWs}
         onRefresh={buscarBacklog}
+      />
+
+      {/* Planning Poker */}
+      <PlanningPokerModal
+        aberto={pokerAberto}
+        onFechar={() => { setPokerAberto(false); setPokerCartaoId(null); }}
+        workspaceId={workspaceId}
+        cartaoInicialId={pokerCartaoId}
       />
 
       {/* Modal: Nova Sprint */}
