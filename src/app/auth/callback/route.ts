@@ -2,9 +2,9 @@ import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 function sanitizeRedirectPath(next: string | null): string {
-  if (!next) return "/";
+  if (!next) return "/dashboard";
   // Prevent open redirect: only allow relative paths starting with /
-  if (!next.startsWith("/") || next.startsWith("//")) return "/";
+  if (!next.startsWith("/") || next.startsWith("//")) return "/dashboard";
   return next;
 }
 

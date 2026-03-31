@@ -127,7 +127,7 @@ function LoginContent() {
       provider: "github",
       options: {
         scopes: "repo",
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     });
     if (error) {
