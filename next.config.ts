@@ -2,12 +2,29 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
 
+// Extrair dominio do Supabase da env para CSP dinamico
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
+const supabaseHost = new URL(supabaseUrl).hostname;
+const isSupabaseCloud = supabaseHost.endsWith(".supabase.co");
+
+// CSP: permitir tanto *.supabase.co quanto self-hosted
+const supabaseConnectSrc = isSupabaseCloud
+  ? "https://*.supabase.co wss://*.supabase.co"
+  : `${supabaseUrl} wss://${supabaseHost}`;
+const supabaseImgSrc = isSupabaseCloud
+  ? "https://*.supabase.co"
+  : `${supabaseUrl}`;
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "**.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: supabaseHost,
       },
       {
         protocol: "https",
@@ -38,9 +55,9 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://*.supabase.co https://avatars.githubusercontent.com https://github.com",
+              `img-src 'self' data: blob: ${supabaseImgSrc} https://avatars.githubusercontent.com https://github.com`,
               "font-src 'self' https://fonts.gstatic.com",
-              `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.github.com${isDev ? " ws://localhost:*" : ""}`,
+              `connect-src 'self' ${supabaseConnectSrc} https://api.github.com${isDev ? " ws://localhost:*" : ""}`,
               "frame-ancestors 'none'",
             ].join("; "),
           },
