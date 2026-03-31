@@ -7,9 +7,22 @@ import useSWR, { mutate as globalMutate } from "swr";
 const CHAVE = "workspaces";
 
 async function fetcher() {
+  // Buscar apenas workspaces onde o usuario e membro
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [] as Workspace[];
+
+  const { data: memberships } = await supabase
+    .from("workspace_usuarios")
+    .select("workspace_id")
+    .eq("user_id", user.id);
+
+  if (!memberships || memberships.length === 0) return [] as Workspace[];
+
+  const wsIds = memberships.map((m) => m.workspace_id);
   const { data } = await supabase
     .from("workspaces")
     .select("*")
+    .in("id", wsIds)
     .order("nome");
   return (data || []) as Workspace[];
 }

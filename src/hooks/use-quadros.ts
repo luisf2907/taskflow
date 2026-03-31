@@ -8,9 +8,22 @@ import useSWR, { mutate as globalMutate } from "swr";
 const CHAVE = "quadros";
 
 async function fetcher() {
+  // Buscar apenas quadros dos workspaces onde o usuario e membro
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [] as Quadro[];
+
+  const { data: memberships } = await supabase
+    .from("workspace_usuarios")
+    .select("workspace_id")
+    .eq("user_id", user.id);
+
+  if (!memberships || memberships.length === 0) return [] as Quadro[];
+
+  const wsIds = memberships.map((m) => m.workspace_id);
   const { data } = await supabase
     .from("quadros")
     .select("*")
+    .in("workspace_id", wsIds)
     .order("criado_em", { ascending: false });
   return (data || []) as Quadro[];
 }
