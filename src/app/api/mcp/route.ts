@@ -85,7 +85,7 @@ const tools: ToolDef[] = [
   },
   {
     name: "create_card",
-    description: "Criar um novo card no backlog. Pode incluir etiquetas (por nome, cria se nao existir) e checklists com itens.",
+    description: "Criar um novo card no backlog. Use esta tool diretamente para criar cards — voce mesmo define titulo, descricao, etiquetas e checklists. NAO use generate_cards ou enhance_card para isso, essas sao para o usuario do app usar via IA Gemini.",
     inputSchema: {
       type: "object",
       properties: {
@@ -119,7 +119,7 @@ const tools: ToolDef[] = [
   },
   {
     name: "update_card",
-    description: "Atualizar campos de um card. Pode adicionar etiquetas e checklists.",
+    description: "Atualizar campos de um card existente. Voce pode adicionar etiquetas por nome e checklists com itens diretamente — nao precisa usar enhance_card para isso.",
     inputSchema: {
       type: "object",
       properties: {
@@ -332,7 +332,7 @@ const tools: ToolDef[] = [
   // ─── IA ───
   {
     name: "generate_cards",
-    description: "Usar IA para quebrar texto em multiplos cards no backlog",
+    description: "Usar IA Gemini para quebrar texto livre em multiplos cards (uso interno do app). Prefira criar cards diretamente com create_card se voce ja sabe os detalhes.",
     inputSchema: {
       type: "object",
       properties: { texto: { type: "string", description: "Texto descrevendo as tarefas" } },
@@ -345,7 +345,7 @@ const tools: ToolDef[] = [
   },
   {
     name: "enhance_card",
-    description: "Usar IA para melhorar descricao, checklists e etiquetas de um card",
+    description: "Usar IA Gemini para melhorar um card existente (uso interno do app). Prefira update_card se voce mesmo quer editar o card.",
     inputSchema: {
       type: "object",
       properties: { card_id: { type: "string", description: "ID do card" } },
