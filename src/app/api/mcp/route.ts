@@ -154,6 +154,24 @@ const tools: ToolDef[] = [
     },
   },
   {
+    name: "toggle_checklist_item",
+    description: "Marcar/desmarcar um item de checklist como concluido. Use get_card primeiro para ver os IDs dos checklist_itens.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        item_id: { type: "string", description: "ID do item de checklist" },
+        concluido: { type: "boolean", description: "true para marcar como feito, false para desmarcar. Se omitido, faz toggle." },
+      },
+      required: ["item_id"],
+    },
+    handler: async (params, apiKey, baseUrl) => {
+      const body: Record<string, unknown> = {};
+      if (typeof params.concluido === "boolean") body.concluido = params.concluido;
+      const res = await callV1("PATCH", `checklist-items/${params.item_id}`, apiKey, baseUrl, body);
+      return JSON.stringify(res.data, null, 2);
+    },
+  },
+  {
     name: "move_card",
     description: "Mover card entre colunas, sprints ou backlog",
     inputSchema: {

@@ -61,6 +61,9 @@ const routes: Array<{ method: string; pattern: string[]; handler: Handler }> = [
   { method: "POST", pattern: ["cards", "*", "start-work"], handler: handleStartWork },
   { method: "POST", pattern: ["cards", "*", "finish-work"], handler: handleFinishWork },
 
+  // Checklists
+  { method: "PATCH", pattern: ["checklist-items", "*"], handler: handleToggleChecklistItem },
+
   // Sprints
   { method: "GET", pattern: ["sprints"], handler: handleListSprints },
   { method: "GET", pattern: ["sprints", "*", "summary"], handler: handleSprintSummary },
@@ -457,6 +460,43 @@ async function handleDeleteCard(_auth: ApiKeyAuth, _req: Request, params: string
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });
+}
+
+async function handleToggleChecklistItem(_auth: ApiKeyAuth, request: Request, params: string[]) {
+  const [itemId] = params;
+  const body = await getBody(request);
+  const service = getService();
+
+  // Se body tem "concluido", usar esse valor. Senao, fazer toggle.
+  if (body && typeof body.concluido === "boolean") {
+    const { data, error } = await service
+      .from("checklist_itens")
+      .update({ concluido: body.concluido })
+      .eq("id", itemId)
+      .select()
+      .single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ data });
+  }
+
+  // Toggle: buscar estado atual e inverter
+  const { data: item } = await service
+    .from("checklist_itens")
+    .select("id, concluido")
+    .eq("id", itemId)
+    .single();
+
+  if (!item) return NextResponse.json({ error: "Item nao encontrado" }, { status: 404 });
+
+  const { data, error } = await service
+    .from("checklist_itens")
+    .update({ concluido: !item.concluido })
+    .eq("id", itemId)
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ data });
 }
 
 async function handleMoveCard(auth: ApiKeyAuth, request: Request, params: string[]) {
