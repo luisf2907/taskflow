@@ -61,12 +61,12 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
     etiquetas,
     criar: criarEtiqueta,
     excluir: excluirEtiqueta,
-  } = useEtiquetasWorkspace(workspaceId || `quadro-${quadroId}`);
+  } = useEtiquetasWorkspace(workspaceId || "");
 
   const {
     membros,
     criar: criarMembro,
-  } = useMembrosWorkspace(workspaceId || `quadro-${quadroId}`);
+  } = useMembrosWorkspace(workspaceId || "");
 
   const [cartaoSelecionado, setCartaoSelecionado] =
     useState<CartaoComResumo | null>(null);

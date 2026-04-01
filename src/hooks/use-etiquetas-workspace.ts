@@ -9,7 +9,7 @@ function chave(workspaceId: string) {
 }
 
 export function useEtiquetasWorkspace(workspaceId: string) {
-  const key = chave(workspaceId);
+  const key = workspaceId ? chave(workspaceId) : null;
 
   const { data: etiquetas = [], isLoading: carregando } = useSWR(key, async () => {
     const { data } = await supabase

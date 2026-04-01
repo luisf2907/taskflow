@@ -15,7 +15,7 @@ function chave(workspaceId: string) {
 }
 
 export function useMembrosWorkspace(workspaceId: string) {
-  const key = chave(workspaceId);
+  const key = workspaceId ? chave(workspaceId) : null;
   const sincronizou = useRef(false);
 
   const { data: membros = [], isLoading: carregando } = useSWR(key, async () => {
