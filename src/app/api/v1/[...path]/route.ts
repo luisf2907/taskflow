@@ -640,14 +640,25 @@ async function handleFinishWork(auth: ApiKeyAuth, request: Request, params: stri
     return NextResponse.json({ error: `Erro ao criar PR: ${prResult.error}` }, { status: 500 });
   }
 
-  // Salvar PR no card
+  // Salvar PR no card (incluindo pr_repo_id)
   if (prResult.data) {
     const pr = prResult.data as { number: number; html_url: string; user?: { login: string } };
+
+    // Buscar repo_id pelo owner/nome
+    const { data: repoData } = await service
+      .from("repositorios")
+      .select("id")
+      .eq("owner", prOwner)
+      .eq("nome", prRepo)
+      .eq("workspace_id", auth.workspaceId)
+      .maybeSingle();
+
     await service.from("cartoes").update({
       pr_numero: pr.number,
       pr_url: pr.html_url,
       pr_status: "open",
       pr_autor: pr.user?.login || null,
+      pr_repo_id: repoData?.id || card.pr_repo_id || null,
     }).eq("id", cardId);
   }
 
