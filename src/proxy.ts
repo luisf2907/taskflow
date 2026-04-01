@@ -45,10 +45,14 @@ export async function proxy(request: NextRequest) {
   }
 
   // Protected routes: redirect to login if not authenticated
+  // API v1 and MCP use their own auth (API keys), skip middleware redirect
   if (
     !user &&
     !pathname.startsWith("/login") &&
-    !pathname.startsWith("/auth")
+    !pathname.startsWith("/auth") &&
+    !pathname.startsWith("/api/v1") &&
+    !pathname.startsWith("/api/mcp") &&
+    !pathname.startsWith("/api/api-keys")
   ) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
