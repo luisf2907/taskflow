@@ -205,7 +205,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
       .select("id")
       .eq("pr_repo_id", repoId)
       .eq("pr_numero", prNumber)
-      .single();
+      .maybeSingle();
 
     if (!card) {
       setErro("Nenhum card vinculado a este PR. Configure o webhook primeiro.");
@@ -239,7 +239,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
       .select("id")
       .eq("pr_repo_id", repoId)
       .eq("pr_numero", prNumber)
-      .single();
+      .maybeSingle();
 
     if (!card) {
       setErro("Nenhum card vinculado a este PR.");
