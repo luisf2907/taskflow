@@ -1,5 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server";
-import { applyRateLimit, validateBody } from "@/lib/api-utils";
+import { applyRateLimit, validateBody, stripFormatting } from "@/lib/api-utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -35,7 +35,8 @@ REGRAS:
    - "etiqueta_ids": array de IDs de etiquetas que se aplicam (pode ser vazio)
 3. Minimo 1 card, maximo 10 cards
 4. Nao repita cards nem invente funcionalidades nao mencionadas
-5. Retorne APENAS JSON array valido${etiquetasSection}
+5. Retorne APENAS JSON array valido
+6. FORMATACAO: Use APENAS texto plano. Proibido: markdown (**, ##, -, *, \`, [], ()), emojis, HTML. Use quebras de linha simples (\\n) para separar paragrafos.${etiquetasSection}
 
 EXEMPLO:
 [
@@ -117,11 +118,11 @@ export async function POST(request: NextRequest) {
     // Sanitize and validate each card
     const FIBONACCI = [1, 2, 3, 5, 8, 13];
     const sanitized = cards.slice(0, 10).map((card) => ({
-      titulo: String(card.titulo || "").trim().slice(0, 200),
-      descricao: String(card.descricao || "").trim().slice(0, 2000),
+      titulo: stripFormatting(String(card.titulo || "")).slice(0, 200),
+      descricao: stripFormatting(String(card.descricao || "")).slice(0, 2000),
       peso: FIBONACCI.includes(card.peso) ? card.peso : 3,
       checklist: Array.isArray(card.checklist)
-        ? card.checklist.slice(0, 10).map((item: unknown) => String(item || "").trim()).filter((s: string) => s.length > 0)
+        ? card.checklist.slice(0, 10).map((item: unknown) => stripFormatting(String(item || ""))).filter((s: string) => s.length > 0)
         : [],
       etiqueta_ids: Array.isArray(card.etiqueta_ids)
         ? card.etiqueta_ids.filter((id: unknown) => typeof id === "string" && etiquetaIdsValidos.has(id))

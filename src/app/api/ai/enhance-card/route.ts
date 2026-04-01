@@ -1,5 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server";
-import { applyRateLimit, validateBody } from "@/lib/api-utils";
+import { applyRateLimit, validateBody, stripFormatting } from "@/lib/api-utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -43,6 +43,7 @@ REGRAS:
 3. "etiqueta_ids": array COMPLETO de IDs de etiquetas que devem estar no card (incluindo as ja atribuidas se fizerem sentido, mais novas se aplicavel). Se nenhuma se encaixar, retorne array vazio.
 4. "peso_sugerido": se nao tem peso definido, sugira em fibonacci (1,2,3,5,8,13). Se ja tem, retorne null.
 5. Retorne APENAS um JSON object valido
+6. FORMATACAO: Use APENAS texto plano. Proibido: markdown (**, ##, -, *, \`, [], ()), emojis, HTML. Use quebras de linha simples (\\n) para separar paragrafos.
 
 EXEMPLO:
 {
@@ -102,9 +103,9 @@ export async function POST(request: NextRequest) {
     const FIBONACCI = [1, 2, 3, 5, 8, 13];
 
     const sanitized = {
-      descricao: String(data.descricao || "").trim().slice(0, 5000),
+      descricao: stripFormatting(String(data.descricao || "")).slice(0, 5000),
       checklist_novos: Array.isArray(data.checklist_novos)
-        ? data.checklist_novos.slice(0, 10).map((i: unknown) => String(i || "").trim()).filter((s: string) => s.length > 0)
+        ? data.checklist_novos.slice(0, 10).map((i: unknown) => stripFormatting(String(i || ""))).filter((s: string) => s.length > 0)
         : [],
       etiqueta_ids: Array.isArray(data.etiqueta_ids)
         ? data.etiqueta_ids.filter((id: unknown) => typeof id === "string" && idsValidos.has(id))
