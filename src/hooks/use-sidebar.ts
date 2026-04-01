@@ -1,26 +1,45 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
+
+const STORAGE_KEY = "tf_sidebar_aberta";
+
+// Leitura sincrona do localStorage — sem flash
+function getSnapshot(): boolean {
+  if (typeof window === "undefined") return true;
+  const salva = localStorage.getItem(STORAGE_KEY);
+  return salva === null ? true : salva === "true";
+}
+
+function getServerSnapshot(): boolean {
+  return true; // SSR default: sidebar aberta
+}
+
+function subscribe(callback: () => void) {
+  // Escutar mudancas no localStorage (outras tabs)
+  const handler = (e: StorageEvent) => {
+    if (e.key === STORAGE_KEY) callback();
+  };
+  window.addEventListener("storage", handler);
+
+  // Escutar mudancas locais via evento custom
+  window.addEventListener("tf-sidebar-change", callback);
+
+  return () => {
+    window.removeEventListener("storage", handler);
+    window.removeEventListener("tf-sidebar-change", callback);
+  };
+}
 
 export function useSidebar() {
-  const [aberta, setAberta] = useState<boolean>(true);
-  const [iniciado, setIniciado] = useState(false);
+  const aberta = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  useEffect(() => {
-    const salva = localStorage.getItem("tf_sidebar_aberta");
-    if (salva !== null) {
-      setAberta(salva === "true");
-    }
-    setIniciado(true);
+  const toggleSidebar = useCallback(() => {
+    const next = !getSnapshot();
+    localStorage.setItem(STORAGE_KEY, String(next));
+    window.dispatchEvent(new Event("tf-sidebar-change"));
   }, []);
 
-  const toggleSidebar = () => {
-    setAberta((prev) => {
-      const next = !prev;
-      localStorage.setItem("tf_sidebar_aberta", String(next));
-      return next;
-    });
-  };
-
-  return { sidebarAberta: aberta, toggleSidebar, iniciado };
+  // Sempre iniciado — sem flash
+  return { sidebarAberta: aberta, toggleSidebar, iniciado: true };
 }

@@ -107,7 +107,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
       {/* Right side: Tools & Profile */}
       <div className="flex items-center gap-2 sm:gap-4">
         {/* Notifications */}
-        {user && <NotificationBell />}
+        <NotificationBell />
 
         {/* Toggle Theme */}
         <button
@@ -121,80 +121,88 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
         </button>
 
         {/* Profile Pill */}
-        {user && (
-          <div className="relative flex items-center justify-center">
-            <button
-              onClick={() => setMenuAberto(!menuAberto)}
-              aria-label="Menu do perfil"
-              aria-expanded={menuAberto}
-              aria-haspopup="true"
-              className="flex items-center gap-2.5 pr-3 sm:pr-5 pl-2 py-2 rounded-[20px] transition-all hover:-translate-y-0.5 border"
-              style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)" }}
-            >
-              {avatar ? (
-                <img src={avatar} alt={nome} className="w-8 h-8 rounded-[14px] shrink-0" />
-              ) : (
-                <div
-                  className="w-8 h-8 rounded-[14px] flex items-center justify-center text-[12px] font-black shrink-0"
-                  style={{ background: "var(--tf-accent)", color: "white" }}
-                >
-                  {iniciais || <User size={14} strokeWidth={2.5} />}
-                </div>
-              )}
-              <span className="hidden sm:inline text-[14px] font-bold tracking-tight" style={{ color: "var(--tf-text)" }}>
-                {nome || "Conta"}
-              </span>
-              <svg className="w-3.5 h-3.5 ml-1 transition-transform" style={{ color: "var(--tf-text-tertiary)", transform: menuAberto ? "rotate(180deg)" : "none" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {/* Dropdown Menu */}
-            {menuAberto && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setMenuAberto(false)} />
-                <div
-                  ref={menuRef}
-                  role="menu"
-                  onKeyDown={handleMenuKeyDown}
-                  className="absolute top-[calc(100%+12px)] left-1/2 z-50 w-56 rounded-[20px] p-2.5 origin-top border"
-                  style={{
-                    marginLeft: "-112px",
-                    background: "var(--tf-surface)",
-                    borderColor: "var(--tf-border)",
-                    animation: "dropdownExpandDown 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards"
-                  }}
-                >
-                  <div className="px-4 py-3 mb-2.5 rounded-[14px]" style={{ background: "var(--tf-bg)" }}>
-                    <p className="text-[15px] font-bold tracking-tight truncate" style={{ color: "var(--tf-text)" }}>{nome}</p>
-                    <p className="text-[12px] font-medium truncate mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>{user.email}</p>
+        <div className="relative flex items-center justify-center">
+          {user ? (
+            <>
+              <button
+                onClick={() => setMenuAberto(!menuAberto)}
+                aria-label="Menu do perfil"
+                aria-expanded={menuAberto}
+                aria-haspopup="true"
+                className="flex items-center gap-2.5 pr-3 sm:pr-5 pl-2 py-2 rounded-[20px] transition-all hover:-translate-y-0.5 border"
+                style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)" }}
+              >
+                {avatar ? (
+                  <img src={avatar} alt={nome} className="w-8 h-8 rounded-[14px] shrink-0" />
+                ) : (
+                  <div
+                    className="w-8 h-8 rounded-[14px] flex items-center justify-center text-[12px] font-black shrink-0"
+                    style={{ background: "var(--tf-accent)", color: "white" }}
+                  >
+                    {iniciais || <User size={14} strokeWidth={2.5} />}
                   </div>
+                )}
+                <span className="hidden sm:inline text-[14px] font-bold tracking-tight" style={{ color: "var(--tf-text)" }}>
+                  {nome || "Conta"}
+                </span>
+                <svg className="w-3.5 h-3.5 ml-1 transition-transform" style={{ color: "var(--tf-text-tertiary)", transform: menuAberto ? "rotate(180deg)" : "none" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
-                  <Link
-                    href="/settings"
-                    role="menuitem"
-                    tabIndex={0}
-                    onClick={() => setMenuAberto(false)}
-                    className="flex items-center gap-2.5 px-4 py-3 rounded-[14px] text-[13px] font-bold hover-menu-item"
-                    style={{ color: "var(--tf-text-secondary)" }}
+              {/* Dropdown Menu */}
+              {menuAberto && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setMenuAberto(false)} />
+                  <div
+                    ref={menuRef}
+                    role="menu"
+                    onKeyDown={handleMenuKeyDown}
+                    className="absolute top-[calc(100%+12px)] left-1/2 z-50 w-56 rounded-[20px] p-2.5 origin-top border"
+                    style={{
+                      marginLeft: "-112px",
+                      background: "var(--tf-surface)",
+                      borderColor: "var(--tf-border)",
+                      animation: "dropdownExpandDown 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards"
+                    }}
                   >
-                    <User size={15} /> Configurações
-                  </Link>
+                    <div className="px-4 py-3 mb-2.5 rounded-[14px]" style={{ background: "var(--tf-bg)" }}>
+                      <p className="text-[15px] font-bold tracking-tight truncate" style={{ color: "var(--tf-text)" }}>{nome}</p>
+                      <p className="text-[12px] font-medium truncate mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>{user.email}</p>
+                    </div>
 
-                  <button
-                    role="menuitem"
-                    tabIndex={0}
-                    onClick={logout}
-                    className="w-full flex items-center gap-2.5 px-4 py-3 rounded-[14px] text-[13px] font-bold hover-danger-bg mt-1"
-                    style={{ color: "var(--tf-danger)" }}
-                  >
-                    <LogOut size={15} /> Sair
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+                    <Link
+                      href="/settings"
+                      role="menuitem"
+                      tabIndex={0}
+                      onClick={() => setMenuAberto(false)}
+                      className="flex items-center gap-2.5 px-4 py-3 rounded-[14px] text-[13px] font-bold hover-menu-item"
+                      style={{ color: "var(--tf-text-secondary)" }}
+                    >
+                      <User size={15} /> Configurações
+                    </Link>
+
+                    <button
+                      role="menuitem"
+                      tabIndex={0}
+                      onClick={logout}
+                      className="w-full flex items-center gap-2.5 px-4 py-3 rounded-[14px] text-[13px] font-bold hover-danger-bg mt-1"
+                      style={{ color: "var(--tf-danger)" }}
+                    >
+                      <LogOut size={15} /> Sair
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center gap-2.5 pr-5 pl-2 py-2 rounded-[20px] border animate-pulse"
+              style={{ borderColor: "var(--tf-border)" }}>
+              <div className="w-8 h-8 rounded-[14px] shrink-0" style={{ background: "var(--tf-bg-secondary)" }} />
+              <div className="hidden sm:block w-16 h-4 rounded-[8px]" style={{ background: "var(--tf-bg-secondary)" }} />
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
