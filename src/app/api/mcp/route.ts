@@ -119,7 +119,7 @@ const tools: ToolDef[] = [
   },
   {
     name: "update_card",
-    description: "Atualizar campos de um card existente. Voce pode adicionar etiquetas por nome e checklists com itens diretamente — nao precisa usar enhance_card para isso.",
+    description: "Atualizar campos de um card existente (titulo, descricao, peso). Pode ADICIONAR novas etiquetas e NOVOS checklists. ATENCAO: para marcar itens de checklist como concluidos, use toggle_checklist_item — esta tool NAO modifica checklists existentes, apenas adiciona novos.",
     inputSchema: {
       type: "object",
       properties: {
@@ -155,7 +155,7 @@ const tools: ToolDef[] = [
   },
   {
     name: "toggle_checklist_item",
-    description: "Marcar/desmarcar um item de checklist como concluido. Use get_card primeiro para ver os IDs dos checklist_itens.",
+    description: "Marcar/desmarcar um item de checklist como concluido. IMPORTANTE: Esta e a UNICA forma de marcar itens como feitos. Use get_card primeiro para ver os checklist_itens com seus IDs. NAO use update_card para marcar itens — update_card so ADICIONA checklists novos.",
     inputSchema: {
       type: "object",
       properties: {
