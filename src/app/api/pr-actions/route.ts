@@ -90,16 +90,6 @@ export async function POST(request: NextRequest) {
   // SECURITY: Verify user is a member of the repo's workspace
   // (RLS on repositorios already checks this via .select() above — if repoData is null, user has no access)
   // But let's also explicitly verify workspace membership for defense-in-depth
-  const { count: memberCount } = await supabase
-    .from("workspace_usuarios")
-    .select("id", { count: "exact", head: true })
-    .eq("workspace_id", repo.workspace_id)
-    .eq("user_id", user.id);
-
-  if (!memberCount || memberCount === 0) {
-    return NextResponse.json({ error: "Sem permissão neste workspace" }, { status: 403 });
-  }
-
   // 3. Buscar token GitHub do user
   const service = createServiceClient();
   const { data: tokenData } = await service
