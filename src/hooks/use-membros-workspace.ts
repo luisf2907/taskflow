@@ -85,7 +85,7 @@ export function useMembrosWorkspace(workspaceId: string) {
 
       const { data: criados } = await supabase
         .from("membros")
-        .upsert(inserts, { onConflict: "user_id,workspace_id", ignoreDuplicates: true })
+        .insert(inserts)
         .select();
 
       if (criados && criados.length > 0) {
