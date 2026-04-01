@@ -83,13 +83,15 @@ export function useMembrosWorkspace(workspaceId: string) {
         user_id: p.id,
       }));
 
-      const { data: criados } = await supabase
-        .from("membros")
-        .insert(inserts)
-        .select();
+      // Insert um por um para ignorar conflitos silenciosamente
+      const criados = [];
+      for (const ins of inserts) {
+        const { data } = await supabase.from("membros").insert(ins).select().single();
+        if (data) criados.push(data);
+      }
 
-      if (criados && criados.length > 0) {
-        globalMutate(key, [...membros, ...criados.filter((c) => !membrosExistentes.has(c.user_id))], false);
+      if (criados.length > 0) {
+        globalMutate(key, [...membros, ...criados], false);
       }
     })();
   }, [carregando, workspaceId, membros, key]);
