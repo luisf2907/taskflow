@@ -85,13 +85,30 @@ const tools: ToolDef[] = [
   },
   {
     name: "create_card",
-    description: "Criar um novo card no backlog",
+    description: "Criar um novo card no backlog. Pode incluir etiquetas (por nome, cria se nao existir) e checklists com itens.",
     inputSchema: {
       type: "object",
       properties: {
         titulo: { type: "string", description: "Titulo do card" },
-        descricao: { type: "string", description: "Descricao do card" },
-        peso: { type: "number", description: "Story points" },
+        descricao: { type: "string", description: "Descricao do card (user story, contexto tecnico)" },
+        peso: { type: "number", description: "Story points (fibonacci: 1,2,3,5,8,13,21)" },
+        etiquetas: {
+          type: "array",
+          items: { type: "string" },
+          description: "Nomes de etiquetas (ex: ['bug', 'frontend', 'urgente']). Cria automaticamente se nao existir no workspace.",
+        },
+        checklists: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              titulo: { type: "string", description: "Titulo do checklist (ex: 'Criterios de Aceitacao')" },
+              itens: { type: "array", items: { type: "string" }, description: "Itens do checklist" },
+            },
+            required: ["titulo", "itens"],
+          },
+          description: "Checklists com itens (ex: criterios de aceitacao, tarefas tecnicas)",
+        },
       },
       required: ["titulo"],
     },
@@ -102,7 +119,7 @@ const tools: ToolDef[] = [
   },
   {
     name: "update_card",
-    description: "Atualizar campos de um card",
+    description: "Atualizar campos de um card. Pode adicionar etiquetas e checklists.",
     inputSchema: {
       type: "object",
       properties: {
@@ -110,6 +127,23 @@ const tools: ToolDef[] = [
         titulo: { type: "string", description: "Novo titulo" },
         descricao: { type: "string", description: "Nova descricao" },
         peso: { type: "number", description: "Novos story points" },
+        etiquetas: {
+          type: "array",
+          items: { type: "string" },
+          description: "Nomes de etiquetas para adicionar (cria se nao existir)",
+        },
+        checklists: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              titulo: { type: "string" },
+              itens: { type: "array", items: { type: "string" } },
+            },
+            required: ["titulo", "itens"],
+          },
+          description: "Checklists para adicionar ao card",
+        },
       },
       required: ["card_id"],
     },

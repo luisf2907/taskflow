@@ -301,11 +301,71 @@ async function handleCreateCard(auth: ApiKeyAuth, request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Associar etiquetas se fornecidas
-  if (body.etiqueta_ids?.length > 0 && data) {
-    await service.from("cartao_etiquetas").insert(
-      body.etiqueta_ids.map((eid: string) => ({ cartao_id: data.id, etiqueta_id: eid }))
-    );
+  if (data) {
+    // Associar etiquetas se fornecidas
+    if (body.etiqueta_ids?.length > 0) {
+      await service.from("cartao_etiquetas").insert(
+        body.etiqueta_ids.map((eid: string) => ({ cartao_id: data.id, etiqueta_id: eid }))
+      );
+    }
+
+    // Criar etiquetas por nome (se nao existem, cria no workspace)
+    if (body.etiquetas?.length > 0) {
+      const cores = ["#EF4444", "#F97316", "#EAB308", "#22C55E", "#3B82F6", "#6366F1", "#A855F7", "#EC4899"];
+      for (let i = 0; i < body.etiquetas.length; i++) {
+        const nome = body.etiquetas[i] as string;
+        // Buscar existente
+        const { data: existente } = await service
+          .from("etiquetas")
+          .select("id")
+          .eq("workspace_id", auth.workspaceId)
+          .eq("nome", nome)
+          .limit(1)
+          .maybeSingle();
+
+        let etiquetaId = existente?.id;
+
+        // Criar se nao existe
+        if (!etiquetaId) {
+          const { data: nova } = await service
+            .from("etiquetas")
+            .insert({ nome, cor: cores[i % cores.length], workspace_id: auth.workspaceId })
+            .select("id")
+            .single();
+          etiquetaId = nova?.id;
+        }
+
+        if (etiquetaId) {
+          await service.from("cartao_etiquetas").insert({ cartao_id: data.id, etiqueta_id: etiquetaId });
+        }
+      }
+    }
+
+    // Criar checklists
+    if (body.checklists?.length > 0) {
+      for (let ci = 0; ci < body.checklists.length; ci++) {
+        const checklist = body.checklists[ci] as { titulo: string; itens: string[] };
+        const titulo = checklist.titulo || "Checklist";
+        const itens = checklist.itens || [];
+
+        const { data: cl } = await service
+          .from("checklists")
+          .insert({ cartao_id: data.id, titulo, posicao: ci })
+          .select("id")
+          .single();
+
+        if (cl && itens.length > 0) {
+          await service.from("checklist_itens").insert(
+            itens.map((texto: string, idx: number) => ({
+              checklist_id: cl.id,
+              texto,
+              concluido: false,
+              posicao: idx,
+            }))
+          );
+        }
+      }
+    }
   }
 
   return NextResponse.json({ data }, { status: 201 });
@@ -333,6 +393,58 @@ async function handleUpdateCard(auth: ApiKeyAuth, request: Request, params: stri
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Card nao encontrado" }, { status: 404 });
+
+  // Adicionar etiquetas por nome
+  if (body.etiquetas?.length > 0) {
+    const cores = ["#EF4444", "#F97316", "#EAB308", "#22C55E", "#3B82F6", "#6366F1", "#A855F7", "#EC4899"];
+    for (let i = 0; i < body.etiquetas.length; i++) {
+      const nome = body.etiquetas[i] as string;
+      const { data: existente } = await service
+        .from("etiquetas")
+        .select("id")
+        .eq("workspace_id", auth.workspaceId)
+        .eq("nome", nome)
+        .limit(1)
+        .maybeSingle();
+
+      let etiquetaId = existente?.id;
+      if (!etiquetaId) {
+        const { data: nova } = await service
+          .from("etiquetas")
+          .insert({ nome, cor: cores[i % cores.length], workspace_id: auth.workspaceId })
+          .select("id")
+          .single();
+        etiquetaId = nova?.id;
+      }
+
+      if (etiquetaId) {
+        await service.from("cartao_etiquetas").upsert(
+          { cartao_id: id, etiqueta_id: etiquetaId },
+          { onConflict: "cartao_id,etiqueta_id", ignoreDuplicates: true }
+        );
+      }
+    }
+  }
+
+  // Adicionar checklists
+  if (body.checklists?.length > 0) {
+    for (let ci = 0; ci < body.checklists.length; ci++) {
+      const checklist = body.checklists[ci] as { titulo: string; itens: string[] };
+      const { data: cl } = await service
+        .from("checklists")
+        .insert({ cartao_id: id, titulo: checklist.titulo || "Checklist", posicao: ci })
+        .select("id")
+        .single();
+
+      if (cl && checklist.itens?.length > 0) {
+        await service.from("checklist_itens").insert(
+          checklist.itens.map((texto: string, idx: number) => ({
+            checklist_id: cl.id, texto, concluido: false, posicao: idx,
+          }))
+        );
+      }
+    }
+  }
 
   return NextResponse.json({ data });
 }
