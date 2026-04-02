@@ -356,7 +356,7 @@ export default function PaginaInicial() {
         <main id="main-content" className="flex-1 overflow-y-auto overflow-x-hidden mb-4 rounded-[32px] relative no-scrollbar flex flex-col xl:flex-row gap-8" style={{ background: "var(--tf-surface)" }}>
 
           {/* Main Left Content */}
-          <div className="flex-1 px-8 pt-10 md:px-12 md:pt-12 flex flex-col relative">
+          <div className="flex-1 min-w-0 px-8 pt-10 md:px-12 md:pt-12 flex flex-col relative">
             {carregando ? (
               <div className="flex-1 space-y-8 animate-pulse pt-4">
                 {/* Hero skeleton */}
