@@ -15,7 +15,10 @@ import { useRepositorios } from "@/hooks/use-repositorios";
 import { useGitHubRepo } from "@/hooks/use-github";
 import { parsearRepo } from "@/lib/github/client";
 import { CartaoComResumo } from "@/hooks/use-cartoes";
-import { DetalheCartao } from "@/components/quadro/detalhe-cartao";
+const DetalheCartao = dynamic(
+  () => import("@/components/quadro/detalhe-cartao").then((m) => m.DetalheCartao),
+  { ssr: false }
+);
 import { RepoFileBrowser } from "@/components/workspace/repo-file-browser";
 import { RepoFileViewer } from "@/components/workspace/repo-file-viewer";
 import { RepoBranches } from "@/components/workspace/repo-branches";
@@ -25,8 +28,15 @@ import { MetricasWorkspace } from "@/components/workspace/metricas";
 import { TimelineView } from "@/components/workspace/timeline-view";
 import { AutomacoesConfig } from "@/components/workspace/automacoes-config";
 import AtividadesFeed from "@/components/workspace/atividades-feed";
-import { PlanningPokerModal } from "@/components/planning-poker/planning-poker-modal";
-import { GerarCardsModal } from "@/components/ai/gerar-cards-modal";
+import dynamic from "next/dynamic";
+const PlanningPokerModal = dynamic(
+  () => import("@/components/planning-poker/planning-poker-modal").then((m) => m.PlanningPokerModal),
+  { ssr: false }
+);
+const GerarCardsModal = dynamic(
+  () => import("@/components/ai/gerar-cards-modal").then((m) => m.GerarCardsModal),
+  { ssr: false }
+);
 import { useRealtimeWorkspace } from "@/hooks/use-realtime";
 import { supabase } from "@/lib/supabase/client";
 import { useColunas } from "@/hooks/use-colunas";
@@ -912,7 +922,7 @@ export default function PaginaWorkspace() {
 
       <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
         <Header onMenuMobile={toggleSidebar} />
-        <main className="flex-1 overflow-y-auto pb-4 no-scrollbar" style={{ background: "transparent" }}>
+        <main id="main-content" className="flex-1 overflow-y-auto pb-4 no-scrollbar" style={{ background: "transparent" }}>
 
           {/* GRID ÚNICO — hero + conteúdo alinhados */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

@@ -135,7 +135,7 @@ export default function PaginaQuadro() {
         <Sidebar quadros={quadros} onNovoQuadro={() => router.push("/dashboard")} aberta={sidebarAberta} onToggle={toggleSidebar} />
       )}
 
-      <div className={`flex-1 flex flex-col overflow-hidden ${telaCheia ? "p-3" : "px-2 lg:px-4"}`}>
+      <main id="main-content" className={`flex-1 flex flex-col overflow-hidden ${telaCheia ? "p-3" : "px-2 lg:px-4"}`}>
         {!telaCheia && <Header onMenuMobile={toggleSidebar} />}
         <div
           className="flex-1 flex flex-col overflow-hidden rounded-[32px]"
@@ -310,7 +310,7 @@ export default function PaginaQuadro() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Modal: Configurar Sprint */}
       <Modal

@@ -236,6 +236,7 @@ export default function SettingsPage() {
         <Header onMenuMobile={toggleSidebar} />
 
         <main
+          id="main-content"
           className="flex-1 overflow-y-auto rounded-[32px] mb-4 no-scrollbar"
           style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
         >

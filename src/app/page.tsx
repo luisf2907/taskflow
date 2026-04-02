@@ -37,7 +37,7 @@ const jsonLd = {
 
 export default function LandingPage() {
   return (
-    <main style={{ background: "var(--tf-bg)" }}>
+    <main id="main-content" style={{ background: "var(--tf-bg)" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

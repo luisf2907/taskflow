@@ -167,11 +167,33 @@ export function extensaoParaLinguagem(filename: string): string {
 // AUTHENTICATED GITHUB API (server-side proxy)
 // =============================================
 
+export interface GitHubRateLimit {
+  remaining: number;
+  limit: number;
+  reset: number; // Unix timestamp
+}
+
+export interface GitHubResponse<T> {
+  data: T | null;
+  status: number;
+  error?: string;
+  rateLimit?: GitHubRateLimit;
+}
+
+function parseRateLimit(res: Response): GitHubRateLimit | undefined {
+  const remaining = res.headers.get("X-RateLimit-Remaining");
+  const limit = res.headers.get("X-RateLimit-Limit");
+  const reset = res.headers.get("X-RateLimit-Reset");
+  if (remaining && limit && reset) {
+    return { remaining: Number(remaining), limit: Number(limit), reset: Number(reset) };
+  }
+}
+
 export async function githubAuthFetch<T>(
   path: string,
   token: string,
   options?: RequestInit
-): Promise<{ data: T | null; status: number; error?: string }> {
+): Promise<GitHubResponse<T>> {
   try {
     const res = await fetch(`${BASE}${path}`, {
       ...options,
@@ -182,12 +204,13 @@ export async function githubAuthFetch<T>(
         ...options?.headers,
       },
     });
+    const rateLimit = parseRateLimit(res);
     if (!res.ok) {
       const err = await res.json().catch(() => ({ message: res.statusText }));
-      return { data: null, status: res.status, error: err.message };
+      return { data: null, status: res.status, error: err.message, rateLimit };
     }
     const data = await res.json().catch(() => null);
-    return { data: data as T, status: res.status };
+    return { data: data as T, status: res.status, rateLimit };
   } catch {
     return { data: null, status: 500, error: "Network error" };
   }
@@ -281,10 +304,13 @@ export async function requestReviewers(
 export async function buscarBranchesAuth(
   owner: string,
   repo: string,
-  token: string
+  token: string,
+  options?: { page?: number; perPage?: number }
 ) {
+  const perPage = options?.perPage ?? 100;
+  const page = options?.page ?? 1;
   return githubAuthFetch<GitHubBranch[]>(
-    `/repos/${owner}/${repo}/branches?per_page=100`,
+    `/repos/${owner}/${repo}/branches?per_page=${perPage}&page=${page}`,
     token
   );
 }
@@ -293,10 +319,13 @@ export async function buscarPRsAuth(
   owner: string,
   repo: string,
   token: string,
-  state: "open" | "closed" | "all" = "open"
+  state: "open" | "closed" | "all" = "open",
+  options?: { page?: number; perPage?: number }
 ) {
+  const perPage = options?.perPage ?? 30;
+  const page = options?.page ?? 1;
   return githubAuthFetch<GitHubPR[]>(
-    `/repos/${owner}/${repo}/pulls?state=${state}&per_page=30&sort=updated&direction=desc`,
+    `/repos/${owner}/${repo}/pulls?state=${state}&per_page=${perPage}&page=${page}&sort=updated&direction=desc`,
     token
   );
 }

@@ -353,7 +353,7 @@ export default function PaginaInicial() {
       <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
         <Header onMenuMobile={toggleSidebar} />
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden mb-4 rounded-[32px] relative no-scrollbar flex flex-col xl:flex-row gap-8" style={{ background: "var(--tf-surface)" }}>
+        <main id="main-content" className="flex-1 overflow-y-auto overflow-x-hidden mb-4 rounded-[32px] relative no-scrollbar flex flex-col xl:flex-row gap-8" style={{ background: "var(--tf-surface)" }}>
 
           {/* Main Left Content */}
           <div className="flex-1 px-8 pt-10 md:px-12 md:pt-12 flex flex-col relative">

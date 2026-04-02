@@ -45,17 +45,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="h-full" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                if (localStorage.getItem('tema') === 'escuro' || (!localStorage.getItem('tema') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.classList.add('dark');
-                }
-              } catch(e) {}
-            `,
-          }}
-        />
+        <script src="/theme-init.js" />
       </head>
       <body
         suppressHydrationWarning
@@ -63,6 +53,13 @@ export default function RootLayout({
       >
         <SWRProvider>
           <ErrorBoundary>
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-medium"
+              style={{ background: "var(--tf-accent)", color: "#fff" }}
+            >
+              Pular para o conteúdo
+            </a>
             <AuthListener />
             <CommandPalette />
             <OfflineBanner />

@@ -76,6 +76,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Repo not connected" }, { status: 404 });
   }
 
+  // Batch load all automations for involved workspaces (avoid N+1 per repo)
+  const workspaceIds = [...new Set(repos.map((r) => r.workspace_id))];
+  const { data: todasAutomacoes } = await service
+    .from("automacoes")
+    .select("*")
+    .in("workspace_id", workspaceIds)
+    .eq("ativo", true);
+  const automacoesPorWs = new Map<string, typeof todasAutomacoes>();
+  for (const a of todasAutomacoes || []) {
+    const lista = automacoesPorWs.get(a.workspace_id) || [];
+    lista.push(a);
+    automacoesPorWs.set(a.workspace_id, lista);
+  }
+
   const results = [];
 
   for (const repo of repos) {
@@ -119,14 +133,10 @@ export async function POST(request: NextRequest) {
         { onConflict: "pr_repo_id,pr_numero" }
       ).select("id").single();
 
-      // Fire pr_opened automations
+      // Fire pr_opened automations (pre-loaded, no N+1)
       if (card) {
-        const { data: automacoes } = await service
-          .from("automacoes")
-          .select("*")
-          .eq("workspace_id", repo.workspace_id)
-          .eq("ativo", true);
-        if (automacoes && automacoes.length > 0) {
+        const automacoes = automacoesPorWs.get(repo.workspace_id) || [];
+        if (automacoes.length > 0) {
           await executarAutomacoes(service, automacoes, {
             tipo: "pr_opened",
             config: {},
@@ -200,14 +210,10 @@ export async function POST(request: NextRequest) {
         .update(updateData)
         .eq("id", cardVinculado.id);
 
-      // Fire automations — pr_merged or pr_closed
+      // Fire automations — pr_merged or pr_closed (pre-loaded, no N+1)
       if (!updateErr) {
-        const { data: automacoes } = await service
-          .from("automacoes")
-          .select("*")
-          .eq("workspace_id", repo.workspace_id)
-          .eq("ativo", true);
-        if (automacoes && automacoes.length > 0) {
+        const automacoes = automacoesPorWs.get(repo.workspace_id) || [];
+        if (automacoes.length > 0) {
           await executarAutomacoes(service, automacoes, {
             tipo: merged ? "pr_merged" : "pr_closed",
             config: {},
