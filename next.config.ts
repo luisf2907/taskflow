@@ -16,11 +16,6 @@ const supabaseImgSrc = isSupabaseCloud
   : `${supabaseUrl}`;
 
 const nextConfig: NextConfig = {
-  experimental: {
-    sri: {
-      algorithm: "sha256",
-    },
-  },
   images: {
     remotePatterns: [
       {
@@ -58,7 +53,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              `script-src 'self'${isDev ? " 'unsafe-eval'" : ""}`,
+              `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
               "style-src 'self' 'unsafe-inline'",
               `img-src 'self' data: blob: ${supabaseImgSrc} https://avatars.githubusercontent.com https://github.com`,
               "font-src 'self' https://fonts.gstatic.com",
