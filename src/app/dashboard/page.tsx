@@ -190,14 +190,14 @@ export default function PaginaInicial() {
     return (
       <button
         onClick={() => router.push(`/quadro/${quadro.id}`)}
-        className="group text-left rounded-[32px] overflow-hidden p-6 relative flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 h-[150px] min-w-[260px] max-w-[300px] flex-shrink-0 snap-start"
+        className="group text-left rounded-[32px] overflow-hidden p-6 relative flex flex-col transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 min-w-[260px] max-w-[300px] flex-shrink-0 snap-start"
         style={{
           background: `linear-gradient(135deg, ${quadro.cor}, ${quadro.cor}dd)`
         }}
       >
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.04] transition-colors duration-300" />
         <div className="relative z-10 w-full">
-          <div justify-start="true" className="flex justify-between items-start mb-3">
+          <div className="flex justify-between items-start mb-3">
             <div className="w-10 h-10 rounded-[14px] bg-white/20 backdrop-blur-md flex items-center justify-center">
               <Grid3X3 size={20} className="text-white" />
             </div>
@@ -207,7 +207,7 @@ export default function PaginaInicial() {
           </h3>
         </div>
 
-        <div className="relative z-10 flex items-center justify-between w-full mt-3">
+        <div className="relative z-10 flex items-center justify-between w-full mt-4">
           <p className="text-white/85 text-[12px] font-bold flex items-center gap-1.5 backdrop-blur-sm bg-black/10 px-3 py-1.5 rounded-full">
             <Clock size={12} />
             {new Date(quadro.atualizado_em).toLocaleDateString("pt-BR", { day: '2-digit', month: 'short' })}
@@ -465,8 +465,8 @@ export default function PaginaInicial() {
                       Acessados Recentemente
                     </h2>
 
-                    {/* Item 3: Scroll Horizontal Nativo Oculto */}
-                    <div className="flex overflow-x-auto gap-4 pt-4 pb-6 snap-x no-scrollbar -mx-8 px-8 md:-mx-12 md:px-12">
+                    {/* Scroll Horizontal */}
+                    <div className="flex overflow-x-auto gap-4 pt-3 pb-6 snap-x no-scrollbar scroll-pl-8 md:scroll-pl-12 -mx-8 px-8 md:-mx-12 md:px-12" style={{ overflowY: "visible" }}>
                       {recentes.map((q) => <QuadroBentoCard key={q.id} quadro={q} />)}
                     </div>
                   </section>
@@ -492,7 +492,7 @@ export default function PaginaInicial() {
                     <h2 className="text-[19px] font-black tracking-tight mb-2 flex items-center gap-2" style={{ color: "var(--tf-text)" }}>
                       <Grid3X3 size={20} /> Quadros Soltos
                     </h2>
-                    <div className="flex overflow-x-auto gap-4 pt-4 pb-6 snap-x no-scrollbar -mx-8 px-8 md:-mx-12 md:px-12">
+                    <div className="flex overflow-x-auto gap-4 pt-3 pb-6 snap-x no-scrollbar scroll-pl-8 md:scroll-pl-12 -mx-8 px-8 md:-mx-12 md:px-12" style={{ overflowY: "visible" }}>
                       {quadrosAvulsos.map((q) => <QuadroBentoCard key={q.id} quadro={q} />)}
 
                       <button
