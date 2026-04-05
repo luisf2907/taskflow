@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -57,7 +58,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               `img-src 'self' data: blob: ${supabaseImgSrc} https://avatars.githubusercontent.com https://github.com`,
               "font-src 'self' https://fonts.gstatic.com",
-              `connect-src 'self' ${supabaseConnectSrc} https://api.github.com${isDev ? " ws://localhost:*" : ""}`,
+              `connect-src 'self' ${supabaseConnectSrc} https://api.github.com https://*.ingest.sentry.io${isDev ? " ws://localhost:*" : ""}`,
               "frame-ancestors 'none'",
             ].join("; "),
           },
@@ -67,4 +68,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
+
+export default withBundleAnalyzer(nextConfig);
