@@ -88,6 +88,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Loader2, Lock, Search, Upload } from "lucide-react";
 import type { Repositorio } from "@/types/github";
 import { ImportarModal } from "@/components/workspace/importar-modal";
+import { exportCSV, exportJSON } from "@/lib/export";
 
 // ─── Modal Conectar Repo (com listagem autenticada) ───
 function ModalConectarRepo({
@@ -603,7 +604,7 @@ export default function PaginaWorkspace() {
 
   const { workspaces, atualizar: atualizarWs, excluir: excluirWs } = useWorkspaces();
   const { quadros, criar: criarQuadro, atualizar: atualizarQuadro, excluir: excluirQuadro } = useQuadros();
-  const { backlogPuro, cartoesDaSprint, criarTarefa, associarASprint, desassociarDeSprint, moverParaSprint, excluirTarefa, buscar: buscarBacklog } = useBacklog(workspaceId);
+  const { cartoes: todosCartoes, backlogPuro, cartoesDaSprint, criarTarefa, associarASprint, desassociarDeSprint, moverParaSprint, excluirTarefa, buscar: buscarBacklog } = useBacklog(workspaceId);
   const { etiquetas: etiquetasWs, criar: criarEtiquetaWs, excluir: excluirEtiquetaWs } = useEtiquetasWorkspace(workspaceId);
   const { membros: membrosWs, criar: criarMembroWs, excluir: excluirMembroWs } = useMembrosWorkspace(workspaceId);
   const { usuarios: wsUsuarios, convidar: convidarUsuario, remover: removerUsuario, alterarPapel } = useWorkspaceUsuarios(workspaceId);
@@ -948,6 +949,19 @@ export default function PaginaWorkspace() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+                  <Dropdown
+                    trigger={
+                      <button
+                        className="flex items-center gap-2 px-4 py-3 text-[13px] font-bold rounded-[20px] border transition-all hover:-translate-y-0.5"
+                        style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)" }}
+                      >
+                        <Download size={16} /> Exportar
+                      </button>
+                    }
+                  >
+                    <DropdownItem onClick={() => exportCSV(todosCartoes, `${workspace.nome}-export.csv`)}>CSV</DropdownItem>
+                    <DropdownItem onClick={() => exportJSON(todosCartoes, `${workspace.nome}-export.json`)}>JSON</DropdownItem>
+                  </Dropdown>
                   <button
                     onClick={() => setModalImport(true)}
                     className="flex items-center gap-2 px-4 py-3 text-[13px] font-bold rounded-[20px] border transition-all hover:-translate-y-0.5"

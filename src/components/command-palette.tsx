@@ -2,18 +2,29 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { Calendar, Folder, Kanban, Search, ArrowRight } from "lucide-react";
+import { Calendar, Folder, Kanban, Search, ArrowRight, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+type TipoResultado = "workspace" | "quadro" | "cartao";
+type FiltroTab = "todos" | "cartao" | "quadro" | "workspace";
+
 interface Resultado {
   id: string;
-  tipo: "workspace" | "quadro" | "cartao";
+  tipo: TipoResultado;
   titulo: string;
   subtitulo?: string;
+  descricaoPreview?: string;
   cor?: string;
   href: string;
 }
+
+const TABS: { id: FiltroTab; label: string }[] = [
+  { id: "todos", label: "Todos" },
+  { id: "cartao", label: "Cards" },
+  { id: "quadro", label: "Sprints" },
+  { id: "workspace", label: "Workspaces" },
+];
 
 export function CommandPalette() {
   const [aberto, setAberto] = useState(false);
@@ -21,17 +32,18 @@ export function CommandPalette() {
   const [resultados, setResultados] = useState<Resultado[]>([]);
   const [indiceAtivo, setIndiceAtivo] = useState(0);
   const [carregando, setCarregando] = useState(false);
+  const [tab, setTab] = useState<FiltroTab>("todos");
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Abrir/fechar
   const abrir = useCallback(() => {
     setAberto(true);
     setBusca("");
     setResultados([]);
     setIndiceAtivo(0);
+    setTab("todos");
     setTimeout(() => inputRef.current?.focus(), 50);
   }, []);
 
@@ -41,7 +53,6 @@ export function CommandPalette() {
     setResultados([]);
   }, []);
 
-  // Listener global para ⌘K e ⌘S
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "s")) {
@@ -50,11 +61,7 @@ export function CommandPalette() {
         else abrir();
       }
     }
-
-    function handleOpenEvent() {
-      abrir();
-    }
-
+    function handleOpenEvent() { abrir(); }
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("open-command-palette", handleOpenEvent);
     return () => {
@@ -77,85 +84,72 @@ export function CommandPalette() {
       setCarregando(true);
       const termo = `%${busca.trim()}%`;
 
-      const [resWorkspaces, resQuadros, resCartoes] = await Promise.all([
-        supabase
-          .from("workspaces")
-          .select("id, nome, cor")
-          .ilike("nome", termo)
-          .limit(4),
-        supabase
-          .from("quadros")
-          .select("id, nome, cor, workspace_id")
-          .ilike("nome", termo)
-          .limit(5),
-        supabase
-          .from("cartoes")
-          .select("id, titulo, coluna_id, workspace_id")
-          .ilike("titulo", termo)
-          .limit(6),
+      const [resWorkspaces, resQuadros, resCartoesTitulo, resCartoesDesc] = await Promise.all([
+        supabase.from("workspaces").select("id, nome, cor").ilike("nome", termo).limit(5),
+        supabase.from("quadros").select("id, nome, cor, workspace_id, status_sprint").ilike("nome", termo).limit(6),
+        supabase.from("cartoes").select("id, titulo, descricao, coluna_id, workspace_id, data_conclusao").ilike("titulo", termo).limit(10),
+        supabase.from("cartoes").select("id, titulo, descricao, coluna_id, workspace_id, data_conclusao").ilike("descricao", termo).limit(5),
       ]);
 
       const items: Resultado[] = [];
 
       // Workspaces
-      if (resWorkspaces.data) {
-        for (const ws of resWorkspaces.data) {
-          items.push({
-            id: ws.id,
-            tipo: "workspace",
-            titulo: ws.nome,
-            subtitulo: "Workspace",
-            cor: ws.cor,
-            href: `/workspace/${ws.id}`,
-          });
-        }
+      for (const ws of resWorkspaces.data || []) {
+        items.push({
+          id: ws.id, tipo: "workspace", titulo: ws.nome,
+          subtitulo: "Workspace", cor: ws.cor,
+          href: `/workspace/${ws.id}`,
+        });
       }
 
-      // Quadros/Sprints
-      if (resQuadros.data) {
-        for (const q of resQuadros.data) {
-          items.push({
-            id: q.id,
-            tipo: "quadro",
-            titulo: q.nome,
-            subtitulo: "Sprint",
-            cor: q.cor,
-            href: `/quadro/${q.id}`,
-          });
-        }
+      // Quadros
+      for (const q of resQuadros.data || []) {
+        const statusLabel = q.status_sprint === "ativa" ? "Ativa" : q.status_sprint === "concluida" ? "Concluida" : "Planejada";
+        items.push({
+          id: q.id, tipo: "quadro", titulo: q.nome,
+          subtitulo: `Sprint · ${statusLabel}`, cor: q.cor,
+          href: `/quadro/${q.id}`,
+        });
       }
 
-      // Cartões — precisam buscar o quadro_id via coluna
-      if (resCartoes.data && resCartoes.data.length > 0) {
-        // Pegar coluna_ids dos cartões que têm coluna
-        const colunaIds = resCartoes.data
-          .filter((c) => c.coluna_id)
-          .map((c) => c.coluna_id as string);
+      // Cards (titulo + descricao, deduplicate)
+      const allCards = [...(resCartoesTitulo.data || []), ...(resCartoesDesc.data || [])];
+      const seenCardIds = new Set<string>();
+      const uniqueCards = allCards.filter((c) => {
+        if (seenCardIds.has(c.id)) return false;
+        seenCardIds.add(c.id);
+        return true;
+      });
 
-        let colunaMap: Record<string, string> = {};
+      if (uniqueCards.length > 0) {
+        const colunaIds = uniqueCards.filter((c) => c.coluna_id).map((c) => c.coluna_id as string);
+        let colunaMap: Record<string, { quadro_id: string; nome: string }> = {};
         if (colunaIds.length > 0) {
           const { data: colunas } = await supabase
             .from("colunas")
-            .select("id, quadro_id")
-            .in("id", colunaIds);
+            .select("id, quadro_id, nome")
+            .in("id", [...new Set(colunaIds)]);
           if (colunas) {
-            for (const col of colunas) {
-              colunaMap[col.id] = col.quadro_id;
-            }
+            for (const col of colunas) colunaMap[col.id] = { quadro_id: col.quadro_id, nome: col.nome };
           }
         }
 
-        for (const c of resCartoes.data) {
-          const quadroId = c.coluna_id ? colunaMap[c.coluna_id] : null;
-          if (quadroId) {
-            items.push({
-              id: c.id,
-              tipo: "cartao",
-              titulo: c.titulo,
-              subtitulo: "Card",
-              href: `/quadro/${quadroId}`,
-            });
-          }
+        for (const c of uniqueCards) {
+          const colInfo = c.coluna_id ? colunaMap[c.coluna_id] : null;
+          const quadroId = colInfo?.quadro_id;
+          if (!quadroId && !c.workspace_id) continue;
+
+          const status = c.data_conclusao ? "Concluido" : colInfo?.nome || "Backlog";
+          const descPreview = c.descricao
+            ? c.descricao.slice(0, 80) + (c.descricao.length > 80 ? "..." : "")
+            : undefined;
+
+          items.push({
+            id: c.id, tipo: "cartao", titulo: c.titulo,
+            subtitulo: `Card · ${status}`,
+            descricaoPreview: descPreview,
+            href: quadroId ? `/quadro/${quadroId}` : `/workspace/${c.workspace_id}`,
+          });
         }
       }
 
@@ -164,24 +158,30 @@ export function CommandPalette() {
       setCarregando(false);
     }, 250);
 
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [busca]);
 
-  // Navegação por teclado
+  // Filtrar por tab
+  const filtrados = tab === "todos" ? resultados : resultados.filter((r) => r.tipo === tab);
+
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setIndiceAtivo((prev) => (prev + 1) % Math.max(resultados.length, 1));
+      setIndiceAtivo((prev) => (prev + 1) % Math.max(filtrados.length, 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setIndiceAtivo((prev) => (prev - 1 + resultados.length) % Math.max(resultados.length, 1));
-    } else if (e.key === "Enter" && resultados[indiceAtivo]) {
+      setIndiceAtivo((prev) => (prev - 1 + filtrados.length) % Math.max(filtrados.length, 1));
+    } else if (e.key === "Enter" && filtrados[indiceAtivo]) {
       e.preventDefault();
-      navegar(resultados[indiceAtivo]);
+      navegar(filtrados[indiceAtivo]);
     } else if (e.key === "Escape") {
       fechar();
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      const tabIds = TABS.map((t) => t.id);
+      const idx = tabIds.indexOf(tab);
+      setTab(tabIds[(idx + 1) % tabIds.length]);
+      setIndiceAtivo(0);
     }
   }
 
@@ -190,7 +190,7 @@ export function CommandPalette() {
     router.push(item.href);
   }
 
-  const icone = (tipo: Resultado["tipo"]) => {
+  const icone = (tipo: TipoResultado) => {
     switch (tipo) {
       case "workspace": return <Folder size={16} />;
       case "quadro": return <Calendar size={16} />;
@@ -198,7 +198,7 @@ export function CommandPalette() {
     }
   };
 
-  const labelTipo = (tipo: Resultado["tipo"]) => {
+  const labelTipo = (tipo: TipoResultado) => {
     switch (tipo) {
       case "workspace": return "WORKSPACE";
       case "quadro": return "SPRINT";
@@ -239,7 +239,7 @@ export function CommandPalette() {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Buscar workspaces, sprints, cards..."
+            placeholder="Buscar por titulo ou descricao..."
             className="flex-1 bg-transparent outline-none text-[15px] font-medium"
             style={{ color: "var(--tf-text)" }}
           />
@@ -251,11 +251,34 @@ export function CommandPalette() {
           </kbd>
         </div>
 
+        {/* Tabs (only show when there are results) */}
+        {busca.trim() && resultados.length > 0 && (
+          <div className="flex items-center gap-1 px-4 py-2 border-b" style={{ borderColor: "var(--tf-border)" }}>
+            {TABS.map((t) => {
+              const count = t.id === "todos" ? resultados.length : resultados.filter((r) => r.tipo === t.id).length;
+              if (t.id !== "todos" && count === 0) return null;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => { setTab(t.id); setIndiceAtivo(0); }}
+                  className="px-3 py-1 rounded-[8px] text-[11px] font-bold transition-all"
+                  style={{
+                    background: tab === t.id ? "var(--tf-accent-light)" : "transparent",
+                    color: tab === t.id ? "var(--tf-accent)" : "var(--tf-text-tertiary)",
+                  }}
+                >
+                  {t.label} {count > 0 && <span className="ml-1 opacity-60">{count}</span>}
+                </button>
+              );
+            })}
+            <span className="ml-auto text-[9px] font-bold" style={{ color: "var(--tf-text-tertiary)" }}>
+              Tab ↹ filtrar
+            </span>
+          </div>
+        )}
+
         {/* Results */}
-        <div
-          className="max-h-[360px] overflow-y-auto py-2 px-2"
-          style={{ scrollbarWidth: "thin" }}
-        >
+        <div className="max-h-[360px] overflow-y-auto py-2 px-2" style={{ scrollbarWidth: "thin" }}>
           {busca.trim() === "" ? (
             <div className="flex flex-col items-center justify-center py-10 gap-2">
               <Search size={28} style={{ color: "var(--tf-border)" }} />
@@ -264,11 +287,11 @@ export function CommandPalette() {
               </p>
               <div className="flex items-center gap-3 mt-2">
                 <kbd className="text-[10px] font-bold px-2 py-0.5 rounded-[4px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}>⌘K</kbd>
-                <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>para abrir</span>
+                <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>abrir</span>
                 <kbd className="text-[10px] font-bold px-2 py-0.5 rounded-[4px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}>↑↓</kbd>
                 <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>navegar</span>
-                <kbd className="text-[10px] font-bold px-2 py-0.5 rounded-[4px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}>↵</kbd>
-                <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>abrir</span>
+                <kbd className="text-[10px] font-bold px-2 py-0.5 rounded-[4px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}>Tab</kbd>
+                <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>filtrar</span>
               </div>
             </div>
           ) : carregando ? (
@@ -276,31 +299,28 @@ export function CommandPalette() {
               <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "var(--tf-accent)", borderTopColor: "transparent" }} />
               <span className="text-[13px] font-medium" style={{ color: "var(--tf-text-tertiary)" }}>Buscando...</span>
             </div>
-          ) : resultados.length === 0 ? (
+          ) : filtrados.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 gap-1">
               <p className="text-[13px] font-bold" style={{ color: "var(--tf-text-secondary)" }}>
                 Nenhum resultado
               </p>
               <p className="text-[12px]" style={{ color: "var(--tf-text-tertiary)" }}>
-                Tente um termo diferente
+                Tente um termo diferente{tab !== "todos" ? " ou mude o filtro" : ""}
               </p>
             </div>
           ) : (
             <div className="space-y-0.5">
-              {resultados.map((item, i) => (
+              {filtrados.map((item, i) => (
                 <button
                   key={`${item.tipo}-${item.id}`}
                   onClick={() => navegar(item)}
                   onMouseEnter={() => setIndiceAtivo(i)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-[8px] text-left group",
-                  )}
+                  className={cn("w-full flex items-center gap-3 px-3 py-2.5 rounded-[8px] text-left group")}
                   style={{
                     background: i === indiceAtivo ? "var(--tf-accent-light)" : "transparent",
                     transition: "background 0.1s ease",
                   }}
                 >
-                  {/* Icon */}
                   <div
                     className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
                     style={{
@@ -311,14 +331,21 @@ export function CommandPalette() {
                     {icone(item.tipo)}
                   </div>
 
-                  {/* Text */}
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-semibold truncate" style={{ color: "var(--tf-text)" }}>
                       {item.titulo}
                     </p>
+                    {item.descricaoPreview && (
+                      <p className="text-[11px] truncate flex items-center gap-1 mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>
+                        <FileText size={10} className="shrink-0" />
+                        {item.descricaoPreview}
+                      </p>
+                    )}
+                    {item.subtitulo && !item.descricaoPreview && (
+                      <p className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>{item.subtitulo}</p>
+                    )}
                   </div>
 
-                  {/* Type badge */}
                   <span
                     className="text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full shrink-0"
                     style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}
@@ -326,14 +353,10 @@ export function CommandPalette() {
                     {labelTipo(item.tipo)}
                   </span>
 
-                  {/* Arrow */}
                   <ArrowRight
                     size={14}
                     className="shrink-0"
-                    style={{
-                      color: i === indiceAtivo ? "var(--tf-accent)" : "transparent",
-                      transition: "color 0.1s ease",
-                    }}
+                    style={{ color: i === indiceAtivo ? "var(--tf-accent)" : "transparent", transition: "color 0.1s ease" }}
                   />
                 </button>
               ))}
@@ -342,10 +365,10 @@ export function CommandPalette() {
         </div>
 
         {/* Footer */}
-        {resultados.length > 0 && (
+        {filtrados.length > 0 && (
           <div className="px-5 py-2.5 border-t flex items-center justify-between" style={{ borderColor: "var(--tf-border)" }}>
             <span className="text-[11px] font-medium" style={{ color: "var(--tf-text-tertiary)" }}>
-              {resultados.length} {resultados.length === 1 ? "resultado" : "resultados"}
+              {filtrados.length} {filtrados.length === 1 ? "resultado" : "resultados"}
             </span>
             <div className="flex items-center gap-2">
               <kbd className="text-[10px] font-bold px-1.5 py-0.5 rounded-[4px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}>↵</kbd>

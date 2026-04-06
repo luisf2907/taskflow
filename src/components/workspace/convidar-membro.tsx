@@ -2,7 +2,9 @@
 
 import { useWorkspaceUsuarios } from "@/hooks/use-workspace-usuarios";
 import {
+  Check,
   Crown,
+  Link2,
   Loader2,
   Mail,
   Trash2,
@@ -11,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/lib/supabase/client";
 
 interface ConvidarMembroProps {
   workspaceId: string;
@@ -136,6 +139,9 @@ export function ConvidarMembro({
           )}
         </form>
 
+        {/* Invite link */}
+        <InviteLinkSection workspaceId={workspaceId} />
+
         {/* Members list */}
         <div className="flex-1 overflow-y-auto p-2">
           {usuarios.map((u) => (
@@ -254,5 +260,90 @@ export function ConvidarMembro({
         </div>
       )}
     </>
+  );
+}
+
+// =============================================
+// INVITE LINK SECTION
+// =============================================
+
+function generateCode() {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let code = "";
+  for (let i = 0; i < 12; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function InviteLinkSection({ workspaceId }: { workspaceId: string }) {
+  const [link, setLink] = useState<string | null>(null);
+  const [gerando, setGerando] = useState(false);
+  const [copiado, setCopiado] = useState(false);
+
+  async function gerarLink() {
+    setGerando(true);
+    const code = generateCode();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setGerando(false); return; }
+
+    const { error } = await supabase
+      .from("invite_links")
+      .insert({
+        code,
+        workspace_id: workspaceId,
+        criado_por: user.id,
+      });
+
+    if (!error) {
+      const url = `${window.location.origin}/convite/${code}`;
+      setLink(url);
+    }
+    setGerando(false);
+  }
+
+  async function copiar() {
+    if (!link) return;
+    await navigator.clipboard.writeText(link);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
+  }
+
+  return (
+    <div className="px-3 py-2.5 shrink-0" style={{ borderBottom: "1px solid var(--tf-border)" }}>
+      <p className="text-[11px] font-semibold mb-2 flex items-center gap-1.5" style={{ color: "var(--tf-text-tertiary)" }}>
+        <Link2 size={11} /> Link de convite
+      </p>
+      {link ? (
+        <div className="flex gap-1.5">
+          <input
+            readOnly
+            value={link}
+            className="flex-1 px-2 py-1.5 rounded-[6px] text-[10px] font-mono outline-none min-w-0"
+            style={{ background: "var(--tf-bg)", border: "1px solid var(--tf-border)", color: "var(--tf-text-secondary)" }}
+            onClick={(e) => (e.target as HTMLInputElement).select()}
+          />
+          <button
+            onClick={copiar}
+            className="px-2 py-1.5 rounded-[6px] text-[10px] font-semibold shrink-0"
+            style={{ background: copiado ? "var(--tf-success-bg)" : "var(--tf-accent)", color: copiado ? "var(--tf-success)" : "#fff" }}
+          >
+            {copiado ? <Check size={12} /> : "Copiar"}
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={gerarLink}
+          disabled={gerando}
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-[8px] text-[11px] font-semibold border transition-all"
+          style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)" }}
+        >
+          {gerando ? <Loader2 size={12} className="animate-spin" /> : <Link2 size={12} />}
+          Gerar link de convite
+        </button>
+      )}
+      <p className="text-[9px] mt-1.5" style={{ color: "var(--tf-text-tertiary)" }}>
+        Expira em 7 dias. Qualquer pessoa com o link pode entrar.
+      </p>
+    </div>
   );
 }
