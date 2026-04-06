@@ -42,9 +42,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // suppressHydrationWarning: theme-init.js modifica class/data-theme
+  // antes do React hidratar para evitar flash de tema errado (FOUC)
   return (
-    {/* suppressHydrationWarning necessario: theme-init.js modifica class/data-theme
-        antes do React hidratar para evitar flash de tema errado (FOUC) */}
     <html lang="pt-BR" className="h-full" suppressHydrationWarning>
       <head>
         <script src="/theme-init.js" />
