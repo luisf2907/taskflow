@@ -146,7 +146,7 @@ export function useBacklog(workspaceId: string) {
     // Optimistic: remover do backlog imediatamente
     const quadroNome = cartoes.find((c) => c.quadro_id === quadroId)?.quadro_nome || null;
     globalMutate(key, cartoes.map((c) =>
-      c.id === cartaoId ? { ...c, coluna_id: "__pending__", workspace_id: null, quadro_id: quadroId, quadro_nome: quadroNome, coluna_nome: "...", concluido: false } : c
+      c.id === cartaoId ? { ...c, coluna_id: "__pending__", quadro_id: quadroId, quadro_nome: quadroNome, coluna_nome: "...", concluido: false } : c
     ), { revalidate: false });
 
     // Persist em background
@@ -154,7 +154,7 @@ export function useBacklog(workspaceId: string) {
     if (!colunas || colunas.length === 0) { globalMutate(key); return; }
 
     const { count } = await supabase.from("cartoes").select("id", { count: "exact", head: true }).eq("coluna_id", colunas[0].id);
-    await supabase.from("cartoes").update({ coluna_id: colunas[0].id, workspace_id: null, posicao: count || 0 }).eq("id", cartaoId);
+    await supabase.from("cartoes").update({ coluna_id: colunas[0].id, posicao: count || 0 }).eq("id", cartaoId);
 
     globalMutate(key);
     globalMutate(`cartoes-${quadroId}`);

@@ -528,14 +528,14 @@ async function handleMoveCard(auth: ApiKeyAuth, request: Request, params: string
 
     await service.from("cartoes").update({
       coluna_id: colunas[0].id,
-      workspace_id: null,
+      workspace_id: auth.workspaceId,
       posicao: 0,
     }).eq("id", id);
   } else if (body.coluna_id) {
     // Mover para coluna especifica
     await service.from("cartoes").update({
       coluna_id: body.coluna_id,
-      workspace_id: null,
+      workspace_id: auth.workspaceId,
       posicao: body.posicao ?? 0,
     }).eq("id", id);
   } else {

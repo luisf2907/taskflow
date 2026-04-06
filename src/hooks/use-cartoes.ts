@@ -83,8 +83,20 @@ export function useCartoes(quadroId: string) {
   }
 
   const criar = useCallback(async function criarCartao(colunaId: string, titulo: string, peso?: number | null) {
+    // Buscar workspace_id do quadro para garantir que o card sempre tenha workspace_id
+    const { data: quadro } = await supabase
+      .from("quadros")
+      .select("workspace_id")
+      .eq("id", quadroId)
+      .single();
+
     const posicao = cartoes.filter((c) => c.coluna_id === colunaId).length;
-    const insert: Record<string, unknown> = { coluna_id: colunaId, titulo, posicao };
+    const insert: Record<string, unknown> = {
+      coluna_id: colunaId,
+      titulo,
+      posicao,
+      workspace_id: quadro?.workspace_id,
+    };
     if (peso != null) insert.peso = peso;
     const { data } = await supabase
       .from("cartoes")
@@ -105,11 +117,6 @@ export function useCartoes(quadroId: string) {
       registrarAtividade({ quadroId, cartaoId: data.id, acao: "criar", entidade: "cartao", detalhes: { titulo: data.titulo } });
 
       // Execute automations for card_created
-      const { data: quadro } = await supabase
-        .from("quadros")
-        .select("workspace_id")
-        .eq("id", quadroId)
-        .single();
       if (quadro?.workspace_id) {
         const { data: automacoes } = await supabase
           .from("automacoes")
