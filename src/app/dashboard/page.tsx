@@ -13,6 +13,7 @@ import { Workspace } from "@/types";
 import {
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
   Clock,
   Folder,
   Grid3X3,
@@ -67,6 +68,7 @@ export default function PaginaInicial() {
   const [novoDataInicio, setNovoDataInicio] = useState("");
   const [novoDataFim, setNovoDataFim] = useState("");
   const [novoMeta, setNovoMeta] = useState("");
+  const [mostrarWorkspaces, setMostrarWorkspaces] = useState(false);
 
   // States Modal Workspace
   const [wsNome, setWsNome] = useState("");
@@ -111,19 +113,20 @@ export default function PaginaInicial() {
   async function handleCriarQuadro() {
     const nome = novoNome.trim();
     if (!nome) return;
+    if (!novoWorkspaceId) return;
 
     const quadro = await criarQuadro({
       nome,
       cor: novaCor,
-      workspaceId: novoWorkspaceId || undefined,
+      workspaceId: novoWorkspaceId,
       dataInicio: novoDataInicio || undefined,
       dataFim: novoDataFim || undefined,
-      statusSprint: novoWorkspaceId ? "planejada" : undefined,
+      statusSprint: "planejada",
       meta: novoMeta.trim() || undefined,
     });
 
     if (quadro) {
-      if (novoWorkspaceId) {
+      {
         const ws = workspaces.find((w) => w.id === novoWorkspaceId);
         if (ws?.colunas_padrao && ws.colunas_padrao.length > 0) {
           const { supabase } = await import("@/lib/supabase/client");
@@ -144,7 +147,7 @@ export default function PaginaInicial() {
 
   function resetModalQuadro() {
     setNovoNome(""); setNovaCor(CORES_QUADRO[0]); setNovoWorkspaceId("");
-    setNovoDataInicio(""); setNovoDataFim(""); setNovoMeta("");
+    setNovoDataInicio(""); setNovoDataFim(""); setNovoMeta(""); setMostrarWorkspaces(false);
   }
 
   async function handleCriarWorkspace() {
@@ -344,7 +347,7 @@ export default function PaginaInicial() {
       {iniciado && (
         <Sidebar
           quadros={quadros}
-          onNovoQuadro={() => setModalQuadro(true)}
+          onNovoQuadro={() => { setNovoWorkspaceId(workspaces[0]?.id || ""); setModalQuadro(true); }}
           aberta={sidebarAberta}
           onToggle={toggleSidebar}
         />
@@ -406,7 +409,7 @@ export default function PaginaInicial() {
                         Workspace
                       </button>
                       <button
-                        onClick={() => setModalQuadro(true)}
+                        onClick={() => { setNovoWorkspaceId(workspaces[0]?.id || ""); setModalQuadro(true); }}
                         className="flex items-center gap-2 justify-center px-6 py-3.5 text-[14px] font-bold rounded-[20px] transition-all hover:-translate-y-0.5"
                         style={{ background: "var(--tf-accent)", color: "white" }}
                       >
@@ -448,7 +451,7 @@ export default function PaginaInicial() {
                         Criar Workspace
                       </button>
                       <button
-                        onClick={() => setModalQuadro(true)}
+                        onClick={() => { setNovoWorkspaceId(workspaces[0]?.id || ""); setModalQuadro(true); }}
                         className="px-8 py-3.5 font-bold rounded-[20px] transition-all hover:bg-black/5 w-full sm:w-auto"
                         style={{ color: "var(--tf-text)", border: "2px solid var(--tf-border)" }}
                       >
@@ -496,14 +499,14 @@ export default function PaginaInicial() {
                       {quadrosAvulsos.map((q) => <QuadroBentoCard key={q.id} quadro={q} />)}
 
                       <button
-                        onClick={() => { setNovoWorkspaceId(""); setModalQuadro(true); }}
+                        onClick={() => { setNovoWorkspaceId(workspaces[0]?.id || ""); setModalQuadro(true); }}
                         className="rounded-[32px] h-[150px] min-w-[260px] flex flex-col items-center justify-center text-[15px] border-[3px] border-dashed transition-all hover:border-solid hover:-translate-y-1 group snap-start"
                         style={{ borderColor: "var(--tf-border)", background: "var(--tf-bg-secondary)" }}
                       >
                         <div className="w-12 h-12 rounded-[20px] flex items-center justify-center mb-3 transition-transform group-hover:scale-110" style={{ background: "var(--tf-surface)" }}>
                           <Plus size={24} style={{ color: "var(--tf-text-secondary)" }} strokeWidth={3} />
                         </div>
-                        <span className="font-extrabold tracking-tight" style={{ color: "var(--tf-text)" }}>Novo Quadro</span>
+                        <span className="font-extrabold tracking-tight" style={{ color: "var(--tf-text)" }}>Nova Sprint</span>
                       </button>
                     </div>
                   </section>
@@ -557,7 +560,7 @@ export default function PaginaInicial() {
       <Modal
         aberto={modalQuadro}
         onFechar={() => { setModalQuadro(false); resetModalQuadro(); }}
-        titulo={novoWorkspaceId ? "Criar sprint" : "Criar quadro"}
+        titulo="Criar sprint"
       >
         <div className="space-y-5">
           <div
@@ -565,7 +568,7 @@ export default function PaginaInicial() {
             style={{ background: `linear-gradient(135deg, ${novaCor}, ${novaCor}bb)` }}
           >
             <span className="text-white font-black text-2xl drop-shadow-md tracking-tight">
-              {novoNome || "Nome do quadro"}
+              {novoNome || "Nome da sprint"}
             </span>
           </div>
 
@@ -583,24 +586,54 @@ export default function PaginaInicial() {
             />
           </div>
 
-          {workspaces.length > 0 && (
-            <div>
-              <label className="text-[13px] font-bold mb-2 block" style={{ color: "var(--tf-text-secondary)" }}>Workspace</label>
-              <select
-                value={novoWorkspaceId}
-                onChange={(e) => setNovoWorkspaceId(e.target.value)}
-                className="w-full px-5 py-3.5 text-[15px] font-medium rounded-[20px] outline-none transition-all cursor-pointer"
-                style={{ background: "var(--tf-bg-secondary)", border: "2px solid transparent", color: "var(--tf-text)" }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "transparent")}
-              >
-                <option value="">Nenhum (quadro avulso)</option>
-                {workspaces.map((ws) => (
-                  <option key={ws.id} value={ws.id}>{ws.nome}</option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>Workspace</label>
+            {workspaces.length > 0 ? (
+              <div className="relative">
+                <button
+                  onClick={() => setMostrarWorkspaces(!mostrarWorkspaces)}
+                  className="w-full text-left text-sm px-3 py-2 rounded-[8px] border flex items-center gap-2"
+                  style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: novoWorkspaceId ? "var(--tf-text)" : "var(--tf-text-tertiary)" }}
+                >
+                  {novoWorkspaceId ? (
+                    <>
+                      <div className="w-5 h-5 rounded-[6px] shrink-0" style={{ background: workspaces.find((w) => w.id === novoWorkspaceId)?.cor || "var(--tf-accent)" }} />
+                      <span className="font-medium flex-1 truncate">{workspaces.find((w) => w.id === novoWorkspaceId)?.nome}</span>
+                    </>
+                  ) : (
+                    <span className="flex-1">Selecionar workspace...</span>
+                  )}
+                  <ChevronDown size={14} className="shrink-0" style={{ color: "var(--tf-text-tertiary)" }} />
+                </button>
+                {mostrarWorkspaces && (
+                  <div
+                    className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto rounded-[8px] border"
+                    style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)", scrollbarWidth: "thin" }}
+                  >
+                    {workspaces.map((ws) => (
+                      <button
+                        key={ws.id}
+                        onClick={() => { setNovoWorkspaceId(ws.id); setMostrarWorkspaces(false); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-smooth"
+                        style={{ color: "var(--tf-text)" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-bg-secondary)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                      >
+                        <div className="w-6 h-6 rounded-[8px] shrink-0 flex items-center justify-center" style={{ background: ws.cor }}>
+                          <Folder size={12} className="text-white" />
+                        </div>
+                        <span className="font-medium">{ws.nome}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs px-1" style={{ color: "var(--tf-text-tertiary)" }}>
+                Crie um workspace primeiro para poder criar sprints.
+              </p>
+            )}
+          </div>
 
           {novoWorkspaceId && (
             <>
@@ -662,11 +695,11 @@ export default function PaginaInicial() {
 
           <button
             onClick={handleCriarQuadro}
-            disabled={!novoNome.trim()}
+            disabled={!novoNome.trim() || !novoWorkspaceId}
             className="w-full py-4 text-[15px] font-bold text-white rounded-[20px] transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
             style={{ background: "var(--tf-accent)" }}
           >
-            {novoWorkspaceId ? "Criar Sprint" : "Criar Quadro"}
+            Criar Sprint
           </button>
         </div>
       </Modal>
