@@ -1,9 +1,10 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { debouncedMutate } from "@/lib/debounced-mutate";
 import { PokerSessao, PokerVoto } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 import { useAuth } from "./use-auth";
 import { useMembrosWorkspace } from "./use-membros-workspace";
 import type { RealtimeChannel } from "@supabase/supabase-js";
@@ -48,23 +49,6 @@ async function fetchPoker(workspaceId: string): Promise<PokerData> {
     votos: (votos || []) as PokerVoto[],
   };
 }
-
-// =============================================
-// DEBOUNCED MUTATE (local ao poker)
-// =============================================
-function createDebouncedMutate(delay = 300) {
-  const timers = new Map<string, ReturnType<typeof setTimeout>>();
-  return (key: string) => {
-    const existing = timers.get(key);
-    if (existing) clearTimeout(existing);
-    timers.set(key, setTimeout(() => {
-      timers.delete(key);
-      globalMutate(key);
-    }, delay));
-  };
-}
-
-const debouncedMutate = createDebouncedMutate(300);
 
 // =============================================
 // HOOK PRINCIPAL
@@ -258,7 +242,7 @@ export function usePlanningPoker(workspaceId: string) {
   // =============================================
   // ESTATISTICAS
   // =============================================
-  const estatisticas = (() => {
+  const estatisticas = useMemo(() => {
     const numericos = votos
       .map((v) => v.valor)
       .filter((v) => v !== "?" && v !== "cafe")
@@ -282,7 +266,7 @@ export function usePlanningPoker(workspaceId: string) {
     const consenso = spread === 0 && numericos.length > 1;
 
     return { media, moda, consenso, spread };
-  })();
+  }, [votos]);
 
   return {
     sessaoAtiva,

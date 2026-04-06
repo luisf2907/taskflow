@@ -47,8 +47,19 @@ function parseServerEnv() {
   return result.data;
 }
 
-/** Public env vars (safe for client) */
-export const publicEnv = parsePublicEnv();
+/** Public env vars (safe for client) — lazy loaded on first access */
+let _publicEnv: ReturnType<typeof parsePublicEnv> | null = null;
+export function getPublicEnv() {
+  if (!_publicEnv) _publicEnv = parsePublicEnv();
+  return _publicEnv;
+}
+
+/** @deprecated Use getPublicEnv() instead. Kept for backward compatibility. */
+export const publicEnv = new Proxy({} as ReturnType<typeof parsePublicEnv>, {
+  get(_target, prop: string) {
+    return getPublicEnv()[prop as keyof ReturnType<typeof parsePublicEnv>];
+  },
+});
 
 /** Server-only env vars (includes service role key) — only import in server code */
 export function getServerEnv() {

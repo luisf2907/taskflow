@@ -234,7 +234,8 @@ export async function POST(request: NextRequest) {
     results.push({ workspace: repo.workspace_id, action: "ignored" });
   }
 
-  if (results.length > 0 && results.every((r) => r.error?.includes("signature") || r.error?.includes("secret"))) {
+  // Se QUALQUER repo falhou por signature/secret, rejeitar tudo (seguranca)
+  if (results.some((r) => r.error?.includes("signature") || r.error?.includes("secret"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 

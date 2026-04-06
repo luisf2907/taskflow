@@ -43,14 +43,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    {/* suppressHydrationWarning necessario: theme-init.js modifica class/data-theme
+        antes do React hidratar para evitar flash de tema errado (FOUC) */}
     <html lang="pt-BR" className="h-full" suppressHydrationWarning>
       <head>
         <script src="/theme-init.js" />
       </head>
-      <body
-        suppressHydrationWarning
-        className={`${dmSans.className} h-full antialiased`}
-      >
+      <body className={`${dmSans.className} h-full antialiased`}>
+
         <SWRProvider>
           <ErrorBoundary>
             <a

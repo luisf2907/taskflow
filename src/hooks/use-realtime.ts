@@ -2,23 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { mutate as globalMutate } from "swr";
+import { debouncedMutate } from "@/lib/debounced-mutate";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-
-// Debounced mutate to batch rapid-fire realtime events
-function createDebouncedMutate(delay = 300) {
-  const timers = new Map<string, ReturnType<typeof setTimeout>>();
-  return (key: string) => {
-    const existing = timers.get(key);
-    if (existing) clearTimeout(existing);
-    timers.set(key, setTimeout(() => {
-      timers.delete(key);
-      globalMutate(key);
-    }, delay));
-  };
-}
-
-const debouncedMutate = createDebouncedMutate(300);
 
 export function useRealtimeBoard(quadroId: string | null) {
   const channelRef = useRef<RealtimeChannel | null>(null);

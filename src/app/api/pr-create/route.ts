@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         .in("quadro_id", quadroIds)
         .ilike("nome", "%review%")
         .limit(1)
-        .single();
+        .maybeSingle();
       colunaReviewId = colunaReview?.id || null;
     }
   }

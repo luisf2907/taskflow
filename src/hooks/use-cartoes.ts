@@ -191,12 +191,19 @@ export function useCartoes(quadroId: string) {
       }
     }
 
+    // Optimistic update com rollback em caso de erro
+    const estadoAnterior = cartoes;
     globalMutate(
       key,
       (atual: Cartao[] | undefined) => (atual || []).map((c) => c.id === cartaoId ? { ...c, coluna_id: novaColunaId, posicao: novaPosicao } : c),
       { revalidate: false }
     );
-    await supabase.from("cartoes").update({ coluna_id: novaColunaId, posicao: novaPosicao }).eq("id", cartaoId);
+    const { error: moveErr } = await supabase.from("cartoes").update({ coluna_id: novaColunaId, posicao: novaPosicao }).eq("id", cartaoId);
+    if (moveErr) {
+      // Rollback: restaurar estado anterior
+      globalMutate(key, estadoAnterior, { revalidate: true });
+      return {};
+    }
 
     // Set or clear data_conclusao based on whether destination is the last column
     const { data: colunas } = await supabase
