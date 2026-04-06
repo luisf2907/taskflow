@@ -176,12 +176,20 @@ export interface CartaoEnriquecido extends Cartao {
 // =============================================
 // PERFIS (auth)
 // =============================================
+export interface NotifPreferences {
+  email_convite: boolean;
+  email_card_atribuido: boolean;
+  email_digest_semanal: boolean;
+  inapp_todas: boolean;
+}
+
 export interface Perfil {
   id: string;
   nome: string | null;
   email: string | null;
   avatar_url: string | null;
   github_username: string | null;
+  notif_preferences: NotifPreferences | null;
   criado_em: string;
   atualizado_em: string;
 }

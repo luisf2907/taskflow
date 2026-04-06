@@ -59,6 +59,13 @@ export default function LandingHeader() {
               {item.label}
             </a>
           ))}
+          <Link
+            href="/pricing"
+            className="px-4 py-2 rounded-[14px] text-[13px] font-bold no-underline transition-all hover-surface"
+            style={{ color: "var(--tf-text-secondary)" }}
+          >
+            Precos
+          </Link>
         </nav>
 
         {/* Desktop actions */}
@@ -141,6 +148,14 @@ export default function LandingHeader() {
           >
             Como Funciona
           </a>
+          <Link
+            href="/pricing"
+            className="px-4 py-3 rounded-[14px] text-[14px] font-bold no-underline hover-surface"
+            style={{ color: "var(--tf-text-secondary)" }}
+            onClick={() => setMobileOpen(false)}
+          >
+            Precos
+          </Link>
           <div className="h-[1px] my-1" style={{ background: "var(--tf-border)" }} />
           <Link
             href="/login"

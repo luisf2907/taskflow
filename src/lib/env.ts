@@ -9,6 +9,7 @@ const envSchema = z.object({
 const serverEnvSchema = envSchema.extend({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   GEMINI_API_KEY: z.string().min(1).optional(),
+  RESEND_API_KEY: z.string().min(1).optional(),
 });
 
 function parsePublicEnv() {

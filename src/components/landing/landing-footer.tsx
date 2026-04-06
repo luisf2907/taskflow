@@ -9,6 +9,7 @@ const linkColumns = [
     links: [
       { label: "Funcionalidades", href: "#features" },
       { label: "Como Funciona", href: "#how-it-works" },
+      { label: "Precos", href: "/pricing" },
     ],
   },
   {
@@ -16,6 +17,13 @@ const linkColumns = [
     links: [
       { label: "Login", href: "/login" },
       { label: "Cadastre-se", href: "/login" },
+    ],
+  },
+  {
+    heading: "Legal",
+    links: [
+      { label: "Termos de Uso", href: "/termos" },
+      { label: "Privacidade", href: "/privacidade" },
     ],
   },
 ];

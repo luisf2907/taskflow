@@ -75,6 +75,24 @@ export function useWorkspaceUsuarios(workspaceId: string | undefined) {
     };
 
     globalMutate(chave(workspaceId), [...usuarios, novoUsuario], false);
+
+    // Enviar email de convite (fire-and-forget)
+    const { data: ws } = await supabase
+      .from("workspaces")
+      .select("nome")
+      .eq("id", workspaceId!)
+      .single();
+
+    fetch("/api/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tipo: "convite",
+        destinatario: email,
+        dados: { nomeWorkspace: ws?.nome || "Workspace" },
+      }),
+    }).catch(() => {});
+
     return { data: novoUsuario };
   }
 
