@@ -185,67 +185,50 @@ async function handleListCards(auth: ApiKeyAuth, request: Request) {
   const sp = getSearchParams(request);
   const service = getService();
 
-  let query = service
-    .from("cartoes")
-    .select("*, cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)")
-    .order("criado_em", { ascending: false })
-    .limit(100);
+  // Paginacao via query params (default: limit=100, offset=0)
+  const limit = Math.min(parseInt(sp.get("limit") || "100", 10) || 100, 500);
+  const offset = parseInt(sp.get("offset") || "0", 10) || 0;
 
   const status = sp.get("status");
   const sprintId = sp.get("sprint_id");
 
   if (status === "backlog") {
-    query = query.is("coluna_id", null).eq("workspace_id", auth.workspaceId);
+    const { data, count } = await service
+      .from("cartoes")
+      .select("*, cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)", { count: "exact" })
+      .is("coluna_id", null)
+      .eq("workspace_id", auth.workspaceId)
+      .order("criado_em", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    return NextResponse.json({ data: data || [], pagination: { offset, limit, total: count } });
   } else if (sprintId) {
-    // Cards de uma sprint especifica — buscar colunas da sprint primeiro
     const { data: colunas } = await service
       .from("colunas")
       .select("id")
       .eq("quadro_id", sprintId);
 
-    if (!colunas || colunas.length === 0) return NextResponse.json({ data: [] });
-    query = query.in("coluna_id", colunas.map(c => c.id));
+    if (!colunas || colunas.length === 0) return NextResponse.json({ data: [], pagination: { offset, limit, total: 0 } });
+
+    const { data, count } = await service
+      .from("cartoes")
+      .select("*, cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)", { count: "exact" })
+      .in("coluna_id", colunas.map(c => c.id))
+      .order("posicao")
+      .range(offset, offset + limit - 1);
+
+    return NextResponse.json({ data: data || [], pagination: { offset, limit, total: count } });
   } else {
-    // Todos os cards do workspace (backlog + sprints)
-    const { data: quadros } = await service
-      .from("quadros")
-      .select("id")
-      .eq("workspace_id", auth.workspaceId);
+    // Todos os cards do workspace — agora com workspace_id direto (sem JOINs)
+    const { data, count } = await service
+      .from("cartoes")
+      .select("*, cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)", { count: "exact" })
+      .eq("workspace_id", auth.workspaceId)
+      .order("criado_em", { ascending: false })
+      .range(offset, offset + limit - 1);
 
-    const qIds = (quadros || []).map(q => q.id);
-
-    const { data: colunas } = qIds.length > 0
-      ? await service.from("colunas").select("id").in("quadro_id", qIds)
-      : { data: [] };
-
-    const colIds = (colunas || []).map(c => c.id);
-
-    // Backlog + sprint cards
-    const [backlogRes, sprintRes] = await Promise.all([
-      service
-        .from("cartoes")
-        .select("*, cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)")
-        .is("coluna_id", null)
-        .eq("workspace_id", auth.workspaceId)
-        .order("criado_em", { ascending: false })
-        .limit(100),
-      colIds.length > 0
-        ? service
-            .from("cartoes")
-            .select("*, cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)")
-            .in("coluna_id", colIds)
-            .order("posicao")
-            .limit(200)
-        : Promise.resolve({ data: [] }),
-    ]);
-
-    return NextResponse.json({
-      data: [...(backlogRes.data || []), ...(sprintRes.data || [])],
-    });
+    return NextResponse.json({ data: data || [], pagination: { offset, limit, total: count } });
   }
-
-  const { data } = await query;
-  return NextResponse.json({ data: data || [] });
 }
 
 async function handleGetCard(auth: ApiKeyAuth, _req: Request, params: string[]) {
@@ -312,60 +295,84 @@ async function handleCreateCard(auth: ApiKeyAuth, request: Request) {
       );
     }
 
-    // Criar etiquetas por nome (se nao existem, cria no workspace)
+    // Criar etiquetas por nome (batch: resolve todas de uma vez, depois vincula)
     if (body.etiquetas?.length > 0) {
       const cores = ["#EF4444", "#F97316", "#EAB308", "#22C55E", "#3B82F6", "#6366F1", "#A855F7", "#EC4899"];
-      for (let i = 0; i < body.etiquetas.length; i++) {
-        const nome = body.etiquetas[i] as string;
-        // Buscar existente
-        const { data: existente } = await service
+      const nomes = (body.etiquetas as string[]).map((n: string) => n.trim()).filter(Boolean);
+
+      // 1 query: buscar todas as existentes de uma vez
+      const { data: existentes } = await service
+        .from("etiquetas")
+        .select("id, nome")
+        .eq("workspace_id", auth.workspaceId)
+        .in("nome", nomes);
+
+      const mapaExistentes = new Map((existentes || []).map((e) => [e.nome, e.id]));
+      const novas = nomes.filter((n) => !mapaExistentes.has(n));
+
+      // 1 query: criar todas as faltantes de uma vez (upsert para evitar race condition)
+      if (novas.length > 0) {
+        const { data: criadas } = await service
           .from("etiquetas")
-          .select("id")
-          .eq("workspace_id", auth.workspaceId)
-          .eq("nome", nome)
-          .limit(1)
-          .maybeSingle();
+          .upsert(
+            novas.map((nome, i) => ({ nome, cor: cores[i % cores.length], workspace_id: auth.workspaceId })),
+            { onConflict: "workspace_id,nome", ignoreDuplicates: true }
+          )
+          .select("id, nome");
 
-        let etiquetaId = existente?.id;
+        for (const c of criadas || []) mapaExistentes.set(c.nome, c.id);
 
-        // Criar se nao existe
-        if (!etiquetaId) {
-          const { data: nova } = await service
+        // Se upsert ignorou duplicatas, buscar as que faltam
+        const faltam = novas.filter((n) => !mapaExistentes.has(n));
+        if (faltam.length > 0) {
+          const { data: recheck } = await service
             .from("etiquetas")
-            .insert({ nome, cor: cores[i % cores.length], workspace_id: auth.workspaceId })
-            .select("id")
-            .single();
-          etiquetaId = nova?.id;
+            .select("id, nome")
+            .eq("workspace_id", auth.workspaceId)
+            .in("nome", faltam);
+          for (const r of recheck || []) mapaExistentes.set(r.nome, r.id);
         }
+      }
 
-        if (etiquetaId) {
-          await service.from("cartao_etiquetas").insert({ cartao_id: data.id, etiqueta_id: etiquetaId });
-        }
+      // 1 query: vincular todas de uma vez
+      const vinculos = nomes
+        .map((n) => mapaExistentes.get(n))
+        .filter(Boolean)
+        .map((etiquetaId) => ({ cartao_id: data.id, etiqueta_id: etiquetaId }));
+
+      if (vinculos.length > 0) {
+        await service.from("cartao_etiquetas").upsert(vinculos, {
+          onConflict: "cartao_id,etiqueta_id",
+          ignoreDuplicates: true,
+        });
       }
     }
 
-    // Criar checklists
+    // Criar checklists (batch: cria todos de uma vez, depois itens em batch)
     if (body.checklists?.length > 0) {
-      for (let ci = 0; ci < body.checklists.length; ci++) {
-        const checklist = body.checklists[ci] as { titulo: string; itens: string[] };
-        const titulo = checklist.titulo || "Checklist";
-        const itens = checklist.itens || [];
+      const { data: cls } = await service
+        .from("checklists")
+        .insert(
+          (body.checklists as { titulo: string; itens: string[] }[]).map((cl, ci) => ({
+            cartao_id: data.id,
+            titulo: cl.titulo || "Checklist",
+            posicao: ci,
+          }))
+        )
+        .select("id");
 
-        const { data: cl } = await service
-          .from("checklists")
-          .insert({ cartao_id: data.id, titulo, posicao: ci })
-          .select("id")
-          .single();
-
-        if (cl && itens.length > 0) {
-          await service.from("checklist_itens").insert(
-            itens.map((texto: string, idx: number) => ({
-              checklist_id: cl.id,
+      if (cls && cls.length > 0) {
+        const todosItens = (body.checklists as { titulo: string; itens: string[] }[]).flatMap(
+          (cl, ci) =>
+            (cl.itens || []).map((texto: string, idx: number) => ({
+              checklist_id: cls[ci].id,
               texto,
               concluido: false,
               posicao: idx,
             }))
-          );
+        );
+        if (todosItens.length > 0) {
+          await service.from("checklist_itens").insert(todosItens);
         }
       }
     }
@@ -397,54 +404,80 @@ async function handleUpdateCard(auth: ApiKeyAuth, request: Request, params: stri
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Card nao encontrado" }, { status: 404 });
 
-  // Adicionar etiquetas por nome
+  // Adicionar etiquetas por nome (batch)
   if (body.etiquetas?.length > 0) {
     const cores = ["#EF4444", "#F97316", "#EAB308", "#22C55E", "#3B82F6", "#6366F1", "#A855F7", "#EC4899"];
-    for (let i = 0; i < body.etiquetas.length; i++) {
-      const nome = body.etiquetas[i] as string;
-      const { data: existente } = await service
+    const nomes = (body.etiquetas as string[]).map((n: string) => n.trim()).filter(Boolean);
+
+    const { data: existentes } = await service
+      .from("etiquetas")
+      .select("id, nome")
+      .eq("workspace_id", auth.workspaceId)
+      .in("nome", nomes);
+
+    const mapaExistentes = new Map((existentes || []).map((e) => [e.nome, e.id]));
+    const novas = nomes.filter((n) => !mapaExistentes.has(n));
+
+    if (novas.length > 0) {
+      const { data: criadas } = await service
         .from("etiquetas")
-        .select("id")
-        .eq("workspace_id", auth.workspaceId)
-        .eq("nome", nome)
-        .limit(1)
-        .maybeSingle();
+        .upsert(
+          novas.map((nome, i) => ({ nome, cor: cores[i % cores.length], workspace_id: auth.workspaceId })),
+          { onConflict: "workspace_id,nome", ignoreDuplicates: true }
+        )
+        .select("id, nome");
 
-      let etiquetaId = existente?.id;
-      if (!etiquetaId) {
-        const { data: nova } = await service
+      for (const c of criadas || []) mapaExistentes.set(c.nome, c.id);
+
+      const faltam = novas.filter((n) => !mapaExistentes.has(n));
+      if (faltam.length > 0) {
+        const { data: recheck } = await service
           .from("etiquetas")
-          .insert({ nome, cor: cores[i % cores.length], workspace_id: auth.workspaceId })
-          .select("id")
-          .single();
-        etiquetaId = nova?.id;
+          .select("id, nome")
+          .eq("workspace_id", auth.workspaceId)
+          .in("nome", faltam);
+        for (const r of recheck || []) mapaExistentes.set(r.nome, r.id);
       }
+    }
 
-      if (etiquetaId) {
-        await service.from("cartao_etiquetas").upsert(
-          { cartao_id: id, etiqueta_id: etiquetaId },
-          { onConflict: "cartao_id,etiqueta_id", ignoreDuplicates: true }
-        );
-      }
+    const vinculos = nomes
+      .map((n) => mapaExistentes.get(n))
+      .filter(Boolean)
+      .map((etiquetaId) => ({ cartao_id: id, etiqueta_id: etiquetaId }));
+
+    if (vinculos.length > 0) {
+      await service.from("cartao_etiquetas").upsert(vinculos, {
+        onConflict: "cartao_id,etiqueta_id",
+        ignoreDuplicates: true,
+      });
     }
   }
 
-  // Adicionar checklists
+  // Adicionar checklists (batch)
   if (body.checklists?.length > 0) {
-    for (let ci = 0; ci < body.checklists.length; ci++) {
-      const checklist = body.checklists[ci] as { titulo: string; itens: string[] };
-      const { data: cl } = await service
-        .from("checklists")
-        .insert({ cartao_id: id, titulo: checklist.titulo || "Checklist", posicao: ci })
-        .select("id")
-        .single();
+    const { data: cls } = await service
+      .from("checklists")
+      .insert(
+        (body.checklists as { titulo: string; itens: string[] }[]).map((cl, ci) => ({
+          cartao_id: id,
+          titulo: cl.titulo || "Checklist",
+          posicao: ci,
+        }))
+      )
+      .select("id");
 
-      if (cl && checklist.itens?.length > 0) {
-        await service.from("checklist_itens").insert(
-          checklist.itens.map((texto: string, idx: number) => ({
-            checklist_id: cl.id, texto, concluido: false, posicao: idx,
+    if (cls && cls.length > 0) {
+      const todosItens = (body.checklists as { titulo: string; itens: string[] }[]).flatMap(
+        (cl, ci) =>
+          (cl.itens || []).map((texto: string, idx: number) => ({
+            checklist_id: cls[ci].id,
+            texto,
+            concluido: false,
+            posicao: idx,
           }))
-        );
+      );
+      if (todosItens.length > 0) {
+        await service.from("checklist_itens").insert(todosItens);
       }
     }
   }
@@ -555,22 +588,24 @@ async function handleStartWork(auth: ApiKeyAuth, request: Request, params: strin
   const body = await getBody(request);
   const service = getService();
 
-  // Buscar card
-  const { data: card } = await service.from("cartoes").select("*").eq("id", cardId).single();
-  if (!card) return NextResponse.json({ error: "Card nao encontrado" }, { status: 404 });
+  // Buscar card + token em paralelo (em vez de sequencial)
+  const [cardResult, token] = await Promise.all([
+    service.from("cartoes").select("id, titulo, coluna_id, branch").eq("id", cardId).single(),
+    getGitHubToken(service, auth.userId),
+  ]);
 
-  // Buscar token GitHub
-  const token = await getGitHubToken(service, auth.userId);
+  const card = cardResult.data;
+  if (!card) return NextResponse.json({ error: "Card nao encontrado" }, { status: 404 });
   if (!token) return NextResponse.json({ error: "GitHub nao conectado" }, { status: 403 });
 
   // Criar branch (se repo fornecido)
   const repo = body?.repo;
   const baseBranch = body?.base || "main";
+  const updateFields: Record<string, unknown> = {};
 
   if (repo) {
     const branchName = `feat/${cardId.slice(0, 8)}-${card.titulo.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30)}`;
 
-    // Buscar SHA da base
     const refResult = await githubAuthFetch<{ object: { sha: string } }>(
       `/repos/${repo}/git/ref/heads/${baseBranch}`,
       token
@@ -582,32 +617,33 @@ async function handleStartWork(auth: ApiKeyAuth, request: Request, params: strin
         token,
         { method: "POST", body: JSON.stringify({ ref: `refs/heads/${branchName}`, sha: refResult.data.object.sha }) }
       );
-
-      // Salvar branch no card
-      await service.from("cartoes").update({ branch: branchName }).eq("id", cardId);
+      updateFields.branch = branchName;
     }
   }
 
   // Mover card para "Em Progresso" (segunda coluna da sprint, se tiver)
   if (card.coluna_id) {
-    const { data: coluna } = await service.from("colunas").select("quadro_id").eq("id", card.coluna_id).single();
-    if (coluna) {
-      const { data: colunas } = await service
-        .from("colunas")
-        .select("id")
-        .eq("quadro_id", coluna.quadro_id)
-        .order("posicao")
-        .limit(3);
+    const { data: colunas } = await service
+      .from("colunas")
+      .select("id")
+      .eq("quadro_id", (
+        await service.from("colunas").select("quadro_id").eq("id", card.coluna_id).single()
+      ).data?.quadro_id || "")
+      .order("posicao")
+      .limit(3);
 
-      // Segunda coluna = "Em Progresso"
-      if (colunas && colunas.length >= 2) {
-        await service.from("cartoes").update({ coluna_id: colunas[1].id }).eq("id", cardId);
-      }
+    if (colunas && colunas.length >= 2) {
+      updateFields.coluna_id = colunas[1].id;
     }
   }
 
-  const { data: updated } = await service.from("cartoes").select("*").eq("id", cardId).single();
-  return NextResponse.json({ data: updated, message: "Trabalho iniciado" });
+  // 1 update com todos os campos, retornando o resultado (elimina re-fetch)
+  if (Object.keys(updateFields).length > 0) {
+    const { data: updated } = await service.from("cartoes").update(updateFields).eq("id", cardId).select().single();
+    return NextResponse.json({ data: updated, message: "Trabalho iniciado" });
+  }
+
+  return NextResponse.json({ data: card, message: "Trabalho iniciado" });
 }
 
 async function handleFinishWork(auth: ApiKeyAuth, request: Request, params: string[]) {
@@ -615,10 +651,14 @@ async function handleFinishWork(auth: ApiKeyAuth, request: Request, params: stri
   const body = await getBody(request);
   const service = getService();
 
-  const { data: card } = await service.from("cartoes").select("*").eq("id", cardId).single();
-  if (!card) return NextResponse.json({ error: "Card nao encontrado" }, { status: 404 });
+  // Buscar card + token em paralelo
+  const [cardResult, token] = await Promise.all([
+    service.from("cartoes").select("id, titulo, descricao, coluna_id, branch, pr_repo_id").eq("id", cardId).single(),
+    getGitHubToken(service, auth.userId),
+  ]);
 
-  const token = await getGitHubToken(service, auth.userId);
+  const card = cardResult.data;
+  if (!card) return NextResponse.json({ error: "Card nao encontrado" }, { status: 404 });
   if (!token) return NextResponse.json({ error: "GitHub nao conectado" }, { status: 403 });
 
   const repo = body?.repo;
@@ -640,6 +680,8 @@ async function handleFinishWork(auth: ApiKeyAuth, request: Request, params: stri
     return NextResponse.json({ error: `Erro ao criar PR: ${prResult.error}` }, { status: 500 });
   }
 
+  const updateFields: Record<string, unknown> = {};
+
   // Salvar PR no card (incluindo pr_repo_id)
   if (prResult.data) {
     const pr = prResult.data as { number: number; html_url: string; user?: { login: string } };
@@ -653,13 +695,11 @@ async function handleFinishWork(auth: ApiKeyAuth, request: Request, params: stri
       .eq("workspace_id", auth.workspaceId)
       .maybeSingle();
 
-    await service.from("cartoes").update({
-      pr_numero: pr.number,
-      pr_url: pr.html_url,
-      pr_status: "open",
-      pr_autor: pr.user?.login || null,
-      pr_repo_id: repoData?.id || card.pr_repo_id || null,
-    }).eq("id", cardId);
+    updateFields.pr_numero = pr.number;
+    updateFields.pr_url = pr.html_url;
+    updateFields.pr_status = "open";
+    updateFields.pr_autor = pr.user?.login || null;
+    updateFields.pr_repo_id = repoData?.id || card.pr_repo_id || null;
   }
 
   // Mover para "Em Review" (penultima coluna)
@@ -672,15 +712,20 @@ async function handleFinishWork(auth: ApiKeyAuth, request: Request, params: stri
         .eq("quadro_id", coluna.quadro_id)
         .order("posicao");
 
-      // Penultima coluna = "Em Review"
       if (colunas && colunas.length >= 3) {
-        const reviewCol = colunas[colunas.length - 2];
-        await service.from("cartoes").update({ coluna_id: reviewCol.id }).eq("id", cardId);
+        updateFields.coluna_id = colunas[colunas.length - 2].id;
       }
     }
   }
 
-  const { data: updated } = await service.from("cartoes").select("*").eq("id", cardId).single();
+  // 1 update com todos os campos, retornando o resultado (elimina re-fetch)
+  const { data: updated } = await service
+    .from("cartoes")
+    .update(updateFields)
+    .eq("id", cardId)
+    .select()
+    .single();
+
   return NextResponse.json({ data: updated, message: "PR criado e card movido para Review" });
 }
 

@@ -38,13 +38,10 @@ export function useRealtimeBoard(quadroId: string | null) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "cartoes" },
-        (payload) => {
-          // Only refetch if the card belongs to this board (check via coluna relationship)
-          const rec = (payload.new || payload.old) as Record<string, unknown> | undefined;
-          if (rec) {
-            // Always debounce to batch rapid events
-            debouncedMutate(`cartoes-${quadroId}`);
-          }
+        () => {
+          // cartoes nao tem quadro_id direto, entao nao da pra filtrar por board
+          // no Supabase Realtime. Debounce ja minimiza o impacto.
+          debouncedMutate(`cartoes-${quadroId}`);
         }
       )
       .on(

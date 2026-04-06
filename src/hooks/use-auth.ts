@@ -16,35 +16,37 @@ export function useAuth() {
     return user;
   });
 
-  const { data: perfil } = useSWR(
-    user ? `perfil-${user.id}` : null,
+  // Perfil e temGithub dependem de user, mas rodam em PARALELO entre si
+  const { data: perfilEGithub } = useSWR(
+    user ? `auth-extras-${user.id}` : null,
     async () => {
-      const { data } = await supabase
-        .from("perfis")
-        .select("*")
-        .eq("id", user!.id)
-        .single();
-      return data as Perfil | null;
-    }
-  );
+      const [perfilRes, githubRes] = await Promise.all([
+        // Fetch perfil
+        supabase
+          .from("perfis")
+          .select("*")
+          .eq("id", user!.id)
+          .single()
+          .then(({ data }) => data as Perfil | null),
 
-  const { data: temGithub, mutate: mutateGithub } = useSWR(
-    user ? `has-github-${user.id}` : null,
-    async () => {
-      // Check OAuth identity
-      const identities = user?.identities ?? [];
-      const hasOAuth = identities.some((i) => i.provider === "github");
-      if (hasOAuth) return true;
+        // Check GitHub connection
+        (async () => {
+          const identities = user?.identities ?? [];
+          const hasOAuth = identities.some((i) => i.provider === "github");
+          if (hasOAuth) return true;
 
-      // Check PAT via API
-      try {
-        const res = await fetch("/api/github-token");
-        if (!res.ok) return false;
-        const data = await res.json();
-        return data.connected === true;
-      } catch {
-        return false;
-      }
+          try {
+            const res = await fetch("/api/github-token");
+            if (!res.ok) return false;
+            const data = await res.json();
+            return data.connected === true;
+          } catch {
+            return false;
+          }
+        })(),
+      ]);
+
+      return { perfil: perfilRes, temGithub: githubRes };
     }
   );
 
@@ -56,11 +58,11 @@ export function useAuth() {
 
   return {
     user,
-    perfil,
+    perfil: perfilEGithub?.perfil ?? null,
     carregando,
-    temGithub: temGithub ?? false,
+    temGithub: perfilEGithub?.temGithub ?? false,
     logout,
     refresh: mutate,
-    refreshGithub: mutateGithub,
+    refreshGithub: () => mutate(),
   };
 }

@@ -6,6 +6,26 @@ import { createServiceClient } from "@/lib/supabase/server";
  */
 
 const memoryMap = new Map<string, { count: number; resetAt: number }>();
+const MAX_MEMORY_ENTRIES = 10_000;
+let lastCleanup = 0;
+
+function cleanupExpired() {
+  const now = Date.now();
+  // Cleanup no maximo a cada 30s para nao impactar performance
+  if (now - lastCleanup < 30_000) return;
+  lastCleanup = now;
+
+  for (const [k, v] of memoryMap) {
+    if (now > v.resetAt) memoryMap.delete(k);
+  }
+
+  // Safety cap: se ainda tiver muitas entries, dropar as mais antigas
+  if (memoryMap.size > MAX_MEMORY_ENTRIES) {
+    const entries = [...memoryMap.entries()].sort((a, b) => a[1].resetAt - b[1].resetAt);
+    const toDelete = entries.slice(0, entries.length - MAX_MEMORY_ENTRIES);
+    for (const [k] of toDelete) memoryMap.delete(k);
+  }
+}
 
 function memoryRateLimit(
   key: string,
@@ -13,6 +33,8 @@ function memoryRateLimit(
   windowMs: number
 ): { ok: boolean; retryAfter?: number } {
   const now = Date.now();
+  cleanupExpired();
+
   const entry = memoryMap.get(key);
 
   if (!entry || now > entry.resetAt) {

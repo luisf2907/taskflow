@@ -7,16 +7,48 @@ import type {
 } from "@/types/github";
 
 const BASE = "https://api.github.com";
+const FETCH_TIMEOUT = 10_000; // 10s timeout para todas as chamadas GitHub
+
+// Cache simples em memória para chamadas publicas (TTL de 60s)
+const publicCache = new Map<string, { data: unknown; expiry: number }>();
+const CACHE_TTL = 60_000;
+
+function getCached<T>(key: string): T | null {
+  const entry = publicCache.get(key);
+  if (!entry || Date.now() > entry.expiry) {
+    publicCache.delete(key);
+    return null;
+  }
+  return entry.data as T;
+}
+
+function setCache(key: string, data: unknown): void {
+  // Limitar tamanho do cache
+  if (publicCache.size > 500) {
+    const oldest = publicCache.keys().next().value;
+    if (oldest) publicCache.delete(oldest);
+  }
+  publicCache.set(key, { data, expiry: Date.now() + CACHE_TTL });
+}
 
 async function githubFetch<T>(path: string): Promise<T | null> {
+  const cached = getCached<T>(path);
+  if (cached) return cached;
+
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+
     const res = await fetch(`${BASE}${path}`, {
-      headers: {
-        Accept: "application/vnd.github.v3+json",
-      },
+      headers: { Accept: "application/vnd.github.v3+json" },
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
+
     if (!res.ok) return null;
-    return res.json();
+    const data = await res.json();
+    setCache(path, data);
+    return data;
   } catch {
     return null;
   }
@@ -194,26 +226,60 @@ export async function githubAuthFetch<T>(
   token: string,
   options?: RequestInit
 ): Promise<GitHubResponse<T>> {
-  try {
-    const res = await fetch(`${BASE}${path}`, {
-      ...options,
-      headers: {
-        Accept: "application/vnd.github.v3+json",
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
-    });
-    const rateLimit = parseRateLimit(res);
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ message: res.statusText }));
-      return { data: null, status: res.status, error: err.message, rateLimit };
+  const maxRetries = 2;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+
+      const res = await fetch(`${BASE}${path}`, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          Accept: "application/vnd.github.v3+json",
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          ...options?.headers,
+        },
+      });
+      clearTimeout(timeout);
+
+      const rateLimit = parseRateLimit(res);
+
+      // Rate limited — retry com backoff
+      if (res.status === 429 && attempt < maxRetries) {
+        const retryAfter = parseInt(res.headers.get("Retry-After") || "2", 10);
+        await new Promise((r) => setTimeout(r, retryAfter * 1000));
+        continue;
+      }
+
+      // Server error — retry com backoff
+      if (res.status >= 500 && attempt < maxRetries) {
+        await new Promise((r) => setTimeout(r, (attempt + 1) * 1000));
+        continue;
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: res.statusText }));
+        return { data: null, status: res.status, error: err.message, rateLimit };
+      }
+      const data = await res.json().catch(() => null);
+      return { data: data as T, status: res.status, rateLimit };
+    } catch (err) {
+      // Timeout or network error — retry
+      if (attempt < maxRetries) {
+        await new Promise((r) => setTimeout(r, (attempt + 1) * 1000));
+        continue;
+      }
+      const message = err instanceof Error && err.name === "AbortError"
+        ? "Request timeout"
+        : "Network error";
+      return { data: null, status: 500, error: message };
     }
-    const data = await res.json().catch(() => null);
-    return { data: data as T, status: res.status, rateLimit };
-  } catch {
-    return { data: null, status: 500, error: "Network error" };
   }
+
+  return { data: null, status: 500, error: "Max retries exceeded" };
 }
 
 export async function mergePR(
