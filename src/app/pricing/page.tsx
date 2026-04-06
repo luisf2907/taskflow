@@ -59,7 +59,7 @@ const colunas = [
   { key: "github", label: "GitHub" },
   { key: "ia", label: "IA" },
   { key: "planningPoker", label: "Planning Poker" },
-  { key: "mcp", label: "MCP (Claude)" },
+  { key: "mcp", label: "MCP" },
 ] as const;
 
 function CheckIcon() {
@@ -143,11 +143,11 @@ export default function PricingPage() {
 
           {/* Desktop table */}
           <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-[13px]" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
+            <table className="text-[13px] table-fixed mx-auto" style={{ borderCollapse: "separate", borderSpacing: 0, maxWidth: "720px", width: "100%" }}>
               <thead>
                 <tr>
-                  <th className="text-left px-4 py-3 font-bold" style={{ color: "var(--tf-text)" }}>Ferramenta</th>
-                  <th className="text-left px-4 py-3 font-bold" style={{ color: "var(--tf-text)" }}>Preco</th>
+                  <th className="text-left px-3 py-3 font-bold w-[120px]" style={{ color: "var(--tf-text)" }}>Ferramenta</th>
+                  <th className="text-left px-3 py-3 font-bold w-[100px]" style={{ color: "var(--tf-text)" }}>Preco</th>
                   {colunas.map((c) => (
                     <th key={c.key} className="text-center px-3 py-3 font-bold" style={{ color: "var(--tf-text)" }}>
                       {c.label}
@@ -172,8 +172,10 @@ export default function PricingPage() {
                       {row.preco}
                     </td>
                     {colunas.map((c) => (
-                      <td key={c.key} className="text-center px-3 py-3">
-                        {row[c.key] ? <CheckIcon /> : <XIcon />}
+                      <td key={c.key} className="px-3 py-3">
+                        <div className="flex items-center justify-center">
+                          {row[c.key] ? <CheckIcon /> : <XIcon />}
+                        </div>
                       </td>
                     ))}
                   </tr>

@@ -24,7 +24,7 @@ async function enviarEmailAsync({ to, subject, html }: EnviarEmailParams): Promi
     const resend = new Resend(apiKey);
 
     await resend.emails.send({
-      from: "Taskflow <noreply@taskflow.app>",
+      from: "Taskflow <noreply@carrotcompany.com.br>",
       to,
       subject,
       html,

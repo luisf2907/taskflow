@@ -7,8 +7,8 @@ const linkColumns = [
   {
     heading: "Produto",
     links: [
-      { label: "Funcionalidades", href: "#features" },
-      { label: "Como Funciona", href: "#how-it-works" },
+      { label: "Funcionalidades", href: "/#features" },
+      { label: "Como Funciona", href: "/#how-it-works" },
       { label: "Precos", href: "/pricing" },
     ],
   },

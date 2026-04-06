@@ -12,16 +12,28 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const next = sanitizeRedirectPath(searchParams.get("next"));
+  const errorParam = searchParams.get("error_description") || searchParams.get("error");
+
+  // Se o Supabase retornou erro (ex: token expirado), redirecionar com mensagem amigavel
+  if (errorParam) {
+    const msg = errorParam.includes("expired")
+      ? "Link expirado. Solicite um novo."
+      : "Erro na autenticacao. Tente novamente.";
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(msg)}`, request.url));
+  }
 
   if (!code) {
-    return NextResponse.redirect(new URL("/login?error=no_code", request.url));
+    return NextResponse.redirect(new URL("/login?error=Link+invalido.+Solicite+um+novo.", request.url));
   }
 
   const supabase = await createServerClient();
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data.session) {
-    return NextResponse.redirect(new URL("/login?error=auth", request.url));
+    const msg = error?.message?.includes("expired")
+      ? "Link expirado. Solicite um novo."
+      : "Falha na autenticacao. Tente novamente.";
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(msg)}`, request.url));
   }
 
   // Se o login foi via GitHub, salvar o provider_token

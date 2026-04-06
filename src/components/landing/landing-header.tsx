@@ -19,7 +19,7 @@ export default function LandingHeader() {
   return (
     <div className="sticky top-0 z-50 px-3 lg:px-6 pt-3.5">
       <header
-        className="max-w-7xl mx-auto h-[64px] px-6 md:px-8 rounded-[32px] flex items-center justify-between transition-all duration-300"
+        className="max-w-7xl mx-auto h-[64px] px-6 md:px-8 rounded-[32px] flex items-center justify-between relative transition-all duration-300"
         style={{
           background: scrolled ? "rgba(var(--tf-header-rgb), 0.85)" : "rgba(var(--tf-header-rgb), 0.4)",
           backdropFilter: "blur(20px)",
@@ -44,11 +44,11 @@ export default function LandingHeader() {
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        {/* Desktop nav — centered absolutely in header */}
+        <nav className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
           {[
-            { label: "Funcionalidades", href: "#features" },
-            { label: "Como Funciona", href: "#how-it-works" },
+            { label: "Funcionalidades", href: "/#features" },
+            { label: "Como Funciona", href: "/#how-it-works" },
           ].map((item) => (
             <a
               key={item.href}
@@ -125,7 +125,7 @@ export default function LandingHeader() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div
-          className="md:hidden mt-2 mx-auto max-w-7xl rounded-[20px] p-4 flex flex-col gap-2 border"
+          className="md:hidden mt-2 mx-auto max-w-6xl rounded-[20px] p-4 flex flex-col gap-2 border"
           style={{
             background: "var(--tf-surface)",
             borderColor: "var(--tf-border)",
@@ -133,7 +133,7 @@ export default function LandingHeader() {
           }}
         >
           <a
-            href="#features"
+            href="/#features"
             className="px-4 py-3 rounded-[14px] text-[14px] font-bold no-underline hover-surface"
             style={{ color: "var(--tf-text-secondary)" }}
             onClick={() => setMobileOpen(false)}
@@ -141,7 +141,7 @@ export default function LandingHeader() {
             Funcionalidades
           </a>
           <a
-            href="#how-it-works"
+            href="/#how-it-works"
             className="px-4 py-3 rounded-[14px] text-[14px] font-bold no-underline hover-surface"
             style={{ color: "var(--tf-text-secondary)" }}
             onClick={() => setMobileOpen(false)}

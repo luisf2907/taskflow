@@ -34,8 +34,9 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Landing page (/) is always public
-  if (pathname === "/") {
+  // Public pages (no auth required)
+  const publicPaths = ["/", "/pricing", "/termos", "/privacidade", "/reset-password"];
+  if (publicPaths.some((p) => pathname === p)) {
     return response;
   }
 

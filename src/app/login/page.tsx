@@ -35,7 +35,7 @@ function LoginContent() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [nome, setNome] = useState("");
-  const [erro, setErro] = useState(errorParam ? "Falha na autenticação. Tente novamente." : "");
+  const [erro, setErro] = useState(errorParam || "");
   const [carregando, setCarregando] = useState(false);
   const [emailConfirmacao, setEmailConfirmacao] = useState(""); // email para mostrar no card
 
@@ -89,7 +89,7 @@ function LoginContent() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/settings`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
       });
       if (error) throw error;
 
