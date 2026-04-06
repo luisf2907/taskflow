@@ -83,10 +83,10 @@ export function useMembrosWorkspace(workspaceId: string) {
         user_id: p.id,
       }));
 
-      // Insert um por um para ignorar conflitos silenciosamente
+      // Upsert para ignorar conflitos silenciosamente (409 on duplicate)
       const criados = [];
       for (const ins of inserts) {
-        const { data } = await supabase.from("membros").insert(ins).select().single();
+        const { data } = await supabase.from("membros").upsert(ins, { onConflict: "workspace_id,user_id", ignoreDuplicates: true }).select().single();
         if (data) criados.push(data);
       }
 
