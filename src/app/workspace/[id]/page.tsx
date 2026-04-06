@@ -85,8 +85,9 @@ import {
 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Lock, Search } from "lucide-react";
+import { Loader2, Lock, Search, Upload } from "lucide-react";
 import type { Repositorio } from "@/types/github";
+import { ImportarModal } from "@/components/workspace/importar-modal";
 
 // ─── Modal Conectar Repo (com listagem autenticada) ───
 function ModalConectarRepo({
@@ -698,6 +699,7 @@ export default function PaginaWorkspace() {
 
   // Modal novo sprint
   const [modalSprint, setModalSprint] = useState(false);
+  const [modalImport, setModalImport] = useState(false);
   const [sprintNome, setSprintNome] = useState("");
   const [sprintMeta, setSprintMeta] = useState("");
   const [sprintCor, setSprintCor] = useState(CORES_QUADRO[0]);
@@ -946,6 +948,13 @@ export default function PaginaWorkspace() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+                  <button
+                    onClick={() => setModalImport(true)}
+                    className="flex items-center gap-2 px-4 py-3 text-[13px] font-bold rounded-[20px] border transition-all hover:-translate-y-0.5"
+                    style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)" }}
+                  >
+                    <Upload size={16} /> Importar
+                  </button>
                   <button
                     onClick={() => setModalSprint(true)}
                     className="flex items-center gap-2 px-5 py-3 text-[14px] font-bold rounded-[20px] transition-all hover:-translate-y-0.5"
@@ -1867,6 +1876,9 @@ export default function PaginaWorkspace() {
         workspaceId={workspaceId}
         cartaoInicialId={pokerCartaoId}
       />
+
+      {/* Modal: Importar */}
+      <ImportarModal aberto={modalImport} onFechar={() => setModalImport(false)} workspaceId={workspaceId} />
 
       {/* Modal: Nova Sprint */}
       <Modal aberto={modalSprint} onFechar={() => setModalSprint(false)} titulo="Criar nova sprint">
