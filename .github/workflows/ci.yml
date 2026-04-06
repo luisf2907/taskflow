@@ -14,6 +14,7 @@ jobs:
   lint-typecheck-test:
     name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
+    if: github.repository == 'luisf2907/taskflow'
 
     steps:
       - uses: actions/checkout@v4
