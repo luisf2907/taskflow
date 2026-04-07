@@ -99,6 +99,7 @@ import { createPortal } from "react-dom";
 import { Loader2, Lock, Search, Upload } from "lucide-react";
 import type { Repositorio } from "@/types/github";
 import { exportCSV, exportJSON } from "@/lib/export";
+import { Tooltip } from "@/components/ui/tooltip";
 
 // ─── Export Dropdown ───
 function ExportDropdown({ cartoes, nomeWorkspace }: { cartoes: import("@/hooks/use-backlog").CartaoBacklog[]; nomeWorkspace: string }) {
@@ -1105,20 +1106,24 @@ export default function PaginaWorkspace() {
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
                   <ExportDropdown cartoes={todosCartoes} nomeWorkspace={workspace.nome} />
-                  <button
-                    onClick={() => setModalImport(true)}
-                    className="flex items-center gap-2 px-4 py-3 text-[13px] font-bold rounded-[20px] border transition-all hover:-translate-y-0.5"
-                    style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)", background: "var(--tf-surface)" }}
-                  >
-                    <Upload size={16} /> Importar
-                  </button>
-                  <button
-                    onClick={() => setModalSprint(true)}
-                    className="flex items-center gap-2 px-5 py-3 text-[14px] font-bold rounded-[20px] transition-all hover:-translate-y-0.5"
-                    style={{ background: "var(--tf-accent-yellow)", color: "#1C2B29" }}
-                  >
-                    <Plus size={18} strokeWidth={2.5} /> Nova Sprint
-                  </button>
+                  <Tooltip content="Importe dados do Trello (JSON) ou Jira (CSV)">
+                    <button
+                      onClick={() => setModalImport(true)}
+                      className="flex items-center gap-2 px-4 py-3 text-[13px] font-bold rounded-[20px] border transition-all hover:-translate-y-0.5"
+                      style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)", background: "var(--tf-surface)" }}
+                    >
+                      <Upload size={16} /> Importar
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Crie um novo sprint para organizar tarefas">
+                    <button
+                      onClick={() => setModalSprint(true)}
+                      className="flex items-center gap-2 px-5 py-3 text-[14px] font-bold rounded-[20px] transition-all hover:-translate-y-0.5"
+                      style={{ background: "var(--tf-accent-yellow)", color: "#1C2B29" }}
+                    >
+                      <Plus size={18} strokeWidth={2.5} /> Nova Sprint
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
 

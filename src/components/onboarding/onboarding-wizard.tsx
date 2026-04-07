@@ -1,23 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Kanban, CheckCircle2 } from "lucide-react";
 import { logger } from "@/lib/logger";
 
 interface OnboardingWizardProps {
+  initialStep?: number;
   onComplete: (workspaceId: string) => void;
   onSkip: () => void;
 }
 
 const CORES = ["#00857A", "#D84D4D", "#FBD051", "#6366F1", "#EC4899", "#F59E0B"];
 
-export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) {
-  const [step, setStep] = useState(1);
+async function salvarStep(step: number) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("perfis").update({ onboarding_step: step }).eq("id", user.id);
+  } catch {
+    // Silent fail - nao bloquear UI
+  }
+}
+
+async function marcarCompleto() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase
+      .from("perfis")
+      .update({ onboarding_done: true, onboarding_step: 4 })
+      .eq("id", user.id);
+    // Legacy fallback
+    localStorage.setItem("tf_onboarding_done", "true");
+  } catch {
+    // Silent fail
+  }
+}
+
+export default function OnboardingWizard({ initialStep = 1, onComplete, onSkip }: OnboardingWizardProps) {
+  const [step, setStep] = useState(initialStep || 1);
   const [workspaceName, setWorkspaceName] = useState("");
   const [workspaceColor, setWorkspaceColor] = useState(CORES[0]);
   const [loading, setLoading] = useState(false);
   const [createdId, setCreatedId] = useState("");
+
+  // Persistir step ao mudar
+  useEffect(() => {
+    if (step > 0 && step < 4) salvarStep(step);
+  }, [step]);
 
   async function handleCreateWorkspace() {
     const nome = workspaceName.trim();
@@ -40,13 +71,18 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
       if (error) throw error;
 
       setCreatedId(data.id);
-      localStorage.setItem("tf_onboarding_done", "true");
+      await marcarCompleto();
       setStep(3);
     } catch (err) {
       logger.error(err instanceof Error ? err.message : String(err), "OnboardingWizard");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleSkip() {
+    await marcarCompleto();
+    onSkip();
   }
 
   return (
@@ -105,7 +141,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
               Começar
             </button>
             <button
-              onClick={onSkip}
+              onClick={handleSkip}
               className="mt-4 text-[14px] font-bold transition-colors hover:opacity-80"
               style={{ color: "var(--tf-text-secondary)" }}
             >

@@ -85,11 +85,13 @@ export default function PaginaInicial() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const done = localStorage.getItem('tf_onboarding_done');
-    if (!done && workspaces.length === 0 && quadros.length === 0) {
+    // Onboarding persistente: usa perfil.onboarding_done (banco) com fallback para localStorage
+    const doneNoBanco = perfil?.onboarding_done === true;
+    const doneNoLocal = localStorage.getItem('tf_onboarding_done') === "true";
+    if (!doneNoBanco && !doneNoLocal && workspaces.length === 0 && quadros.length === 0) {
       setShowOnboarding(true);
     }
-  }, [workspaces, quadros]);
+  }, [workspaces, quadros, perfil?.onboarding_done]);
 
   // Quadros agrupados por workspace
   const quadrosPorWorkspace = useMemo(() => {
@@ -333,14 +335,13 @@ export default function PaginaInicial() {
     <div className="h-full flex overflow-hidden lg:flex-row flex-col" style={{ background: "var(--tf-bg)" }}>
       {showOnboarding && (
         <OnboardingWizard
+          initialStep={perfil?.onboarding_step && perfil.onboarding_step > 0 && perfil.onboarding_step < 4 ? perfil.onboarding_step : 1}
           onComplete={(wsId) => {
             setShowOnboarding(false);
-            localStorage.setItem('tf_onboarding_done', 'true');
             router.push(`/workspace/${wsId}`);
           }}
           onSkip={() => {
             setShowOnboarding(false);
-            localStorage.setItem('tf_onboarding_done', 'true');
           }}
         />
       )}

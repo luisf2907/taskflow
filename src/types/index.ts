@@ -190,6 +190,8 @@ export interface Perfil {
   avatar_url: string | null;
   github_username: string | null;
   notif_preferences: NotifPreferences | null;
+  onboarding_done: boolean | null;
+  onboarding_step: number | null;
   criado_em: string;
   atualizado_em: string;
 }

@@ -159,7 +159,7 @@ function BurndownChart({ sprint, cards }: { sprint: Quadro; cards: CartaoBacklog
   const fim = new Date(sprint.data_fim);
   const hoje = new Date();
   const totalDias = diasEntre(inicio, fim);
-  const diasPassados = Math.min(diasEntre(inicio, hoje), totalDias);
+  const diasPassados = Math.max(0, Math.min(diasEntre(inicio, hoje), totalDias));
 
   const totalPontos = cards.reduce((acc, c) => acc + (c.peso || 0), 0);
   const pontosConcluidos = cards.filter((c) => c.concluido).reduce((acc, c) => acc + (c.peso || 0), 0);
@@ -167,34 +167,56 @@ function BurndownChart({ sprint, cards }: { sprint: Quadro; cards: CartaoBacklog
 
   if (totalPontos === 0 || totalDias <= 0) return null;
 
-  // Linha ideal: de totalPontos até 0
+  // Layout
   const largura = 500;
   const altura = 220;
-  const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+  const padding = { top: 24, right: 20, bottom: 40, left: 50 };
   const w = largura - padding.left - padding.right;
   const h = altura - padding.top - padding.bottom;
 
-  const idealStart = { x: padding.left, y: padding.top };
-  const idealEnd = { x: padding.left + w, y: padding.top + h };
-  const idealPath = `M ${idealStart.x} ${idealStart.y} L ${idealEnd.x} ${idealEnd.y}`;
+  // Conversores dia/pontos -> coordenadas SVG
+  const xFromDia = (dia: number) => padding.left + (dia / totalDias) * w;
+  const yFromPontos = (pontos: number) => padding.top + ((totalPontos - pontos) / totalPontos) * h;
 
-  // Linha real: simplificada — ponto inicial + ponto atual
-  // (sem dados históricos, usamos 2 pontos: início e hoje)
-  const realPoints = [
-    { x: padding.left, y: padding.top }, // dia 0: todos os pontos
-    {
-      x: padding.left + (diasPassados / totalDias) * w,
-      y: padding.top + (pontosConcluidos / totalPontos) * h,
-    },
-  ];
-  const realPath = realPoints.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+  // Linha ideal: totalPontos no dia 0 -> 0 no dia totalDias
+  const idealPath = `M ${xFromDia(0)} ${yFromPontos(totalPontos)} L ${xFromDia(totalDias)} ${yFromPontos(0)}`;
 
-  // Ponto ideal de hoje
-  const idealHoje = totalPontos - (diasPassados / totalDias) * totalPontos;
-  const status = pontosRestantes <= idealHoje ? "adiantado" : "atrasado";
+  // Ponto atual (real)
+  const realStart = { x: xFromDia(0), y: yFromPontos(totalPontos) };
+  const realAtual = { x: xFromDia(diasPassados), y: yFromPontos(pontosRestantes) };
+  const realPath = `M ${realStart.x} ${realStart.y} L ${realAtual.x} ${realAtual.y}`;
+
+  // Velocity atual (pts concluidos por dia)
+  const velocity = diasPassados > 0 ? pontosConcluidos / diasPassados : 0;
+
+  // Trend line: extende a linha real ate o fim do sprint usando a velocity
+  // Quantos pts ainda completados ate dia totalDias?
+  const diasRestantes = totalDias - diasPassados;
+  const pontosTrendFinal = Math.max(0, pontosRestantes - velocity * diasRestantes);
+  const trendPath = velocity > 0
+    ? `M ${realAtual.x} ${realAtual.y} L ${xFromDia(totalDias)} ${yFromPontos(pontosTrendFinal)}`
+    : null;
+
+  // Projecao de termino: quando vai zerar (em dias a partir de hoje)
+  let projecaoData: Date | null = null;
+  let deltaDias = 0;
+  if (velocity > 0 && pontosRestantes > 0) {
+    const diasAteZerar = pontosRestantes / velocity;
+    projecaoData = new Date(hoje.getTime() + diasAteZerar * 24 * 60 * 60 * 1000);
+    deltaDias = Math.round(diasEntre(fim, projecaoData));
+  } else if (pontosRestantes === 0) {
+    projecaoData = hoje;
+    deltaDias = -Math.round(diasEntre(hoje, fim));
+  }
+
+  // Ideal de hoje + delta
+  const idealHoje = Math.max(0, totalPontos - (diasPassados / totalDias) * totalPontos);
+  const delta = Math.round(idealHoje - pontosRestantes); // positivo = adiantado
+  const status = delta >= 0 ? "adiantado" : "atrasado";
   const statusCor = status === "adiantado" ? "#4BCE97" : "#F87171";
+  const trendCor = pontosTrendFinal === 0 || (projecaoData && projecaoData <= fim) ? "#4BCE97" : "#F87171";
 
-  // Grid
+  // Grid Y
   const gridY = [0, 0.25, 0.5, 0.75, 1].map((pct) => ({
     y: padding.top + pct * h,
     label: Math.round(totalPontos * (1 - pct)).toString(),
@@ -204,19 +226,22 @@ function BurndownChart({ sprint, cards }: { sprint: Quadro; cards: CartaoBacklog
   const diasLabels = [];
   const step = Math.max(1, Math.floor(totalDias / 6));
   for (let i = 0; i <= totalDias; i += step) {
-    diasLabels.push({
-      x: padding.left + (i / totalDias) * w,
-      label: `D${i}`,
-    });
+    diasLabels.push({ x: xFromDia(i), label: `D${i}` });
   }
+
+  // Ponto ideal de hoje (marker)
+  const idealHojePoint = { x: xFromDia(diasPassados), y: yFromPontos(idealHoje) };
+
+  // Formatar data de projecao
+  const formatarData = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
   return (
     <div className="rounded-[14px] border p-5" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Burndown — {sprint.nome}</h3>
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded-[8px] text-[11px] font-bold" style={{ background: `${statusCor}20`, color: statusCor }}>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-[11px] font-bold" style={{ background: `${statusCor}20`, color: statusCor }}>
           {status === "adiantado" ? <TrendingUp size={12} /> : <Flame size={12} />}
-          {pontosRestantes} pts restantes · {status}
+          {delta >= 0 ? `+${delta}` : delta} pts {status}
         </div>
       </div>
 
@@ -237,27 +262,41 @@ function BurndownChart({ sprint, cards }: { sprint: Quadro; cards: CartaoBacklog
         {/* Linha ideal (tracejada) */}
         <path d={idealPath} fill="none" stroke="var(--tf-text-tertiary)" strokeWidth={1.5} strokeDasharray="6,4" opacity={0.5} />
 
-        {/* Linha real */}
+        {/* Trend line (projecao baseada na velocity) */}
+        {trendPath && (
+          <path d={trendPath} fill="none" stroke={trendCor} strokeWidth={2} strokeDasharray="4,4" opacity={0.6} strokeLinecap="round" />
+        )}
+
+        {/* Linha real (do dia 0 ate hoje) */}
         <path d={realPath} fill="none" stroke={statusCor} strokeWidth={2.5} strokeLinecap="round" />
 
+        {/* Ponto ideal de hoje (marker pequeno) */}
+        <circle cx={idealHojePoint.x} cy={idealHojePoint.y} r={3} fill="var(--tf-text-tertiary)" opacity={0.6} />
+
         {/* Ponto atual */}
-        <circle cx={realPoints[1].x} cy={realPoints[1].y} r={5} fill="var(--tf-surface)" stroke={statusCor} strokeWidth={2.5} />
+        <circle cx={realAtual.x} cy={realAtual.y} r={5} fill="var(--tf-surface)" stroke={statusCor} strokeWidth={2.5} />
 
         {/* Hoje indicator */}
-        <line x1={realPoints[1].x} y1={padding.top} x2={realPoints[1].x} y2={padding.top + h} stroke={statusCor} strokeWidth={1} strokeDasharray="3,3" opacity={0.4} />
-        <text x={realPoints[1].x} y={padding.top - 6} textAnchor="middle" fontSize={9} fontWeight={600} fill={statusCor}>HOJE</text>
+        <line x1={realAtual.x} y1={padding.top} x2={realAtual.x} y2={padding.top + h} stroke={statusCor} strokeWidth={1} strokeDasharray="3,3" opacity={0.4} />
+        <text x={realAtual.x} y={padding.top - 8} textAnchor="middle" fontSize={9} fontWeight={700} fill={statusCor}>HOJE</text>
 
         {/* Legenda */}
-        <g transform={`translate(${largura - padding.right - 120}, ${padding.top + 10})`}>
-          <line x1={0} y1={0} x2={20} y2={0} stroke="var(--tf-text-tertiary)" strokeWidth={1.5} strokeDasharray="4,3" opacity={0.5} />
-          <text x={24} y={4} fontSize={9} fill="var(--tf-text-tertiary)">Ideal</text>
-          <line x1={0} y1={16} x2={20} y2={16} stroke={statusCor} strokeWidth={2.5} />
-          <text x={24} y={20} fontSize={9} fill="var(--tf-text-tertiary)">Real</text>
+        <g transform={`translate(${largura - padding.right - 150}, ${padding.top + 6})`}>
+          <line x1={0} y1={0} x2={18} y2={0} stroke="var(--tf-text-tertiary)" strokeWidth={1.5} strokeDasharray="4,3" opacity={0.5} />
+          <text x={22} y={3} fontSize={9} fill="var(--tf-text-tertiary)">Ideal</text>
+          <line x1={50} y1={0} x2={68} y2={0} stroke={statusCor} strokeWidth={2.5} />
+          <text x={72} y={3} fontSize={9} fill="var(--tf-text-tertiary)">Real</text>
+          {trendPath && (
+            <>
+              <line x1={100} y1={0} x2={118} y2={0} stroke={trendCor} strokeWidth={2} strokeDasharray="3,3" opacity={0.6} />
+              <text x={122} y={3} fontSize={9} fill="var(--tf-text-tertiary)">Trend</text>
+            </>
+          )}
         </g>
       </svg>
 
-      {/* Stats abaixo */}
-      <div className="flex gap-6 mt-3 pt-3 border-t" style={{ borderColor: "var(--tf-border)" }}>
+      {/* Stats expandidos */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-3 pt-3 border-t" style={{ borderColor: "var(--tf-border)" }}>
         <div>
           <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>Total</span>
           <p className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>{totalPontos} pts</p>
@@ -273,6 +312,21 @@ function BurndownChart({ sprint, cards }: { sprint: Quadro; cards: CartaoBacklog
         <div>
           <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>Dias</span>
           <p className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>{diasPassados}/{totalDias}</p>
+        </div>
+        <div>
+          <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>Velocity</span>
+          <p className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>{velocity.toFixed(1)} pts/dia</p>
+        </div>
+        <div>
+          <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>Projeção</span>
+          <p className="text-sm font-bold" style={{ color: trendCor }}>
+            {projecaoData ? formatarData(projecaoData) : "—"}
+            {projecaoData && deltaDias !== 0 && (
+              <span className="text-[10px] font-medium ml-1">
+                ({deltaDias > 0 ? `+${deltaDias}` : deltaDias}d)
+              </span>
+            )}
+          </p>
         </div>
       </div>
     </div>

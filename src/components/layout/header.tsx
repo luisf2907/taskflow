@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/layout/notification-bell";
+import { Tooltip } from "@/components/ui/tooltip";
 
 export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
   const { tema, alternar } = useTema();
@@ -110,15 +111,16 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
         <NotificationBell />
 
         {/* Toggle Theme */}
-        <button
-          onClick={alternar}
-          className="w-[42px] h-[42px] rounded-[20px] flex items-center justify-center transition-all hover:-translate-y-0.5 hover-accent-text"
-          style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}
-          aria-label={tema === "claro" ? "Alternar para modo escuro" : "Alternar para modo claro"}
-          title={tema === "claro" ? "Modo escuro" : "Modo claro"}
-        >
-          {tema === "claro" ? <Moon size={18} strokeWidth={2.5} /> : <Sun size={18} strokeWidth={2.5} />}
-        </button>
+        <Tooltip content={tema === "claro" ? "Mudar para modo escuro" : "Mudar para modo claro"} position="bottom">
+          <button
+            onClick={alternar}
+            className="w-[42px] h-[42px] rounded-[20px] flex items-center justify-center transition-all hover:-translate-y-0.5 hover-accent-text"
+            style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}
+            aria-label={tema === "claro" ? "Alternar para modo escuro" : "Alternar para modo claro"}
+          >
+            {tema === "claro" ? <Moon size={18} strokeWidth={2.5} /> : <Sun size={18} strokeWidth={2.5} />}
+          </button>
+        </Tooltip>
 
         {/* Profile Pill */}
         <div className="relative flex items-center justify-center">
