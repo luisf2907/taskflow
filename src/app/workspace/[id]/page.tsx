@@ -1,38 +1,103 @@
 "use client";
 
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  Activity,
+  ArrowRight,
+  BarChart3,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Crown,
+  Folder,
+  Gauge,
+  GitBranch,
+  GripVertical,
+  Inbox,
+  Kanban,
+  Layers,
+  Mail,
+  MoreHorizontal,
+  Pencil,
+  Play,
+  Plus,
+  Settings,
+  Shield,
+  Sparkles,
+  Trash2,
+  Upload,
+  UserMinus,
+  Users,
+  X,
+  Zap,
+} from "lucide-react";
+
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
-import { cn } from "@/lib/utils";
 import { Modal } from "@/components/ui/modal";
-import { useSidebar } from "@/hooks/use-sidebar";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
+import { Tooltip } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase/client";
+import { diasRestantes, formatarDataISO as formatarData } from "@/lib/datas";
+
+import { useSidebar } from "@/hooks/use-sidebar";
 import { useQuadros } from "@/hooks/use-quadros";
 import { useWorkspaces } from "@/hooks/use-workspaces";
 import { useBacklog, CartaoBacklog } from "@/hooks/use-backlog";
 import { useEtiquetasWorkspace } from "@/hooks/use-etiquetas-workspace";
 import { useMembrosWorkspace } from "@/hooks/use-membros-workspace";
 import { useRepositorios } from "@/hooks/use-repositorios";
-import { useGitHubRepo } from "@/hooks/use-github";
-import { parsearRepo } from "@/lib/github/client";
 import { CartaoComResumo } from "@/hooks/use-cartoes";
+import { useRealtimeWorkspace } from "@/hooks/use-realtime";
+import { usePRSync } from "@/hooks/use-pr-sync";
+import { useWorkspaceUsuarios } from "@/hooks/use-workspace-usuarios";
+import { Quadro } from "@/types";
+
+// Sub-componentes extraidos desta pagina
+import { ExportDropdown } from "@/components/workspace/export-dropdown";
+import { InviteLinkInline } from "@/components/workspace/invite-link-inline";
+import { ModalConectarRepo } from "@/components/workspace/modal-conectar-repo";
+import { BacklogRow } from "@/components/workspace/backlog/backlog-row";
+import {
+  BacklogPuroDropZone,
+  SprintDropZone,
+} from "@/components/workspace/backlog/drop-zones";
+
+// Lazy load: detalhe do cartao
 const DetalheCartao = dynamic(
   () => import("@/components/quadro/detalhe-cartao").then((m) => m.DetalheCartao),
   { ssr: false }
 );
-import dynamic from "next/dynamic";
-
-// Lazy load: componentes pesados de Repos (so usados na sub-pagina /repos)
-const RepoFileBrowser = dynamic(() => import("@/components/workspace/repo-file-browser").then((m) => m.RepoFileBrowser), { ssr: false });
-const RepoFileViewer = dynamic(() => import("@/components/workspace/repo-file-viewer").then((m) => m.RepoFileViewer), { ssr: false });
-const RepoBranches = dynamic(() => import("@/components/workspace/repo-branches").then((m) => m.RepoBranches), { ssr: false });
-const RepoPRs = dynamic(() => import("@/components/workspace/repo-prs").then((m) => m.RepoPRs), { ssr: false });
-const RepoWebhookConfig = dynamic(() => import("@/components/workspace/repo-webhook-config").then((m) => m.RepoWebhookConfig), { ssr: false });
 
 // Lazy load: componentes de abas (so carregam quando usuario clica na aba)
-const MetricasWorkspace = dynamic(() => import("@/components/workspace/metricas").then((m) => m.MetricasWorkspace), { ssr: false });
-const TimelineView = dynamic(() => import("@/components/workspace/timeline").then((m) => m.TimelineView), { ssr: false });
-const AutomacoesConfig = dynamic(() => import("@/components/workspace/automacoes-config").then((m) => m.AutomacoesConfig), { ssr: false });
-const AtividadesFeed = dynamic(() => import("@/components/workspace/atividades-feed"), { ssr: false });
+const MetricasWorkspace = dynamic(
+  () => import("@/components/workspace/metricas").then((m) => m.MetricasWorkspace),
+  { ssr: false }
+);
+const TimelineView = dynamic(
+  () => import("@/components/workspace/timeline").then((m) => m.TimelineView),
+  { ssr: false }
+);
+const AutomacoesConfig = dynamic(
+  () => import("@/components/workspace/automacoes-config").then((m) => m.AutomacoesConfig),
+  { ssr: false }
+);
+const AtividadesFeed = dynamic(
+  () => import("@/components/workspace/atividades-feed"),
+  { ssr: false }
+);
 
 // Lazy load: modais pesados
 const PlanningPokerModal = dynamic(
@@ -47,695 +112,11 @@ const ImportarModalDynamic = dynamic(
   () => import("@/components/workspace/importar-modal").then((m) => m.ImportarModal),
   { ssr: false }
 );
-import { useRealtimeWorkspace } from "@/hooks/use-realtime";
-import { supabase } from "@/lib/supabase/client";
-import { useColunas } from "@/hooks/use-colunas";
-import { usePRSync } from "@/hooks/use-pr-sync";
-import { useWorkspaceUsuarios } from "@/hooks/use-workspace-usuarios";
-import { Users, Mail, Shield, Crown, UserMinus, Activity } from "lucide-react";
-import { Quadro, StatusSprint } from "@/types";
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import { useDraggable, useDroppable } from "@dnd-kit/core";
-import {
-  Calendar,
-  ChevronRight,
-  Folder,
-  Kanban,
-  Gauge,
-  GripVertical,
-  Inbox,
-  MoreHorizontal,
-  Pencil,
-  Play,
-  Plus,
-  CheckCircle2,
-  Clock,
-  Target,
-  Trash2,
-  Settings,
-  ArrowRight,
-  BarChart3,
-  GitBranch,
-  Link2,
-  Copy,
-  Download,
-  ExternalLink,
-  X,
-  Zap,
-  Layers,
-  Sparkles,
-} from "lucide-react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { Loader2, Lock, Search, Upload } from "lucide-react";
-import type { Repositorio } from "@/types/github";
-import { exportCSV, exportJSON } from "@/lib/export";
-import { Tooltip } from "@/components/ui/tooltip";
-import { diasRestantes, formatarDataISO as formatarData } from "@/lib/datas";
-
-// ─── Export Dropdown ───
-function ExportDropdown({ cartoes, nomeWorkspace }: { cartoes: import("@/hooks/use-backlog").CartaoBacklog[]; nomeWorkspace: string }) {
-  const [aberto, setAberto] = useState(false);
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
-
-  function handleToggle() {
-    if (!aberto && btnRef.current) {
-      const rect = btnRef.current.getBoundingClientRect();
-      setPos({ top: rect.bottom + 8, left: rect.left + rect.width / 2 - 65 });
-    }
-    setAberto(!aberto);
-  }
-
-  function handleExport(tipo: "csv" | "json") {
-    if (tipo === "csv") exportCSV(cartoes, `${nomeWorkspace}-export.csv`);
-    else exportJSON(cartoes, `${nomeWorkspace}-export.json`);
-    setAberto(false);
-  }
-
-  return (
-    <>
-      <button
-        ref={btnRef}
-        onClick={handleToggle}
-        className="flex items-center gap-2 px-4 py-3 text-[13px] font-bold rounded-[20px] border transition-all hover:-translate-y-0.5"
-        style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)", background: "var(--tf-surface)" }}
-      >
-        <Download size={16} /> Exportar
-      </button>
-
-      {aberto && createPortal(
-        <>
-          <div className="fixed inset-0 z-[60]" onClick={() => setAberto(false)} />
-          <div
-            className="fixed rounded-[12px] border z-[70] overflow-hidden"
-            style={{
-              top: pos.top,
-              left: pos.left,
-              width: 130,
-              background: "var(--tf-surface-raised)",
-              borderColor: "var(--tf-border)",
-              boxShadow: "var(--tf-shadow-md)",
-            }}
-          >
-            <button
-              onClick={() => handleExport("csv")}
-              className="block w-full px-4 py-2.5 text-[13px] font-semibold text-left"
-              style={{ color: "var(--tf-text)", borderBottom: "1px solid var(--tf-border-subtle)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-            >
-              CSV
-            </button>
-            <button
-              onClick={() => handleExport("json")}
-              className="block w-full px-4 py-2.5 text-[13px] font-semibold text-left"
-              style={{ color: "var(--tf-text)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-            >
-              JSON
-            </button>
-          </div>
-        </>,
-        document.body
-      )}
-    </>
-  );
-}
-
-// ─── Invite Link Inline ───
-function InviteLinkInline({ workspaceId }: { workspaceId: string }) {
-  const [link, setLink] = useState<string | null>(null);
-  const [gerando, setGerando] = useState(false);
-  const [copiado, setCopiado] = useState(false);
-
-  async function gerarLink() {
-    setGerando(true);
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-    let code = "";
-    for (let i = 0; i < 12; i++) code += chars[Math.floor(Math.random() * chars.length)];
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setGerando(false); return; }
-
-    const { error } = await supabase.from("invite_links").insert({
-      code,
-      workspace_id: workspaceId,
-      criado_por: user.id,
-    });
-
-    if (!error) setLink(`${window.location.origin}/convite/${code}`);
-    setGerando(false);
-  }
-
-  async function copiar() {
-    if (!link) return;
-    await navigator.clipboard.writeText(link);
-    setCopiado(true);
-    setTimeout(() => setCopiado(false), 2000);
-  }
-
-  return (
-    <div className="mb-4 pb-4" style={{ borderBottom: "1px solid var(--tf-border-subtle)" }}>
-      <p className="text-[11px] font-semibold mb-2 flex items-center gap-1.5" style={{ color: "var(--tf-text-tertiary)" }}>
-        <Link2 size={11} /> Ou compartilhe um link de convite
-      </p>
-      {link ? (
-        <div className="flex gap-2">
-          <input
-            readOnly
-            value={link}
-            className="flex-1 px-2.5 py-1.5 rounded-[6px] text-[11px] font-mono outline-none min-w-0"
-            style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text-secondary)" }}
-            onClick={(e) => (e.target as HTMLInputElement).select()}
-          />
-          <button
-            onClick={copiar}
-            className="px-3 py-1.5 rounded-[6px] text-[11px] font-semibold shrink-0"
-            style={{ background: copiado ? "var(--tf-success-bg)" : "var(--tf-accent)", color: copiado ? "var(--tf-success)" : "#fff" }}
-          >
-            {copiado ? "Copiado!" : "Copiar"}
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={gerarLink}
-          disabled={gerando}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-[8px] text-[11px] font-semibold border transition-all"
-          style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)" }}
-        >
-          {gerando ? <Loader2 size={12} className="animate-spin" /> : <Link2 size={12} />}
-          Gerar link (expira em 7 dias)
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ─── Modal Conectar Repo (com listagem autenticada) ───
-function ModalConectarRepo({
-  aberto,
-  onFechar,
-  repoInput,
-  setRepoInput,
-  repositorios,
-  onConectar,
-}: {
-  aberto: boolean;
-  onFechar: () => void;
-  repoInput: string;
-  setRepoInput: (v: string) => void;
-  repositorios: Repositorio[];
-  onConectar: (owner: string, nome: string) => void;
-}) {
-  const [ghRepos, setGhRepos] = useState<
-    { id: number; name: string; full_name: string; description: string | null; private: boolean; language: string | null; owner: string; stars: number }[]
-  >([]);
-  const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-  const [modo, setModo] = useState<"lista" | "manual">("lista");
-
-  useEffect(() => {
-    if (!aberto) return;
-    setCarregando(true);
-    setErro(null);
-    fetch("/api/repos")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.repos) setGhRepos(data.repos);
-        else if (data.error) {
-          setErro(data.error);
-          setModo("manual");
-        }
-      })
-      .catch(() => {
-        setErro("Erro ao carregar repositórios");
-        setModo("manual");
-      })
-      .finally(() => setCarregando(false));
-  }, [aberto]);
-
-  // Filtrar repos já conectados e pela busca
-  const jaConectados = new Set(repositorios.map((r) => `${r.owner}/${r.nome}`));
-  const filtrados = ghRepos.filter((r) => {
-    if (jaConectados.has(r.full_name)) return false;
-    if (!repoInput) return true;
-    return r.full_name.toLowerCase().includes(repoInput.toLowerCase());
-  });
-
-  return (
-    <Modal aberto={aberto} onFechar={onFechar} titulo="Conectar repositório" className="max-w-md">
-      <div className="space-y-3">
-        {/* Toggle modo */}
-        <div className="flex gap-1 p-0.5 rounded-[8px]" style={{ background: "var(--tf-bg-secondary)" }}>
-          <button
-            onClick={() => setModo("lista")}
-            className="flex-1 py-1.5 text-xs font-semibold rounded-[8px] transition-smooth"
-            style={{
-              background: modo === "lista" ? "var(--tf-surface)" : "transparent",
-              color: modo === "lista" ? "var(--tf-text)" : "var(--tf-text-tertiary)",
-              boxShadow: modo === "lista" ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
-            }}
-          >
-            Meus Repos
-          </button>
-          <button
-            onClick={() => setModo("manual")}
-            className="flex-1 py-1.5 text-xs font-semibold rounded-[8px] transition-smooth"
-            style={{
-              background: modo === "manual" ? "var(--tf-surface)" : "transparent",
-              color: modo === "manual" ? "var(--tf-text)" : "var(--tf-text-tertiary)",
-              boxShadow: modo === "manual" ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
-            }}
-          >
-            Manual
-          </button>
-        </div>
-
-        {modo === "lista" ? (
-          <>
-            {/* Busca */}
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--tf-text-tertiary)" }} />
-              <input
-                value={repoInput}
-                onChange={(e) => setRepoInput(e.target.value)}
-                placeholder="Buscar repositório..."
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
-                style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }}
-              />
-            </div>
-
-            {/* Lista */}
-            <div className="max-h-[320px] overflow-y-auto space-y-1 -mx-1 px-1" style={{ scrollbarWidth: "thin" }}>
-              {carregando ? (
-                <div className="flex items-center justify-center py-8 gap-2" style={{ color: "var(--tf-text-tertiary)" }}>
-                  <Loader2 size={16} className="animate-spin" />
-                  <span className="text-xs">Carregando repositórios...</span>
-                </div>
-              ) : erro ? (
-                <div className="text-center py-6">
-                  <p className="text-xs" style={{ color: "var(--tf-text-tertiary)" }}>{erro}</p>
-                </div>
-              ) : filtrados.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-xs" style={{ color: "var(--tf-text-tertiary)" }}>
-                    {repoInput ? "Nenhum repo encontrado" : "Todos os repos já foram conectados"}
-                  </p>
-                </div>
-              ) : (
-                filtrados.map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => onConectar(r.owner, r.name)}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-[8px] text-left transition-smooth group"
-                    style={{ border: "1px solid transparent" }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "var(--tf-bg-secondary)";
-                      e.currentTarget.style.borderColor = "var(--tf-border)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.borderColor = "transparent";
-                    }}
-                  >
-                    <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "var(--tf-accent-light)" }}>
-                      <GitBranch size={14} style={{ color: "var(--tf-accent)" }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-semibold truncate" style={{ color: "var(--tf-text)" }}>
-                          {r.full_name}
-                        </span>
-                        {r.private && (
-                          <Lock size={11} style={{ color: "var(--tf-text-tertiary)" }} />
-                        )}
-                      </div>
-                      {r.description && (
-                        <p className="text-[11px] truncate mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>
-                          {r.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-3 mt-1">
-                        {r.language && (
-                          <span className="text-[10px] font-medium" style={{ color: "var(--tf-text-tertiary)" }}>
-                            {r.language}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <span
-                      className="text-[11px] font-semibold px-2.5 py-1 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth"
-                      style={{ background: "var(--tf-accent)", color: "#fff" }}
-                    >
-                      Conectar
-                    </span>
-                  </button>
-                ))
-              )}
-            </div>
-          </>
-        ) : (
-          /* Modo manual — input de URL */
-          <>
-            <div>
-              <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>URL ou owner/repo</label>
-              <input
-                value={repoInput}
-                onChange={(e) => setRepoInput(e.target.value)}
-                placeholder="https://github.com/owner/repo ou owner/repo"
-                className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
-                style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const parsed = parsearRepo(repoInput);
-                    if (parsed) onConectar(parsed.owner, parsed.nome);
-                  }
-                }}
-              />
-              <p className="text-[11px] mt-1" style={{ color: "var(--tf-text-tertiary)" }}>
-                Cole a URL do GitHub ou digite owner/repo
-              </p>
-            </div>
-
-            {repoInput && parsearRepo(repoInput) && (
-              <div className="p-3 rounded-[8px] border" style={{ background: "var(--tf-bg-secondary)", borderColor: "var(--tf-border)" }}>
-                <div className="flex items-center gap-2">
-                  <GitBranch size={16} style={{ color: "var(--tf-accent)" }} />
-                  <span className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>
-                    {parsearRepo(repoInput)!.owner}/{parsearRepo(repoInput)!.nome}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={() => {
-                const parsed = parsearRepo(repoInput);
-                if (parsed) onConectar(parsed.owner, parsed.nome);
-              }}
-              disabled={!repoInput || !parsearRepo(repoInput)}
-              className="w-full py-2.5 text-sm font-semibold text-white rounded-[8px] transition-smooth disabled:opacity-40"
-              style={{ background: "var(--tf-accent)" }}
-            >
-              Conectar
-            </button>
-          </>
-        )}
-      </div>
-    </Modal>
-  );
-}
 
 const CORES_QUADRO = [
   "#C4841D", "#3D8B37", "#B04632", "#2E86AB",
   "#89609E", "#CD5A91", "#00857C", "#D4732A",
 ];
-
-// ─── Webhook Config Wrapper ───
-function WebhookConfigWrapper({ repoId, repoDb, sprintId, workspaceId }: { repoId: string; repoDb: { webhook_secret?: string | null; coluna_review_id?: string | null; coluna_done_id?: string | null; coluna_doing_id?: string | null }; sprintId: string | undefined; workspaceId: string }) {
-  const { colunas } = useColunas(sprintId ?? "");
-
-  return (
-    <div className="max-w-xl rounded-[14px] p-5" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}>
-      {!sprintId ? (
-        <p className="text-xs" style={{ color: "var(--tf-text-secondary)" }}>
-          Crie um sprint primeiro para poder configurar as colunas do webhook.
-        </p>
-      ) : (
-        <RepoWebhookConfig
-          repoId={repoId}
-          workspaceId={workspaceId}
-          colunas={colunas}
-          webhookSecret={repoDb.webhook_secret ?? null}
-          colunaReviewId={repoDb.coluna_review_id ?? null}
-          colunaDoneId={repoDb.coluna_done_id ?? null}
-          colunaDoingId={repoDb.coluna_doing_id ?? null}
-          onSalvar={() => {}}
-        />
-      )}
-    </div>
-  );
-}
-
-// ─── Repo Card ───
-function RepoCard({ owner, nome, onAbrir, onDesconectar }: { owner: string; nome: string; onAbrir: () => void; onDesconectar: () => void }) {
-  const { repo, carregando } = useGitHubRepo(owner, nome);
-
-  return (
-    <div
-      className="flex items-center gap-4 p-4 rounded-[14px] border transition-smooth cursor-pointer group"
-      style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
-      onClick={onAbrir}
-    >
-      <div className="w-10 h-10 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "var(--tf-accent-light)" }}>
-        <GitBranch size={20} style={{ color: "var(--tf-accent-text)" }} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold truncate" style={{ color: "var(--tf-text)" }}>{owner}/{nome}</p>
-        {carregando ? (
-          <div className="h-3 w-48 rounded mt-1 animate-pulse" style={{ background: "var(--tf-border)" }} />
-        ) : repo ? (
-          <p className="text-xs truncate mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>
-            {repo.description || "Sem descrição"}
-            {repo.language && <span className="ml-2 font-medium" style={{ color: "var(--tf-text-secondary)" }}>{repo.language}</span>}
-          </p>
-        ) : (
-          <p className="text-xs mt-0.5" style={{ color: "var(--tf-danger)" }}>Repositório não encontrado</p>
-        )}
-      </div>
-      {repo && (
-        <div className="flex items-center gap-3 text-xs shrink-0" style={{ color: "var(--tf-text-tertiary)" }}>
-          <span>&#9733; {repo.stargazers_count}</span>
-          <span>&#8918; {repo.forks_count}</span>
-        </div>
-      )}
-      <button
-        onClick={(e) => { e.stopPropagation(); onDesconectar(); }}
-        className="p-1.5 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth"
-        style={{ color: "var(--tf-danger)" }}
-        title="Desconectar"
-      >
-        <Trash2 size={14} />
-      </button>
-    </div>
-  );
-}
-
-function BacklogRow({
-  tarefa, sprints, etiquetas, isLast, onAssociar, onDesassociar, onMover, onExcluir, onClick, onEstimar,
-}: {
-  tarefa: CartaoBacklog;
-  sprints: Quadro[];
-  etiquetas: import("@/types").Etiqueta[];
-  isLast: boolean;
-  onAssociar: (cartaoId: string, quadroId: string) => void;
-  onDesassociar: (cartaoId: string, quadroIdOriginal: string) => void;
-  onMover: (cartaoId: string, quadroIdOriginal: string, quadroIdNovo: string) => void;
-  onExcluir: (cartaoId: string) => void;
-  onClick: () => void;
-  onEstimar?: (cartaoId: string) => void;
-}) {
-  const [seletor, setSeletor] = useState(false);
-  const noSprint = !tarefa.coluna_id;
-
-  const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
-    id: `backlog-${tarefa.id}`,
-    data: { tarefa },
-  });
-
-  // Etiquetas do cartão (usa etiqueta_ids da junction table)
-  const etiquetasDoCartao = etiquetas.filter((e) =>
-    tarefa.etiqueta_ids?.includes(e.id)
-  );
-
-  return (
-    <div
-      ref={setDragRef}
-      className={`flex items-center gap-3 px-5 py-3 rounded-[14px] transition-all duration-300 ease-out group cursor-pointer border hover:-translate-y-0.5 ${isDragging ? "opacity-30 scale-95" : ""}`}
-      style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
-      onClick={onClick}
-    >
-      {/* Drag handle */}
-      <button
-        {...attributes}
-        {...listeners}
-        className="p-0.5 rounded opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing shrink-0"
-        style={{ color: "var(--tf-text-tertiary)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <GripVertical size={14} />
-      </button>
-
-      {/* Título + etiquetas */}
-      <div className="flex-1 min-w-0">
-        <span className="text-[13px] truncate block" style={{ color: "var(--tf-text)" }}>
-          {tarefa.titulo}
-        </span>
-        {etiquetasDoCartao.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {etiquetasDoCartao.map((e) => (
-              <span key={e.id} className="px-1.5 py-[1px] rounded text-[9px] font-bold text-white" style={{ backgroundColor: e.cor }}>
-                {e.nome}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Status (coluna) */}
-      {tarefa.coluna_nome && (
-        <span className="text-[11px] px-2 py-0.5 rounded-[8px] shrink-0" style={{
-          background: tarefa.concluido ? "var(--tf-success-bg)" : "var(--tf-bg-secondary)",
-          color: tarefa.concluido ? "var(--tf-success)" : "var(--tf-text-tertiary)",
-          fontWeight: tarefa.concluido ? 600 : 400,
-        }}>
-          {tarefa.concluido ? "Concluído" : tarefa.coluna_nome}
-        </span>
-      )}
-
-      {/* Peso */}
-      {tarefa.peso && (
-        <span className="text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0" style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}>
-          <Zap size={9} className="inline mr-0.5" />{tarefa.peso}
-        </span>
-      )}
-
-      {/* Sprint associada ou seletor */}
-      {seletor ? (
-        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-          <select
-            className="text-[12px] px-2 py-1 rounded-[8px] outline-none"
-            style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }}
-            defaultValue=""
-            onChange={(e) => {
-              if (e.target.value) onAssociar(tarefa.id, e.target.value);
-              setSeletor(false);
-            }}
-            autoFocus
-          >
-            <option value="" disabled>Escolher sprint...</option>
-            {sprints.filter((s) => s.status_sprint !== "concluida").map((s) => (
-              <option key={s.id} value={s.id}>{s.nome}</option>
-            ))}
-          </select>
-          <button onClick={() => setSeletor(false)} className="p-0.5" style={{ color: "var(--tf-text-tertiary)" }}>
-            <X size={14} />
-          </button>
-        </div>
-      ) : noSprint ? (
-        <button
-          onClick={(e) => { e.stopPropagation(); setSeletor(true); }}
-          className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth shrink-0"
-          style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}
-        >
-          <ArrowRight size={10} /> Mover pra sprint
-        </button>
-      ) : (
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 shrink-0" onClick={(e) => e.stopPropagation()}>
-          <select
-            className="text-[11px] px-1.5 py-0.5 rounded-[8px] outline-none transition-smooth"
-            style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text-secondary)" }}
-            defaultValue=""
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === "__remover__") {
-                if (tarefa.quadro_id) onDesassociar(tarefa.id, tarefa.quadro_id);
-              } else if (val && tarefa.quadro_id) {
-                onMover(tarefa.id, tarefa.quadro_id, val);
-              }
-              e.target.value = "";
-            }}
-          >
-            <option value="" disabled>Mover...</option>
-            {sprints.filter((s) => s.status_sprint !== "concluida" && s.id !== tarefa.quadro_id).map((s) => (
-              <option key={s.id} value={s.id}>→ {s.nome}</option>
-            ))}
-            <option value="__remover__">Remover da sprint</option>
-          </select>
-        </div>
-      )}
-
-      {/* Estimar com Poker */}
-      {onEstimar && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onEstimar(tarefa.id); }}
-          className="p-1 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth shrink-0"
-          style={{ color: "var(--tf-text-tertiary)" }}
-          title="Estimar com Planning Poker"
-        >
-          <Layers size={13} />
-        </button>
-      )}
-
-      {/* Excluir */}
-      <button
-        onClick={(e) => { e.stopPropagation(); onExcluir(tarefa.id); }}
-        className="p-1 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth shrink-0"
-        style={{ color: "var(--tf-text-tertiary)" }}
-        title="Excluir tarefa"
-      >
-        <Trash2 size={13} />
-      </button>
-    </div>
-  );
-}
-
-function BacklogPuroDropZone({ children }: { children: React.ReactNode }) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: "backlog-drop-zone",
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className="rounded-[14px] transition-all duration-200 min-h-[80px]"
-      style={{
-        padding: isOver ? "12px" : "0",
-        border: isOver ? "2px solid var(--tf-accent)" : "2px solid transparent",
-        background: isOver ? "var(--tf-accent-light)" : "transparent",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function SprintDropZone({ sprintId, sprintNome, cor, children }: {
-  sprintId: string;
-  sprintNome: string;
-  cor: string;
-  children: React.ReactNode;
-}) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: `sprint-drop-${sprintId}`,
-    data: { sprintId },
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className="rounded-[14px] transition-all duration-200 min-h-[80px]"
-      style={{
-        padding: isOver ? "12px" : "0",
-        border: isOver ? `2px solid ${cor}` : "2px solid transparent",
-        background: isOver ? `${cor}15` : "transparent",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
 
 export default function PaginaWorkspace() {
   const params = useParams();
