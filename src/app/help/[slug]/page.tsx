@@ -1,10 +1,9 @@
-import LandingHeader from "@/components/landing/landing-header";
-import LandingFooter from "@/components/landing/landing-footer";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 import { ARTIGOS, getArtigoById, getArtigosByCategoria, getCategoriaById } from "@/lib/help-content";
 import { HelpRenderer } from "@/components/help/help-renderer";
+import { HelpLayout } from "@/components/help/help-layout";
 
 export function generateStaticParams() {
   return ARTIGOS.map((a) => ({ slug: a.id }));
@@ -32,9 +31,7 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
   const proximo = idxAtual < artigosCategoria.length - 1 ? artigosCategoria[idxAtual + 1] : null;
 
   return (
-    <div style={{ background: "var(--tf-bg)" }}>
-      <LandingHeader />
-
+    <HelpLayout>
       <main className="max-w-5xl mx-auto px-6 md:px-12 py-12 md:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
           {/* Sidebar */}
@@ -146,8 +143,6 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
           </article>
         </div>
       </main>
-
-      <LandingFooter />
-    </div>
+    </HelpLayout>
   );
 }

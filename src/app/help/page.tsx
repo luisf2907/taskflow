@@ -1,11 +1,10 @@
 "use client";
 
-import LandingHeader from "@/components/landing/landing-header";
-import LandingFooter from "@/components/landing/landing-footer";
 import Link from "next/link";
 import { useState } from "react";
 import { Search, ArrowRight, Sparkles, Folder, Calendar, Kanban, GitBranch, Dices, Bot, Upload, Settings, Keyboard, HelpCircle } from "lucide-react";
-import { CATEGORIAS, ARTIGOS, getArtigosByCategoria, getArtigosPopulares, buscarArtigos } from "@/lib/help-content";
+import { CATEGORIAS, getArtigosByCategoria, getArtigosPopulares, buscarArtigos } from "@/lib/help-content";
+import { HelpLayout } from "@/components/help/help-layout";
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; style?: React.CSSProperties }>> = {
   Sparkles, Folder, Calendar, Kanban, GitBranch, Dices, Bot, Upload, Settings, Keyboard, HelpCircle,
@@ -17,9 +16,7 @@ export default function HelpPage() {
   const resultadosBusca = query.trim() ? buscarArtigos(query) : [];
 
   return (
-    <div style={{ background: "var(--tf-bg)" }}>
-      <LandingHeader />
-
+    <HelpLayout>
       <main className="max-w-5xl mx-auto px-6 md:px-12 py-16 md:py-20">
         {/* Hero */}
         <div className="text-center mb-12">
@@ -184,8 +181,6 @@ export default function HelpPage() {
           </a>
         </div>
       </main>
-
-      <LandingFooter />
-    </div>
+    </HelpLayout>
   );
 }
