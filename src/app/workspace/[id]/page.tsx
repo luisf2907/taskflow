@@ -1406,6 +1406,7 @@ export default function PaginaWorkspace() {
                 sprints={sprintsDoWorkspace}
                 cartoesDaSprint={cartoesDaSprint}
                 onSprintClick={(id) => router.push(`/quadro/${id}`)}
+                workspaceId={workspaceId}
               />
             )}
 
