@@ -22,11 +22,14 @@ import {
 } from "@dnd-kit/sortable";
 import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BarraFiltros, Filtros } from "./barra-filtros";
 import { Cartao } from "./cartao";
 import { Coluna } from "./coluna";
 import { NovaColuna } from "./nova-coluna";
+import { ViewSwitcher, type ViewMode } from "./view-switcher";
+import { ListaView } from "./lista-view";
+import { TabelaView } from "./tabela-view";
 
 const DetalheCartao = dynamic(
   () => import("./detalhe-cartao").then((m) => m.DetalheCartao),
@@ -74,6 +77,23 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
     useState<CartaoComResumo | null>(null);
   const [filtros, setFiltros] = useState<Filtros>({ texto: "", etiquetaIds: [], membroIds: [] });
   const [alertaBloqueio, setAlertaBloqueio] = useState<string | null>(null);
+  const [view, setView] = useState<ViewMode>("kanban");
+
+  // Carregar view persistida do localStorage por sprint
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem(`tf_view_${quadroId}`);
+    if (saved === "kanban" || saved === "lista" || saved === "tabela") {
+      setView(saved);
+    }
+  }, [quadroId]);
+
+  function handleViewChange(v: ViewMode) {
+    setView(v);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`tf_view_${quadroId}`, v);
+    }
+  }
 
   const cartoesFiltradosPorColuna = useMemo(() => {
     const textoLower = filtros.texto.toLowerCase();
@@ -257,46 +277,52 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
           </button>
         </div>
       )}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="flex-1 flex flex-col overflow-hidden px-4 lg:px-6">
-          {/* Barra de filtros */}
-          <div className="pt-4 pb-3 shrink-0 relative">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Toolbar: View Switcher + Barra de filtros */}
+        <div className="pt-4 pb-3 shrink-0 px-4 lg:px-6 flex items-center gap-3 flex-wrap">
+          <ViewSwitcher view={view} onChange={handleViewChange} />
+          <div className="flex-1 min-w-0">
             <BarraFiltros filtros={filtros} onChange={setFiltros} etiquetas={etiquetas} membros={membros} />
-          </div>
-
-          <div className="flex-1 overflow-x-auto overflow-y-hidden pb-6 no-scrollbar">
-            <div className="flex gap-4 items-start h-full pt-1">
-              <SortableContext
-                items={colunaIds}
-                strategy={horizontalListSortingStrategy}
-              >
-                {colunas.map((coluna, index) => (
-                  <Coluna
-                    key={coluna.id}
-                    coluna={coluna}
-                    index={index}
-                    cartoes={cartoesFiltrados(coluna.id)}
-                    etiquetas={etiquetas}
-                    membros={membros}
-                    onCriarCartao={handleCriarCartao}
-                    onCartaoClick={setCartaoSelecionado}
-                    onRenomear={(nome) => handleRenomearColuna(coluna.id, nome)}
-                    onExcluir={() => handleExcluirColuna(coluna.id)}
-                  />
-                ))}
-              </SortableContext>
-              <NovaColuna onCriar={handleCriarColuna} />
-            </div>
           </div>
         </div>
 
-        <DragOverlay>
+        {/* View: Kanban */}
+        {view === "kanban" && (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="flex-1 flex flex-col overflow-hidden px-4 lg:px-6">
+              <div className="flex-1 overflow-x-auto overflow-y-hidden pb-6 no-scrollbar">
+                <div className="flex gap-4 items-start h-full pt-1">
+                  <SortableContext
+                    items={colunaIds}
+                    strategy={horizontalListSortingStrategy}
+                  >
+                    {colunas.map((coluna, index) => (
+                      <Coluna
+                        key={coluna.id}
+                        coluna={coluna}
+                        index={index}
+                        cartoes={cartoesFiltrados(coluna.id)}
+                        etiquetas={etiquetas}
+                        membros={membros}
+                        onCriarCartao={handleCriarCartao}
+                        onCartaoClick={setCartaoSelecionado}
+                        onRenomear={(nome) => handleRenomearColuna(coluna.id, nome)}
+                        onExcluir={() => handleExcluirColuna(coluna.id)}
+                      />
+                    ))}
+                  </SortableContext>
+                  <NovaColuna onCriar={handleCriarColuna} />
+                </div>
+              </div>
+            </div>
+
+            <DragOverlay>
           {cartaoArrastando && (
             <div className="rotate-3 w-[256px]">
               <Cartao
@@ -308,7 +334,31 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
             </div>
           )}
         </DragOverlay>
-      </DndContext>
+          </DndContext>
+        )}
+
+        {/* View: Lista */}
+        {view === "lista" && (
+          <ListaView
+            colunas={colunas}
+            cartoesFiltradosPorColuna={cartoesFiltradosPorColuna}
+            etiquetas={etiquetas}
+            membros={membros}
+            onCartaoClick={setCartaoSelecionado}
+          />
+        )}
+
+        {/* View: Tabela */}
+        {view === "tabela" && (
+          <TabelaView
+            colunas={colunas}
+            cartoesFiltradosPorColuna={cartoesFiltradosPorColuna}
+            etiquetas={etiquetas}
+            membros={membros}
+            onCartaoClick={setCartaoSelecionado}
+          />
+        )}
+      </div>
 
       <DetalheCartao
         cartao={cartaoSelecionado}
