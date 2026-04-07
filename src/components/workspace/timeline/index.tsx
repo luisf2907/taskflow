@@ -1,71 +1,43 @@
 "use client";
 
 import { Quadro } from "@/types";
-import { CartaoBacklog } from "@/hooks/use-backlog";
 import { useQuadros } from "@/hooks/use-quadros";
 import { useSprintDependencies } from "@/hooks/use-sprint-dependencies";
-import { Calendar, ChevronLeft, ChevronRight, Clock, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { Calendar, ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import { useMemo, useRef, useState, useCallback } from "react";
 import {
   diasEntreRound as diasEntre,
   formatarMes,
   formatarDataCurta as formatarData,
-  adicionarDias,
-  toISODate,
 } from "@/lib/datas";
 
-interface TimelineViewProps {
-  sprints: Quadro[];
-  cartoesDaSprint: (quadroId: string) => CartaoBacklog[];
-  onSprintClick: (quadroId: string) => void;
-  workspaceId: string;
-}
+import type { Zoom, SprintRect, TimelineViewProps } from "./_lib/types";
+import { renderDependencyPath, progressoSprint } from "./_lib/helpers";
+import { useTimelineDrag } from "./use-timeline-drag";
 
-type Zoom = "semana" | "mes" | "trimestre";
-type DragMode = "move" | "resize-start" | "resize-end";
-
-interface DragState {
-  sprintId: string;
-  mode: DragMode;
-  startX: number;
-  originalInicio: Date;
-  originalFim: Date;
-  currentInicio: Date;
-  currentFim: Date;
-}
-
-interface CreatingDep {
-  fromSprintId: string;
-  fromX: number;
-  fromY: number;
-  toX: number;
-  toY: number;
-}
-
-export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspaceId }: TimelineViewProps) {
+export function TimelineView({
+  sprints,
+  cartoesDaSprint,
+  onSprintClick,
+  workspaceId,
+}: TimelineViewProps) {
   const [zoom, setZoom] = useState<Zoom>("mes");
   const scrollRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const { atualizar: atualizarQuadro } = useQuadros();
-  const { deps, criar: criarDep, remover: removerDep } = useSprintDependencies(workspaceId);
-
-  // Drag state
-  const [drag, setDrag] = useState<DragState | null>(null);
-  const dragRef = useRef<DragState | null>(null);
-
-  // Creating dependency state
-  const [creatingDep, setCreatingDep] = useState<CreatingDep | null>(null);
-  const creatingDepRef = useRef<CreatingDep | null>(null);
-  const [hoverSprintId, setHoverSprintId] = useState<string | null>(null);
-
-  // Selected dependency (for delete)
-  const [selectedDep, setSelectedDep] = useState<string | null>(null);
+  const { deps, criar: criarDep, remover: removerDep } =
+    useSprintDependencies(workspaceId);
 
   // Filtrar sprints com datas
   const sprintsComDatas = useMemo(
-    () => sprints.filter((s) => s.data_inicio && s.data_fim).sort(
-      (a, b) => new Date(a.data_inicio!).getTime() - new Date(b.data_inicio!).getTime()
-    ),
+    () =>
+      sprints
+        .filter((s) => s.data_inicio && s.data_fim)
+        .sort(
+          (a, b) =>
+            new Date(a.data_inicio!).getTime() -
+            new Date(b.data_inicio!).getTime()
+        ),
     [sprints]
   );
 
@@ -112,15 +84,6 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
   const hoje = new Date();
   const hojeX = diasEntre(inicioTimeline, hoje) * diaLargura;
 
-  // Conversor X → Date
-  const xParaData = useCallback(
-    (x: number): Date => {
-      const dias = Math.round(x / diaLargura);
-      return adicionarDias(inicioTimeline, dias);
-    },
-    [diaLargura, inicioTimeline]
-  );
-
   // Sprint index map
   const sprintIndex = useMemo(() => {
     const map = new Map<string, number>();
@@ -128,9 +91,26 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
     return map;
   }, [sprintsComDatas]);
 
+  // Hook de drag/dependencias
+  const {
+    drag,
+    creatingDep,
+    hoverSprintId,
+    selectedDep,
+    setHoverSprintId,
+    setSelectedDep,
+    iniciarDrag,
+    iniciarCriacaoDep,
+  } = useTimelineDrag({
+    diaLargura,
+    svgRef,
+    atualizarQuadro,
+    criarDep,
+  });
+
   // Pegar dimensoes de uma sprint (com preview se em drag)
   const getSprintRect = useCallback(
-    (sprint: Quadro) => {
+    (sprint: Quadro): SprintRect => {
       let inicio = new Date(sprint.data_inicio!);
       let fim = new Date(sprint.data_fim!);
 
@@ -185,13 +165,21 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
       mesFim.setMonth(mesFim.getMonth() + 1);
       mesFim.setDate(0);
 
-      const xInicio = Math.max(0, diasEntre(inicioTimeline, mesInicio) * diaLargura);
-      const xFim = Math.min(larguraTotal, diasEntre(inicioTimeline, mesFim) * diaLargura);
+      const xInicio = Math.max(
+        0,
+        diasEntre(inicioTimeline, mesInicio) * diaLargura
+      );
+      const xFim = Math.min(
+        larguraTotal,
+        diasEntre(inicioTimeline, mesFim) * diaLargura
+      );
 
       result.push({
         x: xInicio,
         largura: xFim - xInicio,
-        label: `${mesInicio.toLocaleDateString("pt-BR", { month: "long" })} ${mesInicio.getFullYear()}`,
+        label: `${mesInicio.toLocaleDateString("pt-BR", {
+          month: "long",
+        })} ${mesInicio.getFullYear()}`,
       });
 
       cursor.setMonth(cursor.getMonth() + 1);
@@ -207,155 +195,27 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
     }
   }
 
-  function progressoSprint(sprint: Quadro): number {
-    const cards = cartoesDaSprint(sprint.id);
-    if (cards.length === 0) return 0;
-    const concluidos = cards.filter(
-      (c) => c.coluna_nome?.toLowerCase().includes("conclu") || c.coluna_nome?.toLowerCase().includes("done")
-    ).length;
-    return Math.round((concluidos / cards.length) * 100);
-  }
-
-  // ─────────────────────────────────────────────
-  // DRAG HANDLERS
-  // ─────────────────────────────────────────────
-
-  function iniciarDrag(e: React.MouseEvent, sprint: Quadro, mode: DragMode) {
-    e.stopPropagation();
-    e.preventDefault();
-    const inicio = new Date(sprint.data_inicio!);
-    const fim = new Date(sprint.data_fim!);
-    const state: DragState = {
-      sprintId: sprint.id,
-      mode,
-      startX: e.clientX,
-      originalInicio: inicio,
-      originalFim: fim,
-      currentInicio: inicio,
-      currentFim: fim,
-    };
-    setDrag(state);
-    dragRef.current = state;
-  }
-
-  // Mouse move global durante drag
-  useEffect(() => {
-    function handleMove(e: MouseEvent) {
-      // Drag de sprint
-      if (dragRef.current) {
-        const deltaX = e.clientX - dragRef.current.startX;
-        const deltaDias = Math.round(deltaX / diaLargura);
-
-        const novo = { ...dragRef.current };
-        if (novo.mode === "move") {
-          novo.currentInicio = adicionarDias(novo.originalInicio, deltaDias);
-          novo.currentFim = adicionarDias(novo.originalFim, deltaDias);
-        } else if (novo.mode === "resize-start") {
-          const novaInicio = adicionarDias(novo.originalInicio, deltaDias);
-          if (novaInicio < novo.originalFim) novo.currentInicio = novaInicio;
-        } else if (novo.mode === "resize-end") {
-          const novaFim = adicionarDias(novo.originalFim, deltaDias);
-          if (novaFim > novo.originalInicio) novo.currentFim = novaFim;
-        }
-        dragRef.current = novo;
-        setDrag(novo);
-      }
-
-      // Criando dependencia
-      if (creatingDepRef.current && svgRef.current) {
-        const svgRect = svgRef.current.getBoundingClientRect();
-        const x = e.clientX - svgRect.left;
-        const y = e.clientY - svgRect.top;
-        const novo = { ...creatingDepRef.current, toX: x, toY: y };
-        creatingDepRef.current = novo;
-        setCreatingDep(novo);
-      }
-    }
-
-    async function handleUp() {
-      // Finalizar drag
-      if (dragRef.current) {
-        const d = dragRef.current;
-        const inicioStr = toISODate(d.currentInicio);
-        const fimStr = toISODate(d.currentFim);
-        const inicioOriginalStr = toISODate(d.originalInicio);
-        const fimOriginalStr = toISODate(d.originalFim);
-
-        if (inicioStr !== inicioOriginalStr || fimStr !== fimOriginalStr) {
-          await atualizarQuadro(d.sprintId, {
-            data_inicio: inicioStr,
-            data_fim: fimStr,
-          });
-        }
-
-        dragRef.current = null;
-        setDrag(null);
-      }
-
-      // Finalizar criacao de dependencia
-      if (creatingDepRef.current) {
-        const targetSprintId = hoverSprintId;
-        if (targetSprintId && targetSprintId !== creatingDepRef.current.fromSprintId) {
-          await criarDep(creatingDepRef.current.fromSprintId, targetSprintId);
-        }
-        creatingDepRef.current = null;
-        setCreatingDep(null);
-      }
-    }
-
-    window.addEventListener("mousemove", handleMove);
-    window.addEventListener("mouseup", handleUp);
-    return () => {
-      window.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mouseup", handleUp);
-    };
-  }, [diaLargura, atualizarQuadro, criarDep, hoverSprintId]);
-
-  // Iniciar criacao de dependencia
-  function iniciarCriacaoDep(e: React.MouseEvent, sprint: Quadro) {
-    e.stopPropagation();
-    e.preventDefault();
-    const rect = getSprintRect(sprint);
-    if (!svgRef.current) return;
-    const svgRect = svgRef.current.getBoundingClientRect();
-    const fromX = rect.x + rect.w;
-    const fromY = rect.y + rect.h / 2;
-    const novo: CreatingDep = {
-      fromSprintId: sprint.id,
-      fromX,
-      fromY,
-      toX: e.clientX - svgRect.left,
-      toY: e.clientY - svgRect.top,
-    };
-    creatingDepRef.current = novo;
-    setCreatingDep(novo);
-  }
-
-  // ─────────────────────────────────────────────
-  // RENDER DAS DEPENDENCIAS
-  // ─────────────────────────────────────────────
-
-  function renderDependencyPath(fromX: number, fromY: number, toX: number, toY: number, color: string) {
-    const dx = Math.max(20, Math.abs(toX - fromX) / 2);
-    const path = `M ${fromX} ${fromY} C ${fromX + dx} ${fromY}, ${toX - dx} ${toY}, ${toX} ${toY}`;
-    return path;
-  }
-
   return (
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <div className="flex rounded-[8px] p-0.5" style={{ background: "var(--tf-bg-secondary)" }}>
+          <div
+            className="flex rounded-[8px] p-0.5"
+            style={{ background: "var(--tf-bg-secondary)" }}
+          >
             {(["semana", "mes", "trimestre"] as Zoom[]).map((z) => (
               <button
                 key={z}
                 onClick={() => setZoom(z)}
                 className="px-3 py-1.5 text-[11px] font-bold rounded-[8px] capitalize"
                 style={{
-                  background: zoom === z ? "var(--tf-surface)" : "transparent",
-                  color: zoom === z ? "var(--tf-text)" : "var(--tf-text-tertiary)",
-                  boxShadow: zoom === z ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                  background:
+                    zoom === z ? "var(--tf-surface)" : "transparent",
+                  color:
+                    zoom === z ? "var(--tf-text)" : "var(--tf-text-tertiary)",
+                  boxShadow:
+                    zoom === z ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
                 }}
               >
                 {z === "semana" ? "Semana" : z === "mes" ? "Mês" : "Trimestre"}
@@ -363,8 +223,15 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
             ))}
           </div>
 
-          <div className="text-[11px] px-2.5 py-1.5 rounded-[8px]" style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent)" }}>
-            💡 Arraste as barras para mover/redimensionar. Use o ponto da borda direita para criar dependências.
+          <div
+            className="text-[11px] px-2.5 py-1.5 rounded-[8px]"
+            style={{
+              background: "var(--tf-accent-light)",
+              color: "var(--tf-accent)",
+            }}
+          >
+            💡 Arraste as barras para mover/redimensionar. Use o ponto da borda
+            direita para criar dependências.
           </div>
         </div>
 
@@ -372,20 +239,27 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
           <button
             onClick={scrollToHoje}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-[8px]"
-            style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}
+            style={{
+              background: "var(--tf-accent-light)",
+              color: "var(--tf-accent-text)",
+            }}
           >
             <Clock size={12} /> Hoje
           </button>
 
           <button
-            onClick={() => { if (scrollRef.current) scrollRef.current.scrollLeft -= 200; }}
+            onClick={() => {
+              if (scrollRef.current) scrollRef.current.scrollLeft -= 200;
+            }}
             className="p-1.5 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
             <ChevronLeft size={16} />
           </button>
           <button
-            onClick={() => { if (scrollRef.current) scrollRef.current.scrollLeft += 200; }}
+            onClick={() => {
+              if (scrollRef.current) scrollRef.current.scrollLeft += 200;
+            }}
             className="p-1.5 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
@@ -396,8 +270,10 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
 
       {/* Drag preview tooltip */}
       {drag && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-[10px] z-[100] text-[12px] font-bold"
-          style={{ background: "var(--tf-text)", color: "var(--tf-bg)" }}>
+        <div
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-[10px] z-[100] text-[12px] font-bold"
+          style={{ background: "var(--tf-text)", color: "var(--tf-bg)" }}
+        >
           {formatarData(drag.currentInicio)} → {formatarData(drag.currentFim)}
           {" · "}
           {diasEntre(drag.currentInicio, drag.currentFim)} dias
@@ -408,15 +284,24 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
       <div
         ref={scrollRef}
         className="overflow-x-auto rounded-[20px] border no-scrollbar"
-        style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
+        style={{
+          background: "var(--tf-surface)",
+          borderColor: "var(--tf-border)",
+        }}
       >
         {sprintsComDatas.length === 0 && sprintsSemDatas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Calendar size={32} style={{ color: "var(--tf-border)" }} />
-            <p className="text-[14px] font-bold" style={{ color: "var(--tf-text-secondary)" }}>
+            <p
+              className="text-[14px] font-bold"
+              style={{ color: "var(--tf-text-secondary)" }}
+            >
               Nenhuma sprint ainda
             </p>
-            <p className="text-[12px]" style={{ color: "var(--tf-text-tertiary)" }}>
+            <p
+              className="text-[12px]"
+              style={{ color: "var(--tf-text-tertiary)" }}
+            >
               Crie sprints com datas para visualizá-las na timeline
             </p>
           </div>
@@ -429,13 +314,34 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
             onClick={() => setSelectedDep(null)}
           >
             <defs>
-              <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+              <marker
+                id="arrowhead"
+                markerWidth="8"
+                markerHeight="8"
+                refX="7"
+                refY="4"
+                orient="auto"
+              >
                 <polygon points="0 0, 8 4, 0 8" fill="var(--tf-text-tertiary)" />
               </marker>
-              <marker id="arrowhead-warn" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+              <marker
+                id="arrowhead-warn"
+                markerWidth="8"
+                markerHeight="8"
+                refX="7"
+                refY="4"
+                orient="auto"
+              >
                 <polygon points="0 0, 8 4, 0 8" fill="var(--tf-danger)" />
               </marker>
-              <marker id="arrowhead-active" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+              <marker
+                id="arrowhead-active"
+                markerWidth="8"
+                markerHeight="8"
+                refX="7"
+                refY="4"
+                orient="auto"
+              >
                 <polygon points="0 0, 8 4, 0 8" fill="var(--tf-accent)" />
               </marker>
             </defs>
@@ -448,7 +354,9 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
                   y={0}
                   width={m.largura}
                   height={headerAltura}
-                  fill={i % 2 === 0 ? "var(--tf-bg-secondary)" : "var(--tf-surface)"}
+                  fill={
+                    i % 2 === 0 ? "var(--tf-bg-secondary)" : "var(--tf-surface)"
+                  }
                   opacity={0.5}
                 />
                 <text
@@ -504,8 +412,21 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
                   strokeDasharray="4 3"
                   opacity={0.6}
                 />
-                <rect x={hojeX - 22} y={headerAltura + 2} width={44} height={16} rx={8} fill="var(--tf-danger)" />
-                <text x={hojeX} y={headerAltura + 12} textAnchor="middle" className="text-[8px] font-black uppercase tracking-wider" fill="white">
+                <rect
+                  x={hojeX - 22}
+                  y={headerAltura + 2}
+                  width={44}
+                  height={16}
+                  rx={8}
+                  fill="var(--tf-danger)"
+                />
+                <text
+                  x={hojeX}
+                  y={headerAltura + 12}
+                  textAnchor="middle"
+                  className="text-[8px] font-black uppercase tracking-wider"
+                  fill="white"
+                >
                   HOJE
                 </text>
               </g>
@@ -513,8 +434,12 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
 
             {/* DEPENDENCIAS (renderizar antes das barras) */}
             {deps.map((dep) => {
-              const origem = sprintsComDatas.find((s) => s.id === dep.sprint_origem);
-              const destino = sprintsComDatas.find((s) => s.id === dep.sprint_destino);
+              const origem = sprintsComDatas.find(
+                (s) => s.id === dep.sprint_origem
+              );
+              const destino = sprintsComDatas.find(
+                (s) => s.id === dep.sprint_destino
+              );
               if (!origem || !destino) return null;
 
               const rOrigem = getSprintRect(origem);
@@ -526,14 +451,16 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
 
               // Validacao: destino comeca antes do fim do origem?
               const violacao = rDestino.inicio < rOrigem.fim;
-              const cor = violacao ? "var(--tf-danger)" : "var(--tf-text-tertiary)";
+              const cor = violacao
+                ? "var(--tf-danger)"
+                : "var(--tf-text-tertiary)";
               const marker = violacao ? "arrowhead-warn" : "arrowhead";
               const isSelected = selectedDep === dep.id;
 
               return (
                 <g key={dep.id}>
                   <path
-                    d={renderDependencyPath(fromX, fromY, toX, toY, cor)}
+                    d={renderDependencyPath(fromX, fromY, toX, toY)}
                     fill="none"
                     stroke={cor}
                     strokeWidth={isSelected ? 2.5 : 1.5}
@@ -547,7 +474,7 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
                   />
                   {/* Click area mais larga */}
                   <path
-                    d={renderDependencyPath(fromX, fromY, toX, toY, cor)}
+                    d={renderDependencyPath(fromX, fromY, toX, toY)}
                     fill="none"
                     stroke="transparent"
                     strokeWidth={12}
@@ -567,7 +494,12 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
                         setSelectedDep(null);
                       }}
                     >
-                      <circle cx={(fromX + toX) / 2} cy={(fromY + toY) / 2} r={10} fill="var(--tf-danger)" />
+                      <circle
+                        cx={(fromX + toX) / 2}
+                        cy={(fromY + toY) / 2}
+                        r={10}
+                        fill="var(--tf-danger)"
+                      />
                       <text
                         x={(fromX + toX) / 2}
                         y={(fromY + toY) / 2 + 1}
@@ -588,7 +520,12 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
             {/* DEPENDENCIA EM CRIACAO */}
             {creatingDep && (
               <path
-                d={renderDependencyPath(creatingDep.fromX, creatingDep.fromY, creatingDep.toX, creatingDep.toY, "var(--tf-accent)")}
+                d={renderDependencyPath(
+                  creatingDep.fromX,
+                  creatingDep.fromY,
+                  creatingDep.toX,
+                  creatingDep.toY
+                )}
                 fill="none"
                 stroke="var(--tf-accent)"
                 strokeWidth={2}
@@ -602,11 +539,14 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
             {/* Sprint bars */}
             {sprintsComDatas.map((sprint) => {
               const rect = getSprintRect(sprint);
-              const progresso = progressoSprint(sprint);
+              const progresso = progressoSprint(sprint, cartoesDaSprint);
               const cards = cartoesDaSprint(sprint.id);
               const isDragging = drag?.sprintId === sprint.id;
               const isHover = hoverSprintId === sprint.id;
-              const isCreatingTarget = creatingDep && creatingDep.fromSprintId !== sprint.id && isHover;
+              const isCreatingTarget =
+                creatingDep &&
+                creatingDep.fromSprintId !== sprint.id &&
+                isHover;
 
               return (
                 <g
@@ -623,7 +563,11 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
                     rx={8}
                     fill={sprint.cor}
                     opacity={sprint.status_sprint === "concluida" ? 0.4 : 0.85}
-                    stroke={isDragging || isCreatingTarget ? "var(--tf-accent)" : "transparent"}
+                    stroke={
+                      isDragging || isCreatingTarget
+                        ? "var(--tf-accent)"
+                        : "transparent"
+                    }
                     strokeWidth={2}
                     style={{ cursor: "grab" }}
                     onMouseDown={(e) => iniciarDrag(e, sprint, "move")}
@@ -653,7 +597,9 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
                     fill="white"
                     pointerEvents="none"
                   >
-                    {sprint.nome.length > rect.w / 7 ? sprint.nome.slice(0, Math.floor(rect.w / 7)) + "…" : sprint.nome}
+                    {sprint.nome.length > rect.w / 7
+                      ? sprint.nome.slice(0, Math.floor(rect.w / 7)) + "…"
+                      : sprint.nome}
                   </text>
 
                   {rect.w > 100 && (
@@ -702,7 +648,7 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
                       stroke="white"
                       strokeWidth={2}
                       style={{ cursor: "crosshair" }}
-                      onMouseDown={(e) => iniciarCriacaoDep(e, sprint)}
+                      onMouseDown={(e) => iniciarCriacaoDep(e, sprint, rect)}
                     />
                   )}
                 </g>
@@ -715,7 +661,10 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
       {/* Sprints sem datas */}
       {sprintsSemDatas.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-tertiary)" }}>
+          <p
+            className="text-[11px] font-bold uppercase tracking-widest"
+            style={{ color: "var(--tf-text-tertiary)" }}
+          >
             Sem datas definidas
           </p>
           <div className="flex flex-wrap gap-2">
@@ -730,7 +679,10 @@ export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspac
                   background: "var(--tf-surface)",
                 }}
               >
-                <div className="w-3 h-3 rounded-full" style={{ background: s.cor }} />
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ background: s.cor }}
+                />
                 {s.nome}
               </button>
             ))}

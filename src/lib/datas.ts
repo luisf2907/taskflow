@@ -2,8 +2,8 @@
 // Helpers de data compartilhados
 // -----------------------------------------------------------------------------
 // Centraliza utilidades de data antes duplicadas em:
-//   - src/components/workspace/timeline-view.tsx
-//   - src/components/workspace/metricas.tsx
+//   - src/components/workspace/timeline/
+//   - src/components/workspace/metricas/
 //   - src/app/workspace/[id]/page.tsx
 // =============================================================================
 

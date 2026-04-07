@@ -30,7 +30,7 @@ const RepoWebhookConfig = dynamic(() => import("@/components/workspace/repo-webh
 
 // Lazy load: componentes de abas (so carregam quando usuario clica na aba)
 const MetricasWorkspace = dynamic(() => import("@/components/workspace/metricas").then((m) => m.MetricasWorkspace), { ssr: false });
-const TimelineView = dynamic(() => import("@/components/workspace/timeline-view").then((m) => m.TimelineView), { ssr: false });
+const TimelineView = dynamic(() => import("@/components/workspace/timeline").then((m) => m.TimelineView), { ssr: false });
 const AutomacoesConfig = dynamic(() => import("@/components/workspace/automacoes-config").then((m) => m.AutomacoesConfig), { ssr: false });
 const AtividadesFeed = dynamic(() => import("@/components/workspace/atividades-feed"), { ssr: false });
 
