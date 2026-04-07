@@ -35,9 +35,9 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Public pages (no auth required)
-  const publicPaths = ["/", "/pricing", "/termos", "/privacidade", "/reset-password"];
-  // Convite links sao publicos (com prefixo)
-  if (pathname.startsWith("/convite/")) return response;
+  const publicPaths = ["/", "/pricing", "/termos", "/privacidade", "/reset-password", "/help"];
+  // Convite e help articles sao publicos (com prefixo)
+  if (pathname.startsWith("/convite/") || pathname.startsWith("/help/")) return response;
   if (publicPaths.some((p) => pathname === p)) {
     return response;
   }

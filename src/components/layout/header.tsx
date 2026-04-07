@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { useTema } from "@/hooks/use-tema";
-import { LogOut, Menu, Moon, Sun, User } from "lucide-react";
+import { HelpCircle, LogOut, Menu, Moon, Sun, User } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -109,6 +109,18 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
       <div className="flex items-center gap-2 sm:gap-4">
         {/* Notifications */}
         <NotificationBell />
+
+        {/* Help */}
+        <Tooltip content="Central de Ajuda (?)" position="bottom">
+          <button
+            onClick={() => window.dispatchEvent(new Event("open-help-modal"))}
+            className="w-[42px] h-[42px] rounded-[20px] flex items-center justify-center transition-all hover:-translate-y-0.5 hover-accent-text"
+            style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-secondary)" }}
+            aria-label="Central de Ajuda"
+          >
+            <HelpCircle size={18} strokeWidth={2.5} />
+          </button>
+        </Tooltip>
 
         {/* Toggle Theme */}
         <Tooltip content={tema === "claro" ? "Mudar para modo escuro" : "Mudar para modo claro"} position="bottom">

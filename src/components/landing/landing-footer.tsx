@@ -10,6 +10,7 @@ const linkColumns = [
       { label: "Funcionalidades", href: "/#features" },
       { label: "Como Funciona", href: "/#how-it-works" },
       { label: "Precos", href: "/pricing" },
+      { label: "Central de Ajuda", href: "/help" },
     ],
   },
   {
