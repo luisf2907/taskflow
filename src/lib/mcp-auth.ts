@@ -68,14 +68,14 @@ export async function authenticateApiKey(
   }
 
   // Atualizar ultimo uso (fire-and-forget com error logging)
-  service
-    .from("api_keys")
-    .update({ ultimo_uso: new Date().toISOString() })
-    .eq("id", apiKey.id)
-    .then(() => {})
-    .catch((err: unknown) => {
-      console.error("[mcp-auth] Failed to update ultimo_uso:", err instanceof Error ? err.message : err);
-    });
+  Promise.resolve(
+    service
+      .from("api_keys")
+      .update({ ultimo_uso: new Date().toISOString() })
+      .eq("id", apiKey.id)
+  ).catch((err: unknown) => {
+    console.error("[mcp-auth] Failed to update ultimo_uso:", err instanceof Error ? err.message : err);
+  });
 
   return {
     userId: apiKey.user_id,

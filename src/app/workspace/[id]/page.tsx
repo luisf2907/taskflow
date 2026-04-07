@@ -84,11 +84,63 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Lock, Search, Upload } from "lucide-react";
 import type { Repositorio } from "@/types/github";
 import { ImportarModal } from "@/components/workspace/importar-modal";
 import { exportCSV, exportJSON } from "@/lib/export";
+
+// ─── Export Dropdown ───
+function ExportDropdown({ cartoes, nomeWorkspace }: { cartoes: import("@/hooks/use-backlog").CartaoBacklog[]; nomeWorkspace: string }) {
+  const [aberto, setAberto] = useState(false);
+
+  function handleExport(tipo: "csv" | "json") {
+    if (tipo === "csv") exportCSV(cartoes, `${nomeWorkspace}-export.csv`);
+    else exportJSON(cartoes, `${nomeWorkspace}-export.json`);
+    setAberto(false);
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setAberto(!aberto)}
+        className="flex items-center gap-2 px-4 py-3 text-[13px] font-bold rounded-[20px] border transition-all hover:-translate-y-0.5"
+        style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)", background: "var(--tf-surface)" }}
+      >
+        <Download size={16} /> Exportar
+      </button>
+
+      {aberto && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setAberto(false)} />
+          <div
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 rounded-[12px] border z-50 overflow-hidden"
+            style={{ background: "var(--tf-surface-raised)", borderColor: "var(--tf-border)", boxShadow: "var(--tf-shadow-md)", width: "130px" }}
+          >
+            <button
+              onClick={() => handleExport("csv")}
+              className="block w-full px-4 py-2.5 text-[13px] font-semibold text-left"
+              style={{ color: "var(--tf-text)", borderBottom: "1px solid var(--tf-border-subtle)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              CSV
+            </button>
+            <button
+              onClick={() => handleExport("json")}
+              className="block w-full px-4 py-2.5 text-[13px] font-semibold text-left"
+              style={{ color: "var(--tf-text)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              JSON
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 // ─── Modal Conectar Repo (com listagem autenticada) ───
 function ModalConectarRepo({
@@ -949,23 +1001,11 @@ export default function PaginaWorkspace() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
-                  <Dropdown
-                    trigger={
-                      <button
-                        className="flex items-center gap-2 px-4 py-3 text-[13px] font-bold rounded-[20px] border transition-all hover:-translate-y-0.5"
-                        style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)" }}
-                      >
-                        <Download size={16} /> Exportar
-                      </button>
-                    }
-                  >
-                    <DropdownItem onClick={() => exportCSV(todosCartoes, `${workspace.nome}-export.csv`)}>CSV</DropdownItem>
-                    <DropdownItem onClick={() => exportJSON(todosCartoes, `${workspace.nome}-export.json`)}>JSON</DropdownItem>
-                  </Dropdown>
+                  <ExportDropdown cartoes={todosCartoes} nomeWorkspace={workspace.nome} />
                   <button
                     onClick={() => setModalImport(true)}
                     className="flex items-center gap-2 px-4 py-3 text-[13px] font-bold rounded-[20px] border transition-all hover:-translate-y-0.5"
-                    style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)" }}
+                    style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)", background: "var(--tf-surface)" }}
                   >
                     <Upload size={16} /> Importar
                   </button>

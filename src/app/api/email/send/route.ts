@@ -11,7 +11,7 @@ import {
 const schema = z.object({
   tipo: z.enum(["convite", "card_atribuido"]),
   destinatario: z.string().email(),
-  dados: z.record(z.unknown()),
+  dados: z.record(z.string(), z.unknown()),
 });
 
 export async function POST(request: NextRequest) {
