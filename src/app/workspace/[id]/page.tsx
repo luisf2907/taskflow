@@ -100,6 +100,7 @@ import { Loader2, Lock, Search, Upload } from "lucide-react";
 import type { Repositorio } from "@/types/github";
 import { exportCSV, exportJSON } from "@/lib/export";
 import { Tooltip } from "@/components/ui/tooltip";
+import { diasRestantes, formatarDataISO as formatarData } from "@/lib/datas";
 
 // ─── Export Dropdown ───
 function ExportDropdown({ cartoes, nomeWorkspace }: { cartoes: import("@/hooks/use-backlog").CartaoBacklog[]; nomeWorkspace: string }) {
@@ -529,17 +530,6 @@ function RepoCard({ owner, nome, onAbrir, onDesconectar }: { owner: string; nome
       </button>
     </div>
   );
-}
-
-function diasRestantes(dataFim: string | null): number | null {
-  if (!dataFim) return null;
-  const diff = new Date(dataFim).getTime() - new Date().getTime();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
-}
-
-function formatarData(data: string | null): string {
-  if (!data) return "—";
-  return new Date(data + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 }
 
 function BacklogRow({

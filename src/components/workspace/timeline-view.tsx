@@ -6,6 +6,13 @@ import { useQuadros } from "@/hooks/use-quadros";
 import { useSprintDependencies } from "@/hooks/use-sprint-dependencies";
 import { Calendar, ChevronLeft, ChevronRight, Clock, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import {
+  diasEntreRound as diasEntre,
+  formatarMes,
+  formatarDataCurta as formatarData,
+  adicionarDias,
+  toISODate,
+} from "@/lib/datas";
 
 interface TimelineViewProps {
   sprints: Quadro[];
@@ -33,28 +40,6 @@ interface CreatingDep {
   fromY: number;
   toX: number;
   toY: number;
-}
-
-function diasEntre(a: Date, b: Date): number {
-  return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
-}
-
-function formatarMes(d: Date): string {
-  return d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
-}
-
-function formatarData(d: Date): string {
-  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }).replace(".", "");
-}
-
-function adicionarDias(d: Date, dias: number): Date {
-  const novo = new Date(d);
-  novo.setDate(novo.getDate() + dias);
-  return novo;
-}
-
-function toISODate(d: Date): string {
-  return d.toISOString().split("T")[0];
 }
 
 export function TimelineView({ sprints, cartoesDaSprint, onSprintClick, workspaceId }: TimelineViewProps) {

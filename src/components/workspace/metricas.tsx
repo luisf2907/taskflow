@@ -4,6 +4,7 @@ import { CartaoBacklog } from "@/hooks/use-backlog";
 import { Etiqueta, Membro, Quadro } from "@/types";
 import { BarChart3, Flame, Target, TrendingUp, Users, Layers, CheckCircle2, Clock, Timer, Download, Calendar } from "lucide-react";
 import { useMemo, useCallback } from "react";
+import { diasEntreCeil as diasEntre } from "@/lib/datas";
 
 interface MetricasProps {
   sprints: Quadro[];
@@ -11,11 +12,6 @@ interface MetricasProps {
   backlogPuro: CartaoBacklog[];
   etiquetas: Etiqueta[];
   membros: Membro[];
-}
-
-// ─── Helpers ───
-function diasEntre(d1: Date, d2: Date) {
-  return Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 // ─── Stat Card ───
