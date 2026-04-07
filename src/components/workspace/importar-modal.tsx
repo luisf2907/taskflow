@@ -4,8 +4,6 @@ import { Modal } from "@/components/ui/modal";
 import { useState, useRef } from "react";
 import { Upload, FileJson, FileSpreadsheet, ArrowLeft, Check, Loader2, Columns3, Tag, ListChecks, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
-import { parseTrelloJSON } from "@/lib/import-trello";
-import { parseJiraCSV } from "@/lib/import-jira";
 import type { ImportData } from "@/lib/import-types";
 import { mutate as globalMutate } from "swr";
 
@@ -53,12 +51,13 @@ export function ImportarModal({ aberto, onFechar, workspaceId }: ImportarModalPr
     setErro(null);
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const conteudo = e.target?.result as string;
       try {
+        // Lazy load do parser apenas no momento do upload
         const parsed = fonte === "trello"
-          ? parseTrelloJSON(conteudo)
-          : parseJiraCSV(conteudo);
+          ? (await import("@/lib/import-trello")).parseTrelloJSON(conteudo)
+          : (await import("@/lib/import-jira")).parseJiraCSV(conteudo);
 
         const totalCards = parsed.colunas.reduce((acc, c) => acc + c.cards.length, 0);
         if (totalCards === 0) {

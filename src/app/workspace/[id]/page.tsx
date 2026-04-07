@@ -19,22 +19,32 @@ const DetalheCartao = dynamic(
   () => import("@/components/quadro/detalhe-cartao").then((m) => m.DetalheCartao),
   { ssr: false }
 );
-import { RepoFileBrowser } from "@/components/workspace/repo-file-browser";
-import { RepoFileViewer } from "@/components/workspace/repo-file-viewer";
-import { RepoBranches } from "@/components/workspace/repo-branches";
-import { RepoPRs } from "@/components/workspace/repo-prs";
-import { RepoWebhookConfig } from "@/components/workspace/repo-webhook-config";
-import { MetricasWorkspace } from "@/components/workspace/metricas";
-import { TimelineView } from "@/components/workspace/timeline-view";
-import { AutomacoesConfig } from "@/components/workspace/automacoes-config";
-import AtividadesFeed from "@/components/workspace/atividades-feed";
 import dynamic from "next/dynamic";
+
+// Lazy load: componentes pesados de Repos (so usados na sub-pagina /repos)
+const RepoFileBrowser = dynamic(() => import("@/components/workspace/repo-file-browser").then((m) => m.RepoFileBrowser), { ssr: false });
+const RepoFileViewer = dynamic(() => import("@/components/workspace/repo-file-viewer").then((m) => m.RepoFileViewer), { ssr: false });
+const RepoBranches = dynamic(() => import("@/components/workspace/repo-branches").then((m) => m.RepoBranches), { ssr: false });
+const RepoPRs = dynamic(() => import("@/components/workspace/repo-prs").then((m) => m.RepoPRs), { ssr: false });
+const RepoWebhookConfig = dynamic(() => import("@/components/workspace/repo-webhook-config").then((m) => m.RepoWebhookConfig), { ssr: false });
+
+// Lazy load: componentes de abas (so carregam quando usuario clica na aba)
+const MetricasWorkspace = dynamic(() => import("@/components/workspace/metricas").then((m) => m.MetricasWorkspace), { ssr: false });
+const TimelineView = dynamic(() => import("@/components/workspace/timeline-view").then((m) => m.TimelineView), { ssr: false });
+const AutomacoesConfig = dynamic(() => import("@/components/workspace/automacoes-config").then((m) => m.AutomacoesConfig), { ssr: false });
+const AtividadesFeed = dynamic(() => import("@/components/workspace/atividades-feed"), { ssr: false });
+
+// Lazy load: modais pesados
 const PlanningPokerModal = dynamic(
   () => import("@/components/planning-poker/planning-poker-modal").then((m) => m.PlanningPokerModal),
   { ssr: false }
 );
 const GerarCardsModal = dynamic(
   () => import("@/components/ai/gerar-cards-modal").then((m) => m.GerarCardsModal),
+  { ssr: false }
+);
+const ImportarModalDynamic = dynamic(
+  () => import("@/components/workspace/importar-modal").then((m) => m.ImportarModal),
   { ssr: false }
 );
 import { useRealtimeWorkspace } from "@/hooks/use-realtime";
@@ -88,7 +98,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Loader2, Lock, Search, Upload } from "lucide-react";
 import type { Repositorio } from "@/types/github";
-import { ImportarModal } from "@/components/workspace/importar-modal";
 import { exportCSV, exportJSON } from "@/lib/export";
 
 // ─── Export Dropdown ───
@@ -2029,7 +2038,7 @@ export default function PaginaWorkspace() {
       />
 
       {/* Modal: Importar */}
-      <ImportarModal aberto={modalImport} onFechar={() => setModalImport(false)} workspaceId={workspaceId} />
+      <ImportarModalDynamic aberto={modalImport} onFechar={() => setModalImport(false)} workspaceId={workspaceId} />
 
       {/* Modal: Nova Sprint */}
       <Modal aberto={modalSprint} onFechar={() => setModalSprint(false)} titulo="Criar nova sprint">
