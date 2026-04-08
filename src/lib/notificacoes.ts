@@ -10,12 +10,12 @@ interface CriarNotificacaoParams {
 
 export async function criarNotificacao(params: CriarNotificacaoParams): Promise<void> {
   try {
-    await supabase.from("notificacoes").insert({
-      user_id: params.userId,
-      titulo: params.titulo,
-      mensagem: params.mensagem || null,
-      tipo: params.tipo || "info",
-      link: params.link || null,
+    await supabase.rpc("criar_notificacao", {
+      p_user_id: params.userId,
+      p_titulo: params.titulo,
+      p_mensagem: params.mensagem ?? null,
+      p_tipo: params.tipo ?? "info",
+      p_link: params.link ?? null,
     });
   } catch {
     // Silent fail
