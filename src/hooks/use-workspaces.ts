@@ -39,19 +39,24 @@ export function useWorkspaces() {
     if (!nome.trim()) return null;
     const { data: { user } } = await supabase.auth.getUser();
 
+    // Nota: o trigger `trg_auto_add_workspace_creator` no banco adiciona
+    // automaticamente o criador como admin em workspace_usuarios AFTER INSERT.
+    // Fazemos tambem um upsert defensivo aqui para cobrir bancos sem o trigger
+    // (ignoreDuplicates evita 409 se o trigger ja criou a row).
     const { data } = await supabase
       .from("workspaces")
       .insert({ nome, descricao: descricao || null, cor, icone, criado_por: user?.id || null })
       .select()
       .single();
     if (data) {
-      // Adicionar criador como admin do workspace
+      // Upsert idempotente — ignora conflito se o trigger ja adicionou o criador
       if (user) {
-        await supabase.from("workspace_usuarios").insert({
-          workspace_id: data.id,
-          user_id: user.id,
-          papel: "admin",
-        });
+        await supabase
+          .from("workspace_usuarios")
+          .upsert(
+            { workspace_id: data.id, user_id: user.id, papel: "admin" },
+            { onConflict: "workspace_id,user_id", ignoreDuplicates: true }
+          );
       }
       const novo = [...workspaces, data].sort((a, b) => a.nome.localeCompare(b.nome));
       globalMutate(CHAVE, novo, false);
