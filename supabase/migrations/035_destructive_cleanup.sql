@@ -44,14 +44,14 @@ WHERE a.workspace_id IS NULL
 DELETE FROM public.atividades WHERE workspace_id IS NULL;
 
 -- -----------------------------------------------------------------------------
--- 4. NOT NULL em atividades.workspace_id + FK ja deve estar la, so reforcar
+-- 4. NOT NULL em atividades.workspace_id
 -- -----------------------------------------------------------------------------
 
 ALTER TABLE public.atividades
   ALTER COLUMN workspace_id SET NOT NULL;
 
 -- -----------------------------------------------------------------------------
--- 5. NOT NULL em quadros.workspace_id (0 orfaos confirmado)
+-- 5. NOT NULL em quadros.workspace_id
 -- -----------------------------------------------------------------------------
 
 ALTER TABLE public.quadros
@@ -66,21 +66,16 @@ ALTER TABLE public.cartoes
 
 -- -----------------------------------------------------------------------------
 -- 7. Unificar membros em workspace-only
---    (0 membros sem workspace confirmado)
 -- -----------------------------------------------------------------------------
 
--- Dropar o CHECK antes de alterar as colunas
 ALTER TABLE public.membros
   DROP CONSTRAINT IF EXISTS membros_has_owner;
 
--- Dropar indice parcial baseado em quadro_id (vamos remover a coluna)
 DROP INDEX IF EXISTS public.idx_membros_quadro;
 
--- Dropar a coluna legada
 ALTER TABLE public.membros
   DROP COLUMN IF EXISTS quadro_id;
 
--- Agora workspace_id pode ser NOT NULL com seguranca
 ALTER TABLE public.membros
   ALTER COLUMN workspace_id SET NOT NULL;
 

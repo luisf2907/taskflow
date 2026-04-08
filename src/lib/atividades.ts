@@ -13,7 +13,8 @@ interface RegistrarParams {
 // Cache de user_id e workspace_id para evitar queries repetidas
 let cachedUserId: string | null = null;
 let cachedUserExpiry = 0;
-const wsCache = new Map<string, string>();
+const wsCacheByQuadro = new Map<string, string>();
+const wsCacheByCartao = new Map<string, string>();
 
 /**
  * Registra atividade de forma NON-BLOCKING.
@@ -37,10 +38,11 @@ async function registrarAsync(params: RegistrarParams): Promise<void> {
     cachedUserExpiry = now + 60_000;
   }
 
-  // Auto-resolve workspace_id from quadro_id (com cache)
+  // Auto-resolve workspace_id. Fallback: quadro_id -> cartao_id.
   let workspaceId = params.workspaceId || null;
+
   if (!workspaceId && params.quadroId) {
-    const cached = wsCache.get(params.quadroId);
+    const cached = wsCacheByQuadro.get(params.quadroId);
     if (cached) {
       workspaceId = cached;
     } else {
@@ -50,9 +52,27 @@ async function registrarAsync(params: RegistrarParams): Promise<void> {
         .eq("id", params.quadroId)
         .single();
       workspaceId = quadro?.workspace_id || null;
-      if (workspaceId) wsCache.set(params.quadroId, workspaceId);
+      if (workspaceId) wsCacheByQuadro.set(params.quadroId, workspaceId);
     }
   }
+
+  if (!workspaceId && params.cartaoId) {
+    const cached = wsCacheByCartao.get(params.cartaoId);
+    if (cached) {
+      workspaceId = cached;
+    } else {
+      const { data: cartao } = await supabase
+        .from("cartoes")
+        .select("workspace_id")
+        .eq("id", params.cartaoId)
+        .single();
+      workspaceId = cartao?.workspace_id || null;
+      if (workspaceId) wsCacheByCartao.set(params.cartaoId, workspaceId);
+    }
+  }
+
+  // workspace_id e NOT NULL no banco. Sem ele nao da pra registrar.
+  if (!workspaceId) return;
 
   await supabase.from("atividades").insert({
     workspace_id: workspaceId,
