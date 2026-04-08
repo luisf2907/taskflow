@@ -128,7 +128,6 @@ export function useBacklog(workspaceId: string) {
     if (data) {
       const novo: CartaoBacklog = {
         ...data,
-        etiquetas: data.etiquetas || [],
         coluna_nome: null,
         quadro_nome: null,
         quadro_id: null,

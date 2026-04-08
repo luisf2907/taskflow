@@ -50,7 +50,6 @@ export interface Cartao {
   titulo: string;
   descricao: string | null;
   posicao: number;
-  etiquetas: string[];
   data_entrega: string | null;
   peso: number | null;
   pr_numero: number | null;
@@ -93,8 +92,7 @@ export interface CartaoEtiqueta {
 // =============================================
 export interface Membro {
   id: string;
-  quadro_id: string | null;
-  workspace_id: string | null;
+  workspace_id: string;
   user_id: string | null;
   nome: string;
   email: string | null;

@@ -106,7 +106,6 @@ export function useCartoes(quadroId: string) {
     if (data) {
       const enriquecido: CartaoComResumo = {
         ...data,
-        etiquetas: data.etiquetas || [],
         etiqueta_ids: [],
         membro_ids: [],
         total_checklist_itens: 0,
@@ -276,7 +275,7 @@ export function useCartoes(quadroId: string) {
 
     const updates = atualizados.map((c) => ({
       id: c.id, coluna_id: c.coluna_id, titulo: c.titulo, descricao: c.descricao,
-      posicao: c.posicao, etiquetas: c.etiquetas, data_entrega: c.data_entrega,
+      posicao: c.posicao, data_entrega: c.data_entrega,
       peso: c.peso, criado_em: c.criado_em, atualizado_em: c.atualizado_em,
     }));
     await supabase.from("cartoes").upsert(updates);

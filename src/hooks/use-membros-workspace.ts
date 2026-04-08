@@ -33,7 +33,7 @@ export function useMembrosWorkspace(workspaceId: string) {
     const cor = CORES_AVATAR[membros.length % CORES_AVATAR.length];
     const { data } = await supabase
       .from("membros")
-      .insert({ workspace_id: workspaceId, quadro_id: null, nome, email: email || null, cor_avatar: cor })
+      .insert({ workspace_id: workspaceId, nome, email: email || null, cor_avatar: cor })
       .select()
       .single();
     if (data) globalMutate(key, [...membros, data], false);
