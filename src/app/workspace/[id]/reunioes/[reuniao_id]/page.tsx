@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -10,6 +10,8 @@ import {
   CheckCircle2,
   Clock,
   Volume2,
+  Play,
+  Pause,
 } from "lucide-react";
 
 import { Header } from "@/components/layout/header";
@@ -39,7 +41,10 @@ export default function ReuniaoDetailPage() {
   const [perfisPorId, setPerfisPorId] = useState<Record<string, Perfil>>({});
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [currentMs, setCurrentMs] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const seekBarRef = useRef<HTMLDivElement | null>(null);
 
   const workspace = workspaces?.find((w) => w.id === workspaceId);
 
@@ -72,7 +77,6 @@ export default function ReuniaoDetailPage() {
       setFalas((fData || []) as ReuniaoFala[]);
     }
 
-    // Carrega perfis dos usuarios identificados nas falas
     const userIds = new Set<string>();
     (fData || []).forEach((f) => {
       if (f.usuario_id) userIds.add(f.usuario_id);
@@ -110,7 +114,7 @@ export default function ReuniaoDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reuniao?.status]);
 
-  // Gera signed URL do audio quando a reuniao tiver audio_path
+  // Gera signed URL do audio
   useEffect(() => {
     if (!reuniao?.audio_path) {
       setAudioUrl(null);
@@ -124,20 +128,54 @@ export default function ReuniaoDetailPage() {
     })();
   }, [reuniao?.audio_path]);
 
-  // Sincroniza currentMs com o player
+  // Audio event listeners
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     const onTime = () => setCurrentMs(audio.currentTime * 1000);
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    const onMeta = () => setDuration(audio.duration * 1000);
+    const onEnded = () => setIsPlaying(false);
+
     audio.addEventListener("timeupdate", onTime);
-    return () => audio.removeEventListener("timeupdate", onTime);
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("loadedmetadata", onMeta);
+    audio.addEventListener("ended", onEnded);
+    return () => {
+      audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("loadedmetadata", onMeta);
+      audio.removeEventListener("ended", onEnded);
+    };
   }, [audioUrl]);
+
+  const togglePlay = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      void audio.play();
+    } else {
+      audio.pause();
+    }
+  }, []);
 
   function jumpTo(ms: number) {
     const audio = audioRef.current;
     if (!audio) return;
     audio.currentTime = ms / 1000;
     void audio.play();
+  }
+
+  function handleSeek(e: React.MouseEvent<HTMLDivElement>) {
+    const audio = audioRef.current;
+    const bar = seekBarRef.current;
+    if (!audio || !bar || !duration) return;
+    const rect = bar.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audio.currentTime = (pct * duration) / 1000;
   }
 
   // Agrupa falas consecutivas do mesmo speaker
@@ -166,6 +204,8 @@ export default function ReuniaoDetailPage() {
     }
     return out;
   }, [falas]);
+
+  const progressPct = duration > 0 ? (currentMs / duration) * 100 : 0;
 
   if (!reuniao) {
     return (
@@ -292,7 +332,7 @@ export default function ReuniaoDetailPage() {
               />
             )}
 
-            {/* Audio player */}
+            {/* Custom Audio Player */}
             {audioUrl && (
               <div
                 className="rounded-[14px] p-4"
@@ -324,16 +364,73 @@ export default function ReuniaoDetailPage() {
                     </span>
                   )}
                 </div>
+
+                {/* Hidden audio element */}
+                <audio ref={audioRef} src={audioUrl} preload="metadata" />
+
+                {/* Player UI */}
                 <div
-                  className="rounded-[10px] overflow-hidden"
+                  className="flex items-center gap-3 rounded-[10px] px-3 py-2.5"
                   style={{ background: "var(--tf-surface)" }}
                 >
-                  <audio
-                    ref={audioRef}
-                    src={audioUrl}
-                    controls
-                    className="w-full"
-                  />
+                  {/* Play/Pause */}
+                  <button
+                    onClick={togglePlay}
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-150 hover:opacity-80"
+                    style={{ background: "var(--tf-accent)" }}
+                  >
+                    {isPlaying ? (
+                      <Pause size={14} className="text-white" fill="white" />
+                    ) : (
+                      <Play
+                        size={14}
+                        className="text-white ml-0.5"
+                        fill="white"
+                      />
+                    )}
+                  </button>
+
+                  {/* Current time */}
+                  <span
+                    className="text-[11px] font-mono font-semibold min-w-[36px] text-right"
+                    style={{ color: "var(--tf-text)" }}
+                  >
+                    {formatTime(currentMs)}
+                  </span>
+
+                  {/* Seek bar */}
+                  <div
+                    ref={seekBarRef}
+                    onClick={handleSeek}
+                    className="flex-1 h-1.5 rounded-full cursor-pointer relative group"
+                    style={{ background: "var(--tf-border)" }}
+                  >
+                    {/* Progress fill */}
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-100"
+                      style={{
+                        width: `${progressPct}%`,
+                        background: "var(--tf-accent)",
+                      }}
+                    />
+                    {/* Thumb */}
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                      style={{
+                        left: `calc(${progressPct}% - 6px)`,
+                        background: "var(--tf-accent)",
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+                      }}
+                    />
+                  </div>
+
+                  {/* Duration */}
+                  <span
+                    className="text-[11px] font-mono min-w-[36px]"
+                    style={{ color: "var(--tf-text-tertiary)" }}
+                  >
+                    {formatTime(duration)}
+                  </span>
                 </div>
               </div>
             )}
@@ -372,7 +469,9 @@ export default function ReuniaoDetailPage() {
                             : undefined
                         }
                         currentMs={currentMs}
+                        isPlaying={isPlaying}
                         onJump={jumpTo}
+                        onTogglePlay={togglePlay}
                       />
                     ))}
                   </div>
@@ -400,10 +499,19 @@ interface SpeakerBlockProps {
   };
   perfil?: Perfil;
   currentMs: number;
+  isPlaying: boolean;
   onJump: (ms: number) => void;
+  onTogglePlay: () => void;
 }
 
-function SpeakerBlock({ group, perfil, currentMs, onJump }: SpeakerBlockProps) {
+function SpeakerBlock({
+  group,
+  perfil,
+  currentMs,
+  isPlaying,
+  onJump,
+  onTogglePlay,
+}: SpeakerBlockProps) {
   const displayName = perfil?.nome ?? group.speaker_label;
   const isIdentified = group.match_tipo === "strong";
   const confidenceLabel =
@@ -467,31 +575,90 @@ function SpeakerBlock({ group, perfil, currentMs, onJump }: SpeakerBlockProps) {
             const active =
               currentMs >= fala.inicio_ms && currentMs < fala.fim_ms;
             return (
-              <button
+              <div
                 key={fala.id}
-                onClick={() => onJump(fala.inicio_ms)}
-                className="block w-full text-left rounded-[8px] px-2.5 py-1.5 transition-all duration-200"
+                className="group flex items-center gap-1 rounded-[8px] px-2.5 py-1.5 transition-all duration-200"
                 style={{
                   background: active
                     ? "var(--tf-accent-light)"
                     : "transparent",
-                  color: active
-                    ? "var(--tf-accent-text)"
-                    : "var(--tf-text-secondary)",
                 }}
               >
-                <span
-                  className="text-[10px] font-mono mr-2 inline-block min-w-[32px]"
+                <button
+                  onClick={() => {
+                    if (active) {
+                      onTogglePlay();
+                    } else {
+                      onJump(fala.inicio_ms);
+                    }
+                  }}
+                  className="flex-1 min-w-0 text-left"
                   style={{
                     color: active
-                      ? "var(--tf-accent)"
-                      : "var(--tf-text-tertiary)",
+                      ? "var(--tf-accent-text)"
+                      : "var(--tf-text-secondary)",
                   }}
                 >
-                  {formatTime(fala.inicio_ms)}
-                </span>
-                <span className="text-[13px]">{fala.texto}</span>
-              </button>
+                  <span
+                    className="text-[10px] font-mono mr-2 inline-block min-w-[32px]"
+                    style={{
+                      color: active
+                        ? "var(--tf-accent)"
+                        : "var(--tf-text-tertiary)",
+                    }}
+                  >
+                    {formatTime(fala.inicio_ms)}
+                  </span>
+                  <span className="text-[13px]">{fala.texto}</span>
+                </button>
+
+                {/* Inline play/pause button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (active) {
+                      onTogglePlay();
+                    } else {
+                      onJump(fala.inicio_ms);
+                    }
+                  }}
+                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-150"
+                  style={{
+                    background: active
+                      ? "var(--tf-accent)"
+                      : "var(--tf-bg-secondary)",
+                    opacity: active ? 1 : undefined,
+                  }}
+                  // Show on hover for inactive, always show for active
+                  {...(!active && {
+                    style: {
+                      background: "var(--tf-bg-secondary)",
+                      opacity: 0,
+                    },
+                    className:
+                      "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-150 group-hover:!opacity-100",
+                  })}
+                >
+                  {active && isPlaying ? (
+                    <Pause
+                      size={10}
+                      style={{
+                        color: active ? "white" : "var(--tf-text-tertiary)",
+                      }}
+                      fill={active ? "white" : "currentColor"}
+                    />
+                  ) : (
+                    <Play
+                      size={10}
+                      className="ml-px"
+                      style={{
+                        color: active ? "white" : "var(--tf-text-tertiary)",
+                      }}
+                      fill={active ? "white" : "currentColor"}
+                    />
+                  )}
+                </button>
+              </div>
             );
           })}
         </div>
