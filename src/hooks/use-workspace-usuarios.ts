@@ -42,62 +42,47 @@ export function useWorkspaceUsuarios(workspaceId: string | undefined) {
   );
 
   async function convidar(email: string) {
-    // Buscar perfil pelo email
-    const { data: perfil } = await supabase
-      .from("perfis")
-      .select(
-        "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at",
-      )
-      .eq("email", email)
-      .maybeSingle();
+    // Usa API route com service role para buscar perfil por email
+    // (RLS impede client de ver perfis de quem nao e do mesmo workspace)
+    try {
+      const res = await fetch("/api/workspace-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          workspace_id: workspaceId,
+        }),
+      });
+      const result = await res.json();
 
-    if (!perfil) {
-      return { error: "Usuário não encontrado. Peça para ele se cadastrar primeiro." };
+      if (!res.ok) {
+        return { error: result.error || "Erro ao convidar" };
+      }
+
+      const novoUsuario = result.data as WorkspaceUsuario;
+      globalMutate(chave(workspaceId), [...usuarios, novoUsuario], false);
+
+      // Enviar email de convite (fire-and-forget)
+      const { data: ws } = await supabase
+        .from("workspaces")
+        .select("nome")
+        .eq("id", workspaceId!)
+        .single();
+
+      fetch("/api/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tipo: "convite",
+          destinatario: email,
+          dados: { nomeWorkspace: ws?.nome || "Workspace" },
+        }),
+      }).catch(() => {});
+
+      return { data: novoUsuario };
+    } catch {
+      return { error: "Erro de conexao" };
     }
-
-    // Verificar se já é membro
-    const jaExiste = usuarios.some((u) => u.user_id === perfil.id);
-    if (jaExiste) {
-      return { error: "Este usuário já é membro deste workspace." };
-    }
-
-    const { data, error } = await supabase
-      .from("workspace_usuarios")
-      .insert({
-        workspace_id: workspaceId!,
-        user_id: perfil.id,
-        papel: "membro",
-      })
-      .select("*")
-      .single();
-
-    if (error) return { error: error.message };
-
-    const novoUsuario: WorkspaceUsuario = {
-      ...data,
-      perfis: perfil as Perfil,
-    };
-
-    globalMutate(chave(workspaceId), [...usuarios, novoUsuario], false);
-
-    // Enviar email de convite (fire-and-forget)
-    const { data: ws } = await supabase
-      .from("workspaces")
-      .select("nome")
-      .eq("id", workspaceId!)
-      .single();
-
-    fetch("/api/email/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tipo: "convite",
-        destinatario: email,
-        dados: { nomeWorkspace: ws?.nome || "Workspace" },
-      }),
-    }).catch(() => {});
-
-    return { data: novoUsuario };
   }
 
   async function remover(usuarioId: string) {
