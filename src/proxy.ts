@@ -48,14 +48,19 @@ export async function proxy(request: NextRequest) {
   }
 
   // Protected routes: redirect to login if not authenticated
-  // API v1 and MCP use their own auth (API keys), skip middleware redirect
+  // Endpoints com auth propria (API keys, HMAC, etc) precisam bypass do redirect:
+  //   /api/v1, /api/mcp         -> API keys
+  //   /api/api-keys             -> gerencia as API keys (usa cookie)
+  //   /api/reunioes/*/webhook   -> HMAC do worker de voz (stateless, sem cookie)
+  const isVoiceWebhook = /^\/api\/reunioes\/[^/]+\/webhook\/?$/.test(pathname);
   if (
     !user &&
     !pathname.startsWith("/login") &&
     !pathname.startsWith("/auth") &&
     !pathname.startsWith("/api/v1") &&
     !pathname.startsWith("/api/mcp") &&
-    !pathname.startsWith("/api/api-keys")
+    !pathname.startsWith("/api/api-keys") &&
+    !isVoiceWebhook
   ) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
