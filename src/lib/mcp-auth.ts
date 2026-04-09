@@ -56,13 +56,21 @@ export async function authenticateApiKey(
 
   const { data: apiKey, error } = await service
     .from("api_keys")
-    .select("id, user_id, workspace_id")
+    .select("id, user_id, workspace_id, expires_at")
     .eq("key_hash", keyHash)
     .single();
 
   if (error || !apiKey) {
     return NextResponse.json(
       { error: "API key invalida ou revogada" },
+      { status: 401 }
+    );
+  }
+
+  // Checar expiração
+  if (apiKey.expires_at && new Date(apiKey.expires_at) < new Date()) {
+    return NextResponse.json(
+      { error: "API key expirada" },
       { status: 401 }
     );
   }

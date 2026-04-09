@@ -46,7 +46,7 @@ export async function validateBody<T>(
 }
 
 /**
- * Apply rate limiting to a request. Returns null if OK, or a 429 response.
+ * Apply rate limiting to a request (by IP). Returns null if OK, or a 429 response.
  */
 export function applyRateLimit(
   request: NextRequest,
@@ -58,6 +58,32 @@ export function applyRateLimit(
   if (!result.ok) {
     return NextResponse.json(
       { error: "Too many requests. Try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(result.retryAfter || 60) },
+      }
+    );
+  }
+  return null;
+}
+
+/**
+ * Apply rate limiting by API key ID (for authenticated endpoints).
+ * More generous limits than IP-based since the caller is authenticated.
+ */
+export function applyApiKeyRateLimit(
+  keyId: string,
+  prefix: string,
+  opts?: { maxRequests?: number; windowMs?: number }
+): NextResponse | null {
+  const key = `${prefix}:apikey:${keyId}`;
+  const result = rateLimit(key, {
+    maxRequests: opts?.maxRequests ?? 120,
+    windowMs: opts?.windowMs ?? 60_000,
+  });
+  if (!result.ok) {
+    return NextResponse.json(
+      { error: "Too many requests for this API key. Try again later." },
       {
         status: 429,
         headers: { "Retry-After": String(result.retryAfter || 60) },

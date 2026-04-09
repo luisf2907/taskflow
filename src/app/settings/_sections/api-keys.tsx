@@ -12,6 +12,7 @@ interface ApiKey {
   nome: string;
   ultimo_uso: string | null;
   criado_em: string;
+  expires_at: string | null;
 }
 
 interface ApiKeysSectionProps {
@@ -26,6 +27,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
   const [novaKeyNome, setNovaKeyNome] = useState("Claude Code");
   const [novaKeyWs, setNovaKeyWs] = useState("");
   const [novaKeyCriada, setNovaKeyCriada] = useState<string | null>(null);
+  const [novaKeyExpDays, setNovaKeyExpDays] = useState<string>("90");
   const [carregandoKeys, setCarregandoKeys] = useState(false);
 
   const fetchApiKeys = useCallback(async () => {
@@ -55,7 +57,11 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
       const res = await fetch("/api/api-keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome: novaKeyNome, workspace_id: novaKeyWs }),
+        body: JSON.stringify({
+          nome: novaKeyNome,
+          workspace_id: novaKeyWs,
+          expires_in_days: novaKeyExpDays ? parseInt(novaKeyExpDays, 10) : null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -292,6 +298,21 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
                 </option>
               ))}
             </select>
+            <select
+              value={novaKeyExpDays}
+              onChange={(e) => setNovaKeyExpDays(e.target.value)}
+              className="px-3 py-2 text-[12px] rounded-[10px] outline-none"
+              style={{
+                background: "var(--tf-surface)",
+                border: "1px solid var(--tf-border)",
+                color: "var(--tf-text)",
+              }}
+            >
+              <option value="30">30 dias</option>
+              <option value="60">60 dias</option>
+              <option value="90">90 dias</option>
+              <option value="">Sem expiracao</option>
+            </select>
             <button
               onClick={criarApiKey}
               disabled={criandoKey || !novaKeyWs}
@@ -330,14 +351,17 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
                     {key.nome}
                   </p>
                   <p
-                    className="text-[10px]"
+                    className="text-[10px] flex items-center gap-1 flex-wrap"
                     style={{ color: "var(--tf-text-tertiary)" }}
                   >
-                    {key.key_prefix}•••• ·{" "}
-                    {workspaces.find((w) => w.id === key.workspace_id)?.nome ||
-                      "Workspace"}
-                    {key.ultimo_uso &&
-                      ` · Usado ${new Date(key.ultimo_uso).toLocaleDateString("pt-BR")}`}
+                    <span>
+                      {key.key_prefix}•••• ·{" "}
+                      {workspaces.find((w) => w.id === key.workspace_id)?.nome ||
+                        "Workspace"}
+                      {key.ultimo_uso &&
+                        ` · Usado ${new Date(key.ultimo_uso).toLocaleDateString("pt-BR")}`}
+                    </span>
+                    <ExpirationBadge expiresAt={key.expires_at} />
                   </p>
                 </div>
                 <button
@@ -361,5 +385,42 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
         )}
       </div>
     </section>
+  );
+}
+
+function ExpirationBadge({ expiresAt }: { expiresAt: string | null }) {
+  if (!expiresAt) return null;
+
+  const now = new Date();
+  const exp = new Date(expiresAt);
+  const daysLeft = Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (daysLeft <= 0) {
+    return (
+      <span
+        className="text-[9px] font-bold px-1.5 py-0.5 rounded-[4px] uppercase"
+        style={{ color: "var(--tf-danger)", background: "var(--tf-danger-bg)" }}
+      >
+        Expirada
+      </span>
+    );
+  }
+  if (daysLeft <= 7) {
+    return (
+      <span
+        className="text-[9px] font-bold px-1.5 py-0.5 rounded-[4px]"
+        style={{ color: "#f59e0b", background: "rgba(245, 158, 11, 0.1)" }}
+      >
+        Expira em {daysLeft}d
+      </span>
+    );
+  }
+  return (
+    <span
+      className="text-[9px] font-semibold px-1.5 py-0.5 rounded-[4px]"
+      style={{ color: "var(--tf-text-tertiary)", background: "var(--tf-surface)" }}
+    >
+      Expira em {daysLeft}d
+    </span>
   );
 }

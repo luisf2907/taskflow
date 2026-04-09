@@ -1,5 +1,5 @@
 import { authenticateApiKey } from "@/lib/mcp-auth";
-import { applyRateLimit } from "@/lib/api-utils";
+import { applyRateLimit, applyApiKeyRateLimit } from "@/lib/api-utils";
 import { NextRequest, NextResponse } from "next/server";
 
 import { matchRoute, type Route } from "../_lib/router";
@@ -92,6 +92,10 @@ async function handleRequest(
 
   const authResult = await authenticateApiKey(request);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limit por API key (alem do IP acima)
+  const keyLimited = applyApiKeyRateLimit(authResult.keyId, "api-v1");
+  if (keyLimited) return keyLimited;
 
   const { path } = await params;
   const method = request.method;

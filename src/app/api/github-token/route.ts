@@ -1,5 +1,6 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { applyRateLimit } from "@/lib/api-utils";
+import { encrypt } from "@/lib/crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -19,19 +20,21 @@ export async function GET(request: NextRequest) {
   const service = createServiceClient();
   const { data } = await service
     .from("github_tokens")
-    .select("provider_token, atualizado_em")
+    .select("provider_token, encrypted_token, atualizado_em")
     .eq("user_id", user.id)
     .single();
 
-  if (!data?.provider_token) {
+  // Conectado se tem encrypted_token ou provider_token preenchido
+  const hasToken = data?.encrypted_token || (data?.provider_token && data.provider_token !== "");
+  if (!hasToken) {
     return NextResponse.json({ connected: false });
   }
 
-  // Mask the token: show first 4 and last 4 chars
-  const token = data.provider_token;
-  const masked = token.length > 8
-    ? `${token.slice(0, 4)}${"•".repeat(Math.min(token.length - 8, 20))}${token.slice(-4)}`
-    : "••••••••";
+  // Para masked display usamos provider_token (se disponivel) ou indicador generico
+  const plainToken = data.provider_token && data.provider_token !== "" ? data.provider_token : null;
+  const masked = plainToken && plainToken.length > 8
+    ? `${plainToken.slice(0, 4)}${"•".repeat(Math.min(plainToken.length - 8, 20))}${plainToken.slice(-4)}`
+    : "ghp_••••••••••••";
 
   return NextResponse.json({
     connected: true,
@@ -104,12 +107,16 @@ export async function POST(request: NextRequest) {
   const scopes = scopeRes.headers.get("x-oauth-scopes") || "";
   const hasRepoScope = scopes.split(",").some((s) => s.trim() === "repo");
 
-  // Save token via service role
+  // Save token via service role (encriptado se ENCRYPTION_KEY configurada)
   const service = createServiceClient();
+  const encryptedToken = await encrypt(token);
+
   const { error } = await service.from("github_tokens").upsert(
     {
       user_id: user.id,
-      provider_token: token,
+      // Se encryption ativa, salva encriptado e limpa plaintext
+      provider_token: encryptedToken ? "" : token,
+      encrypted_token: encryptedToken,
       provider_refresh_token: null,
       atualizado_em: new Date().toISOString(),
     },

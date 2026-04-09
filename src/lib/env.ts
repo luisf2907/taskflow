@@ -17,6 +17,9 @@ const serverEnvSchema = envSchema.extend({
   // Usado em /api/reunioes/[id]/webhook pra garantir que so o worker pode
   // postar resultado pra uma reuniao (nao qualquer um que adivinhe a URL).
   VOICE_WEBHOOK_SECRET: z.string().min(32).optional(),
+  // AES-256-GCM key para encriptar dados sensiveis (GitHub tokens, etc.)
+  // 64 hex chars = 32 bytes. Gere com: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  ENCRYPTION_KEY: z.string().length(64).optional(),
 });
 
 function parsePublicEnv() {
@@ -47,6 +50,7 @@ function parseServerEnv() {
     VOICE_WORKER_URL: process.env.VOICE_WORKER_URL,
     VOICE_WORKER_API_KEY: process.env.VOICE_WORKER_API_KEY,
     VOICE_WEBHOOK_SECRET: process.env.VOICE_WEBHOOK_SECRET,
+    ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   });
 
   if (!result.success) {

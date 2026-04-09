@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   const { data: keys } = await supabase
     .from("api_keys")
-    .select("id, workspace_id, key_prefix, nome, ultimo_uso, criado_em")
+    .select("id, workspace_id, key_prefix, nome, ultimo_uso, criado_em, expires_at")
     .eq("user_id", user.id)
     .order("criado_em", { ascending: false });
 
@@ -30,14 +30,14 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
 
-  let body: { nome?: string; workspace_id?: string };
+  let body: { nome?: string; workspace_id?: string; expires_in_days?: number | null };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Body JSON invalido" }, { status: 400 });
   }
 
-  const { nome, workspace_id } = body;
+  const { nome, workspace_id, expires_in_days } = body;
 
   if (!workspace_id) {
     return NextResponse.json({ error: "workspace_id obrigatorio" }, { status: 400 });
@@ -69,6 +69,14 @@ export async function POST(request: NextRequest) {
   const keyHash = hashApiKey(plainKey);
   const keyPrefix = plainKey.slice(0, 12); // tf_sk_XXXX
 
+  // Calcular expiração (null = sem expiração)
+  let expires_at: string | null = null;
+  if (expires_in_days && expires_in_days > 0) {
+    const d = new Date();
+    d.setDate(d.getDate() + expires_in_days);
+    expires_at = d.toISOString();
+  }
+
   const { data: created, error } = await supabase
     .from("api_keys")
     .insert({
@@ -77,8 +85,9 @@ export async function POST(request: NextRequest) {
       key_hash: keyHash,
       key_prefix: keyPrefix,
       nome: nome || "API Key",
+      expires_at,
     })
-    .select("id, workspace_id, key_prefix, nome, criado_em")
+    .select("id, workspace_id, key_prefix, nome, criado_em, expires_at")
     .single();
 
   if (error) {
