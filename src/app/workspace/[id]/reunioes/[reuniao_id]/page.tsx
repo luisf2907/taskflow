@@ -4,11 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Mic,
+  AudioLines,
   Loader2,
   AlertCircle,
   CheckCircle2,
   Clock,
+  Volume2,
 } from "lucide-react";
 
 import { Header } from "@/components/layout/header";
@@ -212,20 +213,20 @@ export default function ReuniaoDetailPage() {
               onClick={() =>
                 router.push(`/workspace/${workspaceId}/reunioes`)
               }
-              className="flex items-center gap-1.5 text-[12px] font-semibold"
+              className="flex items-center gap-1.5 text-[12px] font-semibold transition-opacity hover:opacity-70"
               style={{ color: "var(--tf-text-tertiary)" }}
             >
               <ArrowLeft size={12} />
-              Reunioes · {workspace?.nome ?? "Workspace"}
+              Reunioes &middot; {workspace?.nome ?? "Workspace"}
             </button>
 
             {/* Header */}
             <div>
               <h1
-                className="text-2xl font-black tracking-tight flex items-center gap-2"
+                className="text-2xl font-black tracking-tight flex items-center gap-2.5"
                 style={{ color: "var(--tf-text)" }}
               >
-                <Mic size={22} style={{ color: "var(--tf-accent)" }} />
+                <AudioLines size={22} style={{ color: "var(--tf-accent)" }} />
                 {reuniao.titulo}
               </h1>
               {reuniao.descricao && (
@@ -245,11 +246,11 @@ export default function ReuniaoDetailPage() {
                 </span>
                 {reuniao.duracao_seg !== null && (
                   <>
-                    <span>·</span>
+                    <span>&middot;</span>
                     <span>{formatDuration(reuniao.duracao_seg)}</span>
                   </>
                 )}
-                <span>·</span>
+                <span>&middot;</span>
                 <StatusBadge status={reuniao.status} />
               </div>
             </div>
@@ -279,10 +280,15 @@ export default function ReuniaoDetailPage() {
             )}
             {reuniao.status === "error" && (
               <InfoBox
-                icon={<AlertCircle size={16} style={{ color: "#ef4444" }} />}
+                icon={
+                  <AlertCircle
+                    size={16}
+                    style={{ color: "var(--tf-danger)" }}
+                  />
+                }
                 title="Erro no processamento"
                 body={reuniao.erro_mensagem ?? "Erro desconhecido"}
-                color="#ef4444"
+                color="var(--tf-danger)"
               />
             )}
 
@@ -290,10 +296,45 @@ export default function ReuniaoDetailPage() {
             {audioUrl && (
               <div
                 className="rounded-[14px] p-4"
-                style={{ background: "var(--tf-bg-secondary)" }}
+                style={{
+                  background: "var(--tf-bg-secondary)",
+                  border: "1px solid var(--tf-border)",
+                }}
               >
-                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                <audio ref={audioRef} src={audioUrl} controls className="w-full" />
+                <div className="flex items-center gap-2 mb-3">
+                  <Volume2
+                    size={13}
+                    style={{ color: "var(--tf-text-tertiary)" }}
+                  />
+                  <span
+                    className="text-[11px] font-bold uppercase tracking-wide"
+                    style={{ color: "var(--tf-text-tertiary)" }}
+                  >
+                    Audio da reuniao
+                  </span>
+                  {reuniao.language && (
+                    <span
+                      className="text-[10px] px-1.5 py-0.5 rounded-[6px] font-semibold uppercase"
+                      style={{
+                        background: "var(--tf-surface)",
+                        color: "var(--tf-text-tertiary)",
+                      }}
+                    >
+                      {reuniao.language}
+                    </span>
+                  )}
+                </div>
+                <div
+                  className="rounded-[10px] overflow-hidden"
+                  style={{ background: "var(--tf-surface)" }}
+                >
+                  <audio
+                    ref={audioRef}
+                    src={audioUrl}
+                    controls
+                    className="w-full"
+                  />
+                </div>
               </div>
             )}
 
@@ -308,19 +349,28 @@ export default function ReuniaoDetailPage() {
                 </h2>
 
                 {grouped.length === 0 ? (
-                  <p
-                    className="text-[13px]"
-                    style={{ color: "var(--tf-text-tertiary)" }}
+                  <div
+                    className="rounded-[14px] p-8 text-center"
+                    style={{ background: "var(--tf-bg-secondary)" }}
                   >
-                    Nenhuma fala detectada.
-                  </p>
+                    <p
+                      className="text-[13px]"
+                      style={{ color: "var(--tf-text-tertiary)" }}
+                    >
+                      Nenhuma fala detectada.
+                    </p>
+                  </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     {grouped.map((g, idx) => (
                       <SpeakerBlock
                         key={idx}
                         group={g}
-                        perfil={g.usuario_id ? perfisPorId[g.usuario_id] : undefined}
+                        perfil={
+                          g.usuario_id
+                            ? perfisPorId[g.usuario_id]
+                            : undefined
+                        }
                         currentMs={currentMs}
                         onJump={jumpTo}
                       />
@@ -355,8 +405,9 @@ interface SpeakerBlockProps {
 
 function SpeakerBlock({ group, perfil, currentMs, onJump }: SpeakerBlockProps) {
   const displayName = perfil?.nome ?? group.speaker_label;
+  const isIdentified = group.match_tipo === "strong";
   const confidenceLabel =
-    group.match_tipo === "strong"
+    isIdentified
       ? null
       : group.match_tipo === "weak"
         ? "match fraco"
@@ -364,21 +415,25 @@ function SpeakerBlock({ group, perfil, currentMs, onJump }: SpeakerBlockProps) {
   const initial = (displayName[0] || "?").toUpperCase();
 
   return (
-    <div className="flex gap-3">
-      <div className="flex-shrink-0">
+    <div className="flex gap-3.5">
+      <div className="flex-shrink-0 pt-0.5">
         {perfil?.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={perfil.avatar_url}
             alt=""
-            className="w-10 h-10 rounded-full"
+            className="w-9 h-9 rounded-full"
           />
         ) : (
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-[14px] font-bold"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold"
             style={{
-              background: "var(--tf-accent-light)",
-              color: "var(--tf-accent)",
+              background: isIdentified
+                ? "var(--tf-accent-light)"
+                : "var(--tf-bg-secondary)",
+              color: isIdentified
+                ? "var(--tf-accent)"
+                : "var(--tf-text-tertiary)",
             }}
           >
             {initial}
@@ -386,7 +441,7 @@ function SpeakerBlock({ group, perfil, currentMs, onJump }: SpeakerBlockProps) {
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-baseline gap-2 mb-1">
+        <div className="flex items-baseline gap-2 mb-1.5">
           <p
             className="text-[13px] font-bold"
             style={{ color: "var(--tf-text)" }}
@@ -395,16 +450,19 @@ function SpeakerBlock({ group, perfil, currentMs, onJump }: SpeakerBlockProps) {
           </p>
           {confidenceLabel && (
             <span
-              className="text-[10px] uppercase tracking-wide font-bold"
-              style={{ color: "var(--tf-text-tertiary)" }}
+              className="text-[10px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-[4px]"
+              style={{
+                color: "var(--tf-text-tertiary)",
+                background: "var(--tf-bg-secondary)",
+              }}
             >
               {confidenceLabel}
               {group.match_confianca !== null &&
-                ` (${(group.match_confianca * 100).toFixed(0)}%)`}
+                ` ${(group.match_confianca * 100).toFixed(0)}%`}
             </span>
           )}
         </div>
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {group.items.map((fala) => {
             const active =
               currentMs >= fala.inicio_ms && currentMs < fala.fim_ms;
@@ -412,15 +470,23 @@ function SpeakerBlock({ group, perfil, currentMs, onJump }: SpeakerBlockProps) {
               <button
                 key={fala.id}
                 onClick={() => onJump(fala.inicio_ms)}
-                className="block w-full text-left rounded-[8px] px-2 py-1 transition-colors"
+                className="block w-full text-left rounded-[8px] px-2.5 py-1.5 transition-all duration-200"
                 style={{
-                  background: active ? "var(--tf-accent-light)" : "transparent",
-                  color: "var(--tf-text-secondary)",
+                  background: active
+                    ? "var(--tf-accent-light)"
+                    : "transparent",
+                  color: active
+                    ? "var(--tf-accent-text)"
+                    : "var(--tf-text-secondary)",
                 }}
               >
                 <span
-                  className="text-[10px] font-mono mr-2"
-                  style={{ color: "var(--tf-text-tertiary)" }}
+                  className="text-[10px] font-mono mr-2 inline-block min-w-[32px]"
+                  style={{
+                    color: active
+                      ? "var(--tf-accent)"
+                      : "var(--tf-text-tertiary)",
+                  }}
                 >
                   {formatTime(fala.inicio_ms)}
                 </span>
@@ -436,14 +502,18 @@ function SpeakerBlock({ group, perfil, currentMs, onJump }: SpeakerBlockProps) {
 
 function StatusBadge({ status }: { status: ReuniaoStatus }) {
   const info = {
-    done: { label: "Pronto", color: "#10b981", icon: CheckCircle2 },
+    done: {
+      label: "Pronto",
+      color: "var(--tf-success)",
+      icon: CheckCircle2,
+    },
     processing: {
       label: "Processando",
       color: "var(--tf-accent)",
       icon: Loader2,
     },
     pending: { label: "Pendente", color: "#f59e0b", icon: Clock },
-    error: { label: "Erro", color: "#ef4444", icon: AlertCircle },
+    error: { label: "Erro", color: "var(--tf-danger)", icon: AlertCircle },
   }[status];
   const Icon = info.icon;
   return (
@@ -474,7 +544,10 @@ function InfoBox({
   return (
     <div
       className="flex items-start gap-3 p-4 rounded-[14px]"
-      style={{ background: "var(--tf-bg-secondary)" }}
+      style={{
+        background: "var(--tf-bg-secondary)",
+        border: "1px solid var(--tf-border)",
+      }}
     >
       <div className="flex-shrink-0 mt-0.5">{icon}</div>
       <div className="flex-1">
@@ -482,7 +555,7 @@ function InfoBox({
           {title}
         </p>
         <p
-          className="text-[12px] mt-0.5"
+          className="text-[12px] mt-0.5 leading-relaxed"
           style={{ color: "var(--tf-text-tertiary)" }}
         >
           {body}

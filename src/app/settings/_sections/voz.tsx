@@ -1,7 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Trash2, Check, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Mic,
+  MicOff,
+  Trash2,
+  Check,
+  AlertCircle,
+  Loader2,
+  AudioLines,
+  Quote,
+  ShieldCheck,
+  RotateCcw,
+} from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { Perfil } from "@/types";
 
@@ -14,7 +25,7 @@ interface VoiceSectionProps {
 // fricativos, nasais, vogais abertas e fechadas) pra gerar um embedding
 // representativo.
 const ENROLLMENT_PHRASE =
-  "Olá, meu nome é _______. Eu estou gravando a minha voz para ser reconhecida nas reuniões do TaskFlow. Hoje o dia está muito bom e eu espero que tudo funcione corretamente.";
+  "Ola, meu nome e _______. Eu estou gravando a minha voz para ser reconhecida nas reunioes do TaskFlow. Hoje o dia esta muito bom e eu espero que tudo funcione corretamente.";
 
 const TARGET_SECONDS = 15; // minimo recomendado
 const MAX_SECONDS = 45; // corta automaticamente
@@ -38,6 +49,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [health, setHealth] = useState<HealthStatus | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // ---------- refs ----------
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -114,7 +126,6 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
       });
       streamRef.current = stream;
 
-      // Prefer webm/opus (amplamente suportado e eficiente)
       const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
         ? "audio/webm;codecs=opus"
         : MediaRecorder.isTypeSupported("audio/webm")
@@ -224,6 +235,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
     );
     if (!ok) return;
 
+    setDeleting(true);
     try {
       const url = revokeConsent
         ? "/api/voice/enroll?revokeConsent=true"
@@ -241,12 +253,15 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
       onUpdate();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro de rede");
+    } finally {
+      setDeleting(false);
     }
   }
 
   // ---------- derived ----------
   const enrolled = Boolean(perfil?.voice_enrolled_at);
-  const seconds = (elapsedMs / 1000).toFixed(1);
+  const elapsedSec = elapsedMs / 1000;
+  const seconds = elapsedSec.toFixed(1);
   const progressPct = Math.min(
     100,
     (elapsedMs / (TARGET_SECONDS * 1000)) * 100,
@@ -257,13 +272,14 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
   // ---------- render ----------
   return (
     <section className="space-y-4">
+      {/* Section header */}
       <div className="flex items-center gap-2">
-        <Mic size={14} style={{ color: "var(--tf-accent)" }} />
+        <AudioLines size={14} style={{ color: "var(--tf-accent)" }} />
         <h2
           className="text-[11px] font-bold uppercase tracking-widest"
           style={{ color: "var(--tf-text-tertiary)" }}
         >
-          Voz — reconhecimento em reuniões
+          Voz &mdash; reconhecimento em reunioes
         </h2>
       </div>
 
@@ -271,240 +287,391 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
         className="rounded-[20px] p-6 space-y-5"
         style={{ background: "var(--tf-bg-secondary)" }}
       >
-        {/* Status atual */}
-        {enrolled ? (
+        {/* ─── Worker health alert ─── */}
+        {health && !health.ok && (
           <div
             className="flex items-start gap-3 p-3 rounded-[12px]"
-            style={{ background: "var(--tf-surface)" }}
+            style={{
+              background: "var(--tf-danger-bg)",
+              border: "1px solid color-mix(in srgb, var(--tf-danger) 20%, transparent)",
+            }}
           >
-            <Check size={16} style={{ color: "#10b981", flexShrink: 0, marginTop: 2 }} />
-            <div className="flex-1 min-w-0">
+            <AlertCircle
+              size={14}
+              style={{ color: "var(--tf-danger)", flexShrink: 0, marginTop: 2 }}
+            />
+            <div>
               <p
-                className="text-[13px] font-bold"
-                style={{ color: "var(--tf-text)" }}
+                className="text-[12px] font-bold"
+                style={{ color: "var(--tf-danger)" }}
               >
-                Voz cadastrada
+                Worker de voz indisponivel
               </p>
-              <p
-                className="text-[12px] mt-0.5"
-                style={{ color: "var(--tf-text-tertiary)" }}
+              {health.message && (
+                <p
+                  className="text-[11px] mt-0.5"
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                >
+                  {health.message}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ─── ENROLLED STATE ─── */}
+        {enrolled ? (
+          <div className="space-y-4">
+            {/* Status card - matches GithubSection "Conta conectada" pattern */}
+            <div className="flex items-center gap-3">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: "var(--tf-success-bg)" }}
               >
-                {perfil?.voice_enrolled_at &&
-                  `Cadastrada em ${new Date(perfil.voice_enrolled_at).toLocaleString("pt-BR")}`}
-              </p>
+                <Check size={16} style={{ color: "var(--tf-success)" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p
+                  className="text-[13px] font-semibold"
+                  style={{ color: "var(--tf-text)" }}
+                >
+                  Voz cadastrada
+                </p>
+                {perfil?.voice_enrolled_at && (
+                  <p
+                    className="text-[12px]"
+                    style={{ color: "var(--tf-text-tertiary)" }}
+                  >
+                    Cadastrada em{" "}
+                    {new Date(perfil.voice_enrolled_at).toLocaleDateString(
+                      "pt-BR",
+                      { day: "2-digit", month: "long", year: "numeric" },
+                    )}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => {
+                  resetRecording();
+                  void deleteEnrollment(false);
+                }}
+                disabled={deleting}
+                className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-50"
+                style={{ background: "var(--tf-accent)" }}
+              >
+                {deleting ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <RotateCcw size={13} />
+                )}
+                Regravar voz
+              </button>
+              <button
+                onClick={() => deleteEnrollment(true)}
+                disabled={deleting}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-[11px] font-semibold transition-all duration-150 hover:opacity-80 disabled:opacity-50"
+                style={{
+                  color: "var(--tf-danger)",
+                  background: "var(--tf-danger-bg)",
+                }}
+              >
+                {deleting ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <Trash2 size={12} />
+                )}
+                Apagar e revogar
+              </button>
             </div>
           </div>
         ) : (
-          <p
-            className="text-[13px] leading-relaxed"
-            style={{ color: "var(--tf-text-secondary)" }}
-          >
-            Grave uma amostra da sua voz para que o TaskFlow possa identificar
-            você automaticamente nas transcrições de reuniões.
-          </p>
-        )}
-
-        {/* Health do worker */}
-        {health && !health.ok && (
-          <div
-            className="flex items-start gap-2 p-3 rounded-[12px]"
-            style={{ background: "rgba(239, 68, 68, 0.08)" }}
-          >
-            <AlertCircle size={14} style={{ color: "#ef4444", flexShrink: 0, marginTop: 2 }} />
-            <div className="text-[12px]" style={{ color: "#ef4444" }}>
-              Worker de voz indisponivel no momento
-              {health.message && `: ${health.message}`}
-            </div>
-          </div>
-        )}
-
-        {/* Consentimento LGPD */}
-        {!enrolled && (
-          <label
-            className="flex items-start gap-3 p-3 rounded-[12px] cursor-pointer"
-            style={{ background: "var(--tf-surface)" }}
-          >
-            <input
-              type="checkbox"
-              checked={consent}
-              onChange={(e) => setConsent(e.target.checked)}
-              className="mt-0.5"
-              style={{ accentColor: "var(--tf-accent)" }}
-              disabled={Boolean(perfil?.voice_consent_at)}
-            />
-            <span
-              className="text-[12px] leading-relaxed"
+          /* ─── NOT ENROLLED STATE ─── */
+          <div className="space-y-5">
+            {/* Description */}
+            <p
+              className="text-[13px] leading-relaxed"
               style={{ color: "var(--tf-text-secondary)" }}
             >
-              Aceito que o TaskFlow processe a minha voz para fins de
-              identificação em reuniões. O áudio bruto não é armazenado — apenas
-              um vetor matemático de ~1 KB que não pode ser convertido de volta
-              em som. Posso remover estes dados a qualquer momento.
-            </span>
-          </label>
-        )}
-
-        {/* Frase sugerida */}
-        {!enrolled && (
-          <div>
-            <p
-              className="text-[11px] font-bold uppercase tracking-wide mb-2"
-              style={{ color: "var(--tf-text-tertiary)" }}
-            >
-              Leia esta frase em voz natural
+              Grave uma amostra da sua voz para que o TaskFlow possa identificar
+              voce automaticamente nas transcricoes de reunioes.
             </p>
-            <blockquote
-              className="text-[13px] leading-relaxed italic px-4 py-3 rounded-[12px]"
-              style={{
-                background: "var(--tf-surface)",
-                color: "var(--tf-text-secondary)",
-                borderLeft: "3px solid var(--tf-accent)",
-              }}
-            >
-              {ENROLLMENT_PHRASE}
-            </blockquote>
-          </div>
-        )}
 
-        {/* Recorder */}
-        {!enrolled && (
-          <div className="space-y-3">
-            {/* Tempo + barra de progresso */}
-            {(state === "recording" || state === "recorded") && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span
-                    className="text-[13px] font-mono font-bold"
-                    style={{ color: "var(--tf-text)" }}
-                  >
-                    {seconds}s
-                  </span>
-                  <span
-                    className="text-[11px]"
-                    style={{ color: "var(--tf-text-tertiary)" }}
-                  >
-                    Recomendado: {TARGET_SECONDS}s · Máximo: {MAX_SECONDS}s
-                  </span>
-                </div>
-                <div
-                  className="h-1.5 rounded-full overflow-hidden"
-                  style={{ background: "var(--tf-surface)" }}
+            {/* Step 1: LGPD Consent */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <ShieldCheck
+                  size={12}
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                />
+                <p
+                  className="text-[11px] font-bold uppercase tracking-wide"
+                  style={{ color: "var(--tf-text-tertiary)" }}
                 >
-                  <div
-                    className="h-full transition-all duration-100"
-                    style={{
-                      width: `${progressPct}%`,
-                      background:
-                        progressPct >= 100
-                          ? "#10b981"
-                          : "var(--tf-accent)",
-                    }}
-                  />
-                </div>
+                  1. Consentimento
+                </p>
               </div>
-            )}
-
-            {/* Preview */}
-            {state === "recorded" && audioUrl && (
-              <audio
-                src={audioUrl}
-                controls
-                className="w-full"
-                style={{ maxHeight: 40 }}
-              />
-            )}
-
-            {/* Botoes */}
-            <div className="flex flex-wrap gap-2">
-              {state === "idle" && (
-                <button
-                  onClick={startRecording}
-                  disabled={!consent || (health ? !health.ok : false)}
-                  className="px-4 py-2 rounded-[10px] text-[12px] font-bold text-white flex items-center gap-2 disabled:opacity-40"
-                  style={{ background: "var(--tf-accent)" }}
-                >
-                  <Mic size={14} />
-                  Gravar
-                </button>
-              )}
-
-              {state === "recording" && (
-                <button
-                  onClick={stopRecording}
-                  className="px-4 py-2 rounded-[10px] text-[12px] font-bold text-white flex items-center gap-2"
-                  style={{ background: "#ef4444" }}
-                >
-                  <MicOff size={14} />
-                  Parar ({seconds}s)
-                </button>
-              )}
-
-              {state === "recorded" && (
-                <>
-                  <button
-                    onClick={uploadRecording}
-                    disabled={!canUpload}
-                    className="px-4 py-2 rounded-[10px] text-[12px] font-bold text-white flex items-center gap-2 disabled:opacity-40"
-                    style={{ background: "var(--tf-accent)" }}
-                  >
-                    <Check size={14} />
-                    Confirmar e enviar
-                  </button>
-                  <button
-                    onClick={resetRecording}
-                    className="px-4 py-2 rounded-[10px] text-[12px] font-semibold"
-                    style={{ color: "var(--tf-text-tertiary)" }}
-                  >
-                    Regravar
-                  </button>
-                </>
-              )}
-
-              {state === "uploading" && (
-                <div
-                  className="px-4 py-2 rounded-[10px] text-[12px] font-bold flex items-center gap-2"
+              <label
+                className="flex items-start gap-3 p-3.5 rounded-[12px] cursor-pointer transition-all duration-150"
+                style={{
+                  background: "var(--tf-surface)",
+                  border: consent
+                    ? "1.5px solid var(--tf-accent)"
+                    : "1.5px solid var(--tf-border)",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  className="mt-0.5 flex-shrink-0"
+                  style={{ accentColor: "var(--tf-accent)" }}
+                  disabled={Boolean(perfil?.voice_consent_at)}
+                />
+                <span
+                  className="text-[12px] leading-relaxed"
                   style={{ color: "var(--tf-text-secondary)" }}
                 >
-                  <Loader2 size={14} className="animate-spin" />
-                  Enviando...
-                </div>
-              )}
+                  Aceito que o TaskFlow processe a minha voz para fins de
+                  identificacao em reunioes. O audio bruto nao e armazenado
+                  &mdash; apenas um vetor matematico de ~1 KB que nao pode ser
+                  convertido de volta em som. Posso remover estes dados a
+                  qualquer momento.
+                </span>
+              </label>
             </div>
 
-            {state === "recorded" && elapsedMs < 5000 && (
-              <p
-                className="text-[11px]"
-                style={{ color: "#ef4444" }}
+            {/* Step 2: Suggested phrase */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Quote
+                  size={12}
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                />
+                <p
+                  className="text-[11px] font-bold uppercase tracking-wide"
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                >
+                  2. Leia esta frase em voz natural
+                </p>
+              </div>
+              <div
+                className="px-4 py-3.5 rounded-[12px]"
+                style={{
+                  background: "var(--tf-surface)",
+                }}
               >
-                Gravação muito curta ({seconds}s). Mínimo: 5s, recomendado: {TARGET_SECONDS}s.
-              </p>
-            )}
-          </div>
-        )}
+                <p
+                  className="text-[13px] leading-relaxed italic"
+                  style={{ color: "var(--tf-text-secondary)" }}
+                >
+                  &ldquo;{ENROLLMENT_PHRASE}&rdquo;
+                </p>
+              </div>
+            </div>
 
-        {/* Botoes pra quem ja esta enrollado */}
-        {enrolled && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            <button
-              onClick={() => {
-                resetRecording();
-                // deleta o embedding mantendo o consent, pra permitir regravar
-                void deleteEnrollment(false);
-              }}
-              className="px-4 py-2 rounded-[10px] text-[12px] font-bold text-white flex items-center gap-2"
-              style={{ background: "var(--tf-accent)" }}
-            >
-              <Mic size={14} />
-              Regravar voz
-            </button>
-            <button
-              onClick={() => deleteEnrollment(true)}
-              className="px-4 py-2 rounded-[10px] text-[12px] font-semibold flex items-center gap-2"
-              style={{ color: "#ef4444" }}
-            >
-              <Trash2 size={14} />
-              Apagar e revogar consentimento
-            </button>
+            {/* Step 3: Recorder */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Mic
+                  size={12}
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                />
+                <p
+                  className="text-[11px] font-bold uppercase tracking-wide"
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                >
+                  3. Gravar
+                </p>
+              </div>
+
+              <div
+                className="rounded-[12px] p-4"
+                style={{ background: "var(--tf-surface)" }}
+              >
+                {/* ─ Idle: start button ─ */}
+                {state === "idle" && (
+                  <div className="text-center py-2">
+                    <button
+                      onClick={startRecording}
+                      disabled={
+                        !consent || (health ? !health.ok : false)
+                      }
+                      className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-40"
+                      style={{ background: "var(--tf-accent)" }}
+                    >
+                      <Mic size={14} />
+                      Iniciar gravacao
+                    </button>
+                    {!consent && (
+                      <p
+                        className="text-[11px] mt-2.5"
+                        style={{ color: "var(--tf-text-tertiary)" }}
+                      >
+                        Aceite o consentimento acima para gravar
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* ─ Recording: pulsing indicator + timer + stop ─ */}
+                {state === "recording" && (
+                  <div className="text-center space-y-4 py-2">
+                    <div
+                      className="w-14 h-14 rounded-full mx-auto flex items-center justify-center animate-pulse"
+                      style={{ background: "rgba(239, 68, 68, 0.12)" }}
+                    >
+                      <Mic size={22} style={{ color: "#ef4444" }} />
+                    </div>
+                    <div>
+                      <p
+                        className="text-[20px] font-mono font-bold"
+                        style={{ color: "var(--tf-text)" }}
+                      >
+                        {seconds}s
+                      </p>
+                      <p
+                        className="text-[11px] mt-1"
+                        style={{ color: "var(--tf-text-tertiary)" }}
+                      >
+                        Recomendado: {TARGET_SECONDS}s &middot; Maximo:{" "}
+                        {MAX_SECONDS}s
+                      </p>
+                    </div>
+                    {/* Progress bar */}
+                    <div
+                      className="h-1.5 rounded-full overflow-hidden mx-auto max-w-[280px]"
+                      style={{ background: "var(--tf-bg-secondary)" }}
+                    >
+                      <div
+                        className="h-full rounded-full transition-all duration-100"
+                        style={{
+                          width: `${progressPct}%`,
+                          background:
+                            progressPct >= 100
+                              ? "var(--tf-success)"
+                              : "var(--tf-accent)",
+                        }}
+                      />
+                    </div>
+                    <button
+                      onClick={stopRecording}
+                      className="inline-flex items-center gap-2 px-5 py-2 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
+                      style={{ background: "#ef4444" }}
+                    >
+                      <MicOff size={14} />
+                      Parar
+                    </button>
+                  </div>
+                )}
+
+                {/* ─ Recorded: preview + actions ─ */}
+                {state === "recorded" && audioUrl && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{
+                          background:
+                            elapsedSec >= 5
+                              ? "var(--tf-success-bg)"
+                              : "var(--tf-danger-bg)",
+                        }}
+                      >
+                        {elapsedSec >= 5 ? (
+                          <Check
+                            size={14}
+                            style={{ color: "var(--tf-success)" }}
+                          />
+                        ) : (
+                          <AlertCircle
+                            size={14}
+                            style={{ color: "var(--tf-danger)" }}
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-[13px] font-semibold"
+                          style={{ color: "var(--tf-text)" }}
+                        >
+                          {seconds}s gravados
+                        </p>
+                        <p
+                          className="text-[11px]"
+                          style={{
+                            color:
+                              elapsedSec >= 5
+                                ? "var(--tf-text-tertiary)"
+                                : "var(--tf-danger)",
+                          }}
+                        >
+                          {elapsedSec < 5
+                            ? `Muito curto. Minimo: 5s, recomendado: ${TARGET_SECONDS}s`
+                            : elapsedSec < TARGET_SECONDS
+                              ? `Funcional, mas recomendado: ${TARGET_SECONDS}s`
+                              : "Duracao ideal"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Audio player */}
+                    <div
+                      className="rounded-[10px] overflow-hidden"
+                      style={{ background: "var(--tf-bg-secondary)" }}
+                    >
+                      <audio
+                        src={audioUrl}
+                        controls
+                        className="w-full"
+                        style={{ height: 40 }}
+                      />
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={uploadRecording}
+                        disabled={!canUpload}
+                        className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-40"
+                        style={{ background: "var(--tf-accent)" }}
+                      >
+                        <Check size={14} />
+                        Confirmar e enviar
+                      </button>
+                      <button
+                        onClick={resetRecording}
+                        className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-[12px] font-semibold transition-all duration-150 hover:opacity-80"
+                        style={{ color: "var(--tf-text-tertiary)" }}
+                      >
+                        <RotateCcw size={12} />
+                        Regravar
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* ─ Uploading ─ */}
+                {state === "uploading" && (
+                  <div className="flex items-center justify-center gap-2.5 py-4">
+                    <Loader2
+                      size={16}
+                      className="animate-spin"
+                      style={{ color: "var(--tf-accent)" }}
+                    />
+                    <span
+                      className="text-[13px] font-semibold"
+                      style={{ color: "var(--tf-text-secondary)" }}
+                    >
+                      Enviando amostra de voz...
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

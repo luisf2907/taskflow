@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Mic,
+  AudioLines,
   Plus,
   Loader2,
   CheckCircle2,
   AlertCircle,
   Clock,
   Trash2,
+  Mic,
 } from "lucide-react";
 
 import { Header } from "@/components/layout/header";
@@ -142,7 +143,7 @@ export default function ReunioesPage() {
             <div>
               <button
                 onClick={() => router.push(`/workspace/${workspaceId}`)}
-                className="flex items-center gap-1.5 text-[12px] font-semibold mb-3"
+                className="flex items-center gap-1.5 text-[12px] font-semibold mb-3 transition-opacity hover:opacity-70"
                 style={{ color: "var(--tf-text-tertiary)" }}
               >
                 <ArrowLeft size={12} />
@@ -151,10 +152,10 @@ export default function ReunioesPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h1
-                    className="text-2xl font-black tracking-tight flex items-center gap-2"
+                    className="text-2xl font-black tracking-tight flex items-center gap-2.5"
                     style={{ color: "var(--tf-text)" }}
                   >
-                    <Mic size={22} style={{ color: "var(--tf-accent)" }} />
+                    <AudioLines size={22} style={{ color: "var(--tf-accent)" }} />
                     Reunioes
                   </h1>
                   <p
@@ -167,7 +168,7 @@ export default function ReunioesPage() {
                 </div>
                 <button
                   onClick={() => setModalOpen(true)}
-                  className="px-4 py-2 rounded-[10px] text-[12px] font-bold text-white flex items-center gap-2 flex-shrink-0"
+                  className="px-4 py-2 rounded-[10px] text-[12px] font-bold text-white flex items-center gap-2 flex-shrink-0 transition-all duration-150 hover:opacity-90"
                   style={{ background: "var(--tf-accent)" }}
                 >
                   <Plus size={14} />
@@ -180,9 +181,12 @@ export default function ReunioesPage() {
             {!isEnrolled && (
               <div
                 className="flex items-start gap-3 p-4 rounded-[14px]"
-                style={{ background: "rgba(251, 191, 36, 0.08)" }}
+                style={{
+                  background: "var(--tf-warning-bg, rgba(251, 191, 36, 0.08))",
+                  border: "1px solid color-mix(in srgb, #f59e0b 15%, transparent)",
+                }}
               >
-                <AlertCircle
+                <Mic
                   size={16}
                   style={{ color: "#f59e0b", flexShrink: 0, marginTop: 2 }}
                 />
@@ -201,10 +205,10 @@ export default function ReunioesPage() {
                     identificar voce automaticamente.{" "}
                     <button
                       onClick={() => router.push("/settings")}
-                      className="font-bold underline"
+                      className="font-bold underline transition-opacity hover:opacity-70"
                       style={{ color: "var(--tf-accent)" }}
                     >
-                      Ir para settings
+                      Ir para configuracoes
                     </button>
                   </p>
                 </div>
@@ -213,7 +217,7 @@ export default function ReunioesPage() {
 
             {/* Lista */}
             {reunioes === null ? (
-              <div className="flex items-center justify-center py-12">
+              <div className="flex items-center justify-center py-16">
                 <Loader2
                   size={20}
                   className="animate-spin"
@@ -222,26 +226,39 @@ export default function ReunioesPage() {
               </div>
             ) : reunioes.length === 0 ? (
               <div
-                className="rounded-[20px] p-10 text-center"
+                className="rounded-[20px] p-12 text-center"
                 style={{ background: "var(--tf-bg-secondary)" }}
               >
-                <Mic
-                  size={32}
-                  className="mx-auto mb-3"
-                  style={{ color: "var(--tf-text-tertiary)" }}
-                />
+                <div
+                  className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center"
+                  style={{ background: "var(--tf-surface)" }}
+                >
+                  <AudioLines
+                    size={24}
+                    style={{ color: "var(--tf-text-tertiary)" }}
+                  />
+                </div>
                 <p
-                  className="text-[14px] font-bold mb-1"
+                  className="text-[15px] font-bold mb-1"
                   style={{ color: "var(--tf-text)" }}
                 >
                   Nenhuma reuniao ainda
                 </p>
                 <p
-                  className="text-[12px]"
+                  className="text-[12px] mb-5"
                   style={{ color: "var(--tf-text-tertiary)" }}
                 >
-                  Clique em &quot;Nova reuniao&quot; para comecar.
+                  Suba um audio ou grave uma reuniao para gerar transcricoes
+                  automaticas.
                 </p>
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
+                  style={{ background: "var(--tf-accent)" }}
+                >
+                  <Plus size={14} />
+                  Nova reuniao
+                </button>
               </div>
             ) : (
               <div className="space-y-2">
@@ -299,7 +316,7 @@ function ReuniaoCard({ reuniao, onOpen, onDelete }: ReuniaoCardProps) {
 
   return (
     <div
-      className="rounded-[14px] p-4 flex items-center gap-4 transition-colors hover:opacity-90"
+      className="group rounded-[14px] p-4 flex items-center gap-4 transition-all duration-150"
       style={{
         background: "var(--tf-bg-secondary)",
         border: "1px solid var(--tf-border)",
@@ -329,11 +346,11 @@ function ReuniaoCard({ reuniao, onOpen, onDelete }: ReuniaoCardProps) {
             <span>{createdAt}</span>
             {duration && (
               <>
-                <span>·</span>
+                <span>&middot;</span>
                 <span>{duration}</span>
               </>
             )}
-            <span>·</span>
+            <span>&middot;</span>
             <span style={{ color: statusInfo.color, fontWeight: 600 }}>
               {statusInfo.label}
             </span>
@@ -341,7 +358,7 @@ function ReuniaoCard({ reuniao, onOpen, onDelete }: ReuniaoCardProps) {
           {reuniao.status === "error" && reuniao.erro_mensagem && (
             <p
               className="text-[11px] mt-1 truncate"
-              style={{ color: "#ef4444" }}
+              style={{ color: "var(--tf-danger)" }}
               title={reuniao.erro_mensagem}
             >
               {reuniao.erro_mensagem}
@@ -350,8 +367,11 @@ function ReuniaoCard({ reuniao, onOpen, onDelete }: ReuniaoCardProps) {
         </div>
       </button>
       <button
-        onClick={onDelete}
-        className="p-2 rounded-[8px] flex-shrink-0"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+        className="p-2 rounded-[8px] flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-150 hover:!opacity-100"
         style={{ color: "var(--tf-text-tertiary)" }}
         title="Apagar reuniao"
       >
@@ -372,15 +392,15 @@ function getStatusInfo(status: ReuniaoStatus): {
     case "done":
       return {
         label: "Pronto",
-        color: "#10b981",
-        bg: "rgba(16, 185, 129, 0.1)",
-        icon: <CheckCircle2 size={18} style={{ color: "#10b981" }} />,
+        color: "var(--tf-success)",
+        bg: "var(--tf-success-bg)",
+        icon: <CheckCircle2 size={18} style={{ color: "var(--tf-success)" }} />,
       };
     case "processing":
       return {
         label: "Processando",
         color: "var(--tf-accent)",
-        bg: "rgba(196, 132, 29, 0.1)",
+        bg: "var(--tf-accent-light)",
         icon: (
           <Loader2
             size={18}
@@ -399,9 +419,9 @@ function getStatusInfo(status: ReuniaoStatus): {
     case "error":
       return {
         label: "Erro",
-        color: "#ef4444",
-        bg: "rgba(239, 68, 68, 0.1)",
-        icon: <AlertCircle size={18} style={{ color: "#ef4444" }} />,
+        color: "var(--tf-danger)",
+        bg: "var(--tf-danger-bg)",
+        icon: <AlertCircle size={18} style={{ color: "var(--tf-danger)" }} />,
       };
   }
 }

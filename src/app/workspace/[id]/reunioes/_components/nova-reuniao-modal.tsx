@@ -1,7 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Upload, Mic, MicOff, Loader2, Check, X } from "lucide-react";
+import {
+  Upload,
+  Mic,
+  MicOff,
+  Loader2,
+  Check,
+  FileAudio,
+  RotateCcw,
+} from "lucide-react";
 
 import { Modal } from "@/components/ui/modal";
 import { toast } from "@/hooks/use-toast";
@@ -33,6 +41,7 @@ export function NovaReuniaoModal({
   const [audioName, setAudioName] = useState<string>("");
   const [audioMime, setAudioMime] = useState<string>("");
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [dragOver, setDragOver] = useState(false);
 
   // recorder refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -100,6 +109,7 @@ export function NovaReuniaoModal({
 
   function onDrop(e: React.DragEvent) {
     e.preventDefault();
+    setDragOver(false);
     const f = e.dataTransfer.files?.[0];
     if (f) handleFilePick(f);
   }
@@ -269,7 +279,10 @@ export function NovaReuniaoModal({
     onCreated();
   }
 
-  const seconds = (elapsedMs / 1000).toFixed(0);
+  const totalSec = Math.floor(elapsedMs / 1000);
+  const minutes = Math.floor(totalSec / 60);
+  const secs = totalSec % 60;
+  const timeDisplay = `${minutes}:${secs.toString().padStart(2, "0")}`;
   const isBusy = phase === "uploading" || phase === "processing";
 
   return (
@@ -283,7 +296,7 @@ export function NovaReuniaoModal({
         {/* Titulo */}
         <div>
           <label
-            className="text-[11px] font-bold uppercase tracking-wide mb-1 block"
+            className="text-[11px] font-bold uppercase tracking-wide mb-1.5 block"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
             Titulo *
@@ -293,10 +306,10 @@ export function NovaReuniaoModal({
             onChange={(e) => setTitulo(e.target.value)}
             placeholder="Ex: Daily 2026-04-09"
             disabled={isBusy}
-            className="w-full px-3 py-2 rounded-[10px] text-[14px] font-medium outline-none disabled:opacity-50"
+            className="w-full px-3.5 py-2.5 rounded-[10px] text-[13px] font-medium outline-none disabled:opacity-50 transition-all duration-150"
             style={{
               background: "var(--tf-surface)",
-              border: "1px solid var(--tf-border)",
+              border: "1.5px solid var(--tf-border)",
               color: "var(--tf-text)",
             }}
           />
@@ -305,7 +318,7 @@ export function NovaReuniaoModal({
         {/* Descricao */}
         <div>
           <label
-            className="text-[11px] font-bold uppercase tracking-wide mb-1 block"
+            className="text-[11px] font-bold uppercase tracking-wide mb-1.5 block"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
             Descricao (opcional)
@@ -315,10 +328,10 @@ export function NovaReuniaoModal({
             onChange={(e) => setDescricao(e.target.value)}
             placeholder="Sprint planning, review, etc"
             disabled={isBusy}
-            className="w-full px-3 py-2 rounded-[10px] text-[14px] outline-none disabled:opacity-50"
+            className="w-full px-3.5 py-2.5 rounded-[10px] text-[13px] outline-none disabled:opacity-50 transition-all duration-150"
             style={{
               background: "var(--tf-surface)",
-              border: "1px solid var(--tf-border)",
+              border: "1.5px solid var(--tf-border)",
               color: "var(--tf-text)",
             }}
           />
@@ -332,13 +345,18 @@ export function NovaReuniaoModal({
           >
             <button
               onClick={() => setTab("upload")}
-              className="flex-1 py-2 rounded-[8px] text-[12px] font-bold flex items-center justify-center gap-2"
+              className="flex-1 py-2 rounded-[8px] text-[12px] font-bold flex items-center justify-center gap-2 transition-all duration-150"
               style={{
-                background: tab === "upload" ? "var(--tf-surface)" : "transparent",
+                background:
+                  tab === "upload" ? "var(--tf-surface)" : "transparent",
                 color:
                   tab === "upload"
                     ? "var(--tf-text)"
                     : "var(--tf-text-tertiary)",
+                boxShadow:
+                  tab === "upload"
+                    ? "0 1px 3px rgba(0,0,0,0.06)"
+                    : "none",
               }}
             >
               <Upload size={12} />
@@ -346,13 +364,18 @@ export function NovaReuniaoModal({
             </button>
             <button
               onClick={() => setTab("record")}
-              className="flex-1 py-2 rounded-[8px] text-[12px] font-bold flex items-center justify-center gap-2"
+              className="flex-1 py-2 rounded-[8px] text-[12px] font-bold flex items-center justify-center gap-2 transition-all duration-150"
               style={{
-                background: tab === "record" ? "var(--tf-surface)" : "transparent",
+                background:
+                  tab === "record" ? "var(--tf-surface)" : "transparent",
                 color:
                   tab === "record"
                     ? "var(--tf-text)"
                     : "var(--tf-text-tertiary)",
+                boxShadow:
+                  tab === "record"
+                    ? "0 1px 3px rgba(0,0,0,0.06)"
+                    : "none",
               }}
             >
               <Mic size={12} />
@@ -364,19 +387,31 @@ export function NovaReuniaoModal({
         {/* Tab: Upload */}
         {phase === "idle" && tab === "upload" && (
           <label
-            onDragOver={(e) => e.preventDefault()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
-            className="block rounded-[14px] p-6 text-center cursor-pointer"
+            className="block rounded-[14px] p-8 text-center cursor-pointer transition-all duration-150"
             style={{
-              background: "var(--tf-bg-secondary)",
-              border: "2px dashed var(--tf-border)",
+              background: dragOver
+                ? "var(--tf-accent-light)"
+                : "var(--tf-bg-secondary)",
+              border: dragOver
+                ? "2px dashed var(--tf-accent)"
+                : "2px dashed var(--tf-border)",
             }}
           >
-            <Upload
-              size={24}
-              className="mx-auto mb-2"
-              style={{ color: "var(--tf-text-tertiary)" }}
-            />
+            <div
+              className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
+              style={{ background: "var(--tf-surface)" }}
+            >
+              <Upload
+                size={20}
+                style={{ color: "var(--tf-text-tertiary)" }}
+              />
+            </div>
             <p
               className="text-[13px] font-bold"
               style={{ color: "var(--tf-text)" }}
@@ -387,7 +422,7 @@ export function NovaReuniaoModal({
               className="text-[11px] mt-1"
               style={{ color: "var(--tf-text-tertiary)" }}
             >
-              Max 200 MB · mp3, wav, webm, m4a, mp4, ogg
+              Max 200 MB &middot; mp3, wav, webm, m4a, mp4, ogg
             </p>
             <input
               type="file"
@@ -401,23 +436,27 @@ export function NovaReuniaoModal({
         {/* Tab: Record */}
         {phase === "idle" && tab === "record" && (
           <div
-            className="rounded-[14px] p-6 text-center"
+            className="rounded-[14px] p-8 text-center"
             style={{ background: "var(--tf-bg-secondary)" }}
           >
-            <Mic
-              size={24}
-              className="mx-auto mb-2"
-              style={{ color: "var(--tf-text-tertiary)" }}
-            />
+            <div
+              className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
+              style={{ background: "var(--tf-surface)" }}
+            >
+              <Mic
+                size={20}
+                style={{ color: "var(--tf-text-tertiary)" }}
+              />
+            </div>
             <p
-              className="text-[13px] font-bold mb-3"
+              className="text-[13px] font-bold mb-4"
               style={{ color: "var(--tf-text)" }}
             >
               Grave direto do seu microfone
             </p>
             <button
               onClick={startRecording}
-              className="px-5 py-2 rounded-[10px] text-[12px] font-bold text-white inline-flex items-center gap-2"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
               style={{ background: "var(--tf-accent)" }}
             >
               <Mic size={14} />
@@ -429,29 +468,28 @@ export function NovaReuniaoModal({
         {/* Gravando */}
         {phase === "recording" && (
           <div
-            className="rounded-[14px] p-6 text-center space-y-3"
+            className="rounded-[14px] p-8 text-center space-y-4"
             style={{ background: "var(--tf-bg-secondary)" }}
           >
             <div
-              className="w-14 h-14 rounded-full mx-auto flex items-center justify-center animate-pulse"
-              style={{ background: "rgba(239, 68, 68, 0.15)" }}
+              className="w-16 h-16 rounded-full mx-auto flex items-center justify-center animate-pulse"
+              style={{ background: "rgba(239, 68, 68, 0.12)" }}
             >
-              <Mic size={24} style={{ color: "#ef4444" }} />
+              <Mic size={26} style={{ color: "#ef4444" }} />
             </div>
             <p
-              className="text-[22px] font-mono font-bold"
+              className="text-[24px] font-mono font-bold"
               style={{ color: "var(--tf-text)" }}
             >
-              {Math.floor(Number(seconds) / 60)}:
-              {(Number(seconds) % 60).toString().padStart(2, "0")}
+              {timeDisplay}
             </p>
             <button
               onClick={stopRecording}
-              className="px-5 py-2 rounded-[10px] text-[12px] font-bold text-white inline-flex items-center gap-2"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
               style={{ background: "#ef4444" }}
             >
               <MicOff size={14} />
-              Parar
+              Parar gravacao
             </button>
           </div>
         )}
@@ -462,8 +500,16 @@ export function NovaReuniaoModal({
             className="rounded-[14px] p-4 space-y-3"
             style={{ background: "var(--tf-bg-secondary)" }}
           >
-            <div className="flex items-center gap-2">
-              <Check size={14} style={{ color: "#10b981" }} />
+            <div className="flex items-center gap-3">
+              <div
+                className="w-8 h-8 rounded-[10px] flex items-center justify-center flex-shrink-0"
+                style={{ background: "var(--tf-success-bg)" }}
+              >
+                <FileAudio
+                  size={14}
+                  style={{ color: "var(--tf-success)" }}
+                />
+              </div>
               <p
                 className="text-[12px] font-bold flex-1 truncate"
                 style={{ color: "var(--tf-text)" }}
@@ -472,30 +518,36 @@ export function NovaReuniaoModal({
               </p>
               <button
                 onClick={resetAudio}
-                className="p-1"
+                className="p-1.5 rounded-[8px] transition-all duration-150 hover:opacity-70"
                 style={{ color: "var(--tf-text-tertiary)" }}
+                title="Remover audio"
               >
-                <X size={12} />
+                <RotateCcw size={13} />
               </button>
             </div>
-            <audio src={audioUrl} controls className="w-full" />
+            <div
+              className="rounded-[10px] overflow-hidden"
+              style={{ background: "var(--tf-surface)" }}
+            >
+              <audio src={audioUrl} controls className="w-full" />
+            </div>
           </div>
         )}
 
         {/* Status busy */}
         {phase === "uploading" && (
           <div
-            className="flex items-center gap-2 p-3 rounded-[12px]"
+            className="flex items-center gap-3 p-4 rounded-[12px]"
             style={{ background: "var(--tf-bg-secondary)" }}
           >
             <Loader2
-              size={14}
+              size={16}
               className="animate-spin"
               style={{ color: "var(--tf-accent)" }}
             />
             <span
-              className="text-[12px]"
-              style={{ color: "var(--tf-text)" }}
+              className="text-[13px] font-semibold"
+              style={{ color: "var(--tf-text-secondary)" }}
             >
               Enviando audio...
             </span>
@@ -503,17 +555,17 @@ export function NovaReuniaoModal({
         )}
         {phase === "processing" && (
           <div
-            className="flex items-center gap-2 p-3 rounded-[12px]"
+            className="flex items-center gap-3 p-4 rounded-[12px]"
             style={{ background: "var(--tf-bg-secondary)" }}
           >
             <Loader2
-              size={14}
+              size={16}
               className="animate-spin"
               style={{ color: "var(--tf-accent)" }}
             />
             <span
-              className="text-[12px]"
-              style={{ color: "var(--tf-text)" }}
+              className="text-[13px] font-semibold"
+              style={{ color: "var(--tf-text-secondary)" }}
             >
               Iniciando processamento no worker...
             </span>
@@ -525,7 +577,7 @@ export function NovaReuniaoModal({
           <button
             onClick={onClose}
             disabled={isBusy}
-            className="px-4 py-2 rounded-[10px] text-[12px] font-semibold disabled:opacity-40"
+            className="px-4 py-2 rounded-[10px] text-[12px] font-semibold disabled:opacity-40 transition-all duration-150 hover:opacity-70"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
             Cancelar
@@ -533,7 +585,7 @@ export function NovaReuniaoModal({
           <button
             onClick={handleSubmit}
             disabled={!audioBlob || !titulo.trim() || isBusy}
-            className="px-4 py-2 rounded-[10px] text-[12px] font-bold text-white flex items-center gap-2 disabled:opacity-40"
+            className="px-4 py-2 rounded-[10px] text-[12px] font-bold text-white flex items-center gap-2 disabled:opacity-40 transition-all duration-150 hover:opacity-90"
             style={{ background: "var(--tf-accent)" }}
           >
             <Check size={14} />

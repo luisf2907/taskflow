@@ -2,9 +2,11 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { Perfil } from "@/types";
-import useSWR from "swr";
+import useSWR, { useSWRConfig } from "swr";
 
 export function useAuth() {
+  const { mutate: globalMutate } = useSWRConfig();
+
   const {
     data: user,
     isLoading: carregando,
@@ -60,13 +62,22 @@ export function useAuth() {
     window.location.href = "/login";
   }
 
+  const refresh = () => {
+    mutate();
+    globalMutate(
+      (key) => typeof key === "string" && key.startsWith("auth-extras-"),
+      undefined,
+      { revalidate: true },
+    );
+  };
+
   return {
     user,
     perfil: perfilEGithub?.perfil ?? null,
     carregando,
     temGithub: perfilEGithub?.temGithub ?? false,
     logout,
-    refresh: mutate,
-    refreshGithub: () => mutate(),
+    refresh,
+    refreshGithub: refresh,
   };
 }
