@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Mapa de campos do theme_preferences -> CSS variables.
@@ -33,16 +33,56 @@ const PALETTE_MAP: Record<string, string> = {
 const LS_KEY = "tf_custom_palette";
 
 /**
- * Aplica/remove overrides de CSS variables com base no theme_preferences do perfil.
- * Salva no localStorage para que theme-init.js aplique antes do React hidratar.
+ * Detecta se o tema e dark mode.
+ * Formato do theme_preferences:
+ *   { "light": { accent: ..., bg: ... }, "dark": { accent: ..., bg: ... } }
+ *
+ * Aplica o sub-objeto correto conforme o modo atual. Observa mudancas de
+ * classe .dark no <html> via MutationObserver pra reagir ao toggle.
  */
 export function useCustomPalette(
-  themePreferences: Record<string, string> | null | undefined
+  themePreferences: Record<string, unknown> | null | undefined
 ) {
+  const [isDark, setIsDark] = useState(false);
+
+  // Observar mudancas de classe dark no <html>
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     const root = document.documentElement;
 
-    if (!themePreferences || Object.keys(themePreferences).length === 0) {
+    if (!themePreferences) {
+      for (const cssVar of Object.values(PALETTE_MAP)) {
+        root.style.removeProperty(cssVar);
+      }
+      localStorage.removeItem(LS_KEY);
+      return;
+    }
+
+    // Detectar formato: { light: {...}, dark: {...} } ou plano { accent: ... }
+    const hasLightDark =
+      themePreferences.light &&
+      typeof themePreferences.light === "object";
+
+    const palette = hasLightDark
+      ? ((isDark ? themePreferences.dark : themePreferences.light) as Record<
+          string,
+          string
+        >) || {}
+      : (themePreferences as Record<string, string>);
+
+    if (!palette || Object.keys(palette).length === 0) {
       for (const cssVar of Object.values(PALETTE_MAP)) {
         root.style.removeProperty(cssVar);
       }
@@ -51,7 +91,7 @@ export function useCustomPalette(
     }
 
     for (const [field, cssVar] of Object.entries(PALETTE_MAP)) {
-      const value = themePreferences[field];
+      const value = palette[field];
       if (value) {
         root.style.setProperty(cssVar, value);
       } else {
@@ -59,6 +99,10 @@ export function useCustomPalette(
       }
     }
 
-    localStorage.setItem(LS_KEY, JSON.stringify(themePreferences));
-  }, [themePreferences]);
+    // Salvar no localStorage (o theme-init.js aplica antes do React)
+    localStorage.setItem(
+      LS_KEY,
+      JSON.stringify({ ...themePreferences, _mode: isDark ? "dark" : "light" })
+    );
+  }, [themePreferences, isDark]);
 }
