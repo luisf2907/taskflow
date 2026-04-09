@@ -26,7 +26,7 @@ export function useWorkspaceUsuarios(workspaceId: string | undefined) {
       const { data: perfis } = await supabase
         .from("perfis")
         .select(
-          "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at",
+          "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at, theme_preferences",
         )
         .in("id", userIds);
 
