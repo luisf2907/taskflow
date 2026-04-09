@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
   const { data: perfil } = await service
     .from("perfis")
     .select(
-      "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at, theme_preferences"
+      "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at"
     )
     .eq("email", email)
     .maybeSingle();
