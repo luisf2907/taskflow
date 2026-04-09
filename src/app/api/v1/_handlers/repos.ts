@@ -29,6 +29,20 @@ export async function handleListPRs(
   const [owner, repo] = params;
   const service = getService();
 
+  // Validar que o repo pertence ao workspace
+  const { data: repoData } = await service
+    .from("repositorios")
+    .select("id")
+    .eq("owner", owner)
+    .eq("nome", repo)
+    .eq("workspace_id", auth.workspaceId)
+    .maybeSingle();
+  if (!repoData)
+    return NextResponse.json(
+      { error: "Repositorio nao encontrado neste workspace" },
+      { status: 404 }
+    );
+
   const token = await getGitHubToken(service, auth.userId);
   if (!token)
     return NextResponse.json({ error: "GitHub nao conectado" }, { status: 403 });
@@ -44,6 +58,20 @@ export async function handleListBranches(
 ) {
   const [owner, repo] = params;
   const service = getService();
+
+  // Validar que o repo pertence ao workspace
+  const { data: repoData } = await service
+    .from("repositorios")
+    .select("id")
+    .eq("owner", owner)
+    .eq("nome", repo)
+    .eq("workspace_id", auth.workspaceId)
+    .maybeSingle();
+  if (!repoData)
+    return NextResponse.json(
+      { error: "Repositorio nao encontrado neste workspace" },
+      { status: 404 }
+    );
 
   const token = await getGitHubToken(service, auth.userId);
   if (!token)
@@ -82,7 +110,7 @@ export async function handleCreatePR(auth: ApiKeyAuth, request: Request) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  // Vincular ao card se fornecido
+  // Vincular ao card se fornecido — scoped ao workspace
   if (body.card_id && result.data) {
     const pr = result.data as {
       number: number;
@@ -97,7 +125,8 @@ export async function handleCreatePR(auth: ApiKeyAuth, request: Request) {
         pr_status: "open",
         pr_autor: pr.user?.login || null,
       })
-      .eq("id", body.card_id);
+      .eq("id", body.card_id)
+      .eq("workspace_id", auth.workspaceId);
   }
 
   return NextResponse.json({ data: result.data }, { status: 201 });

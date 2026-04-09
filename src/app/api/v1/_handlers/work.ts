@@ -4,6 +4,8 @@ import {
   getService,
   getBody,
   getGitHubToken,
+  assertCard,
+  isErrorResponse,
   type ApiKeyAuth,
 } from "../_lib/helpers";
 
@@ -16,19 +18,14 @@ export async function handleStartWork(
   const body = await getBody(request);
   const service = getService();
 
-  // Buscar card + token em paralelo (em vez de sequencial)
+  // Buscar card (scoped ao workspace) + token em paralelo
   const [cardResult, token] = await Promise.all([
-    service
-      .from("cartoes")
-      .select("id, titulo, coluna_id, branch")
-      .eq("id", cardId)
-      .single(),
+    assertCard(service, cardId, auth.workspaceId, "id, titulo, coluna_id, branch"),
     getGitHubToken(service, auth.userId),
   ]);
 
-  const card = cardResult.data;
-  if (!card)
-    return NextResponse.json({ error: "Card nao encontrado" }, { status: 404 });
+  if (isErrorResponse(cardResult)) return cardResult;
+  const card = cardResult;
   if (!token)
     return NextResponse.json({ error: "GitHub nao conectado" }, { status: 403 });
 
@@ -88,6 +85,7 @@ export async function handleStartWork(
       .from("cartoes")
       .update(updateFields)
       .eq("id", cardId)
+      .eq("workspace_id", auth.workspaceId)
       .select()
       .single();
     return NextResponse.json({ data: updated, message: "Trabalho iniciado" });
@@ -105,19 +103,19 @@ export async function handleFinishWork(
   const body = await getBody(request);
   const service = getService();
 
-  // Buscar card + token em paralelo
+  // Buscar card (scoped ao workspace) + token em paralelo
   const [cardResult, token] = await Promise.all([
-    service
-      .from("cartoes")
-      .select("id, titulo, descricao, coluna_id, branch, pr_repo_id")
-      .eq("id", cardId)
-      .single(),
+    assertCard(
+      service,
+      cardId,
+      auth.workspaceId,
+      "id, titulo, descricao, coluna_id, branch, pr_repo_id"
+    ),
     getGitHubToken(service, auth.userId),
   ]);
 
-  const card = cardResult.data;
-  if (!card)
-    return NextResponse.json({ error: "Card nao encontrado" }, { status: 404 });
+  if (isErrorResponse(cardResult)) return cardResult;
+  const card = cardResult;
   if (!token)
     return NextResponse.json({ error: "GitHub nao conectado" }, { status: 403 });
 
@@ -200,6 +198,7 @@ export async function handleFinishWork(
     .from("cartoes")
     .update(updateFields)
     .eq("id", cardId)
+    .eq("workspace_id", auth.workspaceId)
     .select()
     .single();
 

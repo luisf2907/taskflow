@@ -45,9 +45,11 @@ export function useWorkspaceUsuarios(workspaceId: string | undefined) {
     // Buscar perfil pelo email
     const { data: perfil } = await supabase
       .from("perfis")
-      .select("*")
+      .select(
+        "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at",
+      )
       .eq("email", email)
-      .single();
+      .maybeSingle();
 
     if (!perfil) {
       return { error: "Usuário não encontrado. Peça para ele se cadastrar primeiro." };

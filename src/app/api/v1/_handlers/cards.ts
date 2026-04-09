@@ -3,6 +3,10 @@ import {
   getService,
   getBody,
   getSearchParams,
+  assertCard,
+  assertSprint,
+  assertChecklistItem,
+  isErrorResponse,
   type ApiKeyAuth,
 } from "../_lib/helpers";
 
@@ -142,6 +146,10 @@ export async function handleListCards(auth: ApiKeyAuth, request: Request) {
       pagination: { offset, limit, total: count },
     });
   } else if (sprintId) {
+    // Validar que o sprint pertence ao workspace
+    const sprint = await assertSprint(service, sprintId, auth.workspaceId, "id");
+    if (isErrorResponse(sprint)) return sprint;
+
     const { data: colunas } = await service
       .from("colunas")
       .select("id")
@@ -187,21 +195,20 @@ export async function handleListCards(auth: ApiKeyAuth, request: Request) {
 }
 
 export async function handleGetCard(
-  _auth: ApiKeyAuth,
+  auth: ApiKeyAuth,
   _req: Request,
   params: string[]
 ) {
   const [id] = params;
   const service = getService();
 
-  const { data: card } = await service
-    .from("cartoes")
-    .select("*, cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)")
-    .eq("id", id)
-    .single();
-
-  if (!card)
-    return NextResponse.json({ error: "Card nao encontrado" }, { status: 404 });
+  const card = await assertCard(
+    service,
+    id,
+    auth.workspaceId,
+    "*, cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)"
+  );
+  if (isErrorResponse(card)) return card;
 
   const { data: checklists } = await service
     .from("checklists")
@@ -297,6 +304,7 @@ export async function handleUpdateCard(
     .from("cartoes")
     .update(campos)
     .eq("id", id)
+    .eq("workspace_id", auth.workspaceId)
     .select()
     .single();
 
@@ -321,27 +329,35 @@ export async function handleUpdateCard(
 }
 
 export async function handleDeleteCard(
-  _auth: ApiKeyAuth,
+  auth: ApiKeyAuth,
   _req: Request,
   params: string[]
 ) {
   const [id] = params;
   const service = getService();
 
-  const { error } = await service.from("cartoes").delete().eq("id", id);
+  const { error } = await service
+    .from("cartoes")
+    .delete()
+    .eq("id", id)
+    .eq("workspace_id", auth.workspaceId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }
 
 export async function handleToggleChecklistItem(
-  _auth: ApiKeyAuth,
+  auth: ApiKeyAuth,
   request: Request,
   params: string[]
 ) {
   const [itemId] = params;
   const body = await getBody(request);
   const service = getService();
+
+  // Validar ownership via join checklist -> cartao -> workspace
+  const item = await assertChecklistItem(service, itemId, auth.workspaceId);
+  if (isErrorResponse(item)) return item;
 
   if (body && typeof body.concluido === "boolean") {
     const { data, error } = await service
@@ -354,15 +370,6 @@ export async function handleToggleChecklistItem(
       return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ data });
   }
-
-  const { data: item } = await service
-    .from("checklist_itens")
-    .select("id, concluido")
-    .eq("id", itemId)
-    .single();
-
-  if (!item)
-    return NextResponse.json({ error: "Item nao encontrado" }, { status: 404 });
 
   const { data, error } = await service
     .from("checklist_itens")
@@ -387,6 +394,10 @@ export async function handleMoveCard(
 
   const service = getService();
 
+  // Validar ownership antes de qualquer operacao
+  const card = await assertCard(service, id, auth.workspaceId, "id");
+  if (isErrorResponse(card)) return card;
+
   if (body.backlog) {
     await service
       .from("cartoes")
@@ -395,8 +406,13 @@ export async function handleMoveCard(
         workspace_id: auth.workspaceId,
         posicao: 0,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("workspace_id", auth.workspaceId);
   } else if (body.sprint_id) {
+    // Validar que o sprint pertence ao workspace
+    const sprint = await assertSprint(service, body.sprint_id, auth.workspaceId, "id");
+    if (isErrorResponse(sprint)) return sprint;
+
     const { data: colunas } = await service
       .from("colunas")
       .select("id")
@@ -415,7 +431,8 @@ export async function handleMoveCard(
         workspace_id: auth.workspaceId,
         posicao: 0,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("workspace_id", auth.workspaceId);
   } else if (body.coluna_id) {
     await service
       .from("cartoes")
@@ -424,7 +441,8 @@ export async function handleMoveCard(
         workspace_id: auth.workspaceId,
         posicao: body.posicao ?? 0,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("workspace_id", auth.workspaceId);
   } else {
     return NextResponse.json(
       { error: "Informe backlog:true, sprint_id ou coluna_id" },
@@ -436,6 +454,7 @@ export async function handleMoveCard(
     .from("cartoes")
     .select("*")
     .eq("id", id)
+    .eq("workspace_id", auth.workspaceId)
     .single();
   return NextResponse.json({ data });
 }

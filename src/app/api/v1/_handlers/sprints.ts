@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { getService, getBody, type ApiKeyAuth } from "../_lib/helpers";
+import {
+  getService,
+  getBody,
+  assertSprint,
+  isErrorResponse,
+  type ApiKeyAuth,
+} from "../_lib/helpers";
 
 export async function handleListSprints(auth: ApiKeyAuth) {
   const service = getService();
@@ -13,23 +19,15 @@ export async function handleListSprints(auth: ApiKeyAuth) {
 }
 
 export async function handleSprintSummary(
-  _auth: ApiKeyAuth,
+  auth: ApiKeyAuth,
   _req: Request,
   params: string[]
 ) {
   const [sprintId] = params;
   const service = getService();
 
-  const { data: sprint } = await service
-    .from("quadros")
-    .select("*")
-    .eq("id", sprintId)
-    .single();
-  if (!sprint)
-    return NextResponse.json(
-      { error: "Sprint nao encontrada" },
-      { status: 404 }
-    );
+  const sprint = await assertSprint(service, sprintId, auth.workspaceId);
+  if (isErrorResponse(sprint)) return sprint;
 
   const { data: colunas } = await service
     .from("colunas")
@@ -75,12 +73,16 @@ export async function handleSprintSummary(
 }
 
 export async function handleSprintColumns(
-  _auth: ApiKeyAuth,
+  auth: ApiKeyAuth,
   _req: Request,
   params: string[]
 ) {
   const [sprintId] = params;
   const service = getService();
+
+  // Validar que o sprint pertence ao workspace
+  const sprint = await assertSprint(service, sprintId, auth.workspaceId, "id");
+  if (isErrorResponse(sprint)) return sprint;
 
   const { data } = await service
     .from("colunas")
@@ -139,7 +141,7 @@ export async function handleCreateSprint(auth: ApiKeyAuth, request: Request) {
 }
 
 export async function handleUpdateSprint(
-  _auth: ApiKeyAuth,
+  auth: ApiKeyAuth,
   request: Request,
   params: string[]
 ) {
@@ -161,9 +163,12 @@ export async function handleUpdateSprint(
     .from("quadros")
     .update(campos)
     .eq("id", id)
+    .eq("workspace_id", auth.workspaceId)
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data)
+    return NextResponse.json({ error: "Sprint nao encontrada" }, { status: 404 });
   return NextResponse.json({ data });
 }

@@ -86,7 +86,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ co
     return NextResponse.json({ error: "Erro ao entrar no workspace" }, { status: 500 });
   }
 
-  // Criar membro na tabela membros (para atribuicao de cards)
+  // Criar/atualizar membro na tabela membros (para atribuicao de cards).
+  // Pode existir um membro com mesmo email mas user_id=null (criado antes
+  // do signup). Nesse caso, fazemos update para vincular ao user.
   const { data: perfil } = await service
     .from("perfis")
     .select("nome, email, avatar_url")
@@ -94,16 +96,37 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ co
     .single();
 
   if (perfil) {
-    await service.from("membros").upsert(
-      {
-        workspace_id: invite.workspace_id,
-        user_id: user.id,
-        nome: perfil.nome || perfil.email || "Membro",
-        email: perfil.email,
-        avatar_url: perfil.avatar_url,
-      },
-      { onConflict: "user_id,workspace_id" }
-    ).select();
+    // Tenta encontrar membro existente pelo email (pode ter user_id null)
+    const { data: membroExistente } = await service
+      .from("membros")
+      .select("id")
+      .eq("workspace_id", invite.workspace_id)
+      .eq("email", perfil.email)
+      .maybeSingle();
+
+    if (membroExistente) {
+      // Vincular membro existente ao user
+      await service
+        .from("membros")
+        .update({
+          user_id: user.id,
+          nome: perfil.nome || perfil.email || "Membro",
+          avatar_url: perfil.avatar_url,
+        })
+        .eq("id", membroExistente.id);
+    } else {
+      // Criar novo membro
+      await service.from("membros").upsert(
+        {
+          workspace_id: invite.workspace_id,
+          user_id: user.id,
+          nome: perfil.nome || perfil.email || "Membro",
+          email: perfil.email,
+          avatar_url: perfil.avatar_url,
+        },
+        { onConflict: "workspace_id,user_id" }
+      );
+    }
   }
 
   return NextResponse.json({ ok: true, workspace_id: invite.workspace_id });

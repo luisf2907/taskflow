@@ -9,16 +9,11 @@ export async function handleAIGenerateCards(
   if (!body?.texto)
     return NextResponse.json({ error: "texto obrigatorio" }, { status: 400 });
 
-  // Forward para a rota interna existente
+  // Forward para a rota interna existente (workspaceId vai no body)
   const internalUrl = new URL("/api/ai/generate-cards", request.url);
   const res = await fetch(internalUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      // Passar auth como header interno
-      "x-mcp-user-id": auth.userId,
-      "x-mcp-workspace-id": auth.workspaceId,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...body, workspaceId: auth.workspaceId }),
   });
 
@@ -37,11 +32,7 @@ export async function handleAIEnhanceCard(
   const internalUrl = new URL("/api/ai/enhance-card", request.url);
   const res = await fetch(internalUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-mcp-user-id": auth.userId,
-      "x-mcp-workspace-id": auth.workspaceId,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...body, workspaceId: auth.workspaceId }),
   });
 

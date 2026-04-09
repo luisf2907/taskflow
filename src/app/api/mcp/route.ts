@@ -123,6 +123,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validar required fields do inputSchema antes de chamar o handler
+    if (tool.inputSchema) {
+      const required = (tool.inputSchema.required as string[]) || [];
+      const properties = (tool.inputSchema.properties as Record<string, { type?: string }>) || {};
+      const missing = required.filter(
+        (f) => toolArgs[f] === undefined || toolArgs[f] === null
+      );
+      if (missing.length > 0) {
+        return NextResponse.json(
+          jsonRpcResponse(id, {
+            content: [
+              {
+                type: "text",
+                text: `Campos obrigatorios faltando: ${missing.join(", ")}`,
+              },
+            ],
+            isError: true,
+          })
+        );
+      }
+      // Validar tipos basicos dos campos definidos
+      for (const [key, value] of Object.entries(toolArgs)) {
+        const prop = properties[key];
+        if (!prop?.type) continue;
+        const actual = typeof value;
+        if (
+          (prop.type === "string" && actual !== "string") ||
+          (prop.type === "number" && actual !== "number") ||
+          (prop.type === "boolean" && actual !== "boolean")
+        ) {
+          return NextResponse.json(
+            jsonRpcResponse(id, {
+              content: [
+                {
+                  type: "text",
+                  text: `Campo '${key}' deve ser ${prop.type}, recebeu ${actual}`,
+                },
+              ],
+              isError: true,
+            })
+          );
+        }
+      }
+    }
+
     try {
       const result = await tool.handler(toolArgs, apiKey, baseUrl);
       return NextResponse.json(
