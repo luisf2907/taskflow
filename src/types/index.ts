@@ -192,6 +192,10 @@ export interface Perfil {
   onboarding_step: number | null;
   criado_em: string;
   atualizado_em: string;
+  // TaskFlow Voice (nullable ate o usuario cadastrar a voz)
+  // voice_embedding nunca e lido do client — fica so no server pra matching.
+  voice_enrolled_at: string | null;
+  voice_consent_at: string | null;
 }
 
 // =============================================

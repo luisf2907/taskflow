@@ -25,7 +25,9 @@ export function useWorkspaceUsuarios(workspaceId: string | undefined) {
       const userIds = membros.map((m) => m.user_id);
       const { data: perfis } = await supabase
         .from("perfis")
-        .select("*")
+        .select(
+          "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at",
+        )
         .in("id", userIds);
 
       const perfisMap = new Map<string, Perfil>();

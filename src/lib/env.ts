@@ -10,6 +10,9 @@ const serverEnvSchema = envSchema.extend({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   GEMINI_API_KEY: z.string().min(1).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
+  // TaskFlow Voice worker (FastAPI + pyannote/whisper, exposto via ngrok)
+  VOICE_WORKER_URL: z.string().url().optional(),
+  VOICE_WORKER_API_KEY: z.string().min(1).optional(),
 });
 
 function parsePublicEnv() {
@@ -36,6 +39,9 @@ function parseServerEnv() {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    VOICE_WORKER_URL: process.env.VOICE_WORKER_URL,
+    VOICE_WORKER_API_KEY: process.env.VOICE_WORKER_API_KEY,
   });
 
   if (!result.success) {

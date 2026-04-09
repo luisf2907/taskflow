@@ -21,10 +21,14 @@ export function useAuth() {
     user ? `auth-extras-${user.id}` : null,
     async () => {
       const [perfilRes, githubRes] = await Promise.all([
-        // Fetch perfil
+        // Fetch perfil — NAO inclui voice_embedding (dado biometrico,
+        // fica server-side). Lista explicita evita shippar 2KB de
+        // embedding pro browser em cada reload.
         supabase
           .from("perfis")
-          .select("*")
+          .select(
+            "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at",
+          )
           .eq("id", user!.id)
           .single()
           .then(({ data }) => data as Perfil | null),

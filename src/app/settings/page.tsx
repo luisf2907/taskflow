@@ -15,6 +15,7 @@ import { AparenciaSection } from "./_sections/aparencia";
 import { NotifSection } from "./_sections/notificacoes";
 import { SegurancaSection } from "./_sections/seguranca";
 import { ApiKeysSection } from "./_sections/api-keys";
+import { VoiceSection } from "./_sections/voz";
 
 export default function SettingsPage() {
   const {
@@ -113,6 +114,8 @@ export default function SettingsPage() {
               userId={user?.id}
               perfilPrefs={perfil?.notif_preferences}
             />
+
+            <VoiceSection perfil={perfil} onUpdate={refresh} />
 
             <SegurancaSection onLogout={logout} />
 
