@@ -106,12 +106,14 @@ export async function rateLimitAsync(
 
     if (error || !data) {
       // Fallback to in-memory if RPC not available
+      console.warn("[rate-limit] Supabase RPC falhou, usando in-memory:", error?.message ?? "sem data");
       return memoryRateLimit(key, maxRequests, windowMs);
     }
 
     return data as { ok: boolean; retryAfter?: number };
-  } catch {
+  } catch (err) {
     // Fallback to in-memory
+    console.warn("[rate-limit] Supabase RPC exception, usando in-memory:", err instanceof Error ? err.message : err);
     return memoryRateLimit(key, maxRequests, windowMs);
   }
 }

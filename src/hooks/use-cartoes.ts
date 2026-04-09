@@ -280,12 +280,16 @@ export function useCartoes(quadroId: string) {
     const outros = cartoes.filter((c) => c.coluna_id !== colunaId);
     globalMutate(key, [...outros, ...atualizados], false);
 
-    const updates = atualizados.map((c) => ({
-      id: c.id, coluna_id: c.coluna_id, titulo: c.titulo, descricao: c.descricao,
-      posicao: c.posicao, data_entrega: c.data_entrega,
-      peso: c.peso, criado_em: c.criado_em, atualizado_em: c.atualizado_em,
-    }));
-    await supabase.from("cartoes").upsert(updates);
+    // Usar UPDATE individual em vez de upsert — cards ja existem e upsert
+    // exige permissao INSERT no RLS, causando 403.
+    await Promise.all(
+      atualizados.map((c) =>
+        supabase
+          .from("cartoes")
+          .update({ posicao: c.posicao, coluna_id: c.coluna_id })
+          .eq("id", c.id)
+      )
+    );
   }
 
   function buscar() {

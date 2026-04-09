@@ -193,6 +193,13 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
       return;
     }
 
+    // Validar MIME type antes de enviar
+    const mime = audioBlob.type || "";
+    if (!mime.startsWith("audio/") && !mime.startsWith("video/")) {
+      toast.error("Formato de audio invalido. Tente gravar novamente.");
+      return;
+    }
+
     setState("uploading");
     try {
       const formData = new FormData();

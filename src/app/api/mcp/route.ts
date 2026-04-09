@@ -230,6 +230,19 @@ export async function GET(request: NextRequest) {
   });
 }
 
+// OPTIONS — CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, Mcp-Session-Id",
+      "Access-Control-Max-Age": "86400",
+    },
+  });
+}
+
 // DELETE — close session
 export async function DELETE() {
   return new NextResponse(null, { status: 200 });
