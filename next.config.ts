@@ -59,9 +59,10 @@ const nextConfig: NextConfig = {
               `img-src 'self' data: blob: ${supabaseImgSrc} https://avatars.githubusercontent.com https://github.com`,
               "font-src 'self' https://fonts.gstatic.com data:",
               `connect-src 'self' ${supabaseConnectSrc} https://api.github.com https://*.ingest.sentry.io${isDev ? " ws://localhost:*" : ""}`,
-              // media-src: permite blob: pro preview do MediaRecorder (enrollment de voz).
-              // Sem isso, o CSP cai no default-src 'self' e bloqueia o <audio src="blob:...">.
-              "media-src 'self' blob:",
+              // media-src: permite blob: pro preview do MediaRecorder (enrollment
+              // de voz) e o host do Supabase Storage pro player de reunioes
+              // (carrega audio via signed URL em /storage/v1/object/sign/...).
+              `media-src 'self' blob: ${supabaseImgSrc}`,
               "frame-ancestors 'none'",
             ].join("; "),
           },
