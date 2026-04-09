@@ -196,6 +196,8 @@ export interface Perfil {
   // voice_embedding nunca e lido do client — fica so no server pra matching.
   voice_enrolled_at: string | null;
   voice_consent_at: string | null;
+  // Paleta personalizada (JSONB) — null = padrao
+  theme_preferences: Record<string, string> | null;
 }
 
 // =============================================

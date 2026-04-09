@@ -108,7 +108,7 @@ export default function SettingsPage() {
               onUpdate={refresh}
             />
 
-            <AparenciaSection />
+            <AparenciaSection perfil={perfil} onUpdate={refresh} />
 
             <NotifSection
               userId={user?.id}

@@ -4,6 +4,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { HelpModal } from "@/components/help/help-modal";
 import { OfflineBanner } from "@/components/offline-banner";
 import { SWRProvider } from "@/components/swr-provider";
+import { ThemeInjector } from "@/components/theme-injector";
 import { ToastContainer } from "@/components/ui/toast";
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
@@ -62,6 +63,7 @@ export default function RootLayout({
               Pular para o conteúdo
             </a>
             <AuthListener />
+            <ThemeInjector />
             <CommandPalette />
             <HelpModal />
             <OfflineBanner />
