@@ -23,8 +23,12 @@ const wsCacheByCartao = new Map<string, string>();
  */
 export function registrarAtividade(params: RegistrarParams): void {
   // Fire-and-forget: nao espera a promise resolver
-  registrarAsync(params).catch(() => {
-    // Silent fail - activity logging must never block main operations
+  registrarAsync(params).catch((err) => {
+    console.error(
+      "[atividades] Falha ao registrar:",
+      err instanceof Error ? err.message : err,
+      { acao: params.acao, entidade: params.entidade },
+    );
   });
 }
 

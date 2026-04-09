@@ -34,45 +34,32 @@ async function resolverEVincularEtiquetas(
   const nomes = etiquetas.map((n) => n.trim()).filter(Boolean);
   if (nomes.length === 0) return;
 
-  const { data: existentes } = await service
+  // 1. Upsert todas de uma vez (cria as que faltam, ignora as que ja existem).
+  // Elimina race condition: mesmo se 2 requests concorrentes tentarem criar
+  // a mesma etiqueta, o upsert com ignoreDuplicates garante idempotencia.
+  await service
+    .from("etiquetas")
+    .upsert(
+      nomes.map((nome, i) => ({
+        nome,
+        cor: ETIQUETA_CORES[i % ETIQUETA_CORES.length],
+        workspace_id: workspaceId,
+      })),
+      { onConflict: "workspace_id,nome", ignoreDuplicates: true }
+    );
+
+  // 2. Buscar todas de uma vez (apos upsert garantir que existem)
+  const { data: todas } = await service
     .from("etiquetas")
     .select("id, nome")
     .eq("workspace_id", workspaceId)
     .in("nome", nomes);
 
-  const mapa = new Map((existentes || []).map((e) => [e.nome, e.id]));
-  const novas = nomes.filter((n) => !mapa.has(n));
-
-  if (novas.length > 0) {
-    const { data: criadas } = await service
-      .from("etiquetas")
-      .upsert(
-        novas.map((nome, i) => ({
-          nome,
-          cor: ETIQUETA_CORES[i % ETIQUETA_CORES.length],
-          workspace_id: workspaceId,
-        })),
-        { onConflict: "workspace_id,nome", ignoreDuplicates: true }
-      )
-      .select("id, nome");
-
-    for (const c of criadas || []) mapa.set(c.nome, c.id);
-
-    const faltam = novas.filter((n) => !mapa.has(n));
-    if (faltam.length > 0) {
-      const { data: recheck } = await service
-        .from("etiquetas")
-        .select("id, nome")
-        .eq("workspace_id", workspaceId)
-        .in("nome", faltam);
-      for (const r of recheck || []) mapa.set(r.nome, r.id);
-    }
-  }
-
-  const vinculos = nomes
-    .map((n) => mapa.get(n))
-    .filter(Boolean)
-    .map((etiquetaId) => ({ cartao_id: cartaoId, etiqueta_id: etiquetaId }));
+  // 3. Vincular ao cartao
+  const vinculos = (todas || []).map((e) => ({
+    cartao_id: cartaoId,
+    etiqueta_id: e.id,
+  }));
 
   if (vinculos.length > 0) {
     await service.from("cartao_etiquetas").upsert(vinculos, {

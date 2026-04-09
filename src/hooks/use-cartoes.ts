@@ -136,6 +136,8 @@ export function useCartoes(quadroId: string) {
 
   async function atualizar(id: string, campos: Partial<Cartao>) {
     const ts = new Date().toISOString();
+    const estadoAnterior = cartoes;
+
     // Optimistic — usa funcao pra pegar estado mais recente do cache (evita race condition)
     globalMutate(
       key,
@@ -143,20 +145,25 @@ export function useCartoes(quadroId: string) {
       { revalidate: false }
     );
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("cartoes")
       .update({ ...campos, atualizado_em: ts })
       .eq("id", id)
       .select()
       .single();
-    if (data) {
-      globalMutate(
-        key,
-        (atual: Cartao[] | undefined) => (atual || []).map((c) => (c.id === id ? { ...c, ...data } : c)),
-        { revalidate: false }
-      );
-      registrarAtividade({ quadroId, cartaoId: id, acao: "atualizar", entidade: "cartao", detalhes: { campos: Object.keys(campos) } });
+
+    if (error || !data) {
+      // Rollback: restaurar estado anterior e revalidar
+      globalMutate(key, estadoAnterior, { revalidate: true });
+      return null;
     }
+
+    globalMutate(
+      key,
+      (atual: Cartao[] | undefined) => (atual || []).map((c) => (c.id === id ? { ...c, ...data } : c)),
+      { revalidate: false }
+    );
+    registrarAtividade({ quadroId, cartaoId: id, acao: "atualizar", entidade: "cartao", detalhes: { campos: Object.keys(campos) } });
     return data;
   }
 

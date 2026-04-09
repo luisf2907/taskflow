@@ -40,18 +40,24 @@ export function useColunas(quadroId: string) {
   }
 
   async function atualizar(id: string, campos: Partial<Coluna>) {
+    const estadoAnterior = colunas;
     globalMutate(key, colunas.map((c) => (c.id === id ? { ...c, ...campos } : c)), false);
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("colunas")
       .update(campos)
       .eq("id", id)
       .select()
       .single();
-    if (data) {
-      globalMutate(key, colunas.map((c) => (c.id === id ? data : c)), false);
-      registrarAtividade({ quadroId, acao: "atualizar", entidade: "coluna", detalhes: { campos: Object.keys(campos) } });
+
+    if (error || !data) {
+      // Rollback: restaurar estado anterior e revalidar
+      globalMutate(key, estadoAnterior, { revalidate: true });
+      return null;
     }
+
+    globalMutate(key, colunas.map((c) => (c.id === id ? data : c)), false);
+    registrarAtividade({ quadroId, acao: "atualizar", entidade: "coluna", detalhes: { campos: Object.keys(campos) } });
     return data;
   }
 

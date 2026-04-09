@@ -111,8 +111,13 @@ async function handleRequest(
   try {
     return await matched.handler(authResult, request, matched.params);
   } catch (err) {
-    console.error(`[API v1] ${method} /${path.join("/")}:`, err);
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+    const route = `${method} /api/v1/${path.join("/")}`;
+    const message = err instanceof Error ? err.message : "Erro interno";
+    console.error(`[API v1] ${route}:`, err);
+    return NextResponse.json(
+      { error: message, path: route },
+      { status: 500 }
+    );
   }
 }
 
