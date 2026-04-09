@@ -13,6 +13,10 @@ const serverEnvSchema = envSchema.extend({
   // TaskFlow Voice worker (FastAPI + pyannote/whisper, exposto via ngrok)
   VOICE_WORKER_URL: z.string().url().optional(),
   VOICE_WORKER_API_KEY: z.string().min(1).optional(),
+  // Secret pra HMAC do webhook de callback do worker pro Next.js.
+  // Usado em /api/reunioes/[id]/webhook pra garantir que so o worker pode
+  // postar resultado pra uma reuniao (nao qualquer um que adivinhe a URL).
+  VOICE_WEBHOOK_SECRET: z.string().min(32).optional(),
 });
 
 function parsePublicEnv() {
@@ -42,6 +46,7 @@ function parseServerEnv() {
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     VOICE_WORKER_URL: process.env.VOICE_WORKER_URL,
     VOICE_WORKER_API_KEY: process.env.VOICE_WORKER_API_KEY,
+    VOICE_WEBHOOK_SECRET: process.env.VOICE_WEBHOOK_SECRET,
   });
 
   if (!result.success) {

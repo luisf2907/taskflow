@@ -199,6 +199,46 @@ export interface Perfil {
 }
 
 // =============================================
+// REUNIOES (voice meetings)
+// =============================================
+export type ReuniaoStatus = "pending" | "processing" | "done" | "error";
+
+export interface Reuniao {
+  id: string;
+  workspace_id: string;
+  titulo: string;
+  descricao: string | null;
+  audio_path: string | null;
+  audio_size_bytes: number | null;
+  audio_mime: string | null;
+  status: ReuniaoStatus;
+  erro_mensagem: string | null;
+  duracao_seg: number | null;
+  language: string | null;
+  language_probability: number | null;
+  timings_ms: Record<string, number> | null;
+  criado_por: string | null;
+  criado_em: string;
+  processado_em: string | null;
+  atualizado_em: string;
+}
+
+export type MatchTipo = "strong" | "weak" | "none" | "manual";
+
+export interface ReuniaoFala {
+  id: string;
+  reuniao_id: string;
+  ordem: number;
+  inicio_ms: number;
+  fim_ms: number;
+  speaker_label: string;
+  usuario_id: string | null;
+  match_confianca: number | null;
+  match_tipo: MatchTipo | null;
+  texto: string;
+}
+
+// =============================================
 // WORKSPACE MEMBERSHIP
 // =============================================
 export interface WorkspaceUsuario {

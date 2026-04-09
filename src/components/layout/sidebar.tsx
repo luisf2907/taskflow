@@ -11,6 +11,7 @@ import {
   GitBranch,
   Grid3X3,
   LayoutDashboard,
+  Mic,
   Plus,
   SidebarClose,
   SidebarOpen,
@@ -229,6 +230,23 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
                         >
                           <GitBranch size={15} strokeWidth={pathname === `/workspace/${ws.id}/repos` ? 2.5 : 2} />
                           <span className="sidebar-fade" style={{ opacity: aberta ? 1 : 0 }}>Repositórios</span>
+                        </Link>
+
+                        <Link
+                          href={`/workspace/${ws.id}/reunioes`}
+                          data-active={pathname.startsWith(`/workspace/${ws.id}/reunioes`)}
+                          className={cn(
+                            "sidebar-item sidebar-link flex items-center group relative",
+                            aberta ? "gap-3 px-2 py-[6px] rounded-[8px] text-[13px] font-medium" : "justify-center rounded-[14px] w-[44px] h-[44px] mx-auto"
+                          )}
+                          style={{
+                            background: pathname.startsWith(`/workspace/${ws.id}/reunioes`) && aberta ? "var(--tf-accent-light)" : "transparent",
+                            color: pathname.startsWith(`/workspace/${ws.id}/reunioes`) ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
+                          }}
+                          title={!aberta ? "Reuniões" : undefined}
+                        >
+                          <Mic size={15} strokeWidth={pathname.startsWith(`/workspace/${ws.id}/reunioes`) ? 2.5 : 2} />
+                          <span className="sidebar-fade" style={{ opacity: aberta ? 1 : 0 }}>Reuniões</span>
                         </Link>
                       </>
                     )}

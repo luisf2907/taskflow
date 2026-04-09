@@ -178,3 +178,40 @@ export async function voiceProcessMeeting(
   });
   return (await parseJsonOrThrow(res)) as ProcessMeetingResponse;
 }
+
+export interface ProcessMeetingAsyncAck {
+  status: "queued";
+  reuniao_id: string;
+}
+
+/**
+ * Enfileira o processamento async de uma reuniao.
+ *
+ * O worker vai:
+ *   1. Baixar o audio da `audio_url` (signed URL do Supabase Storage)
+ *   2. Processar com o pipeline
+ *   3. POSTar resultado pra `callback_url` com Authorization: Bearer `callback_token`
+ *
+ * Esta funcao retorna em < 1s (o worker responde 202 e continua em background).
+ * O resultado real chega via webhook em /api/reunioes/[id]/webhook.
+ */
+export async function voiceProcessMeetingAsync(params: {
+  audioUrl: string;
+  reuniaoId: string;
+  callbackUrl: string;
+  callbackToken: string;
+}): Promise<ProcessMeetingAsyncAck> {
+  const { baseUrl } = getConfig();
+  const res = await fetch(`${baseUrl}/process-meeting-async`, {
+    method: "POST",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({
+      audio_url: params.audioUrl,
+      reuniao_id: params.reuniaoId,
+      callback_url: params.callbackUrl,
+      callback_token: params.callbackToken,
+    }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  return (await parseJsonOrThrow(res)) as ProcessMeetingAsyncAck;
+}
