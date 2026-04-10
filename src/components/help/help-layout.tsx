@@ -53,7 +53,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       )}
       <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
         <Header onMenuMobile={toggleSidebar} />
-        <main id="main-content" className="flex-1 overflow-y-auto pb-4 no-scrollbar">
+        <main id="main-content" className="flex-1 overflow-y-auto pb-4">
           {children}
         </main>
       </div>

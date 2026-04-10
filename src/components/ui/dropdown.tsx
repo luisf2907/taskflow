@@ -1,15 +1,18 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+
+const DropdownContext = createContext<(() => void) | undefined>(undefined);
 
 interface DropdownProps {
   trigger: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  closeOnClick?: boolean;
 }
 
-export function Dropdown({ trigger, children, className }: DropdownProps) {
+export function Dropdown({ trigger, children, className, closeOnClick = true }: DropdownProps) {
   const [aberto, setAberto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -97,7 +100,9 @@ export function Dropdown({ trigger, children, className }: DropdownProps) {
           className={cn("absolute right-0 mt-1 min-w-[180px] rounded-[14px] py-1.5 z-50 border", className)}
           style={{ background: "var(--tf-surface-raised)", borderColor: "var(--tf-border)" }}
         >
-          <div onClick={() => setAberto(false)}>{children}</div>
+          <DropdownContext.Provider value={closeOnClick ? () => setAberto(false) : undefined}>
+            {children}
+          </DropdownContext.Provider>
         </div>
       )}
     </div>
@@ -112,11 +117,12 @@ interface DropdownItemProps {
 }
 
 export function DropdownItem({ children, onClick, perigo, className }: DropdownItemProps) {
+  const closeDropdown = useContext(DropdownContext);
   return (
     <button
       role="menuitem"
       tabIndex={-1}
-      onClick={onClick}
+      onClick={() => { onClick?.(); closeDropdown?.(); }}
       className={cn(
         "w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-smooth rounded-[8px] mx-1 outline-none",
         className

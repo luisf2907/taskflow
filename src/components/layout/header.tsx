@@ -4,19 +4,16 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTema } from "@/hooks/use-tema";
 import { HelpCircle, LogOut, Menu, Moon, Sun, User } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { Tooltip } from "@/components/ui/tooltip";
+import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 
 export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
   const { tema, alternar } = useTema();
   const { user, perfil, logout } = useAuth();
-  const [menuAberto, setMenuAberto] = useState(false);
   const isMac = useMemo(() => typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.userAgent), []);
-  const pathname = usePathname();
-  const menuRef = useRef<HTMLDivElement>(null);
 
   const avatar = perfil?.avatar_url;
   const nome = perfil?.nome ?? user?.email?.split("@")[0] ?? "";
@@ -27,37 +24,9 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
     .toUpperCase()
     .slice(0, 2);
 
-  // Close dropdown on route change
-  useEffect(() => {
-    setMenuAberto(false);
-  }, [pathname]);
-
-  // Keyboard navigation inside dropdown
-  const handleMenuKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      setMenuAberto(false);
-      return;
-    }
-
-    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
-    e.preventDefault();
-
-    const items = menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]');
-    if (!items?.length) return;
-
-    const current = document.activeElement as HTMLElement;
-    const idx = Array.from(items).indexOf(current);
-
-    if (e.key === "ArrowDown") {
-      items[idx < items.length - 1 ? idx + 1 : 0]?.focus();
-    } else {
-      items[idx > 0 ? idx - 1 : items.length - 1]?.focus();
-    }
-  }, []);
-
   return (
     <header
-      className="h-[68px] mt-3.5 px-4 md:px-12 xl:pl-12 xl:pr-10 rounded-[32px] flex items-center justify-between shrink-0 mb-3 z-30 relative"
+      className="h-[68px] mt-3.5 pl-4 pr-[22px] md:pl-12 md:pr-[54px] xl:pl-12 xl:pr-[46px] rounded-[32px] flex items-center justify-between shrink-0 mb-3 z-30 relative"
       style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
     >
       {/* Mobile menu button */}
@@ -135,80 +104,49 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
         </Tooltip>
 
         {/* Profile Pill */}
-        <div className="relative flex items-center justify-center">
+        <div className="flex items-center justify-center">
           {user ? (
-            <>
-              <button
-                onClick={() => setMenuAberto(!menuAberto)}
-                aria-label="Menu do perfil"
-                aria-expanded={menuAberto}
-                aria-haspopup="true"
-                className="flex items-center gap-2.5 pr-3 sm:pr-5 pl-2 py-2 rounded-[20px] transition-all hover:-translate-y-0.5 border"
-                style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)" }}
-              >
-                {avatar ? (
-                  <img src={avatar} alt={nome} className="w-8 h-8 rounded-[14px] shrink-0" />
-                ) : (
-                  <div
-                    className="w-8 h-8 rounded-[14px] flex items-center justify-center text-[12px] font-black shrink-0"
-                    style={{ background: "var(--tf-accent)", color: "white" }}
-                  >
-                    {iniciais || <User size={14} strokeWidth={2.5} />}
-                  </div>
-                )}
-                <span className="hidden sm:inline text-[14px] font-bold tracking-tight" style={{ color: "var(--tf-text)" }}>
-                  {nome || "Conta"}
-                </span>
-                <svg className="w-3.5 h-3.5 ml-1 transition-transform" style={{ color: "var(--tf-text-tertiary)", transform: menuAberto ? "rotate(180deg)" : "none" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {/* Dropdown Menu */}
-              {menuAberto && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setMenuAberto(false)} />
-                  <div
-                    ref={menuRef}
-                    role="menu"
-                    onKeyDown={handleMenuKeyDown}
-                    className="absolute top-[calc(100%+12px)] left-1/2 z-50 w-56 rounded-[20px] p-2.5 origin-top border"
-                    style={{
-                      marginLeft: "-112px",
-                      background: "var(--tf-surface)",
-                      borderColor: "var(--tf-border)",
-                      animation: "dropdownExpandDown 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards"
-                    }}
-                  >
-                    <div className="px-4 py-3 mb-2.5 rounded-[14px]" style={{ background: "var(--tf-bg)" }}>
-                      <p className="text-[15px] font-bold tracking-tight truncate" style={{ color: "var(--tf-text)" }}>{nome}</p>
-                      <p className="text-[12px] font-medium truncate mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>{user.email}</p>
+            <Dropdown
+              trigger={
+                <div
+                  className="flex items-center gap-2.5 pr-3 sm:pr-5 pl-2 py-2 rounded-[20px] transition-all hover:-translate-y-0.5 border cursor-pointer"
+                  style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)" }}
+                >
+                  {avatar ? (
+                    <img src={avatar} alt={nome} className="w-8 h-8 rounded-[14px] shrink-0" />
+                  ) : (
+                    <div
+                      className="w-8 h-8 rounded-[14px] flex items-center justify-center text-[12px] font-black shrink-0"
+                      style={{ background: "var(--tf-accent)", color: "white" }}
+                    >
+                      {iniciais || <User size={14} strokeWidth={2.5} />}
                     </div>
+                  )}
+                  <span className="hidden sm:inline text-[14px] font-bold tracking-tight" style={{ color: "var(--tf-text)" }}>
+                    {nome || "Conta"}
+                  </span>
+                  <svg className="w-3.5 h-3.5 ml-1" style={{ color: "var(--tf-text-tertiary)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              }
+              className="w-56 !rounded-[20px] !p-2.5 !right-auto !left-1/2 !-ml-[112px] !mt-3"
+            >
+              <div className="px-4 py-3 mb-2.5 rounded-[14px]" style={{ background: "var(--tf-bg)" }}>
+                <p className="text-[15px] font-bold tracking-tight truncate" style={{ color: "var(--tf-text)" }}>{nome}</p>
+                <p className="text-[12px] font-medium truncate mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>{user.email}</p>
+              </div>
 
-                    <Link
-                      href="/settings"
-                      role="menuitem"
-                      tabIndex={0}
-                      onClick={() => setMenuAberto(false)}
-                      className="flex items-center gap-2.5 px-4 py-3 rounded-[14px] text-[13px] font-bold hover-menu-item"
-                      style={{ color: "var(--tf-text-secondary)" }}
-                    >
-                      <User size={15} /> Configurações
-                    </Link>
+              <DropdownItem onClick={() => {}}>
+                <Link href="/settings" className="flex items-center gap-2.5 w-full" style={{ color: "var(--tf-text-secondary)" }}>
+                  <User size={15} /> Configurações
+                </Link>
+              </DropdownItem>
 
-                    <button
-                      role="menuitem"
-                      tabIndex={0}
-                      onClick={logout}
-                      className="w-full flex items-center gap-2.5 px-4 py-3 rounded-[14px] text-[13px] font-bold hover-danger-bg mt-1"
-                      style={{ color: "var(--tf-danger)" }}
-                    >
-                      <LogOut size={15} /> Sair
-                    </button>
-                  </div>
-                </>
-              )}
-            </>
+              <DropdownItem onClick={logout} perigo>
+                <LogOut size={15} /> Sair
+              </DropdownItem>
+            </Dropdown>
           ) : (
             <div className="flex items-center gap-2.5 pr-5 pl-2 py-2 rounded-[20px] border animate-pulse"
               style={{ borderColor: "var(--tf-border)" }}>

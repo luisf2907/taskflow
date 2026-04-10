@@ -131,7 +131,7 @@ export const Coluna = memo(function Coluna({
       </div>
 
       {/* Cards */}
-      <div className="flex-1 overflow-y-auto px-2.5 pb-1 space-y-2 min-h-[8px]" style={{ scrollbarWidth: "none" }}>
+      <div className="flex-1 overflow-y-auto px-2.5 pb-1 space-y-2 min-h-[8px] scroll-inset">
         <SortableContext items={cartoes.map((c) => c.id)} strategy={verticalListSortingStrategy}>
           {cartoes.map((cartao) => (
             <Cartao key={cartao.id} cartao={cartao} etiquetas={etiquetas} membros={membros} onClick={() => onCartaoClick(cartao)} />

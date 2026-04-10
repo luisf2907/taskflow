@@ -255,14 +255,14 @@ export default function ReuniaoDetailPage() {
       <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
         <Header onMenuMobile={toggleSidebar} />
 
-        <main
-          id="main-content"
-          className="flex-1 overflow-y-auto rounded-[32px] mb-4 no-scrollbar"
+        <div
+          className="flex-1 rounded-[32px] mb-4 overflow-hidden flex flex-col scroll-clip-lg"
           style={{
             background: "var(--tf-surface)",
             border: "1px solid var(--tf-border)",
           }}
         >
+        <main id="main-content" className="flex-1 overflow-y-auto">
           {!reuniao ? (
             <div className="flex items-center justify-center h-full">
               <Loader2
@@ -517,6 +517,7 @@ export default function ReuniaoDetailPage() {
           </div>
           )}
         </main>
+        </div>
       </div>
     </div>
   );

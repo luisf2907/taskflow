@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal } from "@/components/ui/modal";
+import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { GitPullRequest, Loader2, ChevronDown, ExternalLink, Check, LinkIcon, Users, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
@@ -38,11 +39,8 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
   const [cards, setCards] = useState<CardOption[]>([]);
   const [carregandoCards, setCarregandoCards] = useState(false);
   const [cardSelecionado, setCardSelecionado] = useState<string | null>(null);
-  const [mostrarCards, setMostrarCards] = useState(false);
-
   // Reviewers
   const [reviewersSelecionados, setReviewersSelecionados] = useState<string[]>([]);
-  const [mostrarReviewers, setMostrarReviewers] = useState(false);
 
   // Membros com GitHub (para reviewer selection) — deduplicar por user_id
   const membrosComGithub = membros.filter((m) => !!m.user_id)
@@ -59,8 +57,6 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
       setSucesso(null);
       setCardSelecionado(null);
       setReviewersSelecionados([]);
-      setMostrarCards(false);
-      setMostrarReviewers(false);
       return;
     }
 
@@ -353,43 +349,34 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
                 </button>
               </div>
             ) : (
-              <div className="relative">
-                <button
-                  onClick={() => setMostrarCards(!mostrarCards)}
-                  className="w-full text-left text-sm px-3 py-2 rounded-[8px] border"
-                  style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}
-                >
-                  {carregandoCards ? "Carregando cards..." : "Selecionar card..."}
-                </button>
-                {mostrarCards && (
+              <Dropdown
+                trigger={
                   <div
-                    className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto rounded-[8px] border"
-                    style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)", scrollbarWidth: "thin" }}
+                    className="w-full text-left text-sm px-3 py-2 rounded-[8px] border cursor-pointer"
+                    style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}
                   >
-                    {cards.length === 0 ? (
-                      <p className="text-xs text-center py-4" style={{ color: "var(--tf-text-tertiary)" }}>
-                        Nenhum card disponível
-                      </p>
-                    ) : (
-                      cards.map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => { setCardSelecionado(c.id); setMostrarCards(false); }}
-                          className="w-full text-left px-3 py-2 text-sm transition-smooth"
-                          style={{ color: "var(--tf-text)" }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-bg-secondary)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                        >
-                          <p className="font-medium truncate">{c.titulo}</p>
-                          {c.coluna_nome && (
-                            <p className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>{c.coluna_nome}</p>
-                          )}
-                        </button>
-                      ))
-                    )}
+                    {carregandoCards ? "Carregando cards..." : "Selecionar card..."}
                   </div>
+                }
+                className="!left-0 !right-0 w-full max-h-48 overflow-y-auto"
+              >
+                {cards.length === 0 ? (
+                  <p className="text-xs text-center py-4" style={{ color: "var(--tf-text-tertiary)" }}>
+                    Nenhum card disponível
+                  </p>
+                ) : (
+                  cards.map((c) => (
+                    <DropdownItem key={c.id} onClick={() => setCardSelecionado(c.id)}>
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{c.titulo}</p>
+                        {c.coluna_nome && (
+                          <p className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>{c.coluna_nome}</p>
+                        )}
+                      </div>
+                    </DropdownItem>
+                  ))
                 )}
-              </div>
+              </Dropdown>
             )}
           </div>
 
@@ -429,51 +416,41 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
                 </div>
               )}
 
-              <button
-                onClick={() => setMostrarReviewers(!mostrarReviewers)}
-                className="w-full text-left text-sm px-3 py-2 rounded-[8px] border"
-                style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}
+              <Dropdown
+                trigger={
+                  <div
+                    className="w-full text-left text-sm px-3 py-2 rounded-[8px] border cursor-pointer"
+                    style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}
+                  >
+                    Adicionar reviewer...
+                  </div>
+                }
+                className="!left-0 !right-0 w-full max-h-40 overflow-y-auto"
               >
-                Adicionar reviewer...
-              </button>
-
-              {mostrarReviewers && (
-                <div
-                  className="mt-1 max-h-40 overflow-y-auto rounded-[8px] border"
-                  style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)", scrollbarWidth: "thin" }}
-                >
-                  {membrosComGithub
-                    .filter((m) => !reviewersSelecionados.includes(m.user_id!))
-                    .map((m) => (
-                      <button
-                        key={m.user_id}
-                        onClick={() => {
-                          setReviewersSelecionados((prev) => [...prev, m.user_id!]);
-                          setMostrarReviewers(false);
-                        }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-smooth"
-                        style={{ color: "var(--tf-text)" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-bg-secondary)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                      >
-                        {m.avatar_url ? (
-                          <img src={m.avatar_url} alt="" className="w-6 h-6 rounded-full shrink-0" />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: m.cor_avatar }}>
-                            {m.nome.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <span className="font-medium">{m.nome}</span>
-                        {m.email && (
-                          <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>{m.email}</span>
-                        )}
-                      </button>
-                    ))}
-                  {membrosComGithub.filter((m) => !reviewersSelecionados.includes(m.user_id!)).length === 0 && (
-                    <p className="text-xs py-3 text-center" style={{ color: "var(--tf-text-tertiary)" }}>Todos já selecionados</p>
-                  )}
-                </div>
-              )}
+                {membrosComGithub
+                  .filter((m) => !reviewersSelecionados.includes(m.user_id!))
+                  .map((m) => (
+                    <DropdownItem
+                      key={m.user_id}
+                      onClick={() => setReviewersSelecionados((prev) => [...prev, m.user_id!])}
+                    >
+                      {m.avatar_url ? (
+                        <img src={m.avatar_url} alt="" className="w-6 h-6 rounded-full shrink-0" />
+                      ) : (
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: m.cor_avatar }}>
+                          {m.nome.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <span className="font-medium">{m.nome}</span>
+                      {m.email && (
+                        <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>{m.email}</span>
+                      )}
+                    </DropdownItem>
+                  ))}
+                {membrosComGithub.filter((m) => !reviewersSelecionados.includes(m.user_id!)).length === 0 && (
+                  <p className="text-xs py-3 text-center" style={{ color: "var(--tf-text-tertiary)" }}>Todos já selecionados</p>
+                )}
+              </Dropdown>
             </div>
           )}
 

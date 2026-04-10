@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Download } from "lucide-react";
 import { exportCSV, exportJSON } from "@/lib/export";
@@ -14,6 +14,7 @@ interface ExportDropdownProps {
 export function ExportDropdown({ cartoes, nomeWorkspace }: ExportDropdownProps) {
   const [aberto, setAberto] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
 
   function handleToggle() {
@@ -29,6 +30,21 @@ export function ExportDropdown({ cartoes, nomeWorkspace }: ExportDropdownProps) 
     else exportJSON(cartoes, `${nomeWorkspace}-export.json`);
     setAberto(false);
   }
+
+  // Close on click outside
+  useEffect(() => {
+    if (!aberto) return;
+    function handleClickFora(e: MouseEvent) {
+      if (
+        menuRef.current && !menuRef.current.contains(e.target as Node) &&
+        btnRef.current && !btnRef.current.contains(e.target as Node)
+      ) {
+        setAberto(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickFora);
+    return () => document.removeEventListener("mousedown", handleClickFora);
+  }, [aberto]);
 
   return (
     <>
@@ -47,53 +63,37 @@ export function ExportDropdown({ cartoes, nomeWorkspace }: ExportDropdownProps) 
 
       {aberto &&
         createPortal(
-          <>
-            <div
-              className="fixed inset-0 z-[60]"
-              onClick={() => setAberto(false)}
-            />
-            <div
-              className="fixed rounded-[12px] border z-[70] overflow-hidden"
-              style={{
-                top: pos.top,
-                left: pos.left,
-                width: 130,
-                background: "var(--tf-surface-raised)",
-                borderColor: "var(--tf-border)",
-                boxShadow: "var(--tf-shadow-md)",
-              }}
+          <div
+            ref={menuRef}
+            className="fixed rounded-[14px] border z-[70] overflow-hidden py-1.5"
+            style={{
+              top: pos.top,
+              left: pos.left,
+              width: 130,
+              background: "var(--tf-surface-raised)",
+              borderColor: "var(--tf-border)",
+              boxShadow: "var(--tf-shadow-md)",
+            }}
+          >
+            <button
+              onClick={() => handleExport("csv")}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-smooth rounded-[8px] mx-1 outline-none"
+              style={{ color: "var(--tf-text)", width: "calc(100% - 8px)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              <button
-                onClick={() => handleExport("csv")}
-                className="block w-full px-4 py-2.5 text-[13px] font-semibold text-left"
-                style={{
-                  color: "var(--tf-text)",
-                  borderBottom: "1px solid var(--tf-border-subtle)",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "var(--tf-surface-hover)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "transparent")
-                }
-              >
-                CSV
-              </button>
-              <button
-                onClick={() => handleExport("json")}
-                className="block w-full px-4 py-2.5 text-[13px] font-semibold text-left"
-                style={{ color: "var(--tf-text)" }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "var(--tf-surface-hover)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "transparent")
-                }
-              >
-                JSON
-              </button>
-            </div>
-          </>,
+              CSV
+            </button>
+            <button
+              onClick={() => handleExport("json")}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-smooth rounded-[8px] mx-1 outline-none"
+              style={{ color: "var(--tf-text)", width: "calc(100% - 8px)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              JSON
+            </button>
+          </div>,
           document.body
         )}
     </>

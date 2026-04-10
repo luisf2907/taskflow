@@ -287,7 +287,8 @@ export default function ReposPage() {
       />
       <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
         <Header onMenuMobile={toggleSidebar} />
-        <main id="main-content" className="flex-1 overflow-y-auto rounded-[32px] mb-4 p-8" style={{ background: "var(--tf-surface)" }}>
+        <div className="flex-1 rounded-[32px] mb-4 overflow-hidden flex flex-col scroll-clip-lg" style={{ background: "var(--tf-surface)" }}>
+        <main id="main-content" className="flex-1 overflow-y-auto p-8">
           {!repoAberto ? (
             /* ═══ LISTA DE REPOS ═══ */
             <div className="max-w-4xl mx-auto space-y-6">
@@ -493,6 +494,7 @@ export default function ReposPage() {
             </div>
           )}
         </main>
+        </div>
       </div>
 
       <ModalConectarRepoLocal

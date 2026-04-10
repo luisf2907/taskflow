@@ -452,7 +452,7 @@ export default function PaginaWorkspace() {
 
       <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
         <Header onMenuMobile={toggleSidebar} />
-        <main id="main-content" className="flex-1 overflow-y-auto pb-4 no-scrollbar" style={{ background: "transparent" }}>
+        <main id="main-content" className="flex-1 overflow-y-auto pb-4" style={{ background: "transparent", scrollbarGutter: "stable" }}>
 
           {/* GRID ÚNICO — hero + conteúdo alinhados */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
