@@ -238,21 +238,6 @@ export default function ReuniaoDetailPage() {
 
   const progressPct = duration > 0 ? (currentMs / duration) * 100 : 0;
 
-  if (!reuniao) {
-    return (
-      <div
-        className="h-full flex items-center justify-center"
-        style={{ background: "var(--tf-bg)" }}
-      >
-        <Loader2
-          size={24}
-          className="animate-spin"
-          style={{ color: "var(--tf-accent)" }}
-        />
-      </div>
-    );
-  }
-
   return (
     <div
       className="h-full flex overflow-hidden"
@@ -278,6 +263,15 @@ export default function ReuniaoDetailPage() {
             border: "1px solid var(--tf-border)",
           }}
         >
+          {!reuniao ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2
+                size={24}
+                className="animate-spin"
+                style={{ color: "var(--tf-accent)" }}
+              />
+            </div>
+          ) : (
           <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
             {/* Breadcrumb */}
             <button
@@ -521,6 +515,7 @@ export default function ReuniaoDetailPage() {
 
             <div className="h-8" />
           </div>
+          )}
         </main>
       </div>
     </div>
