@@ -73,6 +73,19 @@ export default function PaginaInicial() {
   const router = useRouter();
   const carregando = carregandoQuadros || carregandoWs;
 
+  // Listener para abrir modal de workspace via evento global (sidebar) ou query param
+  useEffect(() => {
+    function handleOpenWsModal() { setEditandoWs(null); setModalWorkspace(true); }
+    window.addEventListener("open-workspace-modal", handleOpenWsModal);
+    // Abrir via query param (?new-workspace=1)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new-workspace")) {
+      handleOpenWsModal();
+      window.history.replaceState({}, "", "/dashboard");
+    }
+    return () => window.removeEventListener("open-workspace-modal", handleOpenWsModal);
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     // Onboarding persistente: usa perfil.onboarding_done (banco) com fallback para localStorage

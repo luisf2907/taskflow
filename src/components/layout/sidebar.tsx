@@ -129,7 +129,13 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
             </button>
           </div>
 
-          <WorkspaceSwitcher aberta={aberta} onNovoWorkspace={() => console.log('Abrir modal de novo workspace')} />
+          <WorkspaceSwitcher aberta={aberta} onNovoWorkspace={() => {
+            if (window.location.pathname === "/dashboard") {
+              window.dispatchEvent(new Event("open-workspace-modal"));
+            } else {
+              window.location.href = "/dashboard?new-workspace=1";
+            }
+          }} />
 
           {/* Navegação Contextual (Apenas visível se tiver workspace selecionado) */}
           {activeWorkspaceId && (
@@ -200,7 +206,7 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
                 <div className={cn("flex items-center mb-1", aberta ? "justify-between px-1" : "justify-center")}>
                   {aberta && (
                     <span className="sidebar-fade text-[11px] font-bold uppercase tracking-widest text-[var(--tf-text-tertiary)] opacity-100 flex-1">
-                      Projetos
+                      Sprints
                     </span>
                   )}
                   <button onClick={onNovoQuadro} aria-label="Criar novo quadro" className={cn("p-1.5 rounded-[8px] hover:bg-[var(--tf-surface-hover)] sidebar-item", !aberta && "bg-[var(--tf-bg-secondary)]")} style={{ color: "var(--tf-text-tertiary)" }} title="Novo quadro">
@@ -213,7 +219,7 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
                   ) : (
                     aberta && (
                       <div className="px-2 py-3 text-[12px] text-center border border-dashed rounded-[10px]" style={{ color: "var(--tf-text-tertiary)", borderColor: "var(--tf-border)" }}>
-                        Nenhum quadro criado.
+                        Nenhuma sprint criada.
                       </div>
                     )
                   )}
