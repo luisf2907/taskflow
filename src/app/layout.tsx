@@ -51,7 +51,7 @@ export default function RootLayout({
       <head>
         <script src="/theme-init.js" />
       </head>
-      <body className={`${dmSans.className} h-full antialiased`}>
+      <body className={`${dmSans.className} h-full antialiased`} suppressHydrationWarning>
 
         <SWRProvider>
           <ErrorBoundary>
