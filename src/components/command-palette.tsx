@@ -278,7 +278,7 @@ export function CommandPalette() {
         )}
 
         {/* Results */}
-        <div className="max-h-[360px] overflow-y-auto py-2 px-2" style={{ scrollbarWidth: "thin" }}>
+        <div className="max-h-[360px] overflow-y-auto py-2 px-2" style={{ scrollbarWidth: "thin" }} aria-live="polite" aria-atomic="true">
           {busca.trim() === "" ? (
             <div className="flex flex-col items-center justify-center py-10 gap-2">
               <Search size={28} style={{ color: "var(--tf-border)" }} />

@@ -26,7 +26,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
 
   return (
     <header
-      className="h-[68px] mt-3.5 pl-4 pr-[22px] md:pl-12 md:pr-[54px] xl:pl-12 xl:pr-[46px] rounded-[32px] flex items-center justify-between shrink-0 mb-3 z-30 relative"
+      className="h-[68px] mt-3.5 px-4 md:px-12 xl:pl-12 xl:pr-10 rounded-[32px] flex items-center justify-between shrink-0 mb-3 z-30 relative"
       style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
     >
       {/* Mobile menu button */}

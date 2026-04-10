@@ -21,6 +21,7 @@ export function NotificationBell() {
   const trigger = (
     <div
       className="relative hover-accent-text transition-all flex items-center justify-center cursor-pointer"
+      aria-label={naoLidas > 0 ? `Notificações — ${naoLidas} não lida${naoLidas > 1 ? "s" : ""}` : "Notificações"}
       style={{
         width: 42,
         height: 42,
@@ -29,10 +30,11 @@ export function NotificationBell() {
         color: "var(--tf-text-secondary)",
       }}
     >
-      <Bell size={18} strokeWidth={2.5} />
+      <Bell size={18} strokeWidth={2.5} aria-hidden="true" />
       {naoLidas > 0 && (
         <span
           className="absolute -top-1 -right-1 flex items-center justify-center font-bold"
+          aria-hidden="true"
           style={{
             width: 20,
             height: 20,
@@ -83,7 +85,7 @@ export function NotificationBell() {
       </div>
 
       {/* List */}
-      <div className="overflow-y-auto" style={{ maxHeight: 360 }}>
+      <div className="overflow-y-auto" style={{ maxHeight: 360 }} role="list" aria-label="Notificações">
         {notificacoes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 gap-2">
             <Bell size={28} style={{ color: "var(--tf-text-tertiary)" }} />
@@ -93,9 +95,10 @@ export function NotificationBell() {
           </div>
         ) : (
           notificacoes.map((n) => (
-            <div
+            <button
               key={n.id}
-              className="group flex items-start gap-3 px-4 py-3 cursor-pointer hover-surface transition-all"
+              role="listitem"
+              className="group flex items-start gap-3 px-4 py-3 cursor-pointer hover-surface transition-all w-full text-left"
               style={{ borderBottom: "1px solid var(--tf-border-subtle)" }}
               onClick={() => {
                 marcarComoLida(n.id);
@@ -147,7 +150,7 @@ export function NotificationBell() {
               >
                 <X size={13} />
               </button>
-            </div>
+            </button>
           ))
         )}
       </div>

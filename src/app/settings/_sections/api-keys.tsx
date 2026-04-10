@@ -409,7 +409,7 @@ function ExpirationBadge({ expiresAt }: { expiresAt: string | null }) {
     return (
       <span
         className="text-[9px] font-bold px-1.5 py-0.5 rounded-[4px]"
-        style={{ color: "#f59e0b", background: "rgba(245, 158, 11, 0.1)" }}
+        style={{ color: "var(--tf-accent-yellow)", background: "var(--tf-warning-bg)" }}
       >
         Expira em {daysLeft}d
       </span>

@@ -4,6 +4,7 @@ import { Modal } from "@/components/ui/modal";
 import { Botao } from "@/components/ui/botao";
 import { toast } from "@/hooks/use-toast";
 import { Etiqueta } from "@/types";
+import { getContrastTextColor } from "@/lib/colors";
 import { Sparkles, Zap, Trash2, Plus, Loader2, CheckSquare, Tag } from "lucide-react";
 import { useState, useCallback } from "react";
 
@@ -160,8 +161,8 @@ export function GerarCardsModal({ aberto, onFechar, workspaceId, etiquetas = [],
               {etiquetas.map((e) => (
                 <span
                   key={e.id}
-                  className="px-1.5 py-[1px] rounded text-[9px] font-bold text-white"
-                  style={{ backgroundColor: e.cor }}
+                  className="px-1.5 py-[1px] rounded text-[9px] font-bold"
+                  style={{ backgroundColor: e.cor, color: getContrastTextColor(e.cor) }}
                 >
                   {e.nome}
                 </span>

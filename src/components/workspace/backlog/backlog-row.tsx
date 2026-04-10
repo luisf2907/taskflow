@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { CartaoBacklog } from "@/hooks/use-backlog";
 import type { Etiqueta, Quadro } from "@/types";
+import { getContrastTextColor } from "@/lib/colors";
 
 interface BacklogRowProps {
   tarefa: CartaoBacklog;
@@ -91,8 +92,8 @@ export function BacklogRow({
             {etiquetasDoCartao.map((e) => (
               <span
                 key={e.id}
-                className="px-1.5 py-[1px] rounded text-[9px] font-bold text-white"
-                style={{ backgroundColor: e.cor }}
+                className="px-1.5 py-[1px] rounded text-[9px] font-bold"
+                style={{ backgroundColor: e.cor, color: getContrastTextColor(e.cor) }}
               >
                 {e.nome}
               </span>

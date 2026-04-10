@@ -63,6 +63,8 @@ export function BarraFiltros({ filtros, onChange, etiquetas, membros }: BarraFil
       {/* Toggle filtros */}
       <button
         onClick={() => setExpandido(!expandido)}
+        aria-expanded={expandido}
+        aria-label="Filtros"
         className="flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] font-medium rounded-[8px] transition-smooth"
         style={{
           background: expandido || totalAtivos > 0 ? "var(--tf-accent-light)" : "var(--tf-surface)",

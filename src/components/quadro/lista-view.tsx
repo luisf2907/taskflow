@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight, CheckSquare, Paperclip, Calendar, GitPullRequest } from "lucide-react";
 import type { Coluna, Etiqueta, Membro } from "@/types";
 import type { CartaoComResumo } from "@/hooks/use-cartoes";
+import { getContrastTextColor } from "@/lib/colors";
 
 interface ListaViewProps {
   colunas: Coluna[];
@@ -47,7 +48,7 @@ export function ListaView({ colunas, cartoesFiltradosPorColuna, etiquetas, membr
               <button
                 onClick={() => toggleColuna(coluna.id)}
                 className="w-full flex items-center gap-2 px-4 py-3"
-                style={{ background: "var(--tf-bg-secondary)" }}
+                style={{ background: "var(--tf-surface-hover)", borderBottom: "1px solid var(--tf-border)" }}
               >
                 {colapsada ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
                 <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: "var(--tf-text)" }}>
@@ -92,9 +93,8 @@ export function ListaView({ colunas, cartoesFiltradosPorColuna, etiquetas, membr
                           <span
                             className="flex-1 text-[13px] font-medium truncate"
                             style={{
-                              color: "var(--tf-text)",
+                              color: concluido ? "var(--tf-text-tertiary)" : "var(--tf-text)",
                               textDecoration: concluido ? "line-through" : "none",
-                              opacity: concluido ? 0.6 : 1,
                             }}
                           >
                             {card.titulo}
@@ -107,7 +107,7 @@ export function ListaView({ colunas, cartoesFiltradosPorColuna, etiquetas, membr
                                 <span
                                   key={e.id}
                                   className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                                  style={{ background: `${e.cor}22`, color: e.cor }}
+                                  style={{ background: e.cor, color: getContrastTextColor(e.cor) }}
                                 >
                                   {e.nome}
                                 </span>

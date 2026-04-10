@@ -41,7 +41,7 @@ export function TabelaView({ colunas, cartoesFiltradosPorColuna, etiquetas, memb
       >
         <table className="w-full text-[12px]" style={{ borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: "var(--tf-bg-secondary)" }}>
+            <tr style={{ background: "var(--tf-surface-hover)", borderBottom: "1px solid var(--tf-border)" }}>
               {[
                 { label: "Título", w: "auto" },
                 { label: "Status", w: "120px" },
@@ -82,9 +82,8 @@ export function TabelaView({ colunas, cartoesFiltradosPorColuna, etiquetas, memb
                     <span
                       className="font-semibold truncate block"
                       style={{
-                        color: "var(--tf-text)",
+                        color: concluido ? "var(--tf-text-tertiary)" : "var(--tf-text)",
                         textDecoration: concluido ? "line-through" : "none",
-                        opacity: concluido ? 0.6 : 1,
                       }}
                     >
                       {card.titulo}

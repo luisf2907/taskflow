@@ -405,7 +405,7 @@ export function MetricasWorkspace({
               ? `mediana ${leadTimeData.mediana}d · ${leadTimeData.total} cards`
               : "sem dados"
           }
-          cor="#F59E0B"
+          cor="var(--tf-accent-yellow)"
         />
         <StatCard
           icone={Timer}

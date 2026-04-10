@@ -67,7 +67,7 @@ function CheckIcon() {
 }
 
 function XIcon() {
-  return <X size={16} style={{ color: "var(--tf-text-tertiary)", opacity: 0.4 }} />;
+  return <X size={16} style={{ color: "var(--tf-border)" }} aria-hidden="true" />;
 }
 
 export default function PricingPage() {

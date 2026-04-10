@@ -323,10 +323,10 @@ export default function ReuniaoDetailPage() {
             {/* Status card (processing/error) */}
             {reuniao.status === "pending" && (
               <InfoBox
-                icon={<Clock size={16} style={{ color: "#f59e0b" }} />}
+                icon={<Clock size={16} style={{ color: "var(--tf-accent-yellow)" }} />}
                 title="Pendente"
                 body="Aguardando o worker pegar este job. Geralmente leva alguns segundos."
-                color="#f59e0b"
+                color="var(--tf-accent-yellow)"
               />
             )}
             {reuniao.status === "processing" && (
@@ -715,7 +715,7 @@ function StatusBadge({ status }: { status: ReuniaoStatus }) {
       color: "var(--tf-accent)",
       icon: Loader2,
     },
-    pending: { label: "Pendente", color: "#f59e0b", icon: Clock },
+    pending: { label: "Pendente", color: "var(--tf-accent-yellow)", icon: Clock },
     error: { label: "Erro", color: "var(--tf-danger)", icon: AlertCircle },
   }[status];
   const Icon = info.icon;

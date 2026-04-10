@@ -27,7 +27,7 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
       if (e.key !== "Tab" || !dialogRef.current) return;
 
       const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), textarea, input:not([disabled]), select, [tabindex]:not([tabindex="-1"])'
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [role="button"]:not([disabled]), [role="menuitem"], [tabindex]:not([tabindex="-1"])'
       );
       if (focusable.length === 0) return;
 

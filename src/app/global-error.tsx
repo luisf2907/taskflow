@@ -13,7 +13,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
       <body>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", fontFamily: "system-ui" }}>
           <h2 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1rem" }}>Algo deu errado</h2>
-          <p style={{ color: "#666", marginBottom: "1.5rem" }}>Um erro inesperado ocorreu. Nossa equipe foi notificada.</p>
+          <p style={{ color: "#6B7B78", marginBottom: "1.5rem" }}>Um erro inesperado ocorreu. Nossa equipe foi notificada.</p>
           <button
             onClick={reset}
             style={{ padding: "0.75rem 1.5rem", background: "#00857A", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold" }}

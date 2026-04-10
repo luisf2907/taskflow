@@ -8,6 +8,7 @@ import { CartaoComResumo } from "@/hooks/use-cartoes";
 import { useChecklists } from "@/hooks/use-checklists";
 import { useComentarios } from "@/hooks/use-comentarios";
 import { Etiqueta, Membro } from "@/types";
+import { getContrastTextColor } from "@/lib/colors";
 import { mutate as globalMutate } from "swr";
 import {
   AlignLeft,
@@ -326,8 +327,8 @@ export function DetalheCartao({
                 {etiquetasDoCartao.map((e) => (
                   <span
                     key={e.id}
-                    className="px-2.5 py-0.5 rounded-full text-[11px] font-bold text-white"
-                    style={{ backgroundColor: e.cor }}
+                    className="px-2.5 py-0.5 rounded-full text-[11px] font-bold"
+                    style={{ backgroundColor: e.cor, color: getContrastTextColor(e.cor) }}
                   >
                     {e.nome}
                   </span>

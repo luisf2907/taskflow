@@ -40,9 +40,8 @@ export function TaskLineItem({ task }: TaskLineItemProps) {
         <p
           className="text-[13px] font-bold truncate tracking-tight transition-colors group-hover:text-amber-500"
           style={{
-            color: "var(--tf-text)",
+            color: concluida ? "var(--tf-text-tertiary)" : "var(--tf-text)",
             textDecoration: concluida ? "line-through" : "none",
-            opacity: concluida ? 0.6 : 1,
           }}
         >
           {task.titulo}

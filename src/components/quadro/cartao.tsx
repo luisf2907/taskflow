@@ -18,6 +18,7 @@ import { memo, useMemo } from "react";
 import { CartaoComResumo } from "@/hooks/use-cartoes";
 import { formatarData, statusData } from "./seletor-data";
 import { GrupoAvatar } from "./avatar";
+import { getContrastTextColor } from "@/lib/colors";
 
 interface CartaoProps {
   cartao: CartaoComResumo;
@@ -47,6 +48,9 @@ export const Cartao = memo(function Cartao({ cartao, etiquetas, membros, onClick
       style={style}
       {...attributes}
       {...listeners}
+      role="button"
+      aria-label={`Card: ${cartao.titulo}`}
+      aria-roledescription="cartão arrastável"
       className={cn(
         "card-surface px-3.5 py-3 cursor-pointer group",
         isDragging && "opacity-60 rotate-2 scale-[1.02]"
@@ -59,8 +63,8 @@ export const Cartao = memo(function Cartao({ cartao, etiquetas, membros, onClick
           {etiquetasDoCartao.map((etiqueta) => (
             <span
               key={etiqueta.id}
-              className="px-2 py-[2px] rounded-[4px] text-[10px] font-bold text-white leading-tight"
-              style={{ backgroundColor: etiqueta.cor }}
+              className="px-2 py-[2px] rounded-[4px] text-[10px] font-bold leading-tight"
+              style={{ backgroundColor: etiqueta.cor, color: getContrastTextColor(etiqueta.cor) }}
             >
               {etiqueta.nome}
             </span>

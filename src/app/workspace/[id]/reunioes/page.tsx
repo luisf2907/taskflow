@@ -183,17 +183,17 @@ export default function ReunioesPage() {
                 className="flex items-start gap-3 p-4 rounded-[14px]"
                 style={{
                   background: "var(--tf-warning-bg, rgba(251, 191, 36, 0.08))",
-                  border: "1px solid color-mix(in srgb, #f59e0b 15%, transparent)",
+                  border: "1px solid color-mix(in srgb, var(--tf-accent-yellow) 15%, transparent)",
                 }}
               >
                 <Mic
                   size={16}
-                  style={{ color: "#f59e0b", flexShrink: 0, marginTop: 2 }}
+                  style={{ color: "var(--tf-accent-yellow)", flexShrink: 0, marginTop: 2 }}
                 />
                 <div className="flex-1">
                   <p
                     className="text-[13px] font-bold"
-                    style={{ color: "#f59e0b" }}
+                    style={{ color: "var(--tf-accent-yellow)" }}
                   >
                     Cadastre sua voz
                   </p>
@@ -413,9 +413,9 @@ function getStatusInfo(status: ReuniaoStatus): {
     case "pending":
       return {
         label: "Pendente",
-        color: "#f59e0b",
+        color: "var(--tf-accent-yellow)",
         bg: "rgba(245, 158, 11, 0.1)",
-        icon: <Clock size={18} style={{ color: "#f59e0b" }} />,
+        icon: <Clock size={18} style={{ color: "var(--tf-accent-yellow)" }} />,
       };
     case "error":
       return {
