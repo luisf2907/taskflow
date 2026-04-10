@@ -365,7 +365,7 @@ export default function PaginaInicial() {
 
                 {/* ── RECENTES (Scroll Horizontal) ── */}
                 {recentes.length > 0 && (
-                  <section className="mb-14">
+                  <section className="mb-8">
                     <h2
                       className="text-[19px] font-black tracking-tight mb-5 flex items-center gap-2"
                       style={{ color: "var(--tf-text)" }}
@@ -375,7 +375,7 @@ export default function PaginaInicial() {
 
                     {/* Scroll Horizontal */}
                     <div
-                      className="flex overflow-x-auto gap-4 pt-3 pb-6 snap-x no-scrollbar scroll-pl-8 md:scroll-pl-12 -mx-8 px-8 md:-mx-12 md:px-12"
+                      className="flex overflow-x-auto gap-4 pt-3 pb-3 snap-x no-scrollbar scroll-pl-4 -mx-4 px-4"
                       style={{ overflowY: "visible" }}
                     >
                       {recentes.map((q) => (
@@ -387,7 +387,7 @@ export default function PaginaInicial() {
 
                 {/* ── WORKSPACES (GRID BENTO) ── */}
                 {workspaces.length > 0 && (
-                  <section className="mb-14">
+                  <section className="mb-8">
                     <h2
                       className="text-[19px] font-black tracking-tight mb-6"
                       style={{ color: "var(--tf-text)" }}
@@ -419,7 +419,7 @@ export default function PaginaInicial() {
                       <Grid3X3 size={20} /> Quadros Soltos
                     </h2>
                     <div
-                      className="flex overflow-x-auto gap-4 pt-3 pb-6 snap-x no-scrollbar scroll-pl-8 md:scroll-pl-12 -mx-8 px-8 md:-mx-12 md:px-12"
+                      className="flex overflow-x-auto gap-4 pt-3 pb-3 snap-x no-scrollbar scroll-pl-4 -mx-4 px-4"
                       style={{ overflowY: "visible" }}
                     >
                       {quadrosAvulsos.map((q) => (
