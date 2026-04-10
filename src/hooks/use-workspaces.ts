@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { Workspace } from "@/types";
+import { getRandomProjectColor } from "@/lib/colors";
 import useSWR, { mutate as globalMutate } from "swr";
 
 const CHAVE = "workspaces";
@@ -33,7 +34,7 @@ export function useWorkspaces() {
   async function criar(
     nome: string,
     descricao?: string,
-    cor: string = "#C4841D",
+    cor: string = getRandomProjectColor(),
     icone: string = "folder"
   ) {
     if (!nome.trim()) return null;

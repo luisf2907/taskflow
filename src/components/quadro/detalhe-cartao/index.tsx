@@ -569,7 +569,7 @@ export function DetalheCartao({
                       className="text-[11px] font-bold px-2 py-0.5 rounded-full"
                       style={{
                         background: cartao.pr_status === "open" ? "var(--tf-success-bg)" : cartao.pr_status === "merged" ? "#8b5cf622" : "var(--tf-danger-bg)",
-                        color: cartao.pr_status === "open" ? "var(--tf-success)" : cartao.pr_status === "merged" ? "#8b5cf6" : "var(--tf-danger)",
+                        color: cartao.pr_status === "open" ? "var(--tf-success)" : cartao.pr_status === "merged" ? "var(--tf-accent)" : "var(--tf-danger)",
                       }}
                     >
                       #{cartao.pr_numero}

@@ -49,11 +49,11 @@ function FileStatusIcon({ status }: { status: string }) {
 
 function FileStatusBadge({ status }: { status: string }) {
   const cores: Record<string, { bg: string; fg: string; label: string }> = {
-    added: { bg: "#22c55e20", fg: "#22c55e", label: "Adicionado" },
-    removed: { bg: "#ef444420", fg: "#ef4444", label: "Removido" },
-    modified: { bg: "#eab30820", fg: "#eab308", label: "Modificado" },
-    renamed: { bg: "#a855f720", fg: "#a855f7", label: "Renomeado" },
-    changed: { bg: "#3b82f620", fg: "#3b82f6", label: "Alterado" },
+    added: { bg: "var(--tf-success-bg)", fg: "var(--tf-success)", label: "Adicionado" },
+    removed: { bg: "var(--tf-danger-bg)", fg: "var(--tf-danger)", label: "Removido" },
+    modified: { bg: "var(--tf-warning-bg)", fg: "var(--tf-warning)", label: "Modificado" },
+    renamed: { bg: "var(--tf-surface-hover)", fg: "var(--tf-text-tertiary)", label: "Renomeado" },
+    changed: { bg: "var(--tf-accent-light)", fg: "var(--tf-accent)", label: "Alterado" },
   };
   const c = cores[status] || cores.changed;
   return (
@@ -75,11 +75,11 @@ function DiffView({ patch }: { patch: string }) {
         let bg = "transparent";
         let color = "var(--tf-text)";
         if (line.startsWith("+") && !line.startsWith("+++")) {
-          bg = "#22c55e12"; color = "#4ade80";
+          bg = "var(--tf-success-bg)"; color = "var(--tf-success)";
         } else if (line.startsWith("-") && !line.startsWith("---")) {
-          bg = "#ef444412"; color = "#f87171";
+          bg = "var(--tf-danger-bg)"; color = "var(--tf-danger)";
         } else if (line.startsWith("@@")) {
-          bg = "#3b82f610"; color = "#60a5fa";
+          bg = "var(--tf-accent-light)"; color = "var(--tf-accent)";
         }
         return (
           <div key={i} className="px-3 whitespace-pre min-h-5" style={{ background: bg, color }}>
@@ -308,17 +308,17 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
             <div className="flex items-center gap-2.5 mt-2 flex-wrap">
               {/* Status */}
               {ehMerged && (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[20px]" style={{ background: "#8b5cf620", color: "#8b5cf6" }}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[20px]" style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent)" }}>
                   <GitMerge size={13} /> Merged
                 </span>
               )}
               {ehClosed && (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[20px]" style={{ background: "#ef444420", color: "#ef4444" }}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[20px]" style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}>
                   <XCircle size={13} /> Fechado
                 </span>
               )}
               {ehAberto && (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[20px]" style={{ background: "#22c55e20", color: "#22c55e" }}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[20px]" style={{ background: "var(--tf-success-bg)", color: "var(--tf-success)" }}>
                   <CircleDot size={13} /> Aberto
                 </span>
               )}
@@ -482,7 +482,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
                     </div>
                   )}
 
-                  {erro && <p className="text-[11px] m-0 px-2 py-1.5 rounded-[8px]" style={{ color: "#ef4444", background: "#ef444415" }}>{erro}</p>}
+                  {erro && <p className="text-[11px] m-0 px-2 py-1.5 rounded-[8px]" style={{ color: "var(--tf-danger)", background: "var(--tf-danger-bg)" }}>{erro}</p>}
 
                   <button
                     onClick={handleMerge}
@@ -501,7 +501,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
                     <button
                       onClick={() => setRejeitando(true)}
                       className="w-full py-[7px] text-xs font-semibold bg-transparent rounded-[8px] cursor-pointer"
-                      style={{ color: "#ef4444", border: "1px solid #ef444440" }}
+                      style={{ color: "var(--tf-danger)", border: "1px solid #ef444440" }}
                     >
                       Rejeitar PR
                     </button>
@@ -509,7 +509,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
                 </div>
               ) : ehAberto && rejeitando ? (
                 <div className="flex flex-col gap-2.5">
-                  <h4 className="text-[13px] font-bold m-0" style={{ color: "#ef4444" }}>Rejeitar Pull Request</h4>
+                  <h4 className="text-[13px] font-bold m-0" style={{ color: "var(--tf-danger)" }}>Rejeitar Pull Request</h4>
                   <textarea
                     value={comentarioRejeicao}
                     onChange={(e) => setComentarioRejeicao(e.target.value)}
@@ -518,12 +518,12 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
                     className="w-full text-xs px-2.5 py-2 rounded-[8px] resize-none outline-none"
                     style={{ border: "1px solid var(--tf-border)", background: "var(--tf-bg)", color: "var(--tf-text)" }}
                   />
-                  {erro && <p className="text-[11px] m-0" style={{ color: "#ef4444" }}>{erro}</p>}
+                  {erro && <p className="text-[11px] m-0" style={{ color: "var(--tf-danger)" }}>{erro}</p>}
                   <button
                     onClick={handleRejeitar}
                     disabled={executando}
                     className="w-full py-2 text-[13px] font-semibold text-white border-none rounded-[8px] cursor-pointer"
-                    style={{ background: "#ef4444" }}
+                    style={{ background: "var(--tf-danger)" }}
                   >
                     {executando ? "Rejeitando..." : "Confirmar Rejeição"}
                   </button>
@@ -537,20 +537,20 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
                 </div>
               ) : ehMerged ? (
                 <div className="text-center py-2">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2.5" style={{ background: "#8b5cf620" }}>
-                    <GitMerge size={24} style={{ color: "#8b5cf6" }} />
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2.5" style={{ background: "var(--tf-accent-light)" }}>
+                    <GitMerge size={24} style={{ color: "var(--tf-accent)" }} />
                   </div>
-                  <p className="text-sm font-semibold m-0" style={{ color: "#8b5cf6" }}>Merged</p>
+                  <p className="text-sm font-semibold m-0" style={{ color: "var(--tf-accent)" }}>Merged</p>
                   <p className="text-[11px] mt-1" style={{ color: "var(--tf-text-tertiary)" }}>
                     {pr.merged_at && tempoAtras(pr.merged_at)}
                   </p>
                 </div>
               ) : ehClosed ? (
                 <div className="text-center py-2">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2.5" style={{ background: "#ef444420" }}>
-                    <XCircle size={24} style={{ color: "#ef4444" }} />
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2.5" style={{ background: "var(--tf-danger-bg)" }}>
+                    <XCircle size={24} style={{ color: "var(--tf-danger)" }} />
                   </div>
-                  <p className="text-sm font-semibold m-0" style={{ color: "#ef4444" }}>Fechado</p>
+                  <p className="text-sm font-semibold m-0" style={{ color: "var(--tf-danger)" }}>Fechado</p>
                   <p className="text-[11px] mt-1" style={{ color: "var(--tf-text-tertiary)" }}>
                     {pr.closed_at && tempoAtras(pr.closed_at)}
                   </p>

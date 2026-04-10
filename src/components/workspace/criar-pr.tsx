@@ -479,7 +479,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
 
           {/* Erro */}
           {erro && (
-            <div className="text-xs px-3 py-2 rounded-[8px]" style={{ background: "#ef444420", color: "#ef4444" }}>
+            <div className="text-xs px-3 py-2 rounded-[8px]" style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}>
               {erro}
             </div>
           )}

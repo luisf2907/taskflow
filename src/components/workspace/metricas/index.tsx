@@ -109,7 +109,7 @@ export function MetricasWorkspace({
       const nome = c.coluna_nome || "Sem coluna";
       porColuna[nome] = (porColuna[nome] || 0) + 1;
     }
-    const cores = ["#60A5FA", "#FBBF24", "#A78BFA", "#4BCE97", "#F87171", "#FB923C"];
+    const cores = ["#60A5FA", "#FBBF24", "#A78BFA", "var(--tf-success)", "#F87171", "#FB923C"];
     return Object.entries(porColuna).map(([label, valor], i) => ({
       label,
       valor,
@@ -394,7 +394,7 @@ export function MetricasWorkspace({
           label="Sprint ativa"
           valor={sprintAtiva?.nome || "—"}
           sub={`${ativaPontosConcluidos}/${ativaPontosTotal} pts · ${ativaProgresso}%`}
-          cor="#4BCE97"
+          cor="var(--tf-success)"
         />
         <StatCard
           icone={Clock}
@@ -416,7 +416,7 @@ export function MetricasWorkspace({
               : "—"
           }
           sub="lead time range"
-          cor="#EC4899"
+          cor="var(--tf-text-secondary)"
         />
         <StatCard
           icone={Layers}
@@ -461,7 +461,7 @@ export function MetricasWorkspace({
                 <Calendar
                   size={14}
                   className="inline mr-1.5"
-                  style={{ color: "#4BCE97" }}
+                  style={{ color: "var(--tf-success)" }}
                 />
                 Throughput Semanal
               </h3>
@@ -485,7 +485,7 @@ export function MetricasWorkspace({
                 <Timer
                   size={14}
                   className="inline mr-1.5"
-                  style={{ color: "#EC4899" }}
+                  style={{ color: "var(--tf-text-secondary)" }}
                 />
                 Cycle Time Médio por Sprint
               </h3>
@@ -586,7 +586,7 @@ export function MetricasWorkspace({
                   className="absolute inset-y-0 left-0 rounded-[8px] opacity-20"
                   style={{
                     width: `${Math.max((v.totalPontos / maxVelocity) * 100, 4)}%`,
-                    background: v.status === "ativa" ? "var(--tf-accent)" : "#4BCE97",
+                    background: v.status === "ativa" ? "var(--tf-accent)" : "var(--tf-success)",
                   }}
                 />
                 <div
@@ -596,7 +596,7 @@ export function MetricasWorkspace({
                       (v.pontosConcluidos / maxVelocity) * 100,
                       v.pontosConcluidos > 0 ? 4 : 0
                     )}%`,
-                    background: v.status === "ativa" ? "var(--tf-accent)" : "#4BCE97",
+                    background: v.status === "ativa" ? "var(--tf-accent)" : "var(--tf-success)",
                   }}
                 >
                   {v.pontosConcluidos > 0 && (
@@ -672,7 +672,7 @@ export function MetricasWorkspace({
                         }`}
                         style={{
                           width: `${(m.concluidos / maxMembroCards) * 100}%`,
-                          background: "#4BCE97",
+                          background: "var(--tf-success)",
                           minWidth: 4,
                         }}
                       />
@@ -700,7 +700,7 @@ export function MetricasWorkspace({
                 style={{ borderColor: "var(--tf-border)" }}
               >
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded" style={{ background: "#4BCE97" }} />
+                  <div className="w-3 h-3 rounded" style={{ background: "var(--tf-success)" }} />
                   <span
                     className="text-[11px]"
                     style={{ color: "var(--tf-text-tertiary)" }}
@@ -747,7 +747,7 @@ export function MetricasWorkspace({
             <div className="space-y-3">
               {completionData.map((d, i) => {
                 const cor =
-                  d.valor >= 80 ? "#4BCE97" : d.valor >= 50 ? "#FBBF24" : "#F87171";
+                  d.valor >= 80 ? "var(--tf-success)" : d.valor >= 50 ? "#FBBF24" : "#F87171";
                 return (
                   <div key={i}>
                     <div className="flex items-center justify-between mb-1">

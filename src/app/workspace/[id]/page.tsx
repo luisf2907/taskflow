@@ -986,7 +986,7 @@ export default function PaginaWorkspace() {
                   </div>
 
                   {erroConvite && (
-                    <p className="text-xs mb-3 px-3 py-2 rounded-[8px]" style={{ background: "#ef444420", color: "#ef4444" }}>
+                    <p className="text-xs mb-3 px-3 py-2 rounded-[8px]" style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}>
                       {erroConvite}
                     </p>
                   )}

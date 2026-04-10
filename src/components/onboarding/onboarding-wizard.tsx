@@ -11,7 +11,7 @@ interface OnboardingWizardProps {
   onSkip: () => void;
 }
 
-const CORES = ["#00857A", "#D84D4D", "#FBD051", "#6366F1", "#EC4899", "#F59E0B"];
+const CORES = ["#00857A", "#D84D4D", "#FBD051", "#6366F1", "var(--tf-text-secondary)", "#F59E0B"];
 
 async function salvarStep(step: number) {
   try {
@@ -227,7 +227,7 @@ export default function OnboardingWizard({ initialStep = 1, onComplete, onSkip }
           <div className="flex flex-col items-center text-center">
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
-              style={{ background: "#22c55e" }}
+              style={{ background: "var(--tf-success)" }}
             >
               <CheckCircle2 size={48} className="text-white" />
             </div>

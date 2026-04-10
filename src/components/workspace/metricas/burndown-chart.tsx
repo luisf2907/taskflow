@@ -88,10 +88,10 @@ export function BurndownChart({ sprint, cards }: BurndownChartProps) {
   );
   const delta = Math.round(idealHoje - pontosRestantes); // positivo = adiantado
   const status = delta >= 0 ? "adiantado" : "atrasado";
-  const statusCor = status === "adiantado" ? "#4BCE97" : "#F87171";
+  const statusCor = status === "adiantado" ? "var(--tf-success)" : "#F87171";
   const trendCor =
     pontosTrendFinal === 0 || (projecaoData && projecaoData <= fim)
-      ? "#4BCE97"
+      ? "var(--tf-success)"
       : "#F87171";
 
   // Grid Y
@@ -307,7 +307,7 @@ export function BurndownChart({ sprint, cards }: BurndownChartProps) {
           <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>
             Concluídos
           </span>
-          <p className="text-sm font-bold" style={{ color: "#4BCE97" }}>
+          <p className="text-sm font-bold" style={{ color: "var(--tf-success)" }}>
             {pontosConcluidos} pts
           </p>
         </div>

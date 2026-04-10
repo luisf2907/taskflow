@@ -577,7 +577,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                       className="w-14 h-14 rounded-full mx-auto flex items-center justify-center animate-pulse"
                       style={{ background: "rgba(239, 68, 68, 0.12)" }}
                     >
-                      <Mic size={22} style={{ color: "#ef4444" }} />
+                      <Mic size={22} style={{ color: "var(--tf-danger)" }} />
                     </div>
                     <div>
                       <p
@@ -613,7 +613,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                     <button
                       onClick={stopRecording}
                       className="inline-flex items-center gap-2 px-5 py-2 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
-                      style={{ background: "#ef4444" }}
+                      style={{ background: "var(--tf-danger)" }}
                     >
                       <MicOff size={14} />
                       Parar

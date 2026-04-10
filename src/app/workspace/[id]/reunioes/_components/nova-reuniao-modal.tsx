@@ -475,7 +475,7 @@ export function NovaReuniaoModal({
               className="w-16 h-16 rounded-full mx-auto flex items-center justify-center animate-pulse"
               style={{ background: "rgba(239, 68, 68, 0.12)" }}
             >
-              <Mic size={26} style={{ color: "#ef4444" }} />
+              <Mic size={26} style={{ color: "var(--tf-danger)" }} />
             </div>
             <p
               className="text-[24px] font-mono font-bold"
@@ -486,7 +486,7 @@ export function NovaReuniaoModal({
             <button
               onClick={stopRecording}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
-              style={{ background: "#ef4444" }}
+              style={{ background: "var(--tf-danger)" }}
             >
               <MicOff size={14} />
               Parar gravacao
