@@ -12,6 +12,8 @@ import {
   Quote,
   ShieldCheck,
   RotateCcw,
+  Play,
+  Pause,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { Perfil } from "@/types";
@@ -50,8 +52,13 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [previewPlaying, setPreviewPlaying] = useState(false);
+  const [previewCurrentMs, setPreviewCurrentMs] = useState(0);
+  const [previewDuration, setPreviewDuration] = useState(0);
 
   // ---------- refs ----------
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const previewSeekRef = useRef<HTMLDivElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -88,6 +95,45 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Preview audio listeners
+  useEffect(() => {
+    const audio = previewAudioRef.current;
+    if (!audio) return;
+    const onTime = () => setPreviewCurrentMs(audio.currentTime * 1000);
+    const onPlay = () => setPreviewPlaying(true);
+    const onPause = () => setPreviewPlaying(false);
+    const onMeta = () => setPreviewDuration(audio.duration * 1000);
+    const onEnded = () => setPreviewPlaying(false);
+    audio.addEventListener("timeupdate", onTime);
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("loadedmetadata", onMeta);
+    audio.addEventListener("ended", onEnded);
+    return () => {
+      audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("loadedmetadata", onMeta);
+      audio.removeEventListener("ended", onEnded);
+    };
+  }, [audioUrl]);
+
+  function togglePreviewPlay() {
+    const audio = previewAudioRef.current;
+    if (!audio) return;
+    if (audio.paused) void audio.play();
+    else audio.pause();
+  }
+
+  function handlePreviewSeek(e: React.MouseEvent<HTMLDivElement>) {
+    const audio = previewAudioRef.current;
+    const bar = previewSeekRef.current;
+    if (!audio || !bar || !previewDuration) return;
+    const rect = bar.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audio.currentTime = (pct * previewDuration) / 1000;
+  }
 
   // ---------- helpers ----------
   function stopStreamAndTimer() {
@@ -625,17 +671,61 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                       </div>
                     </div>
 
-                    {/* Audio player */}
+                    {/* Custom audio player */}
+                    <audio
+                      ref={previewAudioRef}
+                      src={audioUrl}
+                      preload="metadata"
+                    />
                     <div
-                      className="rounded-[10px] overflow-hidden"
+                      className="flex items-center gap-2.5 rounded-[10px] px-3 py-2"
                       style={{ background: "var(--tf-bg-secondary)" }}
                     >
-                      <audio
-                        src={audioUrl}
-                        controls
-                        className="w-full"
-                        style={{ height: 40 }}
-                      />
+                      <button
+                        onClick={togglePreviewPlay}
+                        className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-150 hover:opacity-80"
+                        style={{ background: "var(--tf-accent)" }}
+                      >
+                        {previewPlaying ? (
+                          <Pause size={12} className="text-white" fill="white" />
+                        ) : (
+                          <Play size={12} className="text-white ml-px" fill="white" />
+                        )}
+                      </button>
+                      <span
+                        className="text-[10px] font-mono font-semibold min-w-[30px] text-right"
+                        style={{ color: "var(--tf-text)" }}
+                      >
+                        {fmtTime(previewCurrentMs)}
+                      </span>
+                      <div
+                        ref={previewSeekRef}
+                        onClick={handlePreviewSeek}
+                        className="flex-1 h-1.5 rounded-full cursor-pointer relative group"
+                        style={{ background: "var(--tf-border)" }}
+                      >
+                        <div
+                          className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-100"
+                          style={{
+                            width: `${previewDuration > 0 ? (previewCurrentMs / previewDuration) * 100 : 0}%`,
+                            background: "var(--tf-accent)",
+                          }}
+                        />
+                        <div
+                          className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                          style={{
+                            left: `calc(${previewDuration > 0 ? (previewCurrentMs / previewDuration) * 100 : 0}% - 5px)`,
+                            background: "var(--tf-accent)",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                          }}
+                        />
+                      </div>
+                      <span
+                        className="text-[10px] font-mono min-w-[30px]"
+                        style={{ color: "var(--tf-text-tertiary)" }}
+                      >
+                        {fmtTime(previewDuration)}
+                      </span>
                     </div>
 
                     {/* Action buttons */}
@@ -684,4 +774,11 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
       </div>
     </section>
   );
+}
+
+function fmtTime(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }
