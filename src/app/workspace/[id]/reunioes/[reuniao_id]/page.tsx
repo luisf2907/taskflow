@@ -12,6 +12,10 @@ import {
   Volume2,
   Play,
   Pause,
+  Sparkles,
+  RefreshCw,
+  CircleDot,
+  SquareCheck,
 } from "lucide-react";
 
 import { Header } from "@/components/layout/header";
@@ -43,6 +47,7 @@ export default function ReuniaoDetailPage() {
   const [currentMs, setCurrentMs] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [summarizing, setSummarizing] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const seekBarRef = useRef<HTMLDivElement | null>(null);
 
@@ -176,6 +181,32 @@ export default function ReuniaoDetailPage() {
     const rect = bar.getBoundingClientRect();
     const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     audio.currentTime = (pct * duration) / 1000;
+  }
+
+  async function gerarResumo() {
+    if (!reuniaoId || summarizing) return;
+    setSummarizing(true);
+    try {
+      const res = await fetch("/api/ai/summarize-reuniao", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reuniao_id: reuniaoId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Erro ao gerar resumo");
+        return;
+      }
+      // Atualizar reuniao local com o resumo
+      setReuniao((prev) =>
+        prev ? { ...prev, resumo_ia: data.resumo_ia } : prev
+      );
+      toast.success("Resumo gerado!");
+    } catch {
+      toast.error("Erro de conexao");
+    } finally {
+      setSummarizing(false);
+    }
   }
 
   // Agrupa falas consecutivas do mesmo speaker
@@ -433,6 +464,15 @@ export default function ReuniaoDetailPage() {
                   </span>
                 </div>
               </div>
+            )}
+
+            {/* AI Summary */}
+            {reuniao.status === "done" && (
+              <ResumoIaCard
+                resumo={reuniao.resumo_ia}
+                loading={summarizing}
+                onGerar={gerarResumo}
+              />
             )}
 
             {/* Transcript */}
@@ -694,6 +734,167 @@ function StatusBadge({ status }: { status: ReuniaoStatus }) {
       />
       {info.label}
     </span>
+  );
+}
+
+function ResumoIaCard({
+  resumo,
+  loading,
+  onGerar,
+}: {
+  resumo: Reuniao["resumo_ia"];
+  loading: boolean;
+  onGerar: () => void;
+}) {
+  if (!resumo && !loading) {
+    return (
+      <div className="flex items-center justify-center">
+        <button
+          onClick={onGerar}
+          className="flex items-center gap-2.5 px-5 py-2.5 rounded-[12px] text-[13px] font-bold text-white transition-all duration-150 hover:opacity-90"
+          style={{ background: "var(--tf-accent)" }}
+        >
+          <Sparkles size={15} />
+          Resumir com IA
+        </button>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div
+        className="flex items-center gap-3 p-5 rounded-[14px]"
+        style={{
+          background: "var(--tf-bg-secondary)",
+          border: "1px solid var(--tf-border)",
+        }}
+      >
+        <Loader2
+          size={16}
+          className="animate-spin"
+          style={{ color: "var(--tf-accent)" }}
+        />
+        <span
+          className="text-[13px] font-semibold"
+          style={{ color: "var(--tf-text-secondary)" }}
+        >
+          Gerando resumo...
+        </span>
+      </div>
+    );
+  }
+
+  if (!resumo) return null;
+
+  return (
+    <div
+      className="rounded-[14px] p-5 space-y-4"
+      style={{
+        background: "var(--tf-bg-secondary)",
+        border: "1px solid var(--tf-border)",
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Sparkles size={14} style={{ color: "var(--tf-accent)" }} />
+          <span
+            className="text-[11px] font-bold uppercase tracking-widest"
+            style={{ color: "var(--tf-text-tertiary)" }}
+          >
+            Resumo da IA
+          </span>
+        </div>
+        <button
+          onClick={onGerar}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-[10px] font-semibold transition-all duration-150 hover:opacity-70"
+          style={{
+            color: "var(--tf-text-tertiary)",
+            background: "var(--tf-surface)",
+          }}
+          title="Regerar resumo"
+        >
+          <RefreshCw size={10} />
+          Regerar
+        </button>
+      </div>
+
+      {/* Resumo */}
+      <p
+        className="text-[13px] leading-relaxed"
+        style={{ color: "var(--tf-text)" }}
+      >
+        {resumo.resumo}
+      </p>
+
+      {/* Pontos-chave */}
+      {resumo.pontos_chave.length > 0 && (
+        <div className="space-y-1.5">
+          <p
+            className="text-[11px] font-bold uppercase tracking-wide"
+            style={{ color: "var(--tf-text-tertiary)" }}
+          >
+            Pontos-chave
+          </p>
+          <ul className="space-y-1">
+            {resumo.pontos_chave.map((p, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <CircleDot
+                  size={10}
+                  className="flex-shrink-0 mt-1"
+                  style={{ color: "var(--tf-accent)" }}
+                />
+                <span
+                  className="text-[12px] leading-relaxed"
+                  style={{ color: "var(--tf-text-secondary)" }}
+                >
+                  {p}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Tarefas */}
+      {resumo.tarefas.length > 0 && (
+        <div className="space-y-1.5">
+          <p
+            className="text-[11px] font-bold uppercase tracking-wide"
+            style={{ color: "var(--tf-text-tertiary)" }}
+          >
+            Tarefas identificadas
+          </p>
+          <ul className="space-y-1">
+            {resumo.tarefas.map((t, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <SquareCheck
+                  size={11}
+                  className="flex-shrink-0 mt-0.5"
+                  style={{ color: "var(--tf-success)" }}
+                />
+                <span
+                  className="text-[12px] leading-relaxed"
+                  style={{ color: "var(--tf-text-secondary)" }}
+                >
+                  {t}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Data de geracao */}
+      <p
+        className="text-[10px]"
+        style={{ color: "var(--tf-text-tertiary)" }}
+      >
+        Gerado em{" "}
+        {new Date(resumo.gerado_em).toLocaleString("pt-BR")}
+      </p>
+    </div>
   );
 }
 

@@ -222,6 +222,12 @@ export interface Reuniao {
   criado_em: string;
   processado_em: string | null;
   atualizado_em: string;
+  resumo_ia: {
+    resumo: string;
+    pontos_chave: string[];
+    tarefas: string[];
+    gerado_em: string;
+  } | null;
 }
 
 export type MatchTipo = "strong" | "weak" | "none" | "manual";
