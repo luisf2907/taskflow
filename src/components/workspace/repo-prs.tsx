@@ -78,7 +78,7 @@ function obterStatus(pr: GitHubPR): {
   if (pr.merged_at) {
     return {
       label: "Merged",
-      cor: "var(--tf-accent)",
+      cor: "var(--tf-merged)",
       icone: <GitMerge size={14} />,
     };
   }

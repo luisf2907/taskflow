@@ -109,7 +109,7 @@ export function MetricasWorkspace({
       const nome = c.coluna_nome || "Sem coluna";
       porColuna[nome] = (porColuna[nome] || 0) + 1;
     }
-    const cores = ["#60A5FA", "#FBBF24", "#A78BFA", "var(--tf-success)", "#F87171", "#FB923C"];
+    const cores = ["#60A5FA", "var(--tf-accent-yellow)", "#A78BFA", "var(--tf-success)", "var(--tf-danger)", "#FB923C"];
     return Object.entries(porColuna).map(([label, valor], i) => ({
       label,
       valor,
@@ -747,7 +747,7 @@ export function MetricasWorkspace({
             <div className="space-y-3">
               {completionData.map((d, i) => {
                 const cor =
-                  d.valor >= 80 ? "var(--tf-success)" : d.valor >= 50 ? "#FBBF24" : "#F87171";
+                  d.valor >= 80 ? "var(--tf-success)" : d.valor >= 50 ? "var(--tf-accent-yellow)" : "var(--tf-danger)";
                 return (
                   <div key={i}>
                     <div className="flex items-center justify-between mb-1">

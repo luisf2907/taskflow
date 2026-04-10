@@ -40,7 +40,7 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
     cartao.pr_status === "open"
       ? "var(--tf-success)"
       : cartao.pr_status === "merged"
-        ? "var(--tf-accent)"
+        ? "var(--tf-merged)"
         : "var(--tf-danger)";
 
   const statusLabel =
@@ -448,7 +448,7 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
           </p>
           <div className="space-y-1.5">
             {historico.map((h, i) => {
-              const cor = h.status === "merged" ? "var(--tf-accent)" : "var(--tf-danger)";
+              const cor = h.status === "merged" ? "var(--tf-merged)" : "var(--tf-danger)";
               const iconeLabel =
                 h.status === "merged" ? "✓ Merged" : "✗ Rejeitado";
               return (

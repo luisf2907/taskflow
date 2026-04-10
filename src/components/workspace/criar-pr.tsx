@@ -207,9 +207,9 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
         <div className="text-center py-4 space-y-4">
           <div
             className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
-            style={{ background: "var(--tf-success, #22c55e)20" }}
+            style={{ background: "var(--tf-success-bg)" }}
           >
-            <GitPullRequest size={28} style={{ color: "var(--tf-success, #22c55e)" }} />
+            <GitPullRequest size={28} style={{ color: "var(--tf-success)" }} />
           </div>
           <div>
             <p className="text-sm font-semibold" style={{ color: "var(--tf-text)" }}>

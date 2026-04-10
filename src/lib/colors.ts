@@ -8,7 +8,7 @@ export const TASKFLOW_PALETTE = [
   "#FBD051", // Yellow
   "#3B82F6", // Blue standard
   "#8B5CF6", // Purple
-  "var(--tf-text-secondary)", // Pink
+  "#EC4899", // Pink
 ];
 
 /**

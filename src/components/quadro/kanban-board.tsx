@@ -263,7 +263,7 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
           aria-live="assertive"
           className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-[12px] text-sm font-semibold shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2"
           style={{
-            background: "var(--tf-danger, #ef4444)",
+            background: "var(--tf-danger)",
             color: "#fff",
           }}
         >

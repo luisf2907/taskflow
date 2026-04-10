@@ -45,7 +45,7 @@ export function PainelParticipantes({ membros, votos, status, estatisticas }: Pa
           {estatisticas.consenso && (
             <span
               className="px-2 py-0.5 rounded-full text-[11px] font-bold text-white"
-              style={{ background: "#22C55E" }}
+              style={{ background: "var(--tf-success)" }}
             >
               Consenso!
             </span>
@@ -53,7 +53,7 @@ export function PainelParticipantes({ membros, votos, status, estatisticas }: Pa
           {!estatisticas.consenso && estatisticas.spread > 5 && (
             <span
               className="px-2 py-0.5 rounded-full text-[11px] font-bold"
-              style={{ background: "#EAB308", color: "#000" }}
+              style={{ background: "var(--tf-accent-yellow)", color: "#000" }}
             >
               Discutir
             </span>

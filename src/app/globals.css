@@ -62,6 +62,8 @@
   --tf-danger-bg: #FBEDED;
   --tf-warning: #8DA03B;
   --tf-warning-bg: #F4F9DD;
+  --tf-merged: #8B5CF6;
+  --tf-merged-bg: #F3F0FF;
 
   /* Column */
   --tf-column: #F5F9F8;
@@ -128,6 +130,8 @@
   --tf-danger-bg: #3E1E1E;
   --tf-warning: #D4A017;
   --tf-warning-bg: #2E2A1A;
+  --tf-merged: #A78BFA;
+  --tf-merged-bg: #2A2040;
 
   --tf-column: #1D2624;
 

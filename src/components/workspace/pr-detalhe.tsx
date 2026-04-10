@@ -308,7 +308,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
             <div className="flex items-center gap-2.5 mt-2 flex-wrap">
               {/* Status */}
               {ehMerged && (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[20px]" style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent)" }}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[20px]" style={{ background: "var(--tf-merged-bg)", color: "var(--tf-merged)" }}>
                   <GitMerge size={13} /> Merged
                 </span>
               )}
@@ -501,7 +501,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
                     <button
                       onClick={() => setRejeitando(true)}
                       className="w-full py-[7px] text-xs font-semibold bg-transparent rounded-[8px] cursor-pointer"
-                      style={{ color: "var(--tf-danger)", border: "1px solid #ef444440" }}
+                      style={{ color: "var(--tf-danger)", border: "1px solid var(--tf-danger-bg)" }}
                     >
                       Rejeitar PR
                     </button>
@@ -537,10 +537,10 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
                 </div>
               ) : ehMerged ? (
                 <div className="text-center py-2">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2.5" style={{ background: "var(--tf-accent-light)" }}>
-                    <GitMerge size={24} style={{ color: "var(--tf-accent)" }} />
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2.5" style={{ background: "var(--tf-merged-bg)" }}>
+                    <GitMerge size={24} style={{ color: "var(--tf-merged)" }} />
                   </div>
-                  <p className="text-sm font-semibold m-0" style={{ color: "var(--tf-accent)" }}>Merged</p>
+                  <p className="text-sm font-semibold m-0" style={{ color: "var(--tf-merged)" }}>Merged</p>
                   <p className="text-[11px] mt-1" style={{ color: "var(--tf-text-tertiary)" }}>
                     {pr.merged_at && tempoAtras(pr.merged_at)}
                   </p>

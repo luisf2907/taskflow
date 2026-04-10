@@ -81,7 +81,7 @@ export function SalaPoker({
             background: sessao.status === "votando"
               ? "var(--tf-accent)"
               : sessao.status === "revelado"
-                ? "#22C55E"
+                ? "var(--tf-success)"
                 : "var(--tf-text-tertiary)",
             color: "#fff",
           }}

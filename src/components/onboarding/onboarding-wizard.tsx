@@ -11,7 +11,7 @@ interface OnboardingWizardProps {
   onSkip: () => void;
 }
 
-const CORES = ["#00857A", "#D84D4D", "#FBD051", "#6366F1", "var(--tf-text-secondary)", "#F59E0B"];
+const CORES = ["#00857A", "#D84D4D", "#FBD051", "#6366F1", "#EC4899", "#F59E0B"];
 
 async function salvarStep(step: number) {
   try {

@@ -10,7 +10,7 @@ const TRELLO_CORES: Record<string, string> = {
   blue: "#3B82F6",
   sky: "#0EA5E9",
   lime: "#84CC16",
-  pink: "var(--tf-text-secondary)",
+  pink: "#EC4899",
   black: "#1C2B29",
   green_dark: "#15803D",
   yellow_dark: "#A16207",

@@ -6,7 +6,7 @@ import useSWR, { mutate as globalMutate } from "swr";
 
 const CORES_AVATAR = [
   "#EF4444", "#F97316", "#EAB308", "#22C55E", "#14B8A6",
-  "#3B82F6", "#6366F1", "#A855F7", "var(--tf-text-secondary)", "#78716C",
+  "#3B82F6", "#6366F1", "#A855F7", "#EC4899", "#78716C",
 ];
 
 function chave(workspaceId: string) {

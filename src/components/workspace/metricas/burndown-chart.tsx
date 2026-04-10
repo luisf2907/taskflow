@@ -88,11 +88,11 @@ export function BurndownChart({ sprint, cards }: BurndownChartProps) {
   );
   const delta = Math.round(idealHoje - pontosRestantes); // positivo = adiantado
   const status = delta >= 0 ? "adiantado" : "atrasado";
-  const statusCor = status === "adiantado" ? "var(--tf-success)" : "#F87171";
+  const statusCor = status === "adiantado" ? "var(--tf-success)" : "var(--tf-danger)";
   const trendCor =
     pontosTrendFinal === 0 || (projecaoData && projecaoData <= fim)
       ? "var(--tf-success)"
-      : "#F87171";
+      : "var(--tf-danger)";
 
   // Grid Y
   const gridY = [0, 0.25, 0.5, 0.75, 1].map((pct) => ({
