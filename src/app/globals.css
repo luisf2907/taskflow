@@ -366,3 +366,234 @@ select:focus-visible {
     scrollbar-width: none !important;
   }
 }
+
+/* ---- WIKI EDITOR (TipTap — Notion-like blocks) ---- */
+
+/* Editor wrapper — espaço para block handles à esquerda */
+.wiki-editor-wrapper {
+  position: relative;
+  margin-left: 56px;
+}
+
+/* Conteúdo base */
+.wiki-content {
+  color: var(--tf-text);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.wiki-content > *:first-child { margin-top: 0; }
+
+/* ── BLOCK STYLING (Notion-like) ──
+   Cada bloco top-level tem padding + border-radius + hover highlight
+*/
+.wiki-blocks > * {
+  padding: 3px 4px;
+  border-radius: 4px;
+  transition: background 0.1s ease;
+}
+.wiki-blocks > *:hover {
+  background: var(--tf-surface-hover);
+}
+.wiki-blocks > *.ProseMirror-selectednode {
+  background: var(--tf-accent-light);
+  outline: none;
+}
+
+/* ── HEADINGS ── */
+.wiki-content h1 {
+  font-size: 1.875em;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 1.2em;
+  margin-bottom: 0.3em;
+  color: var(--tf-text);
+}
+.wiki-content h2 {
+  font-size: 1.5em;
+  font-weight: 650;
+  line-height: 1.35;
+  margin-top: 1.1em;
+  margin-bottom: 0.2em;
+  color: var(--tf-text);
+}
+.wiki-content h3 {
+  font-size: 1.2em;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1em;
+  margin-bottom: 0.15em;
+  color: var(--tf-text);
+}
+
+/* ── PARAGRAPHS ── */
+.wiki-content p {
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+/* ── LISTS ── */
+.wiki-content ul, .wiki-content ol {
+  padding-left: 1.5em;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+.wiki-content ul { list-style-type: disc; }
+.wiki-content ol { list-style-type: decimal; }
+.wiki-content li { margin-top: 1px; margin-bottom: 1px; }
+.wiki-content li p { margin: 0; }
+
+/* ── BLOCKQUOTE ── */
+.wiki-content blockquote {
+  border-left: 3px solid var(--tf-accent);
+  padding-left: 1em;
+  margin: 4px 0;
+  color: var(--tf-text-secondary);
+}
+
+/* ── CODE BLOCKS ── */
+.wiki-content pre {
+  background: var(--tf-bg-secondary);
+  border: 1px solid var(--tf-border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  overflow-x: auto;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 0.85em;
+  line-height: 1.6;
+  margin: 6px 0;
+}
+
+/* ── INLINE CODE ── */
+.wiki-content code {
+  background: var(--tf-bg-secondary);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 0.875em;
+  color: var(--tf-accent-text);
+}
+.wiki-content pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  color: inherit;
+}
+
+/* ── DIVIDER ── */
+.wiki-content hr {
+  border: none;
+  border-top: 1px solid var(--tf-border);
+  margin: 20px 0;
+}
+
+/* ── IMAGES ── */
+.wiki-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin: 8px 0;
+}
+
+/* ── LINKS ── */
+.wiki-content a, .wiki-content .wiki-link {
+  color: var(--tf-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.wiki-content a:hover, .wiki-content .wiki-link:hover { opacity: 0.8; }
+
+/* ── HIGHLIGHT ── */
+.wiki-content mark {
+  background-color: rgba(255, 207, 64, 0.3);
+  border-radius: 2px;
+  padding: 0.1em 0.2em;
+}
+
+/* ── TASK LIST ── */
+.wiki-content ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+.wiki-content ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+.wiki-content ul[data-type="taskList"] li label { margin-top: 0.25em; }
+.wiki-content ul[data-type="taskList"] li label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--tf-accent);
+  border-radius: 4px;
+}
+.wiki-content ul[data-type="taskList"] li[data-checked="true"] > div > p {
+  text-decoration: line-through;
+  color: var(--tf-text-tertiary);
+}
+
+/* ── TABLE ── */
+.wiki-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 6px 0;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--tf-border);
+}
+.wiki-content th, .wiki-content td {
+  border: 1px solid var(--tf-border);
+  padding: 0.5em 0.75em;
+  min-width: 80px;
+  text-align: left;
+  vertical-align: top;
+}
+.wiki-content th {
+  background: var(--tf-bg-secondary);
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+/* ── PLACEHOLDERS ── */
+.wiki-content .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--tf-text-tertiary);
+  pointer-events: none;
+  height: 0;
+  font-style: normal;
+}
+
+/* ── FOCUS — Remove browser outline ── */
+.wiki-content:focus,
+.wiki-content.ProseMirror-focused {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* ── SELECTION — somente em nós atômicos (imagens, embeds) ── */
+.wiki-content img.ProseMirror-selectednode,
+.wiki-content [data-type="card-embed"].ProseMirror-selectednode,
+.wiki-content .tableWrapper.ProseMirror-selectednode {
+  outline: 2px solid var(--tf-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ── TABLE RESIZE ── */
+.wiki-content .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: var(--tf-accent);
+  pointer-events: none;
+}
+.wiki-content .tableWrapper { overflow-x: auto; }
+
+/* ── DROPCURSOR ── */
+.ProseMirror-dropcursor {
+  border-color: var(--tf-accent) !important;
+}

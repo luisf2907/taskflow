@@ -283,7 +283,7 @@ export type AcaoAtividade =
   | "comentar" | "atribuir" | "etiquetar" | "sprint_status";
 
 export type EntidadeAtividade =
-  | "cartao" | "coluna" | "comentario" | "membro" | "etiqueta" | "sprint";
+  | "cartao" | "coluna" | "comentario" | "membro" | "etiqueta" | "sprint" | "wiki_pagina";
 
 export interface Atividade {
   id: string;
@@ -358,4 +358,27 @@ export interface PokerVoto {
   user_id: string;
   valor: string;
   criado_em: string;
+}
+
+// =============================================
+// WIKI
+// =============================================
+export interface WikiPagina {
+  id: string;
+  workspace_id: string;
+  parent_id: string | null;
+  titulo: string;
+  slug: string;
+  icone: string | null;
+  capa_url: string | null;
+  conteudo: Record<string, unknown> | null;
+  posicao: number;
+  criado_por: string;
+  atualizado_por: string | null;
+  criado_em: string;
+  atualizado_em: string;
+}
+
+export interface WikiPaginaTree extends WikiPagina {
+  filhos: WikiPaginaTree[];
 }

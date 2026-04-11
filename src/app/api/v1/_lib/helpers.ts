@@ -133,6 +133,25 @@ export async function assertChecklistItem(
   return item as Row;
 }
 
+/**
+ * Busca uma pagina wiki garantindo que pertence ao workspace.
+ */
+export async function assertWikiPage(
+  service: Service,
+  pageId: string,
+  workspaceId: string,
+  select = "*"
+): Promise<NextResponse | Row> {
+  const { data } = await service
+    .from("wiki_paginas")
+    .select(select)
+    .eq("id", pageId)
+    .eq("workspace_id", workspaceId)
+    .single();
+  if (!data) return NOT_FOUND("Wiki page");
+  return data as Row;
+}
+
 /** Type guard: verifica se o resultado e uma NextResponse (erro). */
 export function isErrorResponse(
   result: NextResponse | Row

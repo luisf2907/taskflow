@@ -1,0 +1,225 @@
+"use client";
+
+import { useState, useCallback, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+
+import { Header } from "@/components/layout/header";
+import { Sidebar } from "@/components/layout/sidebar";
+import { useAuth } from "@/hooks/use-auth";
+import { useSidebar } from "@/hooks/use-sidebar";
+import { useQuadros } from "@/hooks/use-quadros";
+import { useWorkspaces } from "@/hooks/use-workspaces";
+import { useWiki } from "@/hooks/use-wiki";
+import { toast } from "@/hooks/use-toast";
+import { PageTree } from "@/components/wiki/page-tree";
+import { PageHeader } from "@/components/wiki/page-header";
+import { WikiEditor } from "@/components/wiki/wiki-editor";
+import type { WikiPagina, WikiPaginaTree } from "@/types";
+import { BookOpen, Loader2 } from "lucide-react";
+
+export default function WikiPage() {
+  const params = useParams<{ id: string }>();
+  const workspaceId = params.id;
+  const router = useRouter();
+
+  const { perfil, carregando: authLoading } = useAuth();
+  const { quadros } = useQuadros();
+  const { workspaces } = useWorkspaces();
+  const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
+
+  const workspace = workspaces?.find((w) => w.id === workspaceId);
+
+  const {
+    paginas,
+    arvore,
+    carregando,
+    criarPagina,
+    atualizarPagina,
+    salvarConteudo,
+    excluirPagina,
+  } = useWiki(workspaceId);
+
+  const [paginaSelecionada, setPaginaSelecionada] = useState<WikiPagina | null>(null);
+
+  // Auto-seleciona a primeira página quando carrega
+  useEffect(() => {
+    if (!carregando && paginas.length > 0 && !paginaSelecionada) {
+      setPaginaSelecionada(paginas[0]);
+    }
+  }, [carregando, paginas, paginaSelecionada]);
+
+  // Sync paginaSelecionada com dados atuais
+  useEffect(() => {
+    if (paginaSelecionada) {
+      const atualizada = paginas.find((p) => p.id === paginaSelecionada.id);
+      if (atualizada && atualizada.atualizado_em !== paginaSelecionada.atualizado_em) {
+        setPaginaSelecionada(atualizada);
+      }
+    }
+  }, [paginas, paginaSelecionada]);
+
+  // Redirect para login se não autenticado
+  useEffect(() => {
+    if (!authLoading && !perfil) {
+      router.push("/login");
+    }
+  }, [authLoading, perfil, router]);
+
+  const handleSelecionar = useCallback((node: WikiPaginaTree) => {
+    const pagina = paginas.find((p) => p.id === node.id);
+    if (pagina) setPaginaSelecionada(pagina);
+  }, [paginas]);
+
+  const handleCriarPagina = useCallback(
+    async (parentId?: string | null) => {
+      const nova = await criarPagina("Nova página", parentId);
+      if (nova) {
+        setPaginaSelecionada(nova);
+        toast.success("Página criada!");
+      }
+    },
+    [criarPagina],
+  );
+
+  const handleExcluirPagina = useCallback(
+    async (id: string) => {
+      if (!confirm("Excluir esta página? Sub-páginas ficarão como raiz.")) return;
+      await excluirPagina(id);
+      if (paginaSelecionada?.id === id) {
+        setPaginaSelecionada(null);
+      }
+      toast.success("Página excluída");
+    },
+    [excluirPagina, paginaSelecionada],
+  );
+
+  const handleRenomearPagina = useCallback(
+    async (id: string, novoTitulo: string) => {
+      await atualizarPagina(id, { titulo: novoTitulo });
+    },
+    [atualizarPagina],
+  );
+
+  const handleTituloChange = useCallback(
+    (novoTitulo: string) => {
+      if (paginaSelecionada) {
+        atualizarPagina(paginaSelecionada.id, { titulo: novoTitulo });
+      }
+    },
+    [paginaSelecionada, atualizarPagina],
+  );
+
+  const handleIconeChange = useCallback(
+    (novoIcone: string | null) => {
+      if (paginaSelecionada) {
+        atualizarPagina(paginaSelecionada.id, { icone: novoIcone } as Partial<WikiPagina>);
+      }
+    },
+    [paginaSelecionada, atualizarPagina],
+  );
+
+  const handleSalvarConteudo = useCallback(
+    (conteudo: Record<string, unknown>) => {
+      if (paginaSelecionada) {
+        salvarConteudo(paginaSelecionada.id, conteudo);
+      }
+    },
+    [paginaSelecionada, salvarConteudo],
+  );
+
+  const handleNavegar = useCallback(
+    (paginaId: string) => {
+      const pagina = paginas.find((p) => p.id === paginaId);
+      if (pagina) setPaginaSelecionada(pagina);
+    },
+    [paginas],
+  );
+
+  if (authLoading || !iniciado || !perfil) {
+    return (
+      <div className="h-full flex items-center justify-center" style={{ background: "var(--tf-bg)" }}>
+        <Loader2 size={24} className="animate-spin" style={{ color: "var(--tf-accent)" }} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex overflow-hidden" style={{ background: "var(--tf-bg)" }}>
+      {iniciado && (
+        <Sidebar
+          quadros={quadros}
+          onNovoQuadro={() => {}}
+          aberta={sidebarAberta}
+          onToggle={toggleSidebar}
+        />
+      )}
+
+      <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
+        <Header onMenuMobile={toggleSidebar} />
+
+        <div
+          className="flex-1 rounded-[32px] mb-4 overflow-hidden flex scroll-clip-lg"
+          style={{
+            background: "var(--tf-surface)",
+            border: "1px solid var(--tf-border)",
+          }}
+        >
+          {/* Painel esquerdo — Árvore de páginas */}
+          <div
+            className="w-[260px] shrink-0 flex flex-col border-r overflow-hidden"
+            style={{ borderColor: "var(--tf-border)" }}
+          >
+            <PageTree
+              arvore={arvore}
+              paginaAtivaId={paginaSelecionada?.id || null}
+              onSelecionar={handleSelecionar}
+              onCriarPagina={handleCriarPagina}
+              onExcluirPagina={handleExcluirPagina}
+              onRenomearPagina={handleRenomearPagina}
+            />
+          </div>
+
+          {/* Painel direito — Editor */}
+          <main id="main-content" className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+            {carregando ? (
+              <div className="flex-1 flex items-center justify-center">
+                <Loader2 size={24} className="animate-spin" style={{ color: "var(--tf-accent)" }} />
+              </div>
+            ) : paginaSelecionada ? (
+              <div className="max-w-[900px] mx-auto w-full px-8 py-10">
+                <PageHeader
+                  pagina={paginaSelecionada}
+                  todasPaginas={paginas}
+                  onTituloChange={handleTituloChange}
+                  onIconeChange={handleIconeChange}
+                  onNavegar={handleNavegar}
+                />
+                <WikiEditor
+                  key={paginaSelecionada.id}
+                  conteudo={paginaSelecionada.conteudo}
+                  onSave={handleSalvarConteudo}
+                  workspaceId={workspaceId}
+                  paginaId={paginaSelecionada.id}
+                />
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center gap-4">
+                <BookOpen size={48} strokeWidth={1.2} style={{ color: "var(--tf-border)" }} />
+                <div className="text-center">
+                  <p className="text-[15px] font-medium mb-1" style={{ color: "var(--tf-text-secondary)" }}>
+                    {paginas.length === 0 ? "Sua wiki está vazia" : "Selecione uma página"}
+                  </p>
+                  <p className="text-[13px]" style={{ color: "var(--tf-text-tertiary)" }}>
+                    {paginas.length === 0
+                      ? "Crie sua primeira página para começar"
+                      : "Escolha uma página na árvore ao lado"}
+                  </p>
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+}

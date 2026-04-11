@@ -35,6 +35,13 @@ import {
   handleAIGenerateCards,
   handleAIEnhanceCard,
 } from "../_handlers/ai";
+import {
+  handleListWikiPages,
+  handleGetWikiPage,
+  handleCreateWikiPage,
+  handleUpdateWikiPage,
+  handleDeleteWikiPage,
+} from "../_handlers/wiki";
 
 // =============================================
 // ROUTES TABLE
@@ -74,6 +81,13 @@ const routes: Route[] = [
   // IA
   { method: "POST", pattern: ["ai", "generate-cards"], handler: handleAIGenerateCards },
   { method: "POST", pattern: ["ai", "enhance-card"], handler: handleAIEnhanceCard },
+
+  // Wiki
+  { method: "GET", pattern: ["wiki"], handler: handleListWikiPages },
+  { method: "GET", pattern: ["wiki", "*"], handler: handleGetWikiPage },
+  { method: "POST", pattern: ["wiki"], handler: handleCreateWikiPage },
+  { method: "PATCH", pattern: ["wiki", "*"], handler: handleUpdateWikiPage },
+  { method: "DELETE", pattern: ["wiki", "*"], handler: handleDeleteWikiPage },
 ];
 
 // =============================================

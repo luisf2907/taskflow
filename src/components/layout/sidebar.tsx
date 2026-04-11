@@ -11,6 +11,7 @@ import {
   Grid3X3,
   LayoutDashboard,
   Mic,
+  BookOpen,
   Plus,
   SidebarClose,
   SidebarOpen,
@@ -181,6 +182,23 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
                 >
                   <GitBranch size={16} strokeWidth={pathname === `/workspace/${activeWorkspaceId}/repos` ? 2.5 : 2} />
                   {aberta && <span className="sidebar-fade opacity-100">Repositórios</span>}
+                </Link>
+
+                <Link
+                  href={`/workspace/${activeWorkspaceId}/wiki`}
+                  data-active={pathname.startsWith(`/workspace/${activeWorkspaceId}/wiki`)}
+                  className={cn(
+                    "sidebar-item sidebar-link flex items-center group relative",
+                    aberta ? "gap-3 px-2 py-[6px] rounded-[8px] text-[13px] font-medium" : "justify-center rounded-[14px] w-[44px] h-[44px]"
+                  )}
+                  style={{
+                    background: pathname.startsWith(`/workspace/${activeWorkspaceId}/wiki`) && aberta ? "var(--tf-accent-light)" : "transparent",
+                    color: pathname.startsWith(`/workspace/${activeWorkspaceId}/wiki`) ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
+                  }}
+                  title={!aberta ? "Wiki" : undefined}
+                >
+                  <BookOpen size={16} strokeWidth={pathname.startsWith(`/workspace/${activeWorkspaceId}/wiki`) ? 2.5 : 2} />
+                  {aberta && <span className="sidebar-fade opacity-100">Wiki</span>}
                 </Link>
 
                 <Link
