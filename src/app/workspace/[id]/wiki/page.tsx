@@ -14,8 +14,12 @@ import { toast } from "@/hooks/use-toast";
 import { PageTree } from "@/components/wiki/page-tree";
 import { PageHeader } from "@/components/wiki/page-header";
 import { WikiEditor } from "@/components/wiki/wiki-editor";
+import { MarkdownEditor } from "@/components/wiki/markdown-editor";
+import { MarkdownPreview } from "@/components/wiki/markdown-preview";
 import { CardEmbedPicker } from "@/components/wiki/card-embed-picker";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { tiptapJsonToMarkdown, markdownToTiptapJson } from "@/lib/wiki-markdown";
+import type { WikiEditMode } from "@/components/wiki/wiki-mode-switcher";
 import type { WikiPagina, WikiPaginaTree } from "@/types";
 import type { Editor } from "@tiptap/react";
 import { BookOpen, Loader2 } from "lucide-react";
@@ -46,6 +50,8 @@ export default function WikiPage() {
   const [paginaSelecionada, setPaginaSelecionada] = useState<WikiPagina | null>(null);
   const [cardPickerAberto, setCardPickerAberto] = useState(false);
   const [paginaParaExcluir, setPaginaParaExcluir] = useState<string | null>(null);
+  const [modoEdicao, setModoEdicao] = useState<WikiEditMode>("editor");
+  const [markdownTexto, setMarkdownTexto] = useState("");
   const editorRef = useRef<Editor | null>(null);
 
   // Auto-seleciona a primeira página quando carrega
@@ -178,6 +184,36 @@ export default function WikiPage() {
     [paginaSelecionada, salvarConteudo],
   );
 
+  const handleModoChange = useCallback(
+    (novoModo: WikiEditMode) => {
+      if (novoModo === "markdown" && paginaSelecionada?.conteudo) {
+        const md = tiptapJsonToMarkdown(paginaSelecionada.conteudo);
+        setMarkdownTexto(md);
+      } else if (novoModo === "editor" && markdownTexto) {
+        const json = markdownToTiptapJson(markdownTexto);
+        handleSalvarConteudo(json);
+      }
+      setModoEdicao(novoModo);
+    },
+    [paginaSelecionada, markdownTexto, handleSalvarConteudo],
+  );
+
+  const handleMarkdownChange = useCallback(
+    (texto: string) => {
+      setMarkdownTexto(texto);
+      if (paginaSelecionada) {
+        const json = markdownToTiptapJson(texto);
+        salvarConteudo(paginaSelecionada.id, json);
+      }
+    },
+    [paginaSelecionada, salvarConteudo],
+  );
+
+  // Reset modo quando muda de pagina
+  useEffect(() => {
+    setModoEdicao("editor");
+  }, [paginaSelecionada?.id]);
+
   const handleNavegar = useCallback(
     (paginaId: string) => {
       const pagina = paginas.find((p) => p.id === paginaId);
@@ -251,15 +287,34 @@ export default function WikiPage() {
                   statusSalvamento={statusSalvamento}
                   workspaceId={workspaceId}
                   paginaId={paginaSelecionada.id}
+                  modoEdicao={modoEdicao}
+                  onModoChange={handleModoChange}
                 />
-                <WikiEditor
-                  key={paginaSelecionada.id}
-                  conteudo={paginaSelecionada.conteudo}
-                  onSave={handleSalvarConteudo}
-                  workspaceId={workspaceId}
-                  paginaId={paginaSelecionada.id}
-                  onEditorReady={handleEditorReady}
-                />
+                {modoEdicao === "editor" ? (
+                  <WikiEditor
+                    key={paginaSelecionada.id}
+                    conteudo={paginaSelecionada.conteudo}
+                    onSave={handleSalvarConteudo}
+                    workspaceId={workspaceId}
+                    paginaId={paginaSelecionada.id}
+                    onEditorReady={handleEditorReady}
+                  />
+                ) : (
+                  <div className="flex gap-0 -mx-8" style={{ minHeight: "400px" }}>
+                    <div
+                      className="flex-1 min-w-0 overflow-auto border-r"
+                      style={{ borderColor: "var(--tf-border)" }}
+                    >
+                      <MarkdownEditor
+                        value={markdownTexto}
+                        onChange={handleMarkdownChange}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0 overflow-auto">
+                      <MarkdownPreview conteudo={markdownTexto} />
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center gap-4">

@@ -1,27 +1,16 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
-import { StarterKit } from "@tiptap/starter-kit";
-import { Image as ImageExt } from "@tiptap/extension-image";
 import { Placeholder } from "@tiptap/extension-placeholder";
-import { TextAlign } from "@tiptap/extension-text-align";
-import { Highlight } from "@tiptap/extension-highlight";
-import { TaskList } from "@tiptap/extension-task-list";
-import { TaskItem } from "@tiptap/extension-task-item";
-import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
-import { Table, TableRow, TableCell, TableHeader } from "@tiptap/extension-table";
 import { FileHandler } from "@tiptap/extension-file-handler";
-import { common, createLowlight } from "lowlight";
 import { useEffect, useCallback, useRef, useState } from "react";
 
 import { FloatingToolbar } from "./floating-toolbar";
 import { BlockHandle } from "./block-handle";
 import { TableControls } from "./table-controls";
 import { SlashCommand } from "./slash-command";
-import { CardEmbed } from "./card-embed";
+import { getWikiSchemaExtensions } from "./wiki-extensions";
 import { inserirImagemNoEditor } from "./image-upload";
-
-const lowlight = createLowlight(common);
 
 interface WikiEditorProps {
   conteudo: Record<string, unknown> | null;
@@ -46,12 +35,7 @@ export function WikiEditor({
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        codeBlock: false,
-        link: { openOnClick: false, HTMLAttributes: { class: "wiki-link" } },
-        dropcursor: { color: "var(--tf-accent)", width: 2 },
-      }),
-      ImageExt.configure({ inline: false, allowBase64: false }),
+      ...getWikiSchemaExtensions(),
       Placeholder.configure({
         placeholder: ({ node }) => {
           if (node.type.name === "heading") return `Heading ${node.attrs.level}`;
@@ -59,15 +43,6 @@ export function WikiEditor({
         },
         includeChildren: true,
       }),
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Highlight.configure({ multicolor: false }),
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      CodeBlockLowlight.configure({ lowlight }),
-      Table.configure({ resizable: true }),
-      TableRow,
-      TableCell,
-      TableHeader,
       FileHandler.configure({
         allowedMimeTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
         onDrop: (currentEditor, files, pos) => {
@@ -82,7 +57,6 @@ export function WikiEditor({
         },
       }),
       SlashCommand,
-      CardEmbed,
     ],
     content: conteudo || undefined,
     editable: editavel,

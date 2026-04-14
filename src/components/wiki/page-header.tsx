@@ -2,6 +2,7 @@
 
 import { getBreadcrumb } from "@/lib/wiki-utils";
 import { uploadImagemWiki } from "./image-upload";
+import { WikiModeSwitcher, type WikiEditMode } from "./wiki-mode-switcher";
 import type { WikiPagina } from "@/types";
 import { Check, ChevronRight, ImagePlus, Loader2, SmilePlus, X } from "lucide-react";
 import { useState, useCallback, useRef, useEffect } from "react";
@@ -16,6 +17,8 @@ interface PageHeaderProps {
   statusSalvamento?: "idle" | "salvando" | "salvo";
   workspaceId: string;
   paginaId: string;
+  modoEdicao?: WikiEditMode;
+  onModoChange?: (modo: WikiEditMode) => void;
 }
 
 // Emojis comuns para seleção rápida
@@ -36,6 +39,8 @@ export function PageHeader({
   statusSalvamento = "idle",
   workspaceId,
   paginaId,
+  modoEdicao = "editor",
+  onModoChange,
 }: PageHeaderProps) {
   const [editandoTitulo, setEditandoTitulo] = useState(false);
   const [titulo, setTitulo] = useState(pagina.titulo);
@@ -268,7 +273,10 @@ export function PageHeader({
 
       {/* Meta info */}
       <div
-        className="flex items-center gap-3 text-[11px] ml-[52px] mt-1"
+        className="flex items-center justify-between ml-[52px] mt-1"
+      >
+      <div
+        className="flex items-center gap-3 text-[11px]"
         style={{ color: "var(--tf-text-tertiary)" }}
       >
         <span>
@@ -297,6 +305,11 @@ export function PageHeader({
             )}
           </span>
         )}
+      </div>
+
+      {onModoChange && (
+        <WikiModeSwitcher modo={modoEdicao} onChange={onModoChange} />
+      )}
       </div>
     </div>
   );
