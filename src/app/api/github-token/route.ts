@@ -1,5 +1,5 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
-import { applyRateLimit } from "@/lib/api-utils";
+import { applyRateLimitAsync } from "@/lib/api-utils";
 import { encrypt } from "@/lib/crypto";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
  * Returns masked token info (never the full token).
  */
 export async function GET(request: NextRequest) {
-  const rateLimited = applyRateLimit(request, "github-token-get", { maxRequests: 30, windowMs: 60_000 });
+  const rateLimited = await applyRateLimitAsync(request, "github-token-get", { maxRequests: 30, windowMs: 60_000 });
   if (rateLimited) return rateLimited;
 
   const supabase = await createServerClient();
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
  * Validates and saves a Personal Access Token.
  */
 export async function POST(request: NextRequest) {
-  const rateLimited = applyRateLimit(request, "github-token-post", { maxRequests: 5, windowMs: 60_000 });
+  const rateLimited = await applyRateLimitAsync(request, "github-token-post", { maxRequests: 5, windowMs: 60_000 });
   if (rateLimited) return rateLimited;
 
   const supabase = await createServerClient();
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
  * Removes the stored token.
  */
 export async function DELETE(request: NextRequest) {
-  const rateLimited = applyRateLimit(request, "github-token-delete", { maxRequests: 5, windowMs: 60_000 });
+  const rateLimited = await applyRateLimitAsync(request, "github-token-delete", { maxRequests: 5, windowMs: 60_000 });
   if (rateLimited) return rateLimited;
 
   const supabase = await createServerClient();

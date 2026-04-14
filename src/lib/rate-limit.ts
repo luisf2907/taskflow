@@ -1,9 +1,19 @@
-import { createServiceClient } from "@/lib/supabase/server";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
 /**
- * Rate limiter backed by Supabase for serverless compatibility.
- * Falls back to in-memory for development or if Supabase call fails.
+ * Rate limiter backed by Upstash Redis for serverless compatibility.
+ * Falls back to in-memory if UPSTASH_REDIS_REST_URL is not configured.
+ *
+ * Why Upstash over in-memory?
+ * In serverless (Vercel), each invocation can run on a different instance —
+ * an in-memory Map is NOT shared between them, making rate limiting ineffective.
+ * Upstash Redis is shared, HTTP-based (~1-5ms latency), and works on Edge.
  */
+
+// =============================================
+// In-memory fallback (dev / missing config)
+// =============================================
 
 const memoryMap = new Map<string, { count: number; resetAt: number }>();
 const MAX_MEMORY_ENTRIES = 10_000;
@@ -11,7 +21,6 @@ let lastCleanup = 0;
 
 function cleanupExpired() {
   const now = Date.now();
-  // Cleanup no maximo a cada 30s para nao impactar performance
   if (now - lastCleanup < 30_000) return;
   lastCleanup = now;
 
@@ -19,7 +28,6 @@ function cleanupExpired() {
     if (now > v.resetAt) memoryMap.delete(k);
   }
 
-  // Safety cap: se ainda tiver muitas entries, dropar as mais antigas
   if (memoryMap.size > MAX_MEMORY_ENTRIES) {
     const entries = [...memoryMap.entries()].sort((a, b) => a[1].resetAt - b[1].resetAt);
     const toDelete = entries.slice(0, entries.length - MAX_MEMORY_ENTRIES);
@@ -50,77 +58,77 @@ function memoryRateLimit(
   return { ok: true };
 }
 
+// =============================================
+// Upstash Redis rate limiter (production)
+// =============================================
+
+let redis: Redis | null = null;
+const rateLimiters = new Map<string, Ratelimit>();
+
+function getRedis(): Redis | null {
+  if (redis) return redis;
+
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) return null;
+
+  redis = new Redis({ url, token });
+  return redis;
+}
+
+function getUpstashLimiter(prefix: string, maxRequests: number, windowMs: number): Ratelimit | null {
+  const r = getRedis();
+  if (!r) return null;
+
+  const cacheKey = `${prefix}:${maxRequests}:${windowMs}`;
+  let limiter = rateLimiters.get(cacheKey);
+  if (!limiter) {
+    const windowSec = Math.ceil(windowMs / 1000);
+    limiter = new Ratelimit({
+      redis: r,
+      limiter: Ratelimit.slidingWindow(maxRequests, `${windowSec} s`),
+      prefix: `rl:${prefix}`,
+    });
+    rateLimiters.set(cacheKey, limiter);
+  }
+  return limiter;
+}
+
+// =============================================
+// Public API
+// =============================================
+
 /**
- * Rate limit check using Supabase RPC with in-memory fallback.
- * For the Supabase approach, create this function in your database:
- *
- * CREATE OR REPLACE FUNCTION check_rate_limit(
- *   p_key TEXT,
- *   p_max_requests INT,
- *   p_window_seconds INT
- * ) RETURNS JSON AS $$
- * DECLARE
- *   v_count INT;
- *   v_window_start TIMESTAMPTZ;
- *   v_now TIMESTAMPTZ := NOW();
- * BEGIN
- *   SELECT count, window_start INTO v_count, v_window_start
- *   FROM rate_limits WHERE key = p_key;
- *
- *   IF NOT FOUND OR v_now > v_window_start + (p_window_seconds || ' seconds')::INTERVAL THEN
- *     INSERT INTO rate_limits (key, count, window_start)
- *     VALUES (p_key, 1, v_now)
- *     ON CONFLICT (key) DO UPDATE SET count = 1, window_start = v_now;
- *     RETURN json_build_object('ok', true);
- *   END IF;
- *
- *   IF v_count >= p_max_requests THEN
- *     RETURN json_build_object(
- *       'ok', false,
- *       'retryAfter', EXTRACT(EPOCH FROM (v_window_start + (p_window_seconds || ' seconds')::INTERVAL - v_now))::INT
- *     );
- *   END IF;
- *
- *   UPDATE rate_limits SET count = count + 1 WHERE key = p_key;
- *   RETURN json_build_object('ok', true);
- * END;
- * $$ LANGUAGE plpgsql;
- *
- * CREATE TABLE IF NOT EXISTS rate_limits (
- *   key TEXT PRIMARY KEY,
- *   count INT NOT NULL DEFAULT 0,
- *   window_start TIMESTAMPTZ NOT NULL DEFAULT NOW()
- * );
+ * Async rate limit — uses Upstash Redis in production, in-memory as fallback.
  */
 export async function rateLimitAsync(
   key: string,
   { maxRequests = 20, windowMs = 60_000 } = {}
 ): Promise<{ ok: boolean; retryAfter?: number }> {
+  const limiter = getUpstashLimiter("async", maxRequests, windowMs);
+
+  if (!limiter) {
+    return memoryRateLimit(key, maxRequests, windowMs);
+  }
+
   try {
-    const supabase = createServiceClient();
-    const { data, error } = await supabase.rpc("check_rate_limit", {
-      p_key: key,
-      p_max_requests: maxRequests,
-      p_window_seconds: Math.ceil(windowMs / 1000),
-    });
-
-    if (error || !data) {
-      // Fallback to in-memory if RPC not available
-      console.warn("[rate-limit] Supabase RPC falhou, usando in-memory:", error?.message ?? "sem data");
-      return memoryRateLimit(key, maxRequests, windowMs);
+    const result = await limiter.limit(key);
+    if (!result.success) {
+      const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
+      return { ok: false, retryAfter: Math.max(retryAfter, 1) };
     }
-
-    return data as { ok: boolean; retryAfter?: number };
+    return { ok: true };
   } catch (err) {
-    // Fallback to in-memory
-    console.warn("[rate-limit] Supabase RPC exception, usando in-memory:", err instanceof Error ? err.message : err);
+    console.warn("[rate-limit] Upstash failed, using in-memory:", err instanceof Error ? err.message : err);
     return memoryRateLimit(key, maxRequests, windowMs);
   }
 }
 
 /**
- * Synchronous in-memory rate limiter (kept for backward compatibility).
- * Prefer rateLimitAsync for production serverless deployments.
+ * Synchronous in-memory rate limiter.
+ * Used by applyRateLimit in api-utils.ts for non-async contexts.
+ * In production with Upstash configured, prefer rateLimitAsync.
  */
 export function rateLimit(
   key: string,

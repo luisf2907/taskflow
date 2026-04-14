@@ -204,37 +204,26 @@ export function useCartoes(quadroId: string) {
       (atual: Cartao[] | undefined) => (atual || []).map((c) => c.id === cartaoId ? { ...c, coluna_id: novaColunaId, posicao: novaPosicao } : c),
       { revalidate: false }
     );
-    const { error: moveErr } = await supabase.from("cartoes").update({ coluna_id: novaColunaId, posicao: novaPosicao }).eq("id", cartaoId);
-    if (moveErr) {
-      // Rollback: restaurar estado anterior
+
+    // Single RPC: move + set data_conclusao + return member IDs
+    const { data: result, error: moveErr } = await supabase.rpc("move_card_complete", {
+      p_cartao_id: cartaoId,
+      p_nova_coluna_id: novaColunaId,
+      p_nova_posicao: novaPosicao,
+    });
+
+    if (moveErr || result?.error) {
       globalMutate(key, estadoAnterior, { revalidate: true });
       return {};
     }
 
-    // Set or clear data_conclusao based on whether destination is the last column
-    const { data: colunas } = await supabase
-      .from("colunas")
-      .select("id, posicao")
-      .eq("quadro_id", quadroId)
-      .order("posicao", { ascending: false })
-      .limit(1);
-    const ultimaColunaId = colunas?.[0]?.id;
-
-    if (novaColunaId === ultimaColunaId) {
-      await supabase.from("cartoes").update({ data_conclusao: new Date().toISOString() }).eq("id", cartaoId);
-
-      // Notify card members about completion
+    // Notify card members if moved to Done
+    if (result?.is_done && cartao) {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user && cartao) {
-        // Notify all members of the card
-        const { data: membros } = await supabase
-          .from("cartao_membros")
-          .select("membro_id")
-          .eq("cartao_id", cartaoId);
-        const memberIds = membros?.map((m) => m.membro_id) || [];
-        // Also notify the card creator if not already a member
+      if (user) {
+        const memberIds: string[] = result.member_ids || [];
         const notifyIds = new Set(memberIds);
-        notifyIds.add(user.id); // self-notification for activity feed
+        notifyIds.add(user.id);
         for (const uid of notifyIds) {
           criarNotificacao({
             userId: uid,
@@ -245,24 +234,18 @@ export function useCartoes(quadroId: string) {
           });
         }
       }
-    } else {
-      await supabase.from("cartoes").update({ data_conclusao: null }).eq("id", cartaoId);
     }
 
     if (oldColunaId && oldColunaId !== novaColunaId) {
       registrarAtividade({ quadroId, cartaoId, acao: "mover", entidade: "cartao", detalhes: { titulo: cartao?.titulo, coluna_origem_id: oldColunaId, coluna_destino_id: novaColunaId } });
 
       // Execute automations for card_moved_to_column
-      const { data: quadro } = await supabase
-        .from("quadros")
-        .select("workspace_id")
-        .eq("id", quadroId)
-        .single();
-      if (quadro?.workspace_id) {
+      const workspaceId = result?.workspace_id;
+      if (workspaceId) {
         const { data: automacoes } = await supabase
           .from("automacoes")
           .select("*")
-          .eq("workspace_id", quadro.workspace_id);
+          .eq("workspace_id", workspaceId);
         if (automacoes && automacoes.length > 0) {
           await executarAutomacoes(supabase, automacoes, {
             tipo: "card_moved_to_column",
@@ -280,16 +263,28 @@ export function useCartoes(quadroId: string) {
     const outros = cartoes.filter((c) => c.coluna_id !== colunaId);
     globalMutate(key, [...outros, ...atualizados], false);
 
-    // Usar UPDATE individual em vez de upsert — cards ja existem e upsert
-    // exige permissao INSERT no RLS, causando 403.
-    await Promise.all(
-      atualizados.map((c) =>
-        supabase
-          .from("cartoes")
-          .update({ posicao: c.posicao, coluna_id: c.coluna_id })
-          .eq("id", c.id)
-      )
-    );
+    // Batch update via RPC — 1 transacao ao inves de N updates individuais
+    const updates = atualizados.map((c) => ({
+      id: c.id,
+      coluna_id: c.coluna_id,
+      posicao: c.posicao,
+    }));
+
+    const { error } = await supabase.rpc("reorder_cards", {
+      p_updates: updates,
+    });
+
+    if (error) {
+      console.warn("[reorder] RPC failed, falling back to individual updates:", error.message);
+      await Promise.all(
+        atualizados.map((c) =>
+          supabase
+            .from("cartoes")
+            .update({ posicao: c.posicao, coluna_id: c.coluna_id })
+            .eq("id", c.id)
+        )
+      );
+    }
   }
 
   function buscar() {

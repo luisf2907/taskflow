@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { type ZodSchema, ZodError } from "zod";
-import { rateLimit } from "./rate-limit";
+import { rateLimit, rateLimitAsync } from "./rate-limit";
 
 /**
  * Extract a stable key for rate limiting from the request.
@@ -58,6 +58,54 @@ export function applyRateLimit(
   if (!result.ok) {
     return NextResponse.json(
       { error: "Too many requests. Try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(result.retryAfter || 60) },
+      }
+    );
+  }
+  return null;
+}
+
+/**
+ * Async rate limiting using Upstash Redis (production) with in-memory fallback.
+ * Prefer this over applyRateLimit for all new API routes.
+ */
+export async function applyRateLimitAsync(
+  request: NextRequest,
+  prefix: string,
+  opts?: { maxRequests?: number; windowMs?: number }
+): Promise<NextResponse | null> {
+  const key = getRateLimitKey(request, prefix);
+  const result = await rateLimitAsync(key, opts);
+  if (!result.ok) {
+    return NextResponse.json(
+      { error: "Too many requests. Try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(result.retryAfter || 60) },
+      }
+    );
+  }
+  return null;
+}
+
+/**
+ * Async rate limiting by API key ID using Upstash Redis.
+ */
+export async function applyApiKeyRateLimitAsync(
+  keyId: string,
+  prefix: string,
+  opts?: { maxRequests?: number; windowMs?: number }
+): Promise<NextResponse | null> {
+  const key = `${prefix}:apikey:${keyId}`;
+  const result = await rateLimitAsync(key, {
+    maxRequests: opts?.maxRequests ?? 120,
+    windowMs: opts?.windowMs ?? 60_000,
+  });
+  if (!result.ok) {
+    return NextResponse.json(
+      { error: "Too many requests for this API key. Try again later." },
       {
         status: 429,
         headers: { "Retry-After": String(result.retryAfter || 60) },

@@ -18,7 +18,7 @@ import { randomUUID } from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { applyRateLimit } from "@/lib/api-utils";
+import { applyRateLimitAsync } from "@/lib/api-utils";
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 
 const BUCKET = "reunioes-audio";
@@ -27,7 +27,7 @@ const UPLOAD_TTL_SECONDS = 10 * 60; // 10 min
 const ALLOWED_MIME_PREFIXES = ["audio/", "video/"];
 
 export async function POST(request: NextRequest) {
-  const limited = applyRateLimit(request, "reunioes-create", {
+  const limited = await applyRateLimitAsync(request, "reunioes-create", {
     maxRequests: 20,
     windowMs: 60 * 60 * 1000,
   });

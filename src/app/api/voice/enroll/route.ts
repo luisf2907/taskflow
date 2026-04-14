@@ -14,7 +14,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
-import { applyRateLimit } from "@/lib/api-utils";
+import { applyRateLimitAsync } from "@/lib/api-utils";
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import {
   voiceEnroll,
@@ -39,7 +39,7 @@ const ALLOWED_MIMES = new Set([
 ]);
 
 export async function POST(request: NextRequest) {
-  const limited = applyRateLimit(request, "voice-enroll", {
+  const limited = await applyRateLimitAsync(request, "voice-enroll", {
     maxRequests: 10,
     windowMs: 60 * 60 * 1000, // 10 por hora por IP
   });
@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
  * e (opcionalmente) tambem revoga o consentimento.
  */
 export async function DELETE(request: NextRequest) {
-  const limited = applyRateLimit(request, "voice-enroll-delete", {
+  const limited = await applyRateLimitAsync(request, "voice-enroll-delete", {
     maxRequests: 5,
     windowMs: 60 * 60 * 1000,
   });

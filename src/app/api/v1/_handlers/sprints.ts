@@ -29,45 +29,21 @@ export async function handleSprintSummary(
   const sprint = await assertSprint(service, sprintId, auth.workspaceId);
   if (isErrorResponse(sprint)) return sprint;
 
-  const { data: colunas } = await service
-    .from("colunas")
-    .select("id, nome, posicao")
-    .eq("quadro_id", sprintId)
-    .order("posicao");
+  // Single RPC with GROUP BY — replaces 2 queries + JS aggregation
+  const { data: summary, error } = await service.rpc("get_sprint_summary", {
+    p_sprint_id: sprintId,
+  });
 
-  if (!colunas || colunas.length === 0) {
+  if (error || !summary) {
     return NextResponse.json({
       data: { sprint, colunas: [], total_cards: 0, total_pontos: 0 },
     });
   }
 
-  const colIds = colunas.map((c) => c.id);
-  const { data: cards } = await service
-    .from("cartoes")
-    .select("id, titulo, peso, coluna_id")
-    .in("coluna_id", colIds);
-
-  const cardsList = cards || [];
-  const ultimaColuna = colunas[colunas.length - 1].id;
-
-  const colunasComCards = colunas.map((col) => ({
-    ...col,
-    cards: cardsList.filter((c) => c.coluna_id === col.id).length,
-    pontos: cardsList
-      .filter((c) => c.coluna_id === col.id)
-      .reduce((s, c) => s + (c.peso || 0), 0),
-  }));
-
-  const concluidos = cardsList.filter((c) => c.coluna_id === ultimaColuna);
-
   return NextResponse.json({
     data: {
       sprint,
-      colunas: colunasComCards,
-      total_cards: cardsList.length,
-      total_pontos: cardsList.reduce((s, c) => s + (c.peso || 0), 0),
-      concluidos: concluidos.length,
-      pontos_concluidos: concluidos.reduce((s, c) => s + (c.peso || 0), 0),
+      ...summary,
     },
   });
 }

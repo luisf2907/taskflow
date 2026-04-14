@@ -1,7 +1,7 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { githubAuthFetch } from "@/lib/github/client";
 import { NextRequest, NextResponse } from "next/server";
-import { applyRateLimit } from "@/lib/api-utils";
+import { applyRateLimitAsync } from "@/lib/api-utils";
 
 interface GitHubRepoAPI {
   id: number;
@@ -21,7 +21,7 @@ interface GitHubRepoAPI {
 
 export async function GET(request: NextRequest) {
   // Rate limit: 10 per minute per IP
-  const limited = applyRateLimit(request, "repos", { maxRequests: 10 });
+  const limited = await applyRateLimitAsync(request, "repos", { maxRequests: 10 });
   if (limited) return limited;
 
   // Auth
@@ -73,5 +73,9 @@ export async function GET(request: NextRequest) {
     owner_avatar: r.owner.avatar_url,
   }));
 
-  return NextResponse.json({ repos });
+  return NextResponse.json({ repos }, {
+    headers: {
+      "Cache-Control": "s-maxage=60, stale-while-revalidate=300",
+    },
+  });
 }

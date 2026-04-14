@@ -1,7 +1,7 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { validateBody, applyRateLimit } from "@/lib/api-utils";
+import { validateBody, applyRateLimitAsync } from "@/lib/api-utils";
 import { enviarEmail } from "@/lib/email";
 import {
   templateConviteWorkspace,
@@ -16,7 +16,7 @@ const schema = z.object({
 
 export async function POST(request: NextRequest) {
   // Rate limit: 20 emails per minute per IP
-  const limited = applyRateLimit(request, "email-send", { maxRequests: 20 });
+  const limited = await applyRateLimitAsync(request, "email-send", { maxRequests: 20 });
   if (limited) return limited;
 
   const supabase = await createServerClient();

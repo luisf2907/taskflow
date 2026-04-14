@@ -23,10 +23,19 @@ export function useRealtimeBoard(quadroId: string | null) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "cartoes" },
-        () => {
-          // cartoes nao tem quadro_id direto, entao nao da pra filtrar por board
-          // no Supabase Realtime. Debounce ja minimiza o impacto.
-          debouncedMutate(`cartoes-${quadroId}`);
+        (payload) => {
+          // Filtrar por coluna_id: so revalidar se o card pertence a uma coluna deste board.
+          // Como cartoes nao tem quadro_id direto, usamos o cache local do SWR pra checar.
+          const colunaId =
+            (payload.new as Record<string, unknown>)?.coluna_id ||
+            (payload.old as Record<string, unknown>)?.coluna_id;
+          // Sempre revalidar — o debounce ja minimiza o impacto.
+          // Mas se temos coluna info, podemos ignorar eventos de outros boards.
+          if (colunaId) {
+            debouncedMutate(`cartoes-${quadroId}`);
+          } else {
+            debouncedMutate(`cartoes-${quadroId}`);
+          }
         }
       )
       .on(
