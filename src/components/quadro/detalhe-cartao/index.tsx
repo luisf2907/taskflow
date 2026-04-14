@@ -73,7 +73,7 @@ export function DetalheCartao({
   useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement;
     return () => { previousFocusRef.current?.focus(); };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
   const painelRef = useRef<HTMLDivElement>(null);
 
   // Scroll suave até o painel quando abrir

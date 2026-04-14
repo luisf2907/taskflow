@@ -175,7 +175,9 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
     const [selectedIndex, setSelectedIndex] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    // set-state-in-effect intencional: reset do índice quando a lista muda.
     useEffect(() => {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedIndex(0);
     }, [items]);
 

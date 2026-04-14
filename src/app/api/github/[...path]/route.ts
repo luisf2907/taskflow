@@ -33,6 +33,10 @@ export async function GET(
   const fullPath = searchStr ? `${githubPath}?${searchStr}` : githubPath;
 
   // Auth
+  // SEGURANÇA: o user.id abaixo vem do cookie de sessão via auth.getUser(),
+  // nunca de header/body controlado pelo cliente. Não altere essa invariante —
+  // o service client bypassa RLS, então qualquer rota que leia github_tokens
+  // por um id controlado pelo cliente vaza o provider_token de outro usuário.
   const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 

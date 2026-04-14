@@ -49,11 +49,14 @@ export function PageHeader({
   const capaInputRef = useRef<HTMLInputElement>(null);
   const [uploadingCapa, setUploadingCapa] = useState(false);
 
-  // Sync título quando muda de página
+  // Sync título quando muda de página. set-state-in-effect intencional:
+  // sincroniza com prop vinda de fora.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setTitulo(pagina.titulo);
     setEditandoTitulo(false);
   }, [pagina.id, pagina.titulo]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleCapaUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {

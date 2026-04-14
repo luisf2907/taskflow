@@ -70,7 +70,9 @@ export function CommandPalette() {
     };
   }, [aberto, abrir, fechar]);
 
-  // Busca com debounce
+  // Busca com debounce. set-state-in-effect intencional: reage a mudança de
+  // input do usuário, dispara debounce assíncrono.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!busca.trim()) {
       setResultados([]);
@@ -123,7 +125,7 @@ export function CommandPalette() {
 
       if (uniqueCards.length > 0) {
         const colunaIds = uniqueCards.filter((c) => c.coluna_id).map((c) => c.coluna_id as string);
-        let colunaMap: Record<string, { quadro_id: string; nome: string }> = {};
+        const colunaMap: Record<string, { quadro_id: string; nome: string }> = {};
         if (colunaIds.length > 0) {
           const { data: colunas } = await supabase
             .from("colunas")
@@ -160,6 +162,7 @@ export function CommandPalette() {
 
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [busca]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Filtrar por tab
   const filtrados = tab === "todos" ? resultados : resultados.filter((r) => r.tipo === tab);

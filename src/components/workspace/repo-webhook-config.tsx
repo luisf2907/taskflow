@@ -40,12 +40,15 @@ export function RepoWebhookConfig({
   const [copiado, setCopiado] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
 
+  // Sincronizar form com props vindos do banco. set-state-in-effect intencional.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setSecret(secretInicial || "");
     setReviewId(reviewInicial || "");
     setDoneId(doneInicial || "");
     setDoingId(doingInicial || "");
   }, [secretInicial, reviewInicial, doneInicial, doingInicial]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function gerarSecret() {
     const bytes = new Uint8Array(32);

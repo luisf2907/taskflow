@@ -15,16 +15,17 @@ export function DonutChart({ segmentos, tamanho = 160 }: DonutChartProps) {
   const rInterno = r - espessura;
   const circunferencia = 2 * Math.PI * ((r + rInterno) / 2);
 
-  let offset = 0;
+  // Uso reduce pra evitar mutação de variável externa durante o render
+  // (flagged by react-hooks/immutability).
   const arcos = segmentos
     .filter((s) => s.valor > 0)
-    .map((s) => {
+    .reduce<Array<(typeof segmentos)[number] & { pct: number; comprimento: number; offset: number }>>((acc, s) => {
       const pct = s.valor / total;
       const comprimento = pct * circunferencia;
-      const arco = { ...s, pct, comprimento, offset };
-      offset += comprimento;
-      return arco;
-    });
+      const offset = acc.length === 0 ? 0 : acc[acc.length - 1].offset + acc[acc.length - 1].comprimento;
+      acc.push({ ...s, pct, comprimento, offset });
+      return acc;
+    }, []);
 
   return (
     <div className="flex items-center gap-6">

@@ -132,22 +132,22 @@ export default function LandingHeader() {
             animation: "dropdownExpandDown 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
           }}
         >
-          <a
+          <Link
             href="/#features"
             className="px-4 py-3 rounded-[14px] text-[14px] font-bold no-underline hover-surface"
             style={{ color: "var(--tf-text-secondary)" }}
             onClick={() => setMobileOpen(false)}
           >
             Funcionalidades
-          </a>
-          <a
+          </Link>
+          <Link
             href="/#how-it-works"
             className="px-4 py-3 rounded-[14px] text-[14px] font-bold no-underline hover-surface"
             style={{ color: "var(--tf-text-secondary)" }}
             onClick={() => setMobileOpen(false)}
           >
             Como Funciona
-          </a>
+          </Link>
           <Link
             href="/pricing"
             className="px-4 py-3 rounded-[14px] text-[14px] font-bold no-underline hover-surface"

@@ -52,11 +52,13 @@ export default function WikiSlugPage() {
   const [markdownTexto, setMarkdownTexto] = useState("");
   const editorRef = useRef<Editor | null>(null);
 
-  // Resolve página pelo slug da URL
+  // Resolve página pelo slug da URL. set-state-in-effect intencional: sincroniza
+  // estado com dados async (SWR) + URL params.
   useEffect(() => {
     if (!carregando && paginas.length > 0 && slug) {
       const pagina = paginas.find((p) => p.slug === slug);
       if (pagina) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPaginaSelecionada(pagina);
       } else {
         router.replace(`/workspace/${workspaceId}/wiki`);
@@ -64,11 +66,12 @@ export default function WikiSlugPage() {
     }
   }, [carregando, paginas, slug, workspaceId, router]);
 
-  // Sync com dados atualizados
+  // Sync com dados atualizados vindos do backend via SWR.
   useEffect(() => {
     if (paginaSelecionada) {
       const atualizada = paginas.find((p) => p.id === paginaSelecionada.id);
       if (atualizada && atualizada.atualizado_em !== paginaSelecionada.atualizado_em) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPaginaSelecionada(atualizada);
       }
     }
@@ -221,8 +224,10 @@ export default function WikiSlugPage() {
     [paginaSelecionada, salvarConteudo],
   );
 
-  // Reset modo quando muda de pagina
+  // Reset modo quando muda de página. set-state-in-effect intencional: reage a
+  // mudança de página selecionada.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setModoEdicao("editor");
   }, [paginaSelecionada?.id]);
 

@@ -38,7 +38,9 @@ export function ModalWorkspace({
   const [wsDescricao, setWsDescricao] = useState("");
   const [wsCor, setWsCor] = useState(CORES_WORKSPACE[0]);
 
-  // Sincronizar com o workspace em edicao
+  // Sincronizar com o workspace em edição. set-state-in-effect intencional:
+  // o modal precisa popular os campos quando `editando` muda de fora.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (editando) {
       setWsNome(editando.nome);
@@ -50,6 +52,7 @@ export function ModalWorkspace({
       setWsCor(CORES_WORKSPACE[0]);
     }
   }, [editando, aberto]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function handleFechar() {
     onFechar();

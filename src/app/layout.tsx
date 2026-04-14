@@ -8,7 +8,18 @@ import { ThemeInjector } from "@/components/theme-injector";
 import { ToastContainer } from "@/components/ui/toast";
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
+import { readFileSync } from "fs";
+import path from "path";
 import "./globals.css";
+
+// Lê o conteúdo do theme-init.js em build-time pra injetar inline no <head>.
+// Script inline com dangerouslySetInnerHTML roda antes da hidratação (evita
+// FOUC de tema) sem disparar o warning @next/next/no-sync-scripts e sem o bug
+// do next/script beforeInteractive inside <head> com React 19.
+const themeInitScript = readFileSync(
+  path.join(process.cwd(), "public", "theme-init.js"),
+  "utf8",
+);
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -49,7 +60,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="h-full" suppressHydrationWarning>
       <head>
-        <script src="/theme-init.js" />
+        {/* theme-init inline — roda antes da hidratação pra aplicar dark mode
+            e palette customizada (evita FOUC). */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className={`${dmSans.className} h-full antialiased`} suppressHydrationWarning>
 

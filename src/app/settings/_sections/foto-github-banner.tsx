@@ -27,13 +27,15 @@ export function FotoGithubBanner({
   const [fotoGithub, setFotoGithub] = useState<string | null>(null);
   const [salvandoFoto, setSalvandoFoto] = useState(false);
 
-  // Detectar foto do GitHub após conexão
+  // Detectar foto do GitHub após conexão. set-state-in-effect intencional:
+  // reage à chegada assíncrona de identities/perfil do Supabase.
   useEffect(() => {
     if (!user || !temGithub || perfil?.avatar_url) return;
     const githubIdentity = user.identities?.find((i) => i.provider === "github");
     const avatarUrl = githubIdentity?.identity_data?.avatar_url as
       | string
       | undefined;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (avatarUrl) setFotoGithub(avatarUrl);
   }, [user, temGithub, perfil]);
 

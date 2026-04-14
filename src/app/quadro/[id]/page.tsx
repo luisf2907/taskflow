@@ -76,6 +76,9 @@ export default function PaginaQuadro() {
   }, [telaCheia]);
   const isSprint = !!quadro?.workspace_id;
 
+  // set-state-in-effect intencional: popular o form quando o modal abre com um
+  // quadro/sprint existente.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (quadro && modalConfig) {
       setEditMeta(quadro.meta || "");
@@ -83,6 +86,7 @@ export default function PaginaQuadro() {
       setEditFim(quadro.data_fim || "");
     }
   }, [quadro, modalConfig]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function iniciarEdicao() {
     if (!quadro) return;

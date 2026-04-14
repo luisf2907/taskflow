@@ -44,17 +44,19 @@ export function PlanningPokerModal({
 
   const [cartaoPreSelecionado, setCartaoPreSelecionado] = useState<string | null>(null);
 
-  // Pre-selecionar cartao se passado como prop
+  // Pre-selecionar cartao se passado como prop. set-state-in-effect intencional.
   useEffect(() => {
     if (cartaoInicialId && aberto && !sessaoAtiva) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCartaoPreSelecionado(cartaoInicialId);
     }
   }, [cartaoInicialId, aberto, sessaoAtiva]);
 
-  // Iniciar sessao quando pre-selecionar
+  // Iniciar sessao quando pre-selecionar.
   useEffect(() => {
     if (cartaoPreSelecionado && aberto && !sessaoAtiva && !carregando) {
       iniciarSessao(cartaoPreSelecionado);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCartaoPreSelecionado(null);
     }
   }, [cartaoPreSelecionado, aberto, sessaoAtiva, carregando, iniciarSessao]);

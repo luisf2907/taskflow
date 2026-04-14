@@ -100,6 +100,7 @@ export function usePlanningPoker(workspaceId: string) {
   // =============================================
 
   /** Criar nova sessao de estimativa para um cartao */
+  // deps usam `user` (não `user?.id`) pra bater com o que o React Compiler infere
   const iniciarSessao = useCallback(async (cartaoId: string) => {
     if (!user?.id) return null;
 
@@ -123,7 +124,7 @@ export function usePlanningPoker(workspaceId: string) {
     // Optimistic
     globalMutate(key, { sessao: nova as PokerSessao, votos: [] }, false);
     return nova as PokerSessao;
-  }, [user?.id, workspaceId, key]);
+  }, [user, workspaceId, key]);
 
   /** Votar (upsert — substitui voto anterior) */
   const votar = useCallback(async (valor: string) => {
@@ -159,7 +160,7 @@ export function usePlanningPoker(workspaceId: string) {
       );
 
     globalMutate(key);
-  }, [sessaoAtiva, user?.id, meuMembro, meuVoto, votos, key]);
+  }, [sessaoAtiva, user, meuMembro, meuVoto, votos, key]);
 
   /** Revelar votos (muda status para 'revelado') */
   const revelarVotos = useCallback(async () => {

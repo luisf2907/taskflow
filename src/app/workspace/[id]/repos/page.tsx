@@ -92,6 +92,8 @@ function ModalConectarRepoLocal({
   const [modo, setModo] = useState<"lista" | "manual">("lista");
   const [manualInput, setManualInput] = useState("");
 
+  // set-state-in-effect intencional: fetch disparado ao abrir o modal.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!aberto) return;
     setCarregando(true);
@@ -105,6 +107,7 @@ function ModalConectarRepoLocal({
       .catch(() => { setErro("Erro ao carregar"); setModo("manual"); })
       .finally(() => setCarregando(false));
   }, [aberto]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const jaConectados = new Set(repositorios.map((r) => `${r.owner}/${r.nome}`));
   const filtrados = ghRepos.filter((r) => {

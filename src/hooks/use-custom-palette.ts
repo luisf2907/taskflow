@@ -45,8 +45,10 @@ export function useCustomPalette(
 ) {
   const [isDark, setIsDark] = useState(false);
 
-  // Observar mudancas de classe dark no <html>
+  // Observar mudancas de classe dark no <html>. set-state-in-effect intencional:
+  // sincroniza state com o DOM inicialmente e via MutationObserver.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsDark(document.documentElement.classList.contains("dark"));
 
     const observer = new MutationObserver(() => {

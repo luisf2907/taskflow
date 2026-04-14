@@ -8,6 +8,9 @@ import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 
+// Larguras pre-computadas pro skeleton (evita Math.random() no render).
+const SKELETON_LARGURAS = Array.from({ length: 12 }, () => Math.max(30, Math.random() * 90));
+
 interface RepoFileViewerProps {
   owner: string;
   nome: string;
@@ -69,13 +72,13 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
         </div>
         {/* Content skeleton */}
         <div className="p-4 flex flex-col gap-2">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {SKELETON_LARGURAS.map((largura, i) => (
             <div
               key={i}
               className="h-3.5 rounded-[4px] animate-pulse opacity-60"
               style={{
                 backgroundColor: "var(--tf-bg-secondary)",
-                width: `${Math.max(30, Math.random() * 90)}%`,
+                width: `${largura}%`,
               }}
             />
           ))}

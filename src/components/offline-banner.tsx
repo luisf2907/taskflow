@@ -10,7 +10,10 @@ export function OfflineBanner() {
     function handleOffline() { setOffline(true); }
     function handleOnline() { setOffline(false); }
 
-    // Check initial state
+    // Check initial state — set-state-in-effect intencional pra sincronizar com
+    // navigator.onLine no mount (não dá pra usar lazy initializer porque
+    // navigator não existe durante SSR e precisamos reagir a eventos depois).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!navigator.onLine) setOffline(true);
 
     window.addEventListener("offline", handleOffline);

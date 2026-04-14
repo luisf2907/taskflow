@@ -71,7 +71,7 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
         firstFocusable?.focus();
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [aberto]);
 
   if (!aberto) return null;

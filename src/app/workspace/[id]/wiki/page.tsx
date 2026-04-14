@@ -54,18 +54,21 @@ export default function WikiPage() {
   const [markdownTexto, setMarkdownTexto] = useState("");
   const editorRef = useRef<Editor | null>(null);
 
-  // Auto-seleciona a primeira página quando carrega
+  // Auto-seleciona a primeira página quando carrega. set-state-in-effect
+  // intencional: reage ao fim do fetch async.
   useEffect(() => {
     if (!carregando && paginas.length > 0 && !paginaSelecionada) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPaginaSelecionada(paginas[0]);
     }
   }, [carregando, paginas, paginaSelecionada]);
 
-  // Sync paginaSelecionada com dados atuais
+  // Sync paginaSelecionada com dados atuais vindos do SWR.
   useEffect(() => {
     if (paginaSelecionada) {
       const atualizada = paginas.find((p) => p.id === paginaSelecionada.id);
       if (atualizada && atualizada.atualizado_em !== paginaSelecionada.atualizado_em) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPaginaSelecionada(atualizada);
       }
     }
@@ -209,8 +212,9 @@ export default function WikiPage() {
     [paginaSelecionada, salvarConteudo],
   );
 
-  // Reset modo quando muda de pagina
+  // Reset modo quando muda de página. set-state-in-effect intencional.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setModoEdicao("editor");
   }, [paginaSelecionada?.id]);
 

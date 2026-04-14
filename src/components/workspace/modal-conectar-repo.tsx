@@ -39,6 +39,8 @@ export function ModalConectarRepo({
   const [erro, setErro] = useState<string | null>(null);
   const [modo, setModo] = useState<"lista" | "manual">("lista");
 
+  // set-state-in-effect intencional: fetch disparado ao abrir o modal.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!aberto) return;
     setCarregando(true);
@@ -58,6 +60,7 @@ export function ModalConectarRepo({
       })
       .finally(() => setCarregando(false));
   }, [aberto]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Filtrar repos já conectados e pela busca
   const jaConectados = new Set(

@@ -52,9 +52,12 @@ export function ModalCriarQuadro({
   const [novoMeta, setNovoMeta] = useState("");
   const [mostrarWorkspaces, setMostrarWorkspaces] = useState(false);
 
-  // Sincronizar workspace inicial quando o modal abrir
+  // Sincronizar workspace inicial quando o modal abrir.
+  // set-state-in-effect é intencional aqui: precisamos reagir à mudança do prop
+  // externo só quando o modal muda de estado fechado→aberto.
   useEffect(() => {
     if (aberto && initialWorkspaceId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNovoWorkspaceId(initialWorkspaceId);
     }
   }, [aberto, initialWorkspaceId]);

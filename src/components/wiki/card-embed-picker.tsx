@@ -28,6 +28,8 @@ export function CardEmbedPicker({
   const [busca, setBusca] = useState("");
   const [carregando, setCarregando] = useState(false);
 
+  // set-state-in-effect intencional: reage à abertura do modal.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!aberto) return;
     setCarregando(true);
@@ -44,6 +46,7 @@ export function CardEmbedPicker({
         setCarregando(false);
       });
   }, [aberto, workspaceId]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const filtrados = busca
     ? cards.filter((c) =>

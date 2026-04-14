@@ -124,7 +124,7 @@ export function ImportarModal({ aberto, onFechar, workspaceId }: ImportarModalPr
       const colunaIdMap = new Map(colunasCriadas.map((c) => [c.nome, c.id]));
 
       // 3. Criar/reusar etiquetas (upsert batch)
-      let etiquetaIdMap = new Map<string, string>();
+      const etiquetaIdMap = new Map<string, string>();
       if (dados.etiquetas.length > 0) {
         // Buscar existentes
         const nomes = dados.etiquetas.map((e) => e.nome);

@@ -79,11 +79,13 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
   const [alertaBloqueio, setAlertaBloqueio] = useState<string | null>(null);
   const [view, setView] = useState<ViewMode>("kanban");
 
-  // Carregar view persistida do localStorage por sprint
+  // Carregar view persistida do localStorage por sprint. set-state-in-effect
+  // intencional: lê localStorage que não existe em SSR.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const saved = localStorage.getItem(`tf_view_${quadroId}`);
     if (saved === "kanban" || saved === "lista" || saved === "tabela") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setView(saved);
     }
   }, [quadroId]);

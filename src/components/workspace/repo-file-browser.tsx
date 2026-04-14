@@ -32,10 +32,14 @@ function ordenarConteudo(itens: GitHubConteudo[]): GitHubConteudo[] {
   });
 }
 
+// Larguras pre-computadas pros skeletons (não precisa regenerar a cada render).
+const SKELETON_LARGURAS = Array.from({ length: 8 }, () => 120 + Math.random() * 160);
+const README_SKELETON_LARGURAS = Array.from({ length: 6 }, () => 40 + Math.random() * 50);
+
 function SkeletonLinhas() {
   return (
     <div className="flex flex-col gap-1">
-      {Array.from({ length: 8 }).map((_, i) => (
+      {SKELETON_LARGURAS.map((largura, i) => (
         <div
           key={i}
           className="flex items-center gap-3 rounded-[8px] px-3 py-2 animate-pulse"
@@ -49,7 +53,7 @@ function SkeletonLinhas() {
             className="h-4 rounded-[4px] flex-1"
             style={{
               backgroundColor: "var(--tf-border)",
-              maxWidth: `${120 + Math.random() * 160}px`,
+              maxWidth: `${largura}px`,
             }}
           />
           <div
@@ -72,10 +76,15 @@ export function RepoFileBrowser({
 }: RepoFileBrowserProps) {
   const [caminhoInterno, setCaminhoInterno] = useState("");
   const caminhoAtual = caminhoExterno ?? caminhoInterno;
-  const setCaminhoAtual = (path: string) => {
-    setCaminhoInterno(path);
-    onCaminhoChange?.(path);
-  };
+  // useCallback pra que o React Compiler preserve a memoização dos callbacks
+  // abaixo que dependem de setCaminhoAtual.
+  const setCaminhoAtual = useCallback(
+    (path: string) => {
+      setCaminhoInterno(path);
+      onCaminhoChange?.(path);
+    },
+    [onCaminhoChange],
+  );
 
   const { conteudo, carregando, erro } = useGitHubConteudo(
     owner,
@@ -105,7 +114,7 @@ export function RepoFileBrowser({
 
   const navegarPara = useCallback((path: string) => {
     setCaminhoAtual(path);
-  }, []);
+  }, [setCaminhoAtual]);
 
   const handleClick = useCallback(
     (item: GitHubConteudo) => {
@@ -127,7 +136,7 @@ export function RepoFileBrowser({
       const novoCaminho = segmentos.slice(0, indice + 1).join("/");
       setCaminhoAtual(novoCaminho);
     },
-    [segmentos]
+    [segmentos, setCaminhoAtual]
   );
 
   return (
@@ -266,8 +275,8 @@ function ReadmePreview({ owner, nome, path, branch }: { owner: string; nome: str
           <div className="h-4 w-24 rounded-[4px] animate-pulse" style={{ background: "var(--tf-border)" }} />
         </div>
         <div className="space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-4 rounded-[4px] animate-pulse" style={{ background: "var(--tf-border)", width: `${40 + Math.random() * 50}%` }} />
+          {README_SKELETON_LARGURAS.map((largura, i) => (
+            <div key={i} className="h-4 rounded-[4px] animate-pulse" style={{ background: "var(--tf-border)", width: `${largura}%` }} />
           ))}
         </div>
       </div>

@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import { Moon, Palette, Sun } from "lucide-react";
 
 export function AparenciaSection() {
+  // Inicia com "light" no SSR e sincroniza no useEffect após hidratação pra
+  // evitar hydration mismatch (o <html> pode ter `dark` aplicado pelo
+  // theme-init.js antes da hidratação).
   const [tema, setTema] = useState<"light" | "dark">("light");
 
+  // set-state-in-effect intencional: sync após hidratação.
   useEffect(() => {
-    setTema(
-      document.documentElement.classList.contains("dark") ? "dark" : "light"
-    );
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTema(document.documentElement.classList.contains("dark") ? "dark" : "light");
   }, []);
 
   function toggleTema(t: "light" | "dark") {
