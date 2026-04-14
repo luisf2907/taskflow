@@ -1,5 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server";
-import { applyRateLimit, validateBody, stripFormatting } from "@/lib/api-utils";
+import { applyRateLimitAsync, validateBody, stripFormatting } from "@/lib/api-utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -52,7 +52,7 @@ EXEMPLO:
 
 export async function POST(request: NextRequest) {
   // Rate limit: 5 per minute
-  const limited = applyRateLimit(request, "ai-generate", { maxRequests: 5 });
+  const limited = await applyRateLimitAsync(request, "ai-generate", { maxRequests: 5 });
   if (limited) return limited;
 
   // Auth

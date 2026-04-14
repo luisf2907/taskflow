@@ -2,7 +2,7 @@ import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { createPR, requestReviewers } from "@/lib/github/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { validateBody, applyRateLimit, sanitize } from "@/lib/api-utils";
+import { validateBody, applyRateLimitAsync, sanitize } from "@/lib/api-utils";
 
 const schema = z.object({
   repoId: z.string().uuid(),
@@ -16,7 +16,7 @@ const schema = z.object({
 
 export async function POST(request: NextRequest) {
   // Rate limit: 10 PR creates per minute per IP
-  const limited = applyRateLimit(request, "pr-create", { maxRequests: 10 });
+  const limited = await applyRateLimitAsync(request, "pr-create", { maxRequests: 10 });
   if (limited) return limited;
 
   const parsed = await validateBody(request, schema);

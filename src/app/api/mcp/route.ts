@@ -1,5 +1,5 @@
 import { authenticateApiKey } from "@/lib/mcp-auth";
-import { applyRateLimit, applyApiKeyRateLimit } from "@/lib/api-utils";
+import { applyRateLimitAsync, applyApiKeyRateLimitAsync } from "@/lib/api-utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -29,7 +29,7 @@ function jsonRpcError(
 }
 
 export async function POST(request: NextRequest) {
-  const limited = applyRateLimit(request, "mcp", {
+  const limited = await applyRateLimitAsync(request, "mcp", {
     maxRequests: 60,
     windowMs: 60_000,
   });
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   // Rate limit por API key (alem do IP acima)
-  const keyLimited = applyApiKeyRateLimit(authResult.keyId, "mcp");
+  const keyLimited = await applyApiKeyRateLimitAsync(authResult.keyId, "mcp");
   if (keyLimited) return keyLimited;
 
   const apiKey = authHeader.slice(7).trim();

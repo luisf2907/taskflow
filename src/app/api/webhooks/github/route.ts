@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { applyRateLimit, sanitize } from "@/lib/api-utils";
+import { applyRateLimitAsync, sanitize } from "@/lib/api-utils";
 import { executarAutomacoes } from "@/lib/automacoes-executor";
 
 function verifySignature(
@@ -23,7 +23,7 @@ function verifySignature(
 
 export async function POST(request: NextRequest) {
   // Rate limit webhooks: 60 per minute per IP
-  const limited = applyRateLimit(request, "webhook", { maxRequests: 60 });
+  const limited = await applyRateLimitAsync(request, "webhook", { maxRequests: 60 });
   if (limited) return limited;
 
   const body = await request.text();

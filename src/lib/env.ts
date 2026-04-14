@@ -20,6 +20,10 @@ const serverEnvSchema = envSchema.extend({
   // AES-256-GCM key para encriptar dados sensiveis (GitHub tokens, etc.)
   // 64 hex chars = 32 bytes. Gere com: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
   ENCRYPTION_KEY: z.string().length(64).optional(),
+  // Upstash Redis for rate limiting (serverless-compatible)
+  // Create free instance at https://console.upstash.com
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
 });
 
 function parsePublicEnv() {
@@ -51,6 +55,8 @@ function parseServerEnv() {
     VOICE_WORKER_API_KEY: process.env.VOICE_WORKER_API_KEY,
     VOICE_WEBHOOK_SECRET: process.env.VOICE_WEBHOOK_SECRET,
     ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
+    UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+    UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
   });
 
   if (!result.success) {

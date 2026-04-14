@@ -1,5 +1,5 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
-import { applyRateLimit } from "@/lib/api-utils";
+import { applyRateLimitAsync } from "@/lib/api-utils";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
  * perfis de usuarios que ainda nao sao membros do mesmo workspace).
  */
 export async function POST(request: NextRequest) {
-  const limited = applyRateLimit(request, "workspace-invite", {
+  const limited = await applyRateLimitAsync(request, "workspace-invite", {
     maxRequests: 20,
     windowMs: 60_000,
   });

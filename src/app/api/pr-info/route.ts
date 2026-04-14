@@ -1,7 +1,7 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { validateBody, applyRateLimit } from "@/lib/api-utils";
+import { validateBody, applyRateLimitAsync } from "@/lib/api-utils";
 
 const schema = z.object({
   owner: z.string().min(1).max(200),
@@ -11,7 +11,7 @@ const schema = z.object({
 
 export async function POST(request: NextRequest) {
   // Rate limit: 30 per minute per IP
-  const limited = applyRateLimit(request, "pr-info", { maxRequests: 30 });
+  const limited = await applyRateLimitAsync(request, "pr-info", { maxRequests: 30 });
   if (limited) return limited;
 
   const parsed = await validateBody(request, schema);

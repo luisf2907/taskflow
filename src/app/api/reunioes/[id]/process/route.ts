@@ -16,7 +16,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
-import { applyRateLimit } from "@/lib/api-utils";
+import { applyRateLimitAsync } from "@/lib/api-utils";
 import { getPublicEnv } from "@/lib/env";
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import {
@@ -36,7 +36,7 @@ export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  const limited = applyRateLimit(request, "reunioes-process", {
+  const limited = await applyRateLimitAsync(request, "reunioes-process", {
     maxRequests: 30,
     windowMs: 60 * 60 * 1000,
   });

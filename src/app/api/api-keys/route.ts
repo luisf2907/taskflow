@@ -1,11 +1,11 @@
 import { createServerClient } from "@/lib/supabase/server";
-import { applyRateLimit } from "@/lib/api-utils";
+import { applyRateLimitAsync } from "@/lib/api-utils";
 import { generateApiKey, hashApiKey } from "@/lib/mcp-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET — listar API keys do usuario (mascaradas)
 export async function GET(request: NextRequest) {
-  const limited = applyRateLimit(request, "api-keys-list", { maxRequests: 30, windowMs: 60_000 });
+  const limited = await applyRateLimitAsync(request, "api-keys-list", { maxRequests: 30, windowMs: 60_000 });
   if (limited) return limited;
 
   const supabase = await createServerClient();
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
 // POST — gerar nova API key
 export async function POST(request: NextRequest) {
-  const limited = applyRateLimit(request, "api-keys-create", { maxRequests: 5, windowMs: 60_000 });
+  const limited = await applyRateLimitAsync(request, "api-keys-create", { maxRequests: 5, windowMs: 60_000 });
   if (limited) return limited;
 
   const supabase = await createServerClient();
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
 // DELETE — revogar API key
 export async function DELETE(request: NextRequest) {
-  const limited = applyRateLimit(request, "api-keys-delete", { maxRequests: 10, windowMs: 60_000 });
+  const limited = await applyRateLimitAsync(request, "api-keys-delete", { maxRequests: 10, windowMs: 60_000 });
   if (limited) return limited;
 
   const supabase = await createServerClient();

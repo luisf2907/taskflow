@@ -1,6 +1,6 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { applyRateLimit } from "@/lib/api-utils";
+import { applyRateLimitAsync } from "@/lib/api-utils";
 
 const GITHUB_BASE = "https://api.github.com";
 
@@ -12,7 +12,7 @@ export async function GET(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   // Rate limit: 30 per minute per IP
-  const limited = applyRateLimit(request, "github-proxy", { maxRequests: 30 });
+  const limited = await applyRateLimitAsync(request, "github-proxy", { maxRequests: 30 });
   if (limited) return limited;
 
   const { path } = await params;
