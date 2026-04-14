@@ -109,18 +109,17 @@ function getSlashItems(): SlashCommandItem[] {
       icon: <Image size={18} />,
       command: ({ editor, range }) => {
         editor.chain().focus().deleteRange(range).run();
-        // Trigger file input — o componente pai deve lidar com isso
         const input = document.createElement("input");
         input.type = "file";
         input.accept = "image/jpeg,image/png,image/gif,image/webp";
         input.onchange = () => {
           const file = input.files?.[0];
           if (file) {
-            // Dispatch custom event para o editor pai capturar
             window.dispatchEvent(
               new CustomEvent("wiki-image-upload", { detail: { file } }),
             );
           }
+          input.remove();
         };
         input.click();
       },
@@ -231,6 +230,8 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
     return (
       <div
         ref={containerRef}
+        role="listbox"
+        aria-label="Comandos"
         className="rounded-[12px] overflow-hidden overflow-y-auto max-h-[320px] min-w-[240px]"
         style={{
           background: "var(--tf-surface)",
@@ -241,6 +242,8 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
         {items.map((item, index) => (
           <button
             key={item.title}
+            role="option"
+            aria-selected={index === selectedIndex}
             onClick={() => selectItem(index)}
             className="flex items-center gap-3 w-full px-3 py-2 text-left transition-colors"
             style={{

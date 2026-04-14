@@ -1,8 +1,9 @@
 "use client";
 
 import { getBreadcrumb } from "@/lib/wiki-utils";
+import { uploadImagemWiki } from "./image-upload";
 import type { WikiPagina } from "@/types";
-import { ChevronRight, FileText, ImagePlus, SmilePlus } from "lucide-react";
+import { Check, ChevronRight, ImagePlus, Loader2, SmilePlus, X } from "lucide-react";
 import { useState, useCallback, useRef, useEffect } from "react";
 
 interface PageHeaderProps {
@@ -10,8 +11,11 @@ interface PageHeaderProps {
   todasPaginas: WikiPagina[];
   onTituloChange: (novoTitulo: string) => void;
   onIconeChange: (novoIcone: string | null) => void;
-  onCapaChange?: (novaCapaUrl: string | null) => void;
+  onCapaChange: (novaCapaUrl: string | null) => void;
   onNavegar: (paginaId: string) => void;
+  statusSalvamento?: "idle" | "salvando" | "salvo";
+  workspaceId: string;
+  paginaId: string;
 }
 
 // Emojis comuns para seleção rápida
@@ -27,18 +31,37 @@ export function PageHeader({
   todasPaginas,
   onTituloChange,
   onIconeChange,
+  onCapaChange,
   onNavegar,
+  statusSalvamento = "idle",
+  workspaceId,
+  paginaId,
 }: PageHeaderProps) {
   const [editandoTitulo, setEditandoTitulo] = useState(false);
   const [titulo, setTitulo] = useState(pagina.titulo);
   const [emojiPickerAberto, setEmojiPickerAberto] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const capaInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingCapa, setUploadingCapa] = useState(false);
 
   // Sync título quando muda de página
   useEffect(() => {
     setTitulo(pagina.titulo);
     setEditandoTitulo(false);
   }, [pagina.id, pagina.titulo]);
+
+  const handleCapaUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setUploadingCapa(true);
+      const url = await uploadImagemWiki(file, { workspaceId, paginaId });
+      if (url) onCapaChange(url);
+      setUploadingCapa(false);
+      if (capaInputRef.current) capaInputRef.current.value = "";
+    },
+    [workspaceId, paginaId, onCapaChange],
+  );
 
   const breadcrumb = getBreadcrumb(todasPaginas, pagina.id);
 
@@ -54,6 +77,59 @@ export function PageHeader({
 
   return (
     <div className="pb-2 mb-4">
+      {/* Cover image */}
+      {pagina.capa_url ? (
+        <div className="relative group -mx-8 -mt-10 mb-6 h-[200px] rounded-t-[16px] overflow-hidden">
+          <img
+            src={pagina.capa_url}
+            alt="Capa"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute bottom-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={() => capaInputRef.current?.click()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[11px] font-medium text-white/90 backdrop-blur-sm transition-colors"
+              style={{ background: "rgba(0,0,0,0.5)" }}
+            >
+              <ImagePlus size={12} /> Trocar
+            </button>
+            <button
+              type="button"
+              onClick={() => onCapaChange(null)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[11px] font-medium text-white/90 backdrop-blur-sm transition-colors"
+              style={{ background: "rgba(0,0,0,0.5)" }}
+            >
+              <X size={12} /> Remover
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => capaInputRef.current?.click()}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[11px] hover:bg-[var(--tf-surface-hover)] transition-colors"
+            style={{ color: "var(--tf-text-tertiary)" }}
+          >
+            {uploadingCapa ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <ImagePlus size={12} />
+            )}
+            Adicionar capa
+          </button>
+        </div>
+      )}
+      <input
+        ref={capaInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        onChange={handleCapaUpload}
+        className="hidden"
+      />
+
       {/* Breadcrumb */}
       {breadcrumb.length > 1 && (
         <nav className="flex items-center gap-1 mb-3 flex-wrap">
@@ -205,6 +281,22 @@ export function PageHeader({
             minute: "2-digit",
           })}
         </span>
+
+        {statusSalvamento !== "idle" && (
+          <span className="flex items-center gap-1 transition-opacity duration-300">
+            {statusSalvamento === "salvando" ? (
+              <>
+                <Loader2 size={11} className="animate-spin" style={{ color: "var(--tf-text-tertiary)" }} />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <Check size={11} style={{ color: "var(--tf-accent)" }} />
+                <span style={{ color: "var(--tf-accent)" }}>Salvo</span>
+              </>
+            )}
+          </span>
+        )}
       </div>
     </div>
   );

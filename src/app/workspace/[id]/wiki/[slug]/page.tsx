@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Header } from "@/components/layout/header";
@@ -14,7 +14,10 @@ import { toast } from "@/hooks/use-toast";
 import { PageTree } from "@/components/wiki/page-tree";
 import { PageHeader } from "@/components/wiki/page-header";
 import { WikiEditor } from "@/components/wiki/wiki-editor";
+import { CardEmbedPicker } from "@/components/wiki/card-embed-picker";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import type { WikiPagina, WikiPaginaTree } from "@/types";
+import type { Editor } from "@tiptap/react";
 import { BookOpen, Loader2 } from "lucide-react";
 
 export default function WikiSlugPage() {
@@ -31,6 +34,7 @@ export default function WikiSlugPage() {
     paginas,
     arvore,
     carregando,
+    statusSalvamento,
     criarPagina,
     atualizarPagina,
     salvarConteudo,
@@ -38,6 +42,9 @@ export default function WikiSlugPage() {
   } = useWiki(workspaceId);
 
   const [paginaSelecionada, setPaginaSelecionada] = useState<WikiPagina | null>(null);
+  const [cardPickerAberto, setCardPickerAberto] = useState(false);
+  const [paginaParaExcluir, setPaginaParaExcluir] = useState<string | null>(null);
+  const editorRef = useRef<Editor | null>(null);
 
   // Resolve página pelo slug da URL
   useEffect(() => {
@@ -67,6 +74,29 @@ export default function WikiSlugPage() {
     }
   }, [authLoading, perfil, router]);
 
+  // Listener para abrir card embed picker via slash command
+  useEffect(() => {
+    const handleCardEmbed = () => setCardPickerAberto(true);
+    window.addEventListener("wiki-card-embed", handleCardEmbed);
+    return () => window.removeEventListener("wiki-card-embed", handleCardEmbed);
+  }, []);
+
+  const handleCardEmbedSelecionar = useCallback(
+    (cardId: string) => {
+      if (!editorRef.current) return;
+      editorRef.current
+        .chain()
+        .focus()
+        .insertContent({ type: "cardEmbed", attrs: { cardId } })
+        .run();
+    },
+    [],
+  );
+
+  const handleEditorReady = useCallback((editor: Editor | null) => {
+    editorRef.current = editor;
+  }, []);
+
   const handleSelecionar = useCallback(
     (node: WikiPaginaTree) => {
       const pagina = paginas.find((p) => p.id === node.id);
@@ -91,16 +121,24 @@ export default function WikiSlugPage() {
   );
 
   const handleExcluirPagina = useCallback(
-    async (id: string) => {
-      if (!confirm("Excluir esta página? Sub-páginas ficarão como raiz.")) return;
-      await excluirPagina(id);
-      if (paginaSelecionada?.id === id) {
+    (id: string) => {
+      setPaginaParaExcluir(id);
+    },
+    [],
+  );
+
+  const confirmarExclusao = useCallback(
+    async () => {
+      if (!paginaParaExcluir) return;
+      await excluirPagina(paginaParaExcluir);
+      if (paginaSelecionada?.id === paginaParaExcluir) {
         setPaginaSelecionada(null);
         router.push(`/workspace/${workspaceId}/wiki`);
       }
       toast.success("Página excluída");
+      setPaginaParaExcluir(null);
     },
-    [excluirPagina, paginaSelecionada, workspaceId, router],
+    [excluirPagina, paginaSelecionada, paginaParaExcluir, workspaceId, router],
   );
 
   const handleRenomearPagina = useCallback(
@@ -129,6 +167,15 @@ export default function WikiSlugPage() {
     (novoIcone: string | null) => {
       if (paginaSelecionada) {
         atualizarPagina(paginaSelecionada.id, { icone: novoIcone } as Partial<WikiPagina>);
+      }
+    },
+    [paginaSelecionada, atualizarPagina],
+  );
+
+  const handleCapaChange = useCallback(
+    (novaCapaUrl: string | null) => {
+      if (paginaSelecionada) {
+        atualizarPagina(paginaSelecionada.id, { capa_url: novaCapaUrl } as Partial<WikiPagina>);
       }
     },
     [paginaSelecionada, atualizarPagina],
@@ -211,7 +258,11 @@ export default function WikiSlugPage() {
                   todasPaginas={paginas}
                   onTituloChange={handleTituloChange}
                   onIconeChange={handleIconeChange}
+                  onCapaChange={handleCapaChange}
                   onNavegar={handleNavegar}
+                  statusSalvamento={statusSalvamento}
+                  workspaceId={workspaceId}
+                  paginaId={paginaSelecionada.id}
                 />
                 <WikiEditor
                   key={paginaSelecionada.id}
@@ -219,6 +270,7 @@ export default function WikiSlugPage() {
                   onSave={handleSalvarConteudo}
                   workspaceId={workspaceId}
                   paginaId={paginaSelecionada.id}
+                  onEditorReady={handleEditorReady}
                 />
               </div>
             ) : (
@@ -232,6 +284,23 @@ export default function WikiSlugPage() {
           </main>
         </div>
       </div>
+
+      <CardEmbedPicker
+        workspaceId={workspaceId}
+        aberto={cardPickerAberto}
+        onFechar={() => setCardPickerAberto(false)}
+        onSelecionar={handleCardEmbedSelecionar}
+      />
+
+      <ConfirmModal
+        aberto={!!paginaParaExcluir}
+        onFechar={() => setPaginaParaExcluir(null)}
+        onConfirmar={confirmarExclusao}
+        titulo="Excluir pagina"
+        mensagem="Tem certeza que deseja excluir esta pagina? Sub-paginas ficarao como paginas raiz. Esta acao nao pode ser desfeita."
+        textoBotaoConfirmar="Excluir"
+        danger
+      />
     </div>
   );
 }

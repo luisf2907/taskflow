@@ -5,7 +5,7 @@ import { registrarAtividade } from "@/lib/atividades";
 import { buildTree, gerarSlugUnico, slugify } from "@/lib/wiki-utils";
 import type { WikiPagina, WikiPaginaTree } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 function chave(workspaceId: string) {
   return `wiki-${workspaceId}`;
@@ -167,10 +167,13 @@ export function useWiki(workspaceId: string | null) {
   // Sem revalidação global, atualiza só o item no cache
   // ==========================================
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [statusSalvamento, setStatusSalvamento] = useState<"idle" | "salvando" | "salvo">("idle");
 
   const salvarConteudo = useCallback(
     (id: string, conteudo: Record<string, unknown>) => {
       if (!key) return;
+
+      setStatusSalvamento("salvando");
 
       // Optimistic imediato no cache local
       globalMutate(
@@ -187,21 +190,37 @@ export function useWiki(workspaceId: string | null) {
       // Debounce o save real
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(async () => {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        await supabase
-          .from("wiki_paginas")
-          .update({
-            conteudo,
-            atualizado_por: user?.id || null,
-            atualizado_em: new Date().toISOString(),
-          })
-          .eq("id", id);
+        try {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          const { error } = await supabase
+            .from("wiki_paginas")
+            .update({
+              conteudo,
+              atualizado_por: user?.id || null,
+              atualizado_em: new Date().toISOString(),
+            })
+            .eq("id", id);
+
+          setStatusSalvamento(error ? "idle" : "salvo");
+          if (!error) {
+            setTimeout(() => setStatusSalvamento("idle"), 2000);
+          }
+        } catch {
+          setStatusSalvamento("idle");
+        }
       }, 800);
     },
     [key],
   );
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   // ==========================================
   // EXCLUIR PÁGINA
@@ -306,6 +325,7 @@ export function useWiki(workspaceId: string | null) {
     paginas,
     arvore,
     carregando,
+    statusSalvamento,
     criarPagina,
     atualizarPagina,
     salvarConteudo,

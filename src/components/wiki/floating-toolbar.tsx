@@ -51,8 +51,8 @@ function Btn({
       title={title}
       className={`p-1.5 rounded-[5px] transition-colors ${className}`}
       style={{
-        background: active ? "rgba(255,255,255,0.15)" : "transparent",
-        color: active ? "#fff" : "rgba(255,255,255,0.7)",
+        background: active ? "var(--tf-accent-light)" : "transparent",
+        color: active ? "var(--tf-text)" : "var(--tf-text-secondary)",
       }}
     >
       {children}
@@ -61,7 +61,7 @@ function Btn({
 }
 
 function Separator() {
-  return <div className="w-px h-4 mx-0.5 shrink-0 bg-white/15" />;
+  return <div className="w-px h-4 mx-0.5 shrink-0" style={{ background: "var(--tf-border)" }} />;
 }
 
 // ── Block type dropdown ──
@@ -82,9 +82,9 @@ function BlockTypeDropdown({ editor, onClose }: { editor: Editor; onClose: () =>
     <div
       className="absolute left-0 top-full mt-1 rounded-[10px] py-1 min-w-[170px] z-50"
       style={{
-        background: "#1e1e1e",
-        border: "1px solid rgba(255,255,255,0.12)",
-        boxShadow: "0 8px 30px rgba(0,0,0,0.5)",
+        background: "var(--tf-surface)",
+        border: "1px solid var(--tf-border)",
+        boxShadow: "var(--tf-shadow-lg)",
       }}
     >
       {items.map((item) => (
@@ -92,10 +92,10 @@ function BlockTypeDropdown({ editor, onClose }: { editor: Editor; onClose: () =>
           key={item.label}
           type="button"
           onMouseDown={(e) => { e.preventDefault(); item.action(); onClose(); }}
-          className="flex items-center gap-2.5 w-full px-3 py-1.5 text-[12px] text-left transition-colors hover:bg-white/10"
-          style={{ color: "rgba(255,255,255,0.85)" }}
+          className="flex items-center gap-2.5 w-full px-3 py-1.5 text-[12px] text-left transition-colors hover:bg-[var(--tf-surface-hover)]"
+          style={{ color: "var(--tf-text)" }}
         >
-          <span style={{ color: "rgba(255,255,255,0.5)" }}>{item.icon}</span>
+          <span style={{ color: "var(--tf-text-tertiary)" }}>{item.icon}</span>
           {item.label}
         </button>
       ))}
@@ -109,9 +109,9 @@ function MoreDropdown({ editor, onClose }: { editor: Editor; onClose: () => void
     <div
       className="absolute right-0 top-full mt-1 rounded-[10px] py-1 min-w-[160px] z-50"
       style={{
-        background: "#1e1e1e",
-        border: "1px solid rgba(255,255,255,0.12)",
-        boxShadow: "0 8px 30px rgba(0,0,0,0.5)",
+        background: "var(--tf-surface)",
+        border: "1px solid var(--tf-border)",
+        boxShadow: "var(--tf-shadow-lg)",
       }}
     >
       <button
@@ -121,10 +121,10 @@ function MoreDropdown({ editor, onClose }: { editor: Editor; onClose: () => void
           editor.chain().focus().setTextAlign("left").run();
           onClose();
         }}
-        className="flex items-center gap-2.5 w-full px-3 py-1.5 text-[12px] text-left hover:bg-white/10"
-        style={{ color: "rgba(255,255,255,0.85)" }}
+        className="flex items-center gap-2.5 w-full px-3 py-1.5 text-[12px] text-left hover:bg-[var(--tf-surface-hover)]"
+        style={{ color: "var(--tf-text)" }}
       >
-        <AlignLeft size={13} style={{ color: "rgba(255,255,255,0.5)" }} /> Alinhar esquerda
+        <AlignLeft size={13} style={{ color: "var(--tf-text-tertiary)" }} /> Alinhar esquerda
       </button>
       <button
         type="button"
@@ -133,10 +133,10 @@ function MoreDropdown({ editor, onClose }: { editor: Editor; onClose: () => void
           editor.chain().focus().setTextAlign("center").run();
           onClose();
         }}
-        className="flex items-center gap-2.5 w-full px-3 py-1.5 text-[12px] text-left hover:bg-white/10"
-        style={{ color: "rgba(255,255,255,0.85)" }}
+        className="flex items-center gap-2.5 w-full px-3 py-1.5 text-[12px] text-left hover:bg-[var(--tf-surface-hover)]"
+        style={{ color: "var(--tf-text)" }}
       >
-        <AlignCenter size={13} style={{ color: "rgba(255,255,255,0.5)" }} /> Centralizar
+        <AlignCenter size={13} style={{ color: "var(--tf-text-tertiary)" }} /> Centralizar
       </button>
       <button
         type="button"
@@ -145,28 +145,27 @@ function MoreDropdown({ editor, onClose }: { editor: Editor; onClose: () => void
           editor.chain().focus().setTextAlign("right").run();
           onClose();
         }}
-        className="flex items-center gap-2.5 w-full px-3 py-1.5 text-[12px] text-left hover:bg-white/10"
-        style={{ color: "rgba(255,255,255,0.85)" }}
+        className="flex items-center gap-2.5 w-full px-3 py-1.5 text-[12px] text-left hover:bg-[var(--tf-surface-hover)]"
+        style={{ color: "var(--tf-text)" }}
       >
-        <AlignRight size={13} style={{ color: "rgba(255,255,255,0.5)" }} /> Alinhar direita
+        <AlignRight size={13} style={{ color: "var(--tf-text-tertiary)" }} /> Alinhar direita
       </button>
-      <div className="h-px my-1 bg-white/10" />
+      <div className="h-px my-1" style={{ background: "var(--tf-border)" }} />
       <button
         type="button"
         onMouseDown={(e) => {
           e.preventDefault();
-          // Copia texto selecionado
           const { from, to } = editor.state.selection;
           const text = editor.state.doc.textBetween(from, to);
           navigator.clipboard.writeText(text);
           onClose();
         }}
-        className="flex items-center gap-2.5 w-full px-3 py-1.5 text-[12px] text-left hover:bg-white/10"
-        style={{ color: "rgba(255,255,255,0.85)" }}
+        className="flex items-center gap-2.5 w-full px-3 py-1.5 text-[12px] text-left hover:bg-[var(--tf-surface-hover)]"
+        style={{ color: "var(--tf-text)" }}
       >
-        <Copy size={13} style={{ color: "rgba(255,255,255,0.5)" }} /> Copiar
+        <Copy size={13} style={{ color: "var(--tf-text-tertiary)" }} /> Copiar
       </button>
-      <div className="h-px my-1 bg-white/10" />
+      <div className="h-px my-1" style={{ background: "var(--tf-border)" }} />
       <button
         type="button"
         onMouseDown={(e) => {
@@ -174,8 +173,8 @@ function MoreDropdown({ editor, onClose }: { editor: Editor; onClose: () => void
           editor.chain().focus().deleteSelection().run();
           onClose();
         }}
-        className="flex items-center gap-2.5 w-full px-3 py-1.5 text-[12px] text-left hover:bg-white/10"
-        style={{ color: "#f87171" }}
+        className="flex items-center gap-2.5 w-full px-3 py-1.5 text-[12px] text-left hover:bg-[var(--tf-danger-bg)]"
+        style={{ color: "var(--tf-danger)" }}
       >
         <Trash2 size={13} /> Excluir
       </button>
@@ -244,20 +243,24 @@ export function FloatingToolbar({ editor }: { editor: Editor }) {
   }, [editor]);
 
   useEffect(() => {
-    editor.on("selectionUpdate", updateToolbar);
-    editor.on("blur", () => {
+    const handleBlur = () => {
       setTimeout(() => {
         if (!toolbarRef.current?.contains(document.activeElement)) {
           tippyRef.current?.hide();
           setLinkMode(false);
+          setLinkUrl("");
           setBlockDropdown(false);
           setMoreDropdown(false);
         }
       }, 200);
-    });
+    };
+
+    editor.on("selectionUpdate", updateToolbar);
+    editor.on("blur", handleBlur);
 
     return () => {
       editor.off("selectionUpdate", updateToolbar);
+      editor.off("blur", handleBlur);
       tippyRef.current?.destroy();
     };
   }, [editor, updateToolbar]);
@@ -275,10 +278,12 @@ export function FloatingToolbar({ editor }: { editor: Editor }) {
   return (
     <div ref={toolbarRef} className="hidden">
       <div
+        role="toolbar"
+        aria-label="Barra de formatacao"
         className="flex items-center rounded-[10px] shadow-2xl"
         style={{
-          background: "#262626",
-          border: "1px solid rgba(255,255,255,0.1)",
+          background: "var(--tf-surface)",
+          border: "1px solid var(--tf-border)",
         }}
       >
         {linkMode ? (
@@ -292,8 +297,14 @@ export function FloatingToolbar({ editor }: { editor: Editor }) {
                 if (e.key === "Escape") { setLinkMode(false); setLinkUrl(""); }
               }}
               placeholder="https://..."
+              aria-label="URL do link"
               autoFocus
-              className="w-[200px] text-[12px] px-2 py-1 rounded-[5px] outline-none bg-white/10 text-white placeholder:text-white/30 border border-white/15"
+              className="w-[200px] text-[12px] px-2 py-1 rounded-[5px] outline-none"
+              style={{
+                background: "var(--tf-bg-secondary)",
+                color: "var(--tf-text)",
+                border: "1px solid var(--tf-border)",
+              }}
             />
             <button
               onMouseDown={(e) => { e.preventDefault(); applyLink(); }}
@@ -309,9 +320,11 @@ export function FloatingToolbar({ editor }: { editor: Editor }) {
             <div className="relative">
               <button
                 type="button"
+                aria-expanded={blockDropdown}
+                aria-haspopup="listbox"
                 onMouseDown={(e) => { e.preventDefault(); setBlockDropdown(!blockDropdown); setMoreDropdown(false); }}
-                className="flex items-center gap-1 px-2 py-1 rounded-[5px] text-[12px] font-medium transition-colors hover:bg-white/10"
-                style={{ color: "rgba(255,255,255,0.7)" }}
+                className="flex items-center gap-1 px-2 py-1 rounded-[5px] text-[12px] font-medium transition-colors hover:bg-[var(--tf-surface-hover)]"
+                style={{ color: "var(--tf-text-secondary)" }}
               >
                 {getBlockLabel()}
                 <ChevronDown size={11} />

@@ -3,9 +3,7 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Image as ImageExt } from "@tiptap/extension-image";
-import { Link as LinkExt } from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extension-placeholder";
-import { Underline as UnderlineExt } from "@tiptap/extension-underline";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { Highlight } from "@tiptap/extension-highlight";
 import { TaskList } from "@tiptap/extension-task-list";
@@ -13,7 +11,6 @@ import { TaskItem } from "@tiptap/extension-task-item";
 import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
 import { Table, TableRow, TableCell, TableHeader } from "@tiptap/extension-table";
 import { FileHandler } from "@tiptap/extension-file-handler";
-import { Dropcursor } from "@tiptap/extension-dropcursor";
 import { common, createLowlight } from "lowlight";
 import { useEffect, useCallback, useRef, useState } from "react";
 
@@ -32,6 +29,7 @@ interface WikiEditorProps {
   workspaceId: string;
   paginaId: string;
   editavel?: boolean;
+  onEditorReady?: (editor: ReturnType<typeof useEditor>) => void;
 }
 
 export function WikiEditor({
@@ -40,6 +38,7 @@ export function WikiEditor({
   workspaceId,
   paginaId,
   editavel = true,
+  onEditorReady,
 }: WikiEditorProps) {
   const isInternalUpdate = useRef(false);
   const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -49,26 +48,17 @@ export function WikiEditor({
     extensions: [
       StarterKit.configure({
         codeBlock: false,
+        link: { openOnClick: false, HTMLAttributes: { class: "wiki-link" } },
+        dropcursor: { color: "var(--tf-accent)", width: 2 },
       }),
-      ImageExt.configure({
-        inline: false,
-        allowBase64: false,
-      }),
-      LinkExt.configure({
-        openOnClick: false,
-        HTMLAttributes: { class: "wiki-link" },
-      }),
+      ImageExt.configure({ inline: false, allowBase64: false }),
       Placeholder.configure({
         placeholder: ({ node }) => {
-          if (node.type.name === "heading") {
-            const level = node.attrs.level;
-            return `Heading ${level}`;
-          }
+          if (node.type.name === "heading") return `Heading ${node.attrs.level}`;
           return 'Digite "/" para comandos...';
         },
         includeChildren: true,
       }),
-      UnderlineExt,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Highlight.configure({ multicolor: false }),
       TaskList,
@@ -91,7 +81,6 @@ export function WikiEditor({
           }
         },
       }),
-      Dropcursor.configure({ color: "var(--tf-accent)", width: 2 }),
       SlashCommand,
       CardEmbed,
     ],
@@ -110,6 +99,11 @@ export function WikiEditor({
     },
   });
 
+  // Notifica pai quando editor está pronto
+  useEffect(() => {
+    if (editor) onEditorReady?.(editor);
+  }, [editor, onEditorReady]);
+
   // Listener para image upload via slash command
   useEffect(() => {
     const handleSlashImage = (e: Event) => {
@@ -124,26 +118,23 @@ export function WikiEditor({
   }, [editor, workspaceId, paginaId]);
 
   // Atualiza conteúdo quando muda a página selecionada
+  // Nota: o componente usa key={paginaId} no pai, então normalmente é
+  // remontado. Este effect é um fallback para mudanças sem remontagem.
   useEffect(() => {
-    if (editor && conteudo) {
-      const currentJSON = JSON.stringify(editor.getJSON());
-      const newJSON = JSON.stringify(conteudo);
-      if (currentJSON !== newJSON) {
-        isInternalUpdate.current = true;
-        editor.commands.setContent(conteudo);
-        isInternalUpdate.current = false;
-      }
-    } else if (editor && !conteudo) {
-      isInternalUpdate.current = true;
+    if (!editor) return;
+    isInternalUpdate.current = true;
+    if (conteudo) {
+      editor.commands.setContent(conteudo);
+    } else {
       editor.commands.clearContent();
-      isInternalUpdate.current = false;
     }
+    isInternalUpdate.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paginaId]);
 
   if (!editor) {
     return (
-      <div className="flex items-center justify-center h-[300px]" style={{ color: "var(--tf-text-tertiary)" }}>
+      <div className="flex items-center justify-center h-[300px]" style={{ color: "var(--tf-text-tertiary)" }} role="status" aria-label="Carregando editor">
         <div className="flex items-center gap-2 text-[13px]">
           <div
             className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"

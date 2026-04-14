@@ -31,8 +31,8 @@ function Btn({
       type="button"
       onMouseDown={(e) => { e.preventDefault(); onClick(); }}
       title={title}
-      className="p-1 rounded-[5px] transition-colors hover:bg-white/10"
-      style={{ color: danger ? "#f87171" : "rgba(255,255,255,0.7)" }}
+      className="p-1 rounded-[5px] transition-colors hover:bg-[var(--tf-surface-hover)]"
+      style={{ color: danger ? "var(--tf-danger)" : "var(--tf-text-secondary)" }}
     >
       {children}
     </button>
@@ -97,9 +97,9 @@ export function TableControls({ editor, containerRef }: TableControlsProps) {
       style={{
         top: `${pos.top}px`,
         left: `${pos.left}px`,
-        background: "#262626",
-        border: "1px solid rgba(255,255,255,0.1)",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+        background: "var(--tf-surface)",
+        border: "1px solid var(--tf-border)",
+        boxShadow: "var(--tf-shadow-lg)",
       }}
     >
       <Btn onClick={() => editor.chain().focus().addColumnBefore().run()} title="Coluna à esquerda">
@@ -115,7 +115,7 @@ export function TableControls({ editor, containerRef }: TableControlsProps) {
         <ArrowDown size={12} />
       </Btn>
 
-      <div className="w-px h-3.5 mx-0.5 bg-white/15" />
+      <div className="w-px h-3.5 mx-0.5" style={{ background: "var(--tf-border)" }} />
 
       <Btn onClick={() => editor.chain().focus().deleteColumn().run()} title="Remover coluna" danger>
         <span className="text-[9px] font-bold">Col</span>
@@ -124,7 +124,7 @@ export function TableControls({ editor, containerRef }: TableControlsProps) {
         <span className="text-[9px] font-bold">Row</span>
       </Btn>
 
-      <div className="w-px h-3.5 mx-0.5 bg-white/15" />
+      <div className="w-px h-3.5 mx-0.5" style={{ background: "var(--tf-border)" }} />
 
       <Btn onClick={() => editor.chain().focus().deleteTable().run()} title="Excluir tabela" danger>
         <Trash2 size={12} />

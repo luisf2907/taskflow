@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Header } from "@/components/layout/header";
@@ -14,7 +14,10 @@ import { toast } from "@/hooks/use-toast";
 import { PageTree } from "@/components/wiki/page-tree";
 import { PageHeader } from "@/components/wiki/page-header";
 import { WikiEditor } from "@/components/wiki/wiki-editor";
+import { CardEmbedPicker } from "@/components/wiki/card-embed-picker";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import type { WikiPagina, WikiPaginaTree } from "@/types";
+import type { Editor } from "@tiptap/react";
 import { BookOpen, Loader2 } from "lucide-react";
 
 export default function WikiPage() {
@@ -33,6 +36,7 @@ export default function WikiPage() {
     paginas,
     arvore,
     carregando,
+    statusSalvamento,
     criarPagina,
     atualizarPagina,
     salvarConteudo,
@@ -40,6 +44,9 @@ export default function WikiPage() {
   } = useWiki(workspaceId);
 
   const [paginaSelecionada, setPaginaSelecionada] = useState<WikiPagina | null>(null);
+  const [cardPickerAberto, setCardPickerAberto] = useState(false);
+  const [paginaParaExcluir, setPaginaParaExcluir] = useState<string | null>(null);
+  const editorRef = useRef<Editor | null>(null);
 
   // Auto-seleciona a primeira página quando carrega
   useEffect(() => {
@@ -65,32 +72,67 @@ export default function WikiPage() {
     }
   }, [authLoading, perfil, router]);
 
+  // Listener para abrir card embed picker via slash command
+  useEffect(() => {
+    const handleCardEmbed = () => setCardPickerAberto(true);
+    window.addEventListener("wiki-card-embed", handleCardEmbed);
+    return () => window.removeEventListener("wiki-card-embed", handleCardEmbed);
+  }, []);
+
+  const handleCardEmbedSelecionar = useCallback(
+    (cardId: string) => {
+      if (!editorRef.current) return;
+      editorRef.current
+        .chain()
+        .focus()
+        .insertContent({ type: "cardEmbed", attrs: { cardId } })
+        .run();
+    },
+    [],
+  );
+
+  const handleEditorReady = useCallback((editor: Editor | null) => {
+    editorRef.current = editor;
+  }, []);
+
   const handleSelecionar = useCallback((node: WikiPaginaTree) => {
     const pagina = paginas.find((p) => p.id === node.id);
-    if (pagina) setPaginaSelecionada(pagina);
-  }, [paginas]);
+    if (pagina) {
+      setPaginaSelecionada(pagina);
+      router.replace(`/workspace/${workspaceId}/wiki/${pagina.slug}`);
+    }
+  }, [paginas, workspaceId, router]);
 
   const handleCriarPagina = useCallback(
     async (parentId?: string | null) => {
       const nova = await criarPagina("Nova página", parentId);
       if (nova) {
         setPaginaSelecionada(nova);
+        router.replace(`/workspace/${workspaceId}/wiki/${nova.slug}`);
         toast.success("Página criada!");
       }
     },
-    [criarPagina],
+    [criarPagina, workspaceId, router],
   );
 
   const handleExcluirPagina = useCallback(
-    async (id: string) => {
-      if (!confirm("Excluir esta página? Sub-páginas ficarão como raiz.")) return;
-      await excluirPagina(id);
-      if (paginaSelecionada?.id === id) {
+    (id: string) => {
+      setPaginaParaExcluir(id);
+    },
+    [],
+  );
+
+  const confirmarExclusao = useCallback(
+    async () => {
+      if (!paginaParaExcluir) return;
+      await excluirPagina(paginaParaExcluir);
+      if (paginaSelecionada?.id === paginaParaExcluir) {
         setPaginaSelecionada(null);
       }
       toast.success("Página excluída");
+      setPaginaParaExcluir(null);
     },
-    [excluirPagina, paginaSelecionada],
+    [excluirPagina, paginaSelecionada, paginaParaExcluir],
   );
 
   const handleRenomearPagina = useCallback(
@@ -118,6 +160,15 @@ export default function WikiPage() {
     [paginaSelecionada, atualizarPagina],
   );
 
+  const handleCapaChange = useCallback(
+    (novaCapaUrl: string | null) => {
+      if (paginaSelecionada) {
+        atualizarPagina(paginaSelecionada.id, { capa_url: novaCapaUrl } as Partial<WikiPagina>);
+      }
+    },
+    [paginaSelecionada, atualizarPagina],
+  );
+
   const handleSalvarConteudo = useCallback(
     (conteudo: Record<string, unknown>) => {
       if (paginaSelecionada) {
@@ -130,9 +181,12 @@ export default function WikiPage() {
   const handleNavegar = useCallback(
     (paginaId: string) => {
       const pagina = paginas.find((p) => p.id === paginaId);
-      if (pagina) setPaginaSelecionada(pagina);
+      if (pagina) {
+        setPaginaSelecionada(pagina);
+        router.replace(`/workspace/${workspaceId}/wiki/${pagina.slug}`);
+      }
     },
-    [paginas],
+    [paginas, workspaceId, router],
   );
 
   if (authLoading || !iniciado || !perfil) {
@@ -192,7 +246,11 @@ export default function WikiPage() {
                   todasPaginas={paginas}
                   onTituloChange={handleTituloChange}
                   onIconeChange={handleIconeChange}
+                  onCapaChange={handleCapaChange}
                   onNavegar={handleNavegar}
+                  statusSalvamento={statusSalvamento}
+                  workspaceId={workspaceId}
+                  paginaId={paginaSelecionada.id}
                 />
                 <WikiEditor
                   key={paginaSelecionada.id}
@@ -200,6 +258,7 @@ export default function WikiPage() {
                   onSave={handleSalvarConteudo}
                   workspaceId={workspaceId}
                   paginaId={paginaSelecionada.id}
+                  onEditorReady={handleEditorReady}
                 />
               </div>
             ) : (
@@ -220,6 +279,23 @@ export default function WikiPage() {
           </main>
         </div>
       </div>
+
+      <CardEmbedPicker
+        workspaceId={workspaceId}
+        aberto={cardPickerAberto}
+        onFechar={() => setCardPickerAberto(false)}
+        onSelecionar={handleCardEmbedSelecionar}
+      />
+
+      <ConfirmModal
+        aberto={!!paginaParaExcluir}
+        onFechar={() => setPaginaParaExcluir(null)}
+        onConfirmar={confirmarExclusao}
+        titulo="Excluir pagina"
+        mensagem="Tem certeza que deseja excluir esta pagina? Sub-paginas ficarao como paginas raiz. Esta acao nao pode ser desfeita."
+        textoBotaoConfirmar="Excluir"
+        danger
+      />
     </div>
   );
 }

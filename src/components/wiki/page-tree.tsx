@@ -9,8 +9,9 @@ import {
   MoreHorizontal,
   Trash2,
   PenLine,
+  Search,
 } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 interface PageTreeProps {
   arvore: WikiPaginaTree[];
@@ -75,6 +76,8 @@ function TreeNode({
         {/* Expand/collapse */}
         <button
           type="button"
+          aria-expanded={expandido}
+          aria-label={expandido ? "Recolher" : "Expandir"}
           onClick={(e) => {
             e.stopPropagation();
             setExpandido(!expandido);
@@ -235,6 +238,21 @@ function TreeNode({
   );
 }
 
+function filtrarArvore(arvore: WikiPaginaTree[], termo: string): WikiPaginaTree[] {
+  if (!termo) return arvore;
+  const lower = termo.toLowerCase();
+
+  return arvore.reduce<WikiPaginaTree[]>((acc, node) => {
+    const filhosMatch = filtrarArvore(node.filhos, termo);
+    const tituloMatch = node.titulo.toLowerCase().includes(lower);
+
+    if (tituloMatch || filhosMatch.length > 0) {
+      acc.push({ ...node, filhos: tituloMatch ? node.filhos : filhosMatch });
+    }
+    return acc;
+  }, []);
+}
+
 export function PageTree({
   arvore,
   paginaAtivaId,
@@ -243,6 +261,13 @@ export function PageTree({
   onExcluirPagina,
   onRenomearPagina,
 }: PageTreeProps) {
+  const [busca, setBusca] = useState("");
+
+  const arvoreFiltrada = useMemo(
+    () => filtrarArvore(arvore, busca),
+    [arvore, busca],
+  );
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -267,9 +292,44 @@ export function PageTree({
         </button>
       </div>
 
+      {/* Busca */}
+      {arvore.length > 0 && (
+        <div className="px-3 pt-2">
+          <div
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-[8px]"
+            style={{
+              background: "var(--tf-bg-secondary)",
+              border: "1px solid var(--tf-border)",
+            }}
+          >
+            <Search size={12} style={{ color: "var(--tf-text-tertiary)" }} />
+            <input
+              type="text"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar pagina..."
+              aria-label="Buscar pagina"
+              className="flex-1 text-[12px] outline-none bg-transparent"
+              style={{ color: "var(--tf-text)" }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Tree */}
       <div className="flex-1 overflow-y-auto py-2 px-1">
-        {arvore.length === 0 ? (
+        {busca && arvoreFiltrada.length === 0 ? (
+          <div
+            className="flex items-center justify-center py-8 text-center"
+          >
+            <p
+              className="text-[12px]"
+              style={{ color: "var(--tf-text-tertiary)" }}
+            >
+              Nenhuma pagina encontrada
+            </p>
+          </div>
+        ) : arvore.length === 0 ? (
           <div
             className="flex flex-col items-center justify-center py-12 px-4 text-center"
           >
@@ -303,7 +363,7 @@ export function PageTree({
             </button>
           </div>
         ) : (
-          arvore.map((node) => (
+          arvoreFiltrada.map((node) => (
             <TreeNode
               key={node.id}
               node={node}
