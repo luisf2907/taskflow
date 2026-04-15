@@ -17,9 +17,12 @@ const serverEnvSchema = envSchema.extend({
   // Usado em /api/reunioes/[id]/webhook pra garantir que so o worker pode
   // postar resultado pra uma reuniao (nao qualquer um que adivinhe a URL).
   VOICE_WEBHOOK_SECRET: z.string().min(32).optional(),
-  // AES-256-GCM key para encriptar dados sensiveis (GitHub tokens, etc.)
+  // AES-256-GCM key para encriptar dados sensiveis (GitHub tokens, api keys, etc.)
   // 64 hex chars = 32 bytes. Gere com: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-  ENCRYPTION_KEY: z.string().length(64).optional(),
+  // OBRIGATORIA: sem isso, tokens ficam em plaintext no Postgres.
+  ENCRYPTION_KEY: z
+    .string()
+    .regex(/^[0-9a-fA-F]{64}$/, "ENCRYPTION_KEY must be 64 hex chars (32 bytes). Generate with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""),
   // Upstash Redis for rate limiting (serverless-compatible)
   // Create free instance at https://console.upstash.com
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
