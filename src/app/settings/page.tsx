@@ -64,28 +64,41 @@ export default function SettingsPage() {
         <Header onMenuMobile={toggleSidebar} />
 
         <div
-          className="flex-1 rounded-[32px] mb-4 overflow-hidden flex flex-col scroll-clip-lg"
+          className="flex-1 mb-4 overflow-hidden flex flex-col scroll-clip-lg"
           style={{
             background: "var(--tf-surface)",
             border: "1px solid var(--tf-border)",
+            borderRadius: "var(--tf-radius-xl)",
           }}
         >
         <main
           id="main-content"
           className="flex-1 overflow-y-auto"
         >
-          <div className="max-w-xl mx-auto px-6 py-10 space-y-8">
+          <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
             {/* Page title */}
             <div>
+              <p
+                className="label-mono mb-1"
+                style={{ color: "var(--tf-text-tertiary)" }}
+              >
+                Preferências
+              </p>
               <h1
-                className="text-2xl font-black tracking-tight"
-                style={{ color: "var(--tf-text)" }}
+                className="text-[1.5rem] font-semibold"
+                style={{
+                  color: "var(--tf-text)",
+                  letterSpacing: "-0.02em",
+                }}
               >
                 Configurações
               </h1>
               <p
-                className="text-[13px] mt-1"
-                style={{ color: "var(--tf-text-tertiary)" }}
+                className="text-[0.8125rem] mt-1.5"
+                style={{
+                  color: "var(--tf-text-secondary)",
+                  letterSpacing: "-0.005em",
+                }}
               >
                 Gerencie seu perfil, conexões e preferências.
               </p>

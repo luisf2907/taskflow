@@ -329,7 +329,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
       <div className="flex items-center gap-2">
         <AudioLines size={14} style={{ color: "var(--tf-accent)" }} />
         <h2
-          className="text-[11px] font-bold uppercase tracking-widest"
+          className="label-mono"
           style={{ color: "var(--tf-text-tertiary)" }}
         >
           Voz &mdash; reconhecimento em reunioes
@@ -337,13 +337,13 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
       </div>
 
       <div
-        className="rounded-[20px] p-6 space-y-5"
+        className="rounded-[var(--tf-radius-md)] p-6 space-y-5"
         style={{ background: "var(--tf-bg-secondary)" }}
       >
         {/* ─── Worker health alert ─── */}
         {health && !health.ok && (
           <div
-            className="flex items-start gap-3 p-3 rounded-[12px]"
+            className="flex items-start gap-3 p-3 rounded-[var(--tf-radius-sm)]"
             style={{
               background: "var(--tf-danger-bg)",
               border: "1px solid color-mix(in srgb, var(--tf-danger) 20%, transparent)",
@@ -413,7 +413,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                   void deleteEnrollment(false);
                 }}
                 disabled={deleting}
-                className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 rounded-[var(--tf-radius-xs)] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-50"
                 style={{ background: "var(--tf-accent)" }}
               >
                 {deleting ? (
@@ -426,7 +426,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
               <button
                 onClick={() => deleteEnrollment(true)}
                 disabled={deleting}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-[11px] font-semibold transition-all duration-150 hover:opacity-80 disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[11px] font-semibold transition-all duration-150 hover:opacity-80 disabled:opacity-50"
                 style={{
                   color: "var(--tf-danger)",
                   background: "var(--tf-danger-bg)",
@@ -468,7 +468,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                 </p>
               </div>
               <label
-                className="flex items-start gap-3 p-3.5 rounded-[12px] cursor-pointer transition-all duration-150"
+                className="flex items-start gap-3 p-3.5 rounded-[var(--tf-radius-sm)] cursor-pointer transition-all duration-150"
                 style={{
                   background: "var(--tf-surface)",
                   border: consent
@@ -512,7 +512,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                 </p>
               </div>
               <div
-                className="px-4 py-3.5 rounded-[12px]"
+                className="px-4 py-3.5 rounded-[var(--tf-radius-sm)]"
                 style={{
                   background: "var(--tf-surface)",
                 }}
@@ -542,7 +542,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
               </div>
 
               <div
-                className="rounded-[12px] p-4"
+                className="rounded-[var(--tf-radius-sm)] p-4"
                 style={{ background: "var(--tf-surface)" }}
               >
                 {/* ─ Idle: start button ─ */}
@@ -553,7 +553,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                       disabled={
                         !consent || (health ? !health.ok : false)
                       }
-                      className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-40"
+                      className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-[var(--tf-radius-xs)] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-40"
                       style={{ background: "var(--tf-accent)" }}
                     >
                       <Mic size={14} />
@@ -612,7 +612,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                     </div>
                     <button
                       onClick={stopRecording}
-                      className="inline-flex items-center gap-2 px-5 py-2 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
+                      className="inline-flex items-center gap-2 px-5 py-2 rounded-[var(--tf-radius-xs)] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
                       style={{ background: "var(--tf-danger)" }}
                     >
                       <MicOff size={14} />
@@ -678,7 +678,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                       preload="metadata"
                     />
                     <div
-                      className="flex items-center gap-2.5 rounded-[10px] px-3 py-2"
+                      className="flex items-center gap-2.5 rounded-[var(--tf-radius-xs)] px-3 py-2"
                       style={{ background: "var(--tf-bg-secondary)" }}
                     >
                       <button
@@ -733,7 +733,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                       <button
                         onClick={uploadRecording}
                         disabled={!canUpload}
-                        className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-40"
+                        className="flex items-center gap-2 px-4 py-2 rounded-[var(--tf-radius-xs)] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-40"
                         style={{ background: "var(--tf-accent)" }}
                       >
                         <Check size={14} />
@@ -741,7 +741,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                       </button>
                       <button
                         onClick={resetRecording}
-                        className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-[12px] font-semibold transition-all duration-150 hover:opacity-80"
+                        className="flex items-center gap-2 px-4 py-2 rounded-[var(--tf-radius-xs)] text-[12px] font-semibold transition-all duration-150 hover:opacity-80"
                         style={{ color: "var(--tf-text-tertiary)" }}
                       >
                         <RotateCcw size={12} />

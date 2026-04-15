@@ -32,47 +32,52 @@ export function ProfileSection({ perfil, userEmail, onUpdate }: ProfileSectionPr
   }
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-3">
       <div className="flex items-center gap-2">
-        <User size={14} style={{ color: "var(--tf-accent)" }} />
-        <h2
-          className="text-[11px] font-bold uppercase tracking-widest"
-          style={{ color: "var(--tf-text-tertiary)" }}
-        >
+        <User size={12} strokeWidth={1.75} style={{ color: "var(--tf-accent)" }} />
+        <h2 className="label-mono" style={{ color: "var(--tf-text-secondary)" }}>
           Perfil
         </h2>
       </div>
 
       <div
-        className="rounded-[20px] p-6"
-        style={{ background: "var(--tf-bg-secondary)" }}
+        className="p-5"
+        style={{
+          background: "var(--tf-bg-secondary)",
+          border: "1px solid var(--tf-border)",
+          borderRadius: "var(--tf-radius-md)",
+        }}
       >
-        <div className="flex items-start gap-5">
+        <div className="flex items-start gap-4">
           {perfil?.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={perfil.avatar_url}
               alt=""
-              className="w-16 h-16 rounded-full shrink-0"
+              className="w-14 h-14 shrink-0"
+              style={{ borderRadius: "var(--tf-radius-sm)" }}
             />
           ) : (
             <div
-              className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shrink-0"
+              className="w-14 h-14 flex items-center justify-center text-[1.125rem] font-semibold shrink-0"
               style={{
                 background: "var(--tf-accent-light)",
-                color: "var(--tf-accent)",
+                color: "var(--tf-accent-text)",
+                border: "1px solid var(--tf-accent)",
+                borderRadius: "var(--tf-radius-sm)",
+                fontFamily: "var(--tf-font-mono)",
               }}
             >
               {(perfil?.nome ?? "?")[0].toUpperCase()}
             </div>
           )}
 
-          <div className="flex-1 min-w-0 space-y-3">
+          <div className="flex-1 min-w-0 space-y-2.5">
             {editando ? (
               <>
                 <div>
                   <label
-                    className="text-[11px] font-bold uppercase tracking-wide mb-1 block"
+                    className="label-mono mb-1 block"
                     style={{ color: "var(--tf-text-tertiary)" }}
                   >
                     Nome
@@ -80,57 +85,71 @@ export function ProfileSection({ perfil, userEmail, onUpdate }: ProfileSectionPr
                   <input
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
-                    className="w-full px-3 py-2 rounded-[10px] text-[14px] font-medium outline-none"
+                    className="settings-input w-full h-9 px-3 text-[0.8125rem] outline-none"
                     style={{
-                      background: "var(--tf-surface)",
-                      border: "2px solid var(--tf-accent)",
                       color: "var(--tf-text)",
+                      borderRadius: "var(--tf-radius-xs)",
+                      letterSpacing: "-0.005em",
                     }}
                     autoFocus
                   />
                 </div>
                 <div>
                   <label
-                    className="text-[11px] font-bold uppercase tracking-wide mb-1 block"
+                    className="label-mono mb-1 block"
                     style={{ color: "var(--tf-text-tertiary)" }}
                   >
                     Email
                   </label>
                   <p
-                    className="text-[13px] px-3 py-2 rounded-[10px]"
+                    className="text-[0.75rem] px-3 h-9 inline-flex items-center w-full"
                     style={{
                       background: "var(--tf-surface)",
                       color: "var(--tf-text-tertiary)",
+                      border: "1px solid var(--tf-border)",
+                      borderRadius: "var(--tf-radius-xs)",
+                      fontFamily: "var(--tf-font-mono)",
                     }}
                   >
-                    {userEmail}{" "}
-                    <span className="text-[10px]">(nao editavel)</span>
+                    {userEmail}
                   </p>
                 </div>
                 {perfil?.github_username && (
                   <p
-                    className="text-[12px]"
-                    style={{ color: "var(--tf-text-tertiary)" }}
+                    className="text-[0.6875rem]"
+                    style={{
+                      color: "var(--tf-text-tertiary)",
+                      fontFamily: "var(--tf-font-mono)",
+                      letterSpacing: "0.02em",
+                    }}
                   >
-                    GitHub: @{perfil.github_username}
+                    github · @{perfil.github_username}
                   </p>
                 )}
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex items-center gap-1.5 pt-1">
                   <button
                     onClick={handleSalvar}
                     disabled={!dirty || salvando}
-                    className="px-4 py-2 rounded-[10px] text-[12px] font-bold text-white disabled:opacity-40"
-                    style={{ background: "var(--tf-accent)" }}
+                    className="h-8 px-3 text-[0.75rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-40"
+                    style={{
+                      background: "var(--tf-accent)",
+                      border: "1px solid var(--tf-accent)",
+                      borderRadius: "var(--tf-radius-xs)",
+                    }}
                   >
-                    {salvando ? "Salvando..." : "Salvar"}
+                    {salvando ? "Salvando…" : "Salvar"}
                   </button>
                   <button
                     onClick={() => {
                       setEditando(false);
                       setNome(perfil?.nome || "");
                     }}
-                    className="px-4 py-2 rounded-[10px] text-[12px] font-semibold"
-                    style={{ color: "var(--tf-text-tertiary)" }}
+                    className="h-8 px-3 text-[0.75rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)]"
+                    style={{
+                      color: "var(--tf-text-secondary)",
+                      border: "1px solid var(--tf-border)",
+                      borderRadius: "var(--tf-radius-xs)",
+                    }}
                   >
                     Cancelar
                   </button>
@@ -139,29 +158,40 @@ export function ProfileSection({ perfil, userEmail, onUpdate }: ProfileSectionPr
             ) : (
               <>
                 <p
-                  className="text-lg font-bold truncate"
-                  style={{ color: "var(--tf-text)" }}
+                  className="text-[1rem] font-semibold truncate"
+                  style={{ color: "var(--tf-text)", letterSpacing: "-0.01em" }}
                 >
                   {perfil?.nome ?? "Sem nome"}
                 </p>
                 <p
-                  className="text-[13px] truncate"
-                  style={{ color: "var(--tf-text-tertiary)" }}
+                  className="text-[0.75rem] truncate"
+                  style={{
+                    color: "var(--tf-text-tertiary)",
+                    fontFamily: "var(--tf-font-mono)",
+                  }}
                 >
                   {userEmail}
                 </p>
                 {perfil?.github_username && (
                   <p
-                    className="text-[13px] font-medium"
-                    style={{ color: "var(--tf-text-secondary)" }}
+                    className="text-[0.75rem]"
+                    style={{
+                      color: "var(--tf-text-secondary)",
+                      fontFamily: "var(--tf-font-mono)",
+                    }}
                   >
                     @{perfil.github_username}
                   </p>
                 )}
                 <button
                   onClick={() => setEditando(true)}
-                  className="text-[12px] font-bold mt-1"
-                  style={{ color: "var(--tf-accent)" }}
+                  className="text-[0.6875rem] font-medium mt-1 transition-colors hover:brightness-110"
+                  style={{
+                    color: "var(--tf-accent)",
+                    fontFamily: "var(--tf-font-mono)",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
                 >
                   Editar perfil
                 </button>
@@ -170,6 +200,17 @@ export function ProfileSection({ perfil, userEmail, onUpdate }: ProfileSectionPr
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .settings-input {
+          background: var(--tf-surface);
+          border: 1px solid var(--tf-border);
+          transition: border-color 0.15s ease;
+        }
+        .settings-input:focus {
+          border-color: var(--tf-accent);
+        }
+      `}</style>
     </section>
   );
 }

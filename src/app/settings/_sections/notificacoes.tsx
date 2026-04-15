@@ -71,7 +71,7 @@ export function NotifSection({ userId, perfilPrefs }: NotifSectionProps) {
       <div className="flex items-center gap-2">
         <Bell size={14} style={{ color: "var(--tf-accent)" }} />
         <h2
-          className="text-[11px] font-bold uppercase tracking-widest"
+          className="label-mono"
           style={{ color: "var(--tf-text-tertiary)" }}
         >
           Notificacoes
@@ -79,7 +79,7 @@ export function NotifSection({ userId, perfilPrefs }: NotifSectionProps) {
       </div>
 
       <div
-        className="rounded-[20px] p-6 space-y-1"
+        className="rounded-[var(--tf-radius-md)] p-6 space-y-1"
         style={{ background: "var(--tf-bg-secondary)" }}
       >
         {NOTIF_OPTIONS.map(({ key, label, desc }) => (

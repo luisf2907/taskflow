@@ -101,7 +101,7 @@ export function GithubSection({
       <div className="flex items-center gap-2">
         <Github size={14} style={{ color: "var(--tf-accent)" }} />
         <h2
-          className="text-[11px] font-bold uppercase tracking-widest"
+          className="label-mono"
           style={{ color: "var(--tf-text-tertiary)" }}
         >
           GitHub
@@ -109,7 +109,7 @@ export function GithubSection({
       </div>
 
       <div
-        className="rounded-[20px] p-6"
+        className="rounded-[var(--tf-radius-md)] p-6"
         style={{ background: "var(--tf-bg-secondary)" }}
       >
         {temGithub ? (
@@ -141,7 +141,7 @@ export function GithubSection({
                 onClick={removerToken}
                 disabled={removendoPat}
                 title="Desconectar GitHub"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-[11px] font-semibold transition-all duration-150 hover:opacity-80 disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[11px] font-semibold transition-all duration-150 hover:opacity-80 disabled:opacity-50"
                 style={{
                   color: "var(--tf-danger)",
                   background: "var(--tf-danger-bg)",
@@ -170,7 +170,7 @@ export function GithubSection({
             <button
               onClick={conectarGithub}
               disabled={conectandoGithub}
-              className="flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-[14px] text-[13px] font-semibold transition-all duration-150 hover:opacity-80 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-[var(--tf-radius-md)] text-[13px] font-semibold transition-all duration-150 hover:opacity-80 disabled:opacity-50"
               style={{
                 background: "var(--tf-surface)",
                 color: "var(--tf-text)",
@@ -207,7 +207,7 @@ export function GithubSection({
             {!mostrarPat ? (
               <button
                 onClick={() => setMostrarPat(true)}
-                className="flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-[14px] text-[13px] font-semibold transition-all duration-150 hover:opacity-80"
+                className="flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-[var(--tf-radius-md)] text-[13px] font-semibold transition-all duration-150 hover:opacity-80"
                 style={{
                   color: "var(--tf-text-secondary)",
                   border: "1px dashed var(--tf-border)",
@@ -227,7 +227,7 @@ export function GithubSection({
                     maxLength={200}
                     autoComplete="off"
                     spellCheck={false}
-                    className="w-full px-4 py-2.5 pr-10 rounded-[14px] text-[13px] font-mono outline-none transition-all"
+                    className="w-full px-4 py-2.5 pr-10 rounded-[var(--tf-radius-md)] text-[13px] font-mono outline-none transition-all"
                     style={{
                       background: "var(--tf-surface)",
                       color: "var(--tf-text)",
@@ -266,7 +266,7 @@ export function GithubSection({
                   <button
                     onClick={salvarPat}
                     disabled={salvandoPat || !patInput.trim()}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-[14px] text-[13px] font-semibold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-[var(--tf-radius-md)] text-[13px] font-semibold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-50"
                     style={{ background: "var(--tf-accent)" }}
                   >
                     {salvandoPat ? (
@@ -281,7 +281,7 @@ export function GithubSection({
                       setMostrarPat(false);
                       setPatInput("");
                     }}
-                    className="px-4 py-2.5 rounded-[14px] text-[13px] font-semibold transition-all duration-150 hover:opacity-80"
+                    className="px-4 py-2.5 rounded-[var(--tf-radius-md)] text-[13px] font-semibold transition-all duration-150 hover:opacity-80"
                     style={{
                       color: "var(--tf-text-tertiary)",
                       border: "1px solid var(--tf-border)",

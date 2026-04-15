@@ -61,7 +61,7 @@ export function FotoGithubBanner({
   return (
     <section>
       <div
-        className="rounded-[20px] p-6 flex items-center gap-5"
+        className="rounded-[var(--tf-radius-md)] p-6 flex items-center gap-5"
         style={{
           background: "var(--tf-accent-light)",
           border: "1px solid var(--tf-accent)",
@@ -73,7 +73,7 @@ export function FotoGithubBanner({
             src={fotoGithub}
             alt="Foto do GitHub"
             className="w-14 h-14 rounded-full object-cover"
-            style={{ border: "2px solid var(--tf-accent)" }}
+            style={{ border: "1px solid var(--tf-accent)" }}
           />
           <div
             className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full flex items-center justify-center"
@@ -100,14 +100,14 @@ export function FotoGithubBanner({
           <button
             onClick={usarFotoGithub}
             disabled={salvandoFoto}
-            className="px-4 py-2 rounded-[14px] text-[12px] font-semibold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-50"
+            className="px-4 py-2 rounded-[var(--tf-radius-md)] text-[12px] font-semibold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-50"
             style={{ background: "var(--tf-accent)" }}
           >
             {salvandoFoto ? "Salvando..." : "Usar"}
           </button>
           <button
             onClick={() => setFotoGithub(null)}
-            className="p-1.5 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
+            className="p-1.5 rounded-[var(--tf-radius-xs)] hover:bg-[var(--tf-surface-hover)]"
             style={{
               color: "var(--tf-text-tertiary)",
               transition: "background 0.15s ease",

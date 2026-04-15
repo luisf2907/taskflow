@@ -27,45 +27,52 @@ export function AparenciaSection() {
   }
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-3">
       <div className="flex items-center gap-2">
-        <Palette size={14} style={{ color: "var(--tf-accent)" }} />
-        <h2
-          className="text-[11px] font-bold uppercase tracking-widest"
-          style={{ color: "var(--tf-text-tertiary)" }}
-        >
+        <Palette
+          size={12}
+          strokeWidth={1.75}
+          style={{ color: "var(--tf-accent)" }}
+        />
+        <h2 className="label-mono" style={{ color: "var(--tf-text-secondary)" }}>
           Aparência
         </h2>
       </div>
 
       <div
-        className="rounded-[20px] p-6"
-        style={{ background: "var(--tf-bg-secondary)" }}
+        className="p-5"
+        style={{
+          background: "var(--tf-bg-secondary)",
+          border: "1px solid var(--tf-border)",
+          borderRadius: "var(--tf-radius-md)",
+        }}
       >
-        <div className="flex gap-3">
+        <div className="flex gap-1.5">
           {(
             [
               { id: "light" as const, label: "Claro", icon: Sun },
               { id: "dark" as const, label: "Escuro", icon: Moon },
             ]
-          ).map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => toggleTema(id)}
-              className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-[14px] text-[13px] font-semibold transition-all duration-150"
-              style={{
-                background: tema === id ? "var(--tf-surface)" : "transparent",
-                color: tema === id ? "var(--tf-text)" : "var(--tf-text-tertiary)",
-                border:
-                  tema === id
-                    ? "1px solid var(--tf-border)"
-                    : "1px solid transparent",
-              }}
-            >
-              <Icon size={16} />
-              {label}
-            </button>
-          ))}
+          ).map(({ id, label, icon: Icon }) => {
+            const ativo = tema === id;
+            return (
+              <button
+                key={id}
+                onClick={() => toggleTema(id)}
+                className="flex-1 flex items-center justify-center gap-2 h-10 text-[0.8125rem] font-medium transition-colors"
+                style={{
+                  background: ativo ? "var(--tf-surface)" : "transparent",
+                  color: ativo ? "var(--tf-text)" : "var(--tf-text-tertiary)",
+                  border: `1px solid ${ativo ? "var(--tf-accent)" : "var(--tf-border)"}`,
+                  borderRadius: "var(--tf-radius-xs)",
+                  letterSpacing: "-0.005em",
+                }}
+              >
+                <Icon size={14} strokeWidth={1.75} />
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
     </section>

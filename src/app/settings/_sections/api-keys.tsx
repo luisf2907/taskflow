@@ -93,7 +93,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
       <div className="flex items-center gap-2">
         <Terminal size={14} style={{ color: "var(--tf-accent)" }} />
         <h2
-          className="text-[11px] font-bold uppercase tracking-widest"
+          className="label-mono"
           style={{ color: "var(--tf-text-tertiary)" }}
         >
           API Keys (MCP)
@@ -101,7 +101,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
       </div>
 
       <div
-        className="rounded-[20px] p-6 space-y-4"
+        className="rounded-[var(--tf-radius-md)] p-6 space-y-4"
         style={{ background: "var(--tf-bg-secondary)" }}
       >
         <p className="text-[12px]" style={{ color: "var(--tf-text-secondary)" }}>
@@ -112,10 +112,10 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
         {/* Key recem criada */}
         {novaKeyCriada && (
           <div
-            className="rounded-[14px] p-4 space-y-2"
+            className="rounded-[var(--tf-radius-md)] p-4 space-y-2"
             style={{
               background: "var(--tf-surface)",
-              border: "2px solid var(--tf-accent)",
+              border: "1px solid var(--tf-accent)",
             }}
           >
             <p
@@ -126,7 +126,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
             </p>
             <div className="flex items-center gap-2">
               <code
-                className="flex-1 text-[11px] px-3 py-2 rounded-[8px] break-all"
+                className="flex-1 text-[11px] px-3 py-2 rounded-[var(--tf-radius-xs)] break-all"
                 style={{
                   background: "var(--tf-bg)",
                   color: "var(--tf-text)",
@@ -139,7 +139,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
                   navigator.clipboard.writeText(novaKeyCriada);
                   toast.success("Copiada!");
                 }}
-                className="p-2 rounded-[8px] shrink-0"
+                className="p-2 rounded-[var(--tf-radius-xs)] shrink-0"
                 style={{ color: "var(--tf-accent)" }}
               >
                 <Copy size={14} />
@@ -147,7 +147,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
             </div>
             {/* Claude Code CLI config */}
             <div
-              className="rounded-[10px] p-3 mt-2"
+              className="rounded-[var(--tf-radius-xs)] p-3 mt-2"
               style={{ background: "var(--tf-bg)" }}
             >
               <p
@@ -192,7 +192,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
                   navigator.clipboard.writeText(config);
                   toast.success("Config copiada!");
                 }}
-                className="mt-2 flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-[8px]"
+                className="mt-2 flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-[var(--tf-radius-xs)]"
                 style={{ color: "var(--tf-accent)" }}
               >
                 <Copy size={12} /> Copiar config CLI
@@ -201,7 +201,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
 
             {/* Claude Desktop config */}
             <div
-              className="rounded-[10px] p-3 mt-2"
+              className="rounded-[var(--tf-radius-xs)] p-3 mt-2"
               style={{ background: "var(--tf-bg)" }}
             >
               <p
@@ -251,7 +251,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
                   navigator.clipboard.writeText(config);
                   toast.success("Config copiada!");
                 }}
-                className="mt-2 flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-[8px]"
+                className="mt-2 flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-[var(--tf-radius-xs)]"
                 style={{ color: "var(--tf-accent)" }}
               >
                 <Copy size={12} /> Copiar config Desktop
@@ -274,7 +274,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
               value={novaKeyNome}
               onChange={(e) => setNovaKeyNome(e.target.value)}
               placeholder="Nome da key..."
-              className="flex-1 px-3 py-2 text-[12px] rounded-[10px] outline-none"
+              className="flex-1 px-3 py-2 text-[12px] rounded-[var(--tf-radius-xs)] outline-none"
               style={{
                 background: "var(--tf-surface)",
                 border: "1px solid var(--tf-border)",
@@ -284,7 +284,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
             <select
               value={novaKeyWs}
               onChange={(e) => setNovaKeyWs(e.target.value)}
-              className="px-3 py-2 text-[12px] rounded-[10px] outline-none"
+              className="px-3 py-2 text-[12px] rounded-[var(--tf-radius-xs)] outline-none"
               style={{
                 background: "var(--tf-surface)",
                 border: "1px solid var(--tf-border)",
@@ -301,7 +301,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
             <select
               value={novaKeyExpDays}
               onChange={(e) => setNovaKeyExpDays(e.target.value)}
-              className="px-3 py-2 text-[12px] rounded-[10px] outline-none"
+              className="px-3 py-2 text-[12px] rounded-[var(--tf-radius-xs)] outline-none"
               style={{
                 background: "var(--tf-surface)",
                 border: "1px solid var(--tf-border)",
@@ -316,7 +316,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
             <button
               onClick={criarApiKey}
               disabled={criandoKey || !novaKeyWs}
-              className="flex items-center gap-1 px-4 py-2 text-[12px] font-semibold text-white rounded-[10px] disabled:opacity-40"
+              className="flex items-center gap-1 px-4 py-2 text-[12px] font-semibold text-white rounded-[var(--tf-radius-xs)] disabled:opacity-40"
               style={{ background: "var(--tf-accent)" }}
             >
               <Plus size={12} />
@@ -339,7 +339,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
             {apiKeys.map((key) => (
               <div
                 key={key.id}
-                className="flex items-center gap-3 px-4 py-3 rounded-[14px]"
+                className="flex items-center gap-3 px-4 py-3 rounded-[var(--tf-radius-md)]"
                 style={{ background: "var(--tf-surface)" }}
               >
                 <Key size={13} style={{ color: "var(--tf-text-tertiary)" }} />
@@ -366,7 +366,7 @@ export function ApiKeysSection({ workspaces, userId }: ApiKeysSectionProps) {
                 </div>
                 <button
                   onClick={() => revogarApiKey(key.id)}
-                  className="p-1.5 rounded-[8px] shrink-0"
+                  className="p-1.5 rounded-[var(--tf-radius-xs)] shrink-0"
                   style={{ color: "var(--tf-danger)" }}
                   title="Revogar key"
                 >
