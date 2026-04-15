@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Header } from "@/components/layout/header";
@@ -48,6 +48,15 @@ export default function WikiSlugPage() {
   const [paginaSelecionada, setPaginaSelecionada] = useState<WikiPagina | null>(null);
   const [cardPickerAberto, setCardPickerAberto] = useState(false);
   const [paginaParaExcluir, setPaginaParaExcluir] = useState<string | null>(null);
+
+  // Pagina "ao vivo" — sempre deriva da cache `paginas` pelo id selecionado.
+  // Garante que toda mutacao otimista (rename, icone, capa) seja refletida
+  // no mesmo render, evitando frame de flicker entre cache atualizada e
+  // state `paginaSelecionada` ainda stale.
+  const paginaAtual = useMemo(() => {
+    if (!paginaSelecionada) return null;
+    return paginas.find((p) => p.id === paginaSelecionada.id) ?? paginaSelecionada;
+  }, [paginas, paginaSelecionada]);
   const [modoEdicao, setModoEdicao] = useState<WikiEditMode>("editor");
   const [markdownTexto, setMarkdownTexto] = useState("");
   const editorRef = useRef<Editor | null>(null);
@@ -60,11 +69,20 @@ export default function WikiSlugPage() {
       if (pagina) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setPaginaSelecionada(pagina);
+      } else if (
+        paginaSelecionada &&
+        paginas.some((p) => p.id === paginaSelecionada.id)
+      ) {
+        // Rename em andamento: a pagina ainda existe no cache mas o slug
+        // mudou. Nao redireciona — o router.replace(novoSlug) do handler
+        // de rename ja esta a caminho. Redirecionar para /wiki aqui causa
+        // flicker visivel mostrando brevemente outra pagina.
+        return;
       } else {
         router.replace(`/workspace/${workspaceId}/wiki`);
       }
     }
-  }, [carregando, paginas, slug, workspaceId, router]);
+  }, [carregando, paginas, slug, workspaceId, router, paginaSelecionada]);
 
   // Sync com dados atualizados vindos do backend via SWR.
   useEffect(() => {
@@ -278,7 +296,7 @@ export default function WikiSlugPage() {
           >
             <PageTree
               arvore={arvore}
-              paginaAtivaId={paginaSelecionada?.id || null}
+              paginaAtivaId={paginaAtual?.id || null}
               onSelecionar={handleSelecionar}
               onCriarPagina={handleCriarPagina}
               onExcluirPagina={handleExcluirPagina}
@@ -292,10 +310,10 @@ export default function WikiSlugPage() {
               <div className="flex-1 flex items-center justify-center">
                 <Loader2 size={24} className="animate-spin" style={{ color: "var(--tf-accent)" }} />
               </div>
-            ) : paginaSelecionada ? (
+            ) : paginaAtual ? (
               <div className="max-w-[900px] mx-auto w-full px-8 py-10">
                 <PageHeader
-                  pagina={paginaSelecionada}
+                  pagina={paginaAtual}
                   todasPaginas={paginas}
                   onTituloChange={handleTituloChange}
                   onIconeChange={handleIconeChange}
@@ -303,17 +321,17 @@ export default function WikiSlugPage() {
                   onNavegar={handleNavegar}
                   statusSalvamento={statusSalvamento}
                   workspaceId={workspaceId}
-                  paginaId={paginaSelecionada.id}
+                  paginaId={paginaAtual.id}
                   modoEdicao={modoEdicao}
                   onModoChange={handleModoChange}
                 />
                 {modoEdicao === "editor" ? (
                   <WikiEditor
-                    key={paginaSelecionada.id}
-                    conteudo={paginaSelecionada.conteudo}
+                    key={paginaAtual.id}
+                    conteudo={paginaAtual.conteudo}
                     onSave={handleSalvarConteudo}
                     workspaceId={workspaceId}
-                    paginaId={paginaSelecionada.id}
+                    paginaId={paginaAtual.id}
                     onEditorReady={handleEditorReady}
                   />
                 ) : (

@@ -169,7 +169,7 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
         className={cn(
           "sidebar-ease flex flex-col shrink-0 overflow-y-auto overflow-x-hidden mt-3.5 mb-3 mx-0 lg:ml-3 rounded-[var(--tf-radius-xl)] z-40",
           aberta
-            ? "w-[232px] fixed lg:relative inset-y-0 left-0 lg:inset-auto m-3 lg:mt-3.5 lg:mb-3 lg:ml-3"
+            ? "w-[232px] fixed lg:relative inset-y-0 left-0 lg:inset-auto m-3 lg:mt-3.5 lg:mb-3 lg:ml-3 lg:mr-0"
             : "w-[52px] hidden lg:flex relative"
         )}
         style={{

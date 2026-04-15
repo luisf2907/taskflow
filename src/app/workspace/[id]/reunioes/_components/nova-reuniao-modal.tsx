@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { Modal } from "@/components/ui/modal";
+import { AudioPlayer } from "@/components/ui/audio-player";
 import { toast } from "@/hooks/use-toast";
 
 interface NovaReuniaoModalProps {
@@ -497,40 +498,48 @@ export function NovaReuniaoModal({
         {/* Preview (ready) */}
         {phase === "ready" && audioUrl && (
           <div
-            className="rounded-[14px] p-4 space-y-3"
-            style={{ background: "var(--tf-bg-secondary)" }}
+            className="p-3.5 space-y-3"
+            style={{
+              background: "var(--tf-bg-secondary)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-md)",
+            }}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <div
-                className="w-8 h-8 rounded-[10px] flex items-center justify-center flex-shrink-0"
-                style={{ background: "var(--tf-success-bg)" }}
+                className="w-7 h-7 flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: "transparent",
+                  border: "1px solid var(--tf-success)",
+                  color: "var(--tf-success)",
+                  borderRadius: "var(--tf-radius-xs)",
+                }}
               >
-                <FileAudio
-                  size={14}
-                  style={{ color: "var(--tf-success)" }}
-                />
+                <FileAudio size={13} strokeWidth={1.75} />
               </div>
               <p
-                className="text-[12px] font-bold flex-1 truncate"
-                style={{ color: "var(--tf-text)" }}
+                className="text-[0.75rem] font-medium flex-1 truncate"
+                style={{
+                  color: "var(--tf-text)",
+                  letterSpacing: "-0.005em",
+                }}
               >
                 {audioName}
               </p>
               <button
                 onClick={resetAudio}
-                className="p-1.5 rounded-[8px] transition-all duration-150 hover:opacity-70"
-                style={{ color: "var(--tf-text-tertiary)" }}
-                title="Remover audio"
+                className="p-1 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-danger)]"
+                style={{
+                  color: "var(--tf-text-tertiary)",
+                  borderRadius: "var(--tf-radius-xs)",
+                }}
+                title="Remover áudio"
+                aria-label="Remover áudio"
               >
-                <RotateCcw size={13} />
+                <RotateCcw size={12} strokeWidth={1.75} />
               </button>
             </div>
-            <div
-              className="rounded-[10px] overflow-hidden"
-              style={{ background: "var(--tf-surface)" }}
-            >
-              <audio src={audioUrl} controls className="w-full" />
-            </div>
+            <AudioPlayer src={audioUrl} />
           </div>
         )}
 

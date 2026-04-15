@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Header } from "@/components/layout/header";
@@ -53,6 +53,13 @@ export default function WikiPage() {
   const [modoEdicao, setModoEdicao] = useState<WikiEditMode>("editor");
   const [markdownTexto, setMarkdownTexto] = useState("");
   const editorRef = useRef<Editor | null>(null);
+
+  // Pagina "ao vivo" derivada da cache — evita flicker entre mutate
+  // otimista e re-sync do state local (mesma mecanica da pagina [slug]).
+  const paginaAtual = useMemo(() => {
+    if (!paginaSelecionada) return null;
+    return paginas.find((p) => p.id === paginaSelecionada.id) ?? paginaSelecionada;
+  }, [paginas, paginaSelecionada]);
 
   // Auto-seleciona a primeira página quando carrega. set-state-in-effect
   // intencional: reage ao fim do fetch async.
@@ -265,7 +272,7 @@ export default function WikiPage() {
           >
             <PageTree
               arvore={arvore}
-              paginaAtivaId={paginaSelecionada?.id || null}
+              paginaAtivaId={paginaAtual?.id || null}
               onSelecionar={handleSelecionar}
               onCriarPagina={handleCriarPagina}
               onExcluirPagina={handleExcluirPagina}
@@ -279,10 +286,10 @@ export default function WikiPage() {
               <div className="flex-1 flex items-center justify-center">
                 <Loader2 size={24} className="animate-spin" style={{ color: "var(--tf-accent)" }} />
               </div>
-            ) : paginaSelecionada ? (
+            ) : paginaAtual ? (
               <div className="max-w-[900px] mx-auto w-full px-8 py-10">
                 <PageHeader
-                  pagina={paginaSelecionada}
+                  pagina={paginaAtual}
                   todasPaginas={paginas}
                   onTituloChange={handleTituloChange}
                   onIconeChange={handleIconeChange}
@@ -290,17 +297,17 @@ export default function WikiPage() {
                   onNavegar={handleNavegar}
                   statusSalvamento={statusSalvamento}
                   workspaceId={workspaceId}
-                  paginaId={paginaSelecionada.id}
+                  paginaId={paginaAtual.id}
                   modoEdicao={modoEdicao}
                   onModoChange={handleModoChange}
                 />
                 {modoEdicao === "editor" ? (
                   <WikiEditor
-                    key={paginaSelecionada.id}
-                    conteudo={paginaSelecionada.conteudo}
+                    key={paginaAtual.id}
+                    conteudo={paginaAtual.conteudo}
                     onSave={handleSalvarConteudo}
                     workspaceId={workspaceId}
-                    paginaId={paginaSelecionada.id}
+                    paginaId={paginaAtual.id}
                     onEditorReady={handleEditorReady}
                   />
                 ) : (

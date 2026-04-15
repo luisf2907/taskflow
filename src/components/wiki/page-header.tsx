@@ -49,13 +49,14 @@ export function PageHeader({
   const capaInputRef = useRef<HTMLInputElement>(null);
   const [uploadingCapa, setUploadingCapa] = useState(false);
 
-  // Sync título quando muda de página. set-state-in-effect intencional:
-  // sincroniza com prop vinda de fora.
+  // Sync título só quando muda de PÁGINA (pagina.id), não quando só o
+  // titulo muda — senão cada salvamento dispara um reset de estado que
+  // aparece como flicker na UI.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setTitulo(pagina.titulo);
     setEditandoTitulo(false);
-  }, [pagina.id, pagina.titulo]);
+  }, [pagina.id]); // eslint-disable-line react-hooks/exhaustive-deps
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleCapaUpload = useCallback(
@@ -237,7 +238,8 @@ export function PageHeader({
           )}
         </div>
 
-        {/* Título editável */}
+        {/* Título editável — input e h1 com layout identico para evitar
+            shift/flicker na transicao */}
         {editandoTitulo ? (
           <input
             ref={inputRef}
@@ -253,11 +255,12 @@ export function PageHeader({
               }
             }}
             autoFocus
-            className="flex-1 text-[28px] font-bold leading-tight outline-none py-1"
+            className="flex-1 text-[28px] font-bold leading-tight outline-none py-1 px-1 -mx-1 rounded-[6px]"
             style={{
               color: "var(--tf-text)",
               background: "transparent",
-              borderBottom: "2px solid var(--tf-accent)",
+              border: "1px solid var(--tf-accent)",
+              letterSpacing: "-0.02em",
             }}
           />
         ) : (
@@ -267,7 +270,11 @@ export function PageHeader({
               setEditandoTitulo(true);
             }}
             className="flex-1 text-[28px] font-bold leading-tight cursor-text py-1 hover:bg-[var(--tf-surface-hover)] rounded-[6px] px-1 -mx-1 transition-colors"
-            style={{ color: "var(--tf-text)" }}
+            style={{
+              color: "var(--tf-text)",
+              border: "1px solid transparent",
+              letterSpacing: "-0.02em",
+            }}
           >
             {pagina.titulo}
           </h1>

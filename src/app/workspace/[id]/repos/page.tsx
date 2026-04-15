@@ -291,7 +291,11 @@ export default function ReposPage() {
       <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
         <Header onMenuMobile={toggleSidebar} />
         <div className="flex-1 mb-4 overflow-hidden flex flex-col scroll-clip-lg" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", borderRadius: "var(--tf-radius-xl)" }}>
-        <main id="main-content" className="flex-1 overflow-y-auto p-8">
+        <main
+          id="main-content"
+          className="flex-1 overflow-y-auto p-8"
+          style={{ scrollbarGutter: "stable" }}
+        >
           {!repoAberto ? (
             /* ═══ LISTA DE REPOS ═══ */
             <div className="max-w-4xl mx-auto space-y-6">
@@ -423,6 +427,31 @@ export default function ReposPage() {
                 ))}
               </div>
 
+              {/* Branch indicator — sempre visivel abaixo das tabs pra evitar
+                  jump de layout ao trocar de aba */}
+              <div className="flex items-center gap-2 mt-3">
+                <GitBranch size={13} strokeWidth={1.75} style={{ color: "var(--tf-text-tertiary)" }} />
+                <span
+                  className="label-mono"
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                >
+                  Branch
+                </span>
+                <span
+                  className="inline-flex items-center h-[17px] px-1.5 text-[0.625rem] font-medium"
+                  style={{
+                    background: "var(--tf-accent-light)",
+                    color: "var(--tf-accent-text)",
+                    border: "1px solid var(--tf-accent)",
+                    borderRadius: "var(--tf-radius-xs)",
+                    fontFamily: "var(--tf-font-mono)",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {branch}
+                </span>
+              </div>
+
               {/* Content */}
               {subAba === "arquivos" && (
                 arquivoAberto ? (
@@ -440,23 +469,14 @@ export default function ReposPage() {
                     }}
                   />
                 ) : (
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <GitBranch size={14} style={{ color: "var(--tf-text-tertiary)" }} />
-                      <span className="text-xs font-medium" style={{ color: "var(--tf-text-tertiary)" }}>Branch:</span>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-[var(--tf-radius-xs)]" style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}>
-                        {branch}
-                      </span>
-                    </div>
-                    <RepoFileBrowser
-                      owner={repoAberto.owner}
-                      nome={repoAberto.nome}
-                      branch={branch}
-                      caminhoAtual={caminhoNavegacao}
-                      onCaminhoChange={setCaminhoNavegacao}
-                      onAbrirArquivo={(path) => setArquivoAberto(path)}
-                    />
-                  </div>
+                  <RepoFileBrowser
+                    owner={repoAberto.owner}
+                    nome={repoAberto.nome}
+                    branch={branch}
+                    caminhoAtual={caminhoNavegacao}
+                    onCaminhoChange={setCaminhoNavegacao}
+                    onAbrirArquivo={(path) => setArquivoAberto(path)}
+                  />
                 )
               )}
 
