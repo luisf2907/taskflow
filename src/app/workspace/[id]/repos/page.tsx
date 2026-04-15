@@ -290,7 +290,7 @@ export default function ReposPage() {
       />
       <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
         <Header onMenuMobile={toggleSidebar} />
-        <div className="flex-1 rounded-[var(--tf-radius-xl)] mb-4 overflow-hidden flex flex-col scroll-clip-lg" style={{ background: "var(--tf-surface)" }}>
+        <div className="flex-1 mb-4 overflow-hidden flex flex-col scroll-clip-lg" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", borderRadius: "var(--tf-radius-xl)" }}>
         <main id="main-content" className="flex-1 overflow-y-auto p-8">
           {!repoAberto ? (
             /* ═══ LISTA DE REPOS ═══ */

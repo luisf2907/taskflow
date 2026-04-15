@@ -62,7 +62,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
 
   return (
     <header
-      className="h-11 mt-3.5 px-3 md:px-4 flex items-center justify-between shrink-0 mb-3 z-30 relative lg:mr-3"
+      className="h-11 mt-3.5 px-3 md:px-4 flex items-center justify-between shrink-0 mb-3 z-30 relative"
       style={{
         background: "var(--tf-surface)",
         border: "1px solid var(--tf-border)",
