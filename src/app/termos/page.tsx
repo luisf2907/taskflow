@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function TermosPage() {
   return (
-    <LegalLayout titulo="Termos de Uso" atualizado="06 de abril de 2026">
+    <LegalLayout titulo="Termos de Uso" atualizado="06 de abril de 2026" categoria="Termos">
       <Section titulo="1. Aceitacao dos Termos">
         <p>
           Ao acessar ou utilizar o Taskflow (&quot;Plataforma&quot;), voce concorda com estes

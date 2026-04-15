@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function PrivacidadePage() {
   return (
-    <LegalLayout titulo="Politica de Privacidade" atualizado="06 de abril de 2026">
+    <LegalLayout titulo="Política de Privacidade" atualizado="06 de abril de 2026" categoria="Privacidade">
       <Section titulo="1. Introducao">
         <p>
           Esta Politica de Privacidade descreve como o Taskflow (&quot;nos&quot;, &quot;nosso&quot;)
