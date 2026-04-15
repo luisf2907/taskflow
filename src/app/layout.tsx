@@ -54,9 +54,7 @@ export const metadata: Metadata = {
     title: "Taskflow",
     description: "Gestão de tarefas para times que entregam.",
   },
-  icons: {
-    icon: "/favicon.ico",
-  },
+  // icons auto-discovered via src/app/icon.tsx e apple-icon.tsx
 };
 
 export default function RootLayout({

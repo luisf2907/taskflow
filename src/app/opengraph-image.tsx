@@ -13,86 +13,158 @@ export default function OGImage() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)",
+          justifyContent: "space-between",
+          padding: "72px",
+          background: "#0A0A0B",
           fontFamily: "system-ui, sans-serif",
+          position: "relative",
         }}
       >
-        {/* Logo / Brand */}
+        {/* Grid overlay */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage:
+              "linear-gradient(to right, rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.035) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+
+        {/* Top row — brand + meta */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "16px",
-            marginBottom: "32px",
+            justifyContent: "space-between",
+            position: "relative",
+            zIndex: 10,
           }}
         >
-          <div
-            style={{
-              width: "64px",
-              height: "64px",
-              borderRadius: "16px",
-              background: "#00857A",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "32px",
-              fontWeight: 700,
-              color: "white",
-            }}
-          >
-            T
+          {/* Brand */}
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <div
+              style={{
+                width: "56px",
+                height: "56px",
+                borderRadius: "6px",
+                background: "#FF6B35",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontSize: "28px",
+                fontWeight: 700,
+                letterSpacing: "-0.02em",
+              }}
+            >
+              T
+            </div>
+            <span
+              style={{
+                fontSize: "34px",
+                fontWeight: 600,
+                color: "#E8E8EA",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Taskflow
+            </span>
           </div>
+
+          {/* Meta label */}
           <span
             style={{
-              fontSize: "48px",
-              fontWeight: 700,
-              color: "white",
-              letterSpacing: "-1px",
+              fontSize: "15px",
+              fontFamily: "ui-monospace, monospace",
+              color: "#6B6B70",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
             }}
           >
-            Taskflow
+            · Tech-futurista
           </span>
         </div>
 
-        {/* Tagline */}
-        <p
-          style={{
-            fontSize: "28px",
-            color: "rgba(255, 255, 255, 0.7)",
-            textAlign: "center",
-            maxWidth: "700px",
-            lineHeight: 1.4,
-          }}
-        >
-          Gestão de tarefas para times que entregam
-        </p>
-
-        {/* Features */}
+        {/* Middle — main headline */}
         <div
           style={{
             display: "flex",
-            gap: "24px",
-            marginTop: "40px",
+            flexDirection: "column",
+            gap: "16px",
+            position: "relative",
+            zIndex: 10,
           }}
         >
-          {["Kanban", "Sprints", "GitHub"].map((feature) => (
-            <div
-              key={feature}
-              style={{
-                padding: "10px 24px",
-                borderRadius: "999px",
-                border: "1px solid rgba(0, 133, 122, 0.5)",
-                background: "rgba(0, 133, 122, 0.15)",
-                color: "#00C9B7",
-                fontSize: "18px",
-                fontWeight: 600,
-              }}
-            >
-              {feature}
-            </div>
-          ))}
+          <span
+            style={{
+              fontSize: "15px",
+              fontFamily: "ui-monospace, monospace",
+              color: "#FF6B35",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}
+          >
+            Para times de desenvolvimento
+          </span>
+          <h1
+            style={{
+              fontSize: "72px",
+              fontWeight: 600,
+              color: "#E8E8EA",
+              letterSpacing: "-0.03em",
+              lineHeight: 1.02,
+              margin: 0,
+              maxWidth: "900px",
+            }}
+          >
+            Gerencie tarefas do jeito que seu time{" "}
+            <span style={{ color: "#FF6B35" }}>realmente trabalha.</span>
+          </h1>
+        </div>
+
+        {/* Bottom — features and CTA hint */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            position: "relative",
+            zIndex: 10,
+          }}
+        >
+          <div style={{ display: "flex", gap: "10px" }}>
+            {["Kanban", "Sprints", "GitHub"].map((feature) => (
+              <div
+                key={feature}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "2px",
+                  border: "1px solid #2A2A2E",
+                  background: "#111113",
+                  color: "#A8A8AE",
+                  fontSize: "14px",
+                  fontFamily: "ui-monospace, monospace",
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                  fontWeight: 500,
+                }}
+              >
+                {feature}
+              </div>
+            ))}
+          </div>
+
+          <span
+            style={{
+              fontSize: "15px",
+              fontFamily: "ui-monospace, monospace",
+              color: "#6B6B70",
+              letterSpacing: "0.04em",
+            }}
+          >
+            taskflow.app
+          </span>
         </div>
       </div>
     ),
