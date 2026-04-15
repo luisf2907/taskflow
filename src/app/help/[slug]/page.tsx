@@ -177,18 +177,11 @@ export default async function HelpArticlePage({
               {anterior ? (
                 <Link
                   href={`/help/${anterior.id}`}
-                  className="block p-3.5 no-underline transition-colors"
+                  className="block p-3.5 no-underline transition-colors border border-[var(--tf-border)] hover:border-[var(--tf-accent)]"
                   style={{
                     background: "var(--tf-surface)",
-                    border: "1px solid var(--tf-border)",
                     borderRadius: "var(--tf-radius-xs)",
                   }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.borderColor = "var(--tf-accent)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.borderColor = "var(--tf-border)")
-                  }
                 >
                   <div
                     className="inline-flex items-center gap-1 mb-1"
@@ -219,18 +212,11 @@ export default async function HelpArticlePage({
               {proximo && (
                 <Link
                   href={`/help/${proximo.id}`}
-                  className="block p-3.5 no-underline transition-colors text-right"
+                  className="block p-3.5 no-underline transition-colors text-right border border-[var(--tf-border)] hover:border-[var(--tf-accent)]"
                   style={{
                     background: "var(--tf-surface)",
-                    border: "1px solid var(--tf-border)",
                     borderRadius: "var(--tf-radius-xs)",
                   }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.borderColor = "var(--tf-accent)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.borderColor = "var(--tf-border)")
-                  }
                 >
                   <div
                     className="inline-flex items-center justify-end gap-1 mb-1"
