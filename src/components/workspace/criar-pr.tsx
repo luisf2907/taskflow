@@ -227,14 +227,14 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               href={sucesso.html_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-[8px] text-white"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-[var(--tf-radius-xs)] text-white"
               style={{ background: "var(--tf-accent)" }}
             >
               <ExternalLink size={13} /> Ver no GitHub
             </a>
             <button
               onClick={onFechar}
-              className="px-4 py-2 text-xs font-semibold rounded-[8px]"
+              className="px-4 py-2 text-xs font-semibold rounded-[var(--tf-radius-xs)]"
               style={{ color: "var(--tf-text-secondary)", border: "1px solid var(--tf-border)" }}
             >
               Fechar
@@ -263,7 +263,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
                 <select
                   value={head}
                   onChange={(e) => setHead(e.target.value)}
-                  className="w-full appearance-none text-sm px-3 py-2 rounded-[8px] border pr-8"
+                  className="w-full appearance-none text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border pr-8"
                   style={{
                     background: "var(--tf-bg)",
                     borderColor: "var(--tf-border)",
@@ -289,7 +289,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               <select
                 value={base}
                 onChange={(e) => setBase(e.target.value)}
-                className="w-full appearance-none text-sm px-3 py-2 rounded-[8px] border pr-8"
+                className="w-full appearance-none text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border pr-8"
                 style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text)" }}
               >
                 {branches.map((b) => (
@@ -310,7 +310,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               placeholder="Ex: feat: adicionar autenticação OAuth"
-              className="w-full text-sm px-3 py-2 rounded-[8px] border"
+              className="w-full text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border"
               style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text)" }}
             />
           </div>
@@ -325,7 +325,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               onChange={(e) => setDescricao(e.target.value)}
               placeholder="Descreva as mudanças..."
               rows={3}
-              className="w-full text-sm px-3 py-2 rounded-[8px] border resize-none"
+              className="w-full text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border resize-none"
               style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text)" }}
             />
           </div>
@@ -337,7 +337,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               Vincular a um card <span style={{ color: "var(--tf-text-tertiary)" }}>(opcional — será movido para Review)</span>
             </label>
             {cardEscolhido ? (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-[8px] border" style={{ background: "var(--tf-bg)", borderColor: "var(--tf-accent)" }}>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-[var(--tf-radius-xs)] border" style={{ background: "var(--tf-bg)", borderColor: "var(--tf-accent)" }}>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate" style={{ color: "var(--tf-text)" }}>{cardEscolhido.titulo}</p>
                   {cardEscolhido.coluna_nome && (
@@ -352,7 +352,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               <Dropdown
                 trigger={
                   <div
-                    className="w-full text-left text-sm px-3 py-2 rounded-[8px] border cursor-pointer"
+                    className="w-full text-left text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border cursor-pointer"
                     style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}
                   >
                     {carregandoCards ? "Carregando cards..." : "Selecionar card..."}
@@ -397,7 +397,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
                     return (
                       <span
                         key={userId}
-                        className="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-[8px]"
+                        className="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-[var(--tf-radius-xs)]"
                         style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}
                       >
                         {m.avatar_url ? (
@@ -419,7 +419,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               <Dropdown
                 trigger={
                   <div
-                    className="w-full text-left text-sm px-3 py-2 rounded-[8px] border cursor-pointer"
+                    className="w-full text-left text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border cursor-pointer"
                     style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}
                   >
                     Adicionar reviewer...
@@ -456,7 +456,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
 
           {/* Erro */}
           {erro && (
-            <div className="text-xs px-3 py-2 rounded-[8px]" style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}>
+            <div className="text-xs px-3 py-2 rounded-[var(--tf-radius-xs)]" style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}>
               {erro}
             </div>
           )}
@@ -465,7 +465,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
           <button
             onClick={handleCriar}
             disabled={criando || !head || !titulo.trim() || carregandoBranches}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white rounded-[8px] transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white rounded-[var(--tf-radius-xs)] transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: "var(--tf-accent)" }}
           >
             {criando ? (

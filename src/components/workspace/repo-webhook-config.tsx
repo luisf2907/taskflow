@@ -164,7 +164,7 @@ export function RepoWebhookConfig({
             type="text"
             value={webhookUrl}
             readOnly
-            className="flex-1 px-3 py-2 rounded-[8px] text-xs font-mono"
+            className="flex-1 px-3 py-2 rounded-[var(--tf-radius-xs)] text-xs font-mono"
             style={{
               background: "var(--tf-bg)",
               border: "1px solid var(--tf-border)",
@@ -173,7 +173,7 @@ export function RepoWebhookConfig({
           />
           <button
             onClick={() => copiar(webhookUrl, "url")}
-            className="px-2.5 py-2 rounded-[8px] transition-smooth"
+            className="px-2.5 py-2 rounded-[var(--tf-radius-xs)] transition-smooth"
             style={{
               background: "var(--tf-bg)",
               border: "1px solid var(--tf-border)",
@@ -200,7 +200,7 @@ export function RepoWebhookConfig({
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
             placeholder="Gere ou cole um secret"
-            className="flex-1 px-3 py-2 rounded-[8px] text-xs font-mono"
+            className="flex-1 px-3 py-2 rounded-[var(--tf-radius-xs)] text-xs font-mono"
             style={{
               background: "var(--tf-bg)",
               border: "1px solid var(--tf-border)",
@@ -209,7 +209,7 @@ export function RepoWebhookConfig({
           />
           <button
             onClick={gerarSecret}
-            className="px-2.5 py-2 rounded-[8px] transition-smooth"
+            className="px-2.5 py-2 rounded-[var(--tf-radius-xs)] transition-smooth"
             style={{
               background: "var(--tf-bg)",
               border: "1px solid var(--tf-border)",
@@ -222,7 +222,7 @@ export function RepoWebhookConfig({
           {secret && (
             <button
               onClick={() => copiar(secret, "secret")}
-              className="px-2.5 py-2 rounded-[8px] transition-smooth"
+              className="px-2.5 py-2 rounded-[var(--tf-radius-xs)] transition-smooth"
               style={{
                 background: "var(--tf-bg)",
                 border: "1px solid var(--tf-border)",
@@ -244,7 +244,7 @@ export function RepoWebhookConfig({
           <select
             value={reviewId}
             onChange={(e) => setReviewId(e.target.value)}
-            className="w-full px-2.5 py-2 rounded-[8px] text-xs"
+            className="w-full px-2.5 py-2 rounded-[var(--tf-radius-xs)] text-xs"
             style={{
               background: "var(--tf-bg)",
               border: "1px solid var(--tf-border)",
@@ -264,7 +264,7 @@ export function RepoWebhookConfig({
           <select
             value={doneId}
             onChange={(e) => setDoneId(e.target.value)}
-            className="w-full px-2.5 py-2 rounded-[8px] text-xs"
+            className="w-full px-2.5 py-2 rounded-[var(--tf-radius-xs)] text-xs"
             style={{
               background: "var(--tf-bg)",
               border: "1px solid var(--tf-border)",
@@ -284,7 +284,7 @@ export function RepoWebhookConfig({
           <select
             value={doingId}
             onChange={(e) => setDoingId(e.target.value)}
-            className="w-full px-2.5 py-2 rounded-[8px] text-xs"
+            className="w-full px-2.5 py-2 rounded-[var(--tf-radius-xs)] text-xs"
             style={{
               background: "var(--tf-bg)",
               border: "1px solid var(--tf-border)",
@@ -302,7 +302,7 @@ export function RepoWebhookConfig({
       <button
         onClick={salvar}
         disabled={salvando}
-        className="w-full px-4 py-2 rounded-[14px] text-xs font-medium text-white transition-smooth"
+        className="w-full px-4 py-2 rounded-[var(--tf-radius-md)] text-xs font-medium text-white transition-smooth"
         style={{ background: "var(--tf-accent)" }}
       >
         {salvando ? "Salvando..." : "Salvar configuração"}

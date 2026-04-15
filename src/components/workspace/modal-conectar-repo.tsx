@@ -82,12 +82,12 @@ export function ModalConectarRepo({
       <div className="space-y-3">
         {/* Toggle modo */}
         <div
-          className="flex gap-1 p-0.5 rounded-[8px]"
+          className="flex gap-1 p-0.5 rounded-[var(--tf-radius-xs)]"
           style={{ background: "var(--tf-bg-secondary)" }}
         >
           <button
             onClick={() => setModo("lista")}
-            className="flex-1 py-1.5 text-xs font-semibold rounded-[8px] transition-smooth"
+            className="flex-1 py-1.5 text-xs font-semibold rounded-[var(--tf-radius-xs)] transition-smooth"
             style={{
               background:
                 modo === "lista" ? "var(--tf-surface)" : "transparent",
@@ -101,7 +101,7 @@ export function ModalConectarRepo({
           </button>
           <button
             onClick={() => setModo("manual")}
-            className="flex-1 py-1.5 text-xs font-semibold rounded-[8px] transition-smooth"
+            className="flex-1 py-1.5 text-xs font-semibold rounded-[var(--tf-radius-xs)] transition-smooth"
             style={{
               background:
                 modo === "manual" ? "var(--tf-surface)" : "transparent",
@@ -130,7 +130,7 @@ export function ModalConectarRepo({
                 value={repoInput}
                 onChange={(e) => setRepoInput(e.target.value)}
                 placeholder="Buscar repositório..."
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none transition-smooth"
                 style={{
                   background: "var(--tf-bg-secondary)",
                   border: "1px solid var(--tf-border)",
@@ -177,7 +177,7 @@ export function ModalConectarRepo({
                   <button
                     key={r.id}
                     onClick={() => onConectar(r.owner, r.name)}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-[8px] text-left transition-smooth group"
+                    className="w-full flex items-center gap-3 p-2.5 rounded-[var(--tf-radius-xs)] text-left transition-smooth group"
                     style={{ border: "1px solid transparent" }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background =
@@ -190,7 +190,7 @@ export function ModalConectarRepo({
                     }}
                   >
                     <div
-                      className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
+                      className="w-8 h-8 rounded-[var(--tf-radius-xs)] flex items-center justify-center shrink-0"
                       style={{ background: "var(--tf-accent-light)" }}
                     >
                       <GitBranch
@@ -233,7 +233,7 @@ export function ModalConectarRepo({
                       </div>
                     </div>
                     <span
-                      className="text-[11px] font-semibold px-2.5 py-1 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth"
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-[var(--tf-radius-xs)] opacity-0 group-hover:opacity-100 transition-smooth"
                       style={{ background: "var(--tf-accent)", color: "#fff" }}
                     >
                       Conectar
@@ -257,10 +257,10 @@ export function ModalConectarRepo({
                 value={repoInput}
                 onChange={(e) => setRepoInput(e.target.value)}
                 placeholder="https://github.com/owner/repo ou owner/repo"
-                className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
+                className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none transition-smooth"
                 style={{
                   background: "var(--tf-bg-secondary)",
-                  border: "2px solid var(--tf-border)",
+                  border: "1px solid var(--tf-border)",
                   color: "var(--tf-text)",
                 }}
                 onKeyDown={(e) => {
@@ -280,7 +280,7 @@ export function ModalConectarRepo({
 
             {repoInput && parsearRepo(repoInput) && (
               <div
-                className="p-3 rounded-[8px] border"
+                className="p-3 rounded-[var(--tf-radius-xs)] border"
                 style={{
                   background: "var(--tf-bg-secondary)",
                   borderColor: "var(--tf-border)",
@@ -305,7 +305,7 @@ export function ModalConectarRepo({
                 if (parsed) onConectar(parsed.owner, parsed.nome);
               }}
               disabled={!repoInput || !parsearRepo(repoInput)}
-              className="w-full py-2.5 text-sm font-semibold text-white rounded-[8px] transition-smooth disabled:opacity-40"
+              className="w-full py-2.5 text-sm font-semibold text-white rounded-[var(--tf-radius-xs)] transition-smooth disabled:opacity-40"
               style={{ background: "var(--tf-accent)" }}
             >
               Conectar

@@ -47,7 +47,7 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
   if (carregando) {
     return (
       <div
-        className="rounded-[8px] overflow-hidden"
+        className="rounded-[var(--tf-radius-xs)] overflow-hidden"
         style={{ backgroundColor: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
       >
         {/* Header skeleton */}
@@ -56,7 +56,7 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
           style={{ borderBottom: "1px solid var(--tf-border)" }}
         >
           <div
-            className="w-7 h-7 rounded-[8px] animate-pulse"
+            className="w-7 h-7 rounded-[var(--tf-radius-xs)] animate-pulse"
             style={{ backgroundColor: "var(--tf-bg-secondary)" }}
           />
           <div className="flex-1 flex flex-col gap-1.5">
@@ -89,7 +89,7 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
 
   return (
     <div
-      className="rounded-[8px] overflow-hidden"
+      className="rounded-[var(--tf-radius-xs)] overflow-hidden"
       style={{ backgroundColor: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
     >
       {/* Header */}
@@ -100,7 +100,7 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
         <button
           onClick={onVoltar}
           title="Voltar"
-          className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[8px] cursor-pointer shrink-0"
+          className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[var(--tf-radius-xs)] cursor-pointer shrink-0"
           style={{
             border: "1px solid var(--tf-border)",
             backgroundColor: "var(--tf-bg-secondary)",
@@ -254,7 +254,7 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
               },
               pre: ({ children }) => (
                 <pre
-                  className="rounded-[8px] p-4 my-3 overflow-auto"
+                  className="rounded-[var(--tf-radius-xs)] p-4 my-3 overflow-auto"
                   style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)" }}
                 >
                   {children}
@@ -288,7 +288,7 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
                 <hr className="my-6 border-none" style={{ borderTop: "1px solid var(--tf-border)" }} />
               ),
               img: ({ src, alt }) => (
-                <img src={src} alt={alt || ""} className="max-w-full rounded-[8px] my-3" />
+                <img src={src} alt={alt || ""} className="max-w-full rounded-[var(--tf-radius-xs)] my-3" />
               ),
               input: ({ type, checked, ...props }) => {
                 if (type === "checkbox") {
@@ -316,7 +316,7 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
             href={urlRaw}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[13px] no-underline px-3.5 py-1.5 rounded-[8px]"
+            className="inline-flex items-center gap-1.5 text-[13px] no-underline px-3.5 py-1.5 rounded-[var(--tf-radius-xs)]"
             style={{
               color: "var(--tf-accent)",
               border: "1px solid var(--tf-border)",

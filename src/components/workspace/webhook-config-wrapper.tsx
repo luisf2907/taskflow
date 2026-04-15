@@ -33,7 +33,7 @@ export function WebhookConfigWrapper({
 
   return (
     <div
-      className="max-w-xl rounded-[14px] p-5"
+      className="max-w-xl rounded-[var(--tf-radius-md)] p-5"
       style={{
         background: "var(--tf-surface)",
         border: "1px solid var(--tf-border)",

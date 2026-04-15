@@ -156,7 +156,7 @@ export default function AtividadesFeed({ workspaceId }: AtividadesFeedProps) {
   if (atividades.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <div className="w-14 h-14 rounded-[20px] flex items-center justify-center" style={{ background: "var(--tf-bg-secondary)" }}>
+        <div className="w-14 h-14 rounded-[var(--tf-radius-lg)] flex items-center justify-center" style={{ background: "var(--tf-bg-secondary)" }}>
           <Activity size={24} style={{ color: "var(--tf-text-tertiary)" }} />
         </div>
         <div className="text-center">
@@ -168,7 +168,7 @@ export default function AtividadesFeed({ workspaceId }: AtividadesFeedProps) {
   }
 
   return (
-    <div className="max-h-[650px] overflow-y-auto rounded-[20px] border p-4" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)", scrollbarWidth: "thin" }}>
+    <div className="max-h-[650px] overflow-y-auto rounded-[var(--tf-radius-lg)] border p-4" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)", scrollbarWidth: "thin" }}>
       {grupos.map((grupo) => (
         <div key={grupo.label}>
           <div className="py-2 mb-1">
@@ -197,7 +197,7 @@ export default function AtividadesFeed({ workspaceId }: AtividadesFeedProps) {
 
                 {/* Icon */}
                 <div
-                  className="w-8 h-8 min-w-[32px] rounded-[10px] flex items-center justify-center shrink-0"
+                  className="w-8 h-8 min-w-[32px] rounded-[var(--tf-radius-xs)] flex items-center justify-center shrink-0"
                   style={{ background: `color-mix(in srgb, ${config.cor} 15%, transparent)` }}
                 >
                   <Icon size={14} style={{ color: config.cor }} strokeWidth={2.5} />

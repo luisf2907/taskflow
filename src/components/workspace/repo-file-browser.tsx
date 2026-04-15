@@ -42,7 +42,7 @@ function SkeletonLinhas() {
       {SKELETON_LARGURAS.map((largura, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 rounded-[8px] px-3 py-2 animate-pulse"
+          className="flex items-center gap-3 rounded-[var(--tf-radius-xs)] px-3 py-2 animate-pulse"
           style={{ backgroundColor: "var(--tf-bg-secondary)" }}
         >
           <div
@@ -141,7 +141,7 @@ export function RepoFileBrowser({
 
   return (
     <div
-      className="rounded-[8px] border overflow-hidden"
+      className="rounded-[var(--tf-radius-xs)] border overflow-hidden"
       style={{
         backgroundColor: "var(--tf-surface)",
         borderColor: "var(--tf-border)",
@@ -215,7 +215,7 @@ export function RepoFileBrowser({
                 key={item.sha}
                 type="button"
                 onClick={() => handleClick(item)}
-                className="flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm transition-colors cursor-pointer text-left w-full"
+                className="flex items-center gap-3 rounded-[var(--tf-radius-xs)] px-3 py-2 text-sm transition-colors cursor-pointer text-left w-full"
                 style={{
                   color: "var(--tf-text)",
                 }}

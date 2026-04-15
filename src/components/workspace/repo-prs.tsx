@@ -319,7 +319,7 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
   return (
     <>
       <div
-        className="flex flex-col rounded-[8px] overflow-hidden"
+        className="flex flex-col rounded-[var(--tf-radius-xs)] overflow-hidden"
         style={{
           border: "1px solid var(--tf-border)",
           background: "var(--tf-surface)",
@@ -346,7 +346,7 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
           </span>
 
           <div
-            className="flex gap-0.5 rounded-[8px] p-0.5"
+            className="flex gap-0.5 rounded-[var(--tf-radius-xs)] p-0.5"
             style={{ background: "var(--tf-bg)" }}
           >
             {ABAS.map((a) => (
@@ -392,7 +392,7 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
             {repoId && (
               <button
                 onClick={() => setModalCriar(true)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-[8px] border-none cursor-pointer text-xs font-semibold text-white transition-[opacity] duration-150"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-[var(--tf-radius-xs)] border-none cursor-pointer text-xs font-semibold text-white transition-[opacity] duration-150"
                 style={{ background: "var(--tf-accent)" }}
               >
                 <Plus size={13} /> Criar PR
@@ -427,7 +427,7 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
               {repoId && (
                 <button
                   onClick={() => setModalCriar(true)}
-                  className="flex items-center gap-1 px-4 py-2 rounded-[8px] border-none cursor-pointer text-[13px] font-semibold text-white mt-2"
+                  className="flex items-center gap-1 px-4 py-2 rounded-[var(--tf-radius-xs)] border-none cursor-pointer text-[13px] font-semibold text-white mt-2"
                   style={{ background: "var(--tf-accent)" }}
                 >
                   <Plus size={14} /> Criar Pull Request

@@ -98,7 +98,7 @@ function FileDiffItem({ file }: { file: GitHubPRFile }) {
   const caminho = file.filename.includes("/") ? file.filename.substring(0, file.filename.lastIndexOf("/")) : "";
 
   return (
-    <div className="rounded-[8px] overflow-hidden" style={{ border: "1px solid var(--tf-border)" }}>
+    <div className="rounded-[var(--tf-radius-xs)] overflow-hidden" style={{ border: "1px solid var(--tf-border)" }}>
       <button
         onClick={() => setAberto(!aberto)}
         className="w-full flex items-center gap-2 px-3.5 py-2.5 border-none cursor-pointer text-left"
@@ -308,17 +308,17 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
             <div className="flex items-center gap-2.5 mt-2 flex-wrap">
               {/* Status */}
               {ehMerged && (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[20px]" style={{ background: "var(--tf-merged-bg)", color: "var(--tf-merged)" }}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[var(--tf-radius-lg)]" style={{ background: "var(--tf-merged-bg)", color: "var(--tf-merged)" }}>
                   <GitMerge size={13} /> Merged
                 </span>
               )}
               {ehClosed && (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[20px]" style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[var(--tf-radius-lg)]" style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}>
                   <XCircle size={13} /> Fechado
                 </span>
               )}
               {ehAberto && (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[20px]" style={{ background: "var(--tf-success-bg)", color: "var(--tf-success)" }}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-[3px] rounded-[var(--tf-radius-lg)]" style={{ background: "var(--tf-success-bg)", color: "var(--tf-success)" }}>
                   <CircleDot size={13} /> Aberto
                 </span>
               )}
@@ -341,7 +341,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
             href={pr.html_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs no-underline px-3 py-1.5 rounded-[8px]"
+            className="flex items-center gap-1 text-xs no-underline px-3 py-1.5 rounded-[var(--tf-radius-xs)]"
             style={{ color: "var(--tf-text-tertiary)", border: "1px solid var(--tf-border)" }}
           >
             <ExternalLink size={12} /> GitHub
@@ -350,7 +350,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
       </div>
 
       {/* ─── Stats Bar ─── */}
-      <div className="flex items-center gap-4 px-3.5 py-2.5 rounded-[8px] text-xs" style={{ background: "var(--tf-bg-secondary)" }}>
+      <div className="flex items-center gap-4 px-3.5 py-2.5 rounded-[var(--tf-radius-xs)] text-xs" style={{ background: "var(--tf-bg-secondary)" }}>
         <span style={{ color: "var(--tf-text-secondary)" }}><strong>{files.length}</strong> arquivo{files.length !== 1 ? "s" : ""}</span>
         <span className="font-semibold text-green-500">+{totalAdditions}</span>
         <span className="font-semibold text-red-500">-{totalDeletions}</span>
@@ -378,7 +378,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
             <Icon size={14} /> {label}
             {count > 0 && (
               <span
-                className="text-[10px] font-semibold px-[5px] rounded-[8px]"
+                className="text-[10px] font-semibold px-[5px] rounded-[var(--tf-radius-xs)]"
                 style={{
                   background: tab === id ? "var(--tf-accent-light)" : "var(--tf-bg-secondary)",
                   color: tab === id ? "var(--tf-accent-text)" : "var(--tf-text-tertiary)",
@@ -422,7 +422,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
               {/* Descrição do PR */}
               {pr.body && (
                 <div
-                  className="p-4 rounded-[8px] mb-4 text-[13px] leading-relaxed whitespace-pre-wrap"
+                  className="p-4 rounded-[var(--tf-radius-xs)] mb-4 text-[13px] leading-relaxed whitespace-pre-wrap"
                   style={{ border: "1px solid var(--tf-border)", color: "var(--tf-text-secondary)" }}
                 >
                   {pr.body}
@@ -445,7 +445,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
         {/* ─── Action Panel (sidebar) ─── */}
         {repoId && (
           <div className="w-[280px] shrink-0 sticky top-4">
-            <div className="p-4 rounded-[8px]" style={{ border: "1px solid var(--tf-border)", background: "var(--tf-surface)" }}>
+            <div className="p-4 rounded-[var(--tf-radius-xs)]" style={{ border: "1px solid var(--tf-border)", background: "var(--tf-surface)" }}>
               {ehAberto && !rejeitando ? (
                 <div className="flex flex-col gap-3">
                   <h4 className="text-[13px] font-bold m-0" style={{ color: "var(--tf-text)" }}>Completar merge</h4>
@@ -457,7 +457,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
                       <select
                         value={mergeMethod}
                         onChange={(e) => setMergeMethod(e.target.value as "merge" | "squash" | "rebase")}
-                        className="w-full appearance-none text-xs px-2.5 py-1.5 pr-7 rounded-[8px] cursor-pointer"
+                        className="w-full appearance-none text-xs px-2.5 py-1.5 pr-7 rounded-[var(--tf-radius-xs)] cursor-pointer"
                         style={{ border: "1px solid var(--tf-border)", background: "var(--tf-bg)", color: "var(--tf-text)" }}
                       >
                         <option value="merge">Merge Commit</option>
@@ -476,18 +476,18 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
                         value={commitMsg}
                         onChange={(e) => setCommitMsg(e.target.value)}
                         placeholder={`${mergeLabels[mergeMethod]}: PR #${prNumber}`}
-                        className="w-full text-xs px-2.5 py-1.5 rounded-[8px] outline-none"
+                        className="w-full text-xs px-2.5 py-1.5 rounded-[var(--tf-radius-xs)] outline-none"
                         style={{ border: "1px solid var(--tf-border)", background: "var(--tf-bg)", color: "var(--tf-text)" }}
                       />
                     </div>
                   )}
 
-                  {erro && <p className="text-[11px] m-0 px-2 py-1.5 rounded-[8px]" style={{ color: "var(--tf-danger)", background: "var(--tf-danger-bg)" }}>{erro}</p>}
+                  {erro && <p className="text-[11px] m-0 px-2 py-1.5 rounded-[var(--tf-radius-xs)]" style={{ color: "var(--tf-danger)", background: "var(--tf-danger-bg)" }}>{erro}</p>}
 
                   <button
                     onClick={handleMerge}
                     disabled={executando}
-                    className="w-full flex items-center justify-center gap-1.5 py-2 text-[13px] font-semibold text-white border-none rounded-[8px]"
+                    className="w-full flex items-center justify-center gap-1.5 py-2 text-[13px] font-semibold text-white border-none rounded-[var(--tf-radius-xs)]"
                     style={{
                       background: executando ? "#16a34a88" : "#16a34a",
                       cursor: executando ? "wait" : "pointer",
@@ -500,7 +500,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
                   <div className="pt-3" style={{ borderTop: "1px solid var(--tf-border)" }}>
                     <button
                       onClick={() => setRejeitando(true)}
-                      className="w-full py-[7px] text-xs font-semibold bg-transparent rounded-[8px] cursor-pointer"
+                      className="w-full py-[7px] text-xs font-semibold bg-transparent rounded-[var(--tf-radius-xs)] cursor-pointer"
                       style={{ color: "var(--tf-danger)", border: "1px solid var(--tf-danger-bg)" }}
                     >
                       Rejeitar PR
@@ -515,14 +515,14 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
                     onChange={(e) => setComentarioRejeicao(e.target.value)}
                     placeholder="Motivo da rejeição (opcional)..."
                     rows={3}
-                    className="w-full text-xs px-2.5 py-2 rounded-[8px] resize-none outline-none"
+                    className="w-full text-xs px-2.5 py-2 rounded-[var(--tf-radius-xs)] resize-none outline-none"
                     style={{ border: "1px solid var(--tf-border)", background: "var(--tf-bg)", color: "var(--tf-text)" }}
                   />
                   {erro && <p className="text-[11px] m-0" style={{ color: "var(--tf-danger)" }}>{erro}</p>}
                   <button
                     onClick={handleRejeitar}
                     disabled={executando}
-                    className="w-full py-2 text-[13px] font-semibold text-white border-none rounded-[8px] cursor-pointer"
+                    className="w-full py-2 text-[13px] font-semibold text-white border-none rounded-[var(--tf-radius-xs)] cursor-pointer"
                     style={{ background: "var(--tf-danger)" }}
                   >
                     {executando ? "Rejeitando..." : "Confirmar Rejeição"}

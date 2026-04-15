@@ -15,7 +15,7 @@ export function RepoCard({ owner, nome, onAbrir, onDesconectar }: RepoCardProps)
 
   return (
     <div
-      className="flex items-center gap-4 p-4 rounded-[14px] border transition-smooth cursor-pointer group"
+      className="flex items-center gap-4 p-4 rounded-[var(--tf-radius-md)] border transition-smooth cursor-pointer group"
       style={{
         background: "var(--tf-surface)",
         borderColor: "var(--tf-border)",
@@ -23,7 +23,7 @@ export function RepoCard({ owner, nome, onAbrir, onDesconectar }: RepoCardProps)
       onClick={onAbrir}
     >
       <div
-        className="w-10 h-10 rounded-[8px] flex items-center justify-center shrink-0"
+        className="w-10 h-10 rounded-[var(--tf-radius-xs)] flex items-center justify-center shrink-0"
         style={{ background: "var(--tf-accent-light)" }}
       >
         <GitBranch size={20} style={{ color: "var(--tf-accent-text)" }} />
@@ -75,7 +75,7 @@ export function RepoCard({ owner, nome, onAbrir, onDesconectar }: RepoCardProps)
           e.stopPropagation();
           onDesconectar();
         }}
-        className="p-1.5 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth"
+        className="p-1.5 rounded-[var(--tf-radius-xs)] opacity-0 group-hover:opacity-100 transition-smooth"
         style={{ color: "var(--tf-danger)" }}
         title="Desconectar"
       >

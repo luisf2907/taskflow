@@ -60,7 +60,7 @@ export function ConvidarMembro({
     <>
       <div className="fixed inset-0 bg-black/40 z-50" onClick={onFechar} />
       <div
-        className="fixed right-4 top-16 w-80 max-h-[70vh] rounded-[14px] z-50 overflow-hidden flex flex-col"
+        className="fixed right-4 top-16 w-80 max-h-[70vh] rounded-[var(--tf-radius-md)] z-50 overflow-hidden flex flex-col"
         style={{
           background: "var(--tf-surface)",
           border: "1px solid var(--tf-border)",
@@ -82,7 +82,7 @@ export function ConvidarMembro({
           </div>
           <button
             onClick={onFechar}
-            className="p-1 rounded-[8px] transition-smooth"
+            className="p-1 rounded-[var(--tf-radius-xs)] transition-smooth"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
             <X size={15} />
@@ -103,7 +103,7 @@ export function ConvidarMembro({
               onChange={(e) => setEmail(e.target.value)}
               required
               maxLength={100}
-              className="flex-1 px-3 py-2 rounded-[8px] text-xs outline-none transition-smooth"
+              className="flex-1 px-3 py-2 rounded-[var(--tf-radius-xs)] text-xs outline-none transition-smooth"
               style={{
                 background: "var(--tf-bg)",
                 border: "1px solid var(--tf-border)",
@@ -119,7 +119,7 @@ export function ConvidarMembro({
             <button
               type="submit"
               disabled={carregando}
-              className="px-3 py-2 rounded-[8px] text-xs font-medium text-white transition-smooth"
+              className="px-3 py-2 rounded-[var(--tf-radius-xs)] text-xs font-medium text-white transition-smooth"
               style={{ background: "var(--tf-accent)" }}
             >
               {carregando ? (
@@ -147,7 +147,7 @@ export function ConvidarMembro({
           {usuarios.map((u) => (
             <div
               key={u.id}
-              className="flex items-center gap-2.5 px-2 py-2 rounded-[8px] transition-smooth"
+              className="flex items-center gap-2.5 px-2 py-2 rounded-[var(--tf-radius-xs)] transition-smooth"
               onMouseEnter={(e) =>
                 (e.currentTarget.style.background = "var(--tf-surface-hover)")
               }
@@ -243,14 +243,14 @@ export function ConvidarMembro({
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setConfirmRemoverId(null)}
-                className="px-4 py-2 text-[12px] font-medium rounded-[10px]"
+                className="px-4 py-2 text-[12px] font-medium rounded-[var(--tf-radius-xs)]"
                 style={{ color: "var(--tf-text-secondary)", background: "var(--tf-bg-secondary)" }}
               >
                 Cancelar
               </button>
               <button
                 onClick={() => { remover(confirmRemoverId); setConfirmRemoverId(null); }}
-                className="px-4 py-2 text-[12px] font-bold text-white rounded-[10px]"
+                className="px-4 py-2 text-[12px] font-bold text-white rounded-[var(--tf-radius-xs)]"
                 style={{ background: "var(--tf-danger)" }}
               >
                 Sim, remover
@@ -334,7 +334,7 @@ function InviteLinkSection({ workspaceId }: { workspaceId: string }) {
         <button
           onClick={gerarLink}
           disabled={gerando}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-[8px] text-[11px] font-semibold border transition-all"
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-[var(--tf-radius-xs)] text-[11px] font-semibold border transition-all"
           style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)" }}
         >
           {gerando ? <Loader2 size={12} className="animate-spin" /> : <Link2 size={12} />}

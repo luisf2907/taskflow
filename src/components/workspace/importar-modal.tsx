@@ -257,7 +257,7 @@ export function ImportarModal({ aberto, onFechar, workspaceId }: ImportarModalPr
           </p>
           <button
             onClick={handleFechar}
-            className="px-5 py-2.5 text-[13px] font-bold text-white rounded-[10px]"
+            className="px-5 py-2.5 text-[13px] font-bold text-white rounded-[var(--tf-radius-xs)]"
             style={{ background: "var(--tf-accent)" }}
           >
             Fechar
@@ -272,10 +272,10 @@ export function ImportarModal({ aberto, onFechar, workspaceId }: ImportarModalPr
 
           <button
             onClick={() => escolherFonte("trello")}
-            className="w-full flex items-center gap-4 p-4 rounded-[12px] border text-left transition-all hover:-translate-y-0.5"
+            className="w-full flex items-center gap-4 p-4 rounded-[var(--tf-radius-sm)] border text-left transition-all hover:-translate-y-0.5"
             style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
           >
-            <div className="w-12 h-12 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: "#0079BF20" }}>
+            <div className="w-12 h-12 rounded-[var(--tf-radius-xs)] flex items-center justify-center shrink-0" style={{ background: "#0079BF20" }}>
               <FileJson size={24} style={{ color: "#0079BF" }} />
             </div>
             <div>
@@ -288,10 +288,10 @@ export function ImportarModal({ aberto, onFechar, workspaceId }: ImportarModalPr
 
           <button
             onClick={() => escolherFonte("jira")}
-            className="w-full flex items-center gap-4 p-4 rounded-[12px] border text-left transition-all hover:-translate-y-0.5"
+            className="w-full flex items-center gap-4 p-4 rounded-[var(--tf-radius-sm)] border text-left transition-all hover:-translate-y-0.5"
             style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
           >
-            <div className="w-12 h-12 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: "#0052CC20" }}>
+            <div className="w-12 h-12 rounded-[var(--tf-radius-xs)] flex items-center justify-center shrink-0" style={{ background: "#0052CC20" }}>
               <FileSpreadsheet size={24} style={{ color: "#0052CC" }} />
             </div>
             <div>
@@ -330,7 +330,7 @@ export function ImportarModal({ aberto, onFechar, workspaceId }: ImportarModalPr
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onClick={() => fileRef.current?.click()}
-            className="flex flex-col items-center justify-center py-10 rounded-[14px] border-2 border-dashed cursor-pointer transition-all"
+            className="flex flex-col items-center justify-center py-10 rounded-[var(--tf-radius-md)] border-2 border-dashed cursor-pointer transition-all"
             style={{
               borderColor: dragOver ? "var(--tf-accent)" : "var(--tf-border)",
               background: dragOver ? "var(--tf-accent-light)" : "var(--tf-bg-secondary)",
@@ -354,7 +354,7 @@ export function ImportarModal({ aberto, onFechar, workspaceId }: ImportarModalPr
           />
 
           {erro && (
-            <div className="flex items-start gap-2 text-[13px] px-3 py-2.5 rounded-[10px]" style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}>
+            <div className="flex items-start gap-2 text-[13px] px-3 py-2.5 rounded-[var(--tf-radius-xs)]" style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}>
               <AlertCircle size={16} className="shrink-0 mt-0.5" />
               {erro}
             </div>
@@ -381,7 +381,7 @@ export function ImportarModal({ aberto, onFechar, workspaceId }: ImportarModalPr
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="flex flex-col items-center py-3 rounded-[10px]"
+                className="flex flex-col items-center py-3 rounded-[var(--tf-radius-xs)]"
                 style={{ background: "var(--tf-bg-secondary)" }}
               >
                 <stat.icon size={16} style={{ color: "var(--tf-accent)" }} />
@@ -402,7 +402,7 @@ export function ImportarModal({ aberto, onFechar, workspaceId }: ImportarModalPr
                   {col.cards.slice(0, 5).map((card, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
+                      className="flex items-center gap-2 px-3 py-2 rounded-[var(--tf-radius-xs)]"
                       style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border-subtle)" }}
                     >
                       <span className="text-[13px] font-medium truncate flex-1" style={{ color: "var(--tf-text)" }}>
@@ -426,7 +426,7 @@ export function ImportarModal({ aberto, onFechar, workspaceId }: ImportarModalPr
           </div>
 
           {erro && (
-            <div className="flex items-start gap-2 text-[13px] px-3 py-2.5 rounded-[10px]" style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}>
+            <div className="flex items-start gap-2 text-[13px] px-3 py-2.5 rounded-[var(--tf-radius-xs)]" style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}>
               <AlertCircle size={16} className="shrink-0 mt-0.5" />
               {erro}
             </div>
@@ -435,7 +435,7 @@ export function ImportarModal({ aberto, onFechar, workspaceId }: ImportarModalPr
           <button
             onClick={handleImportar}
             disabled={importando}
-            className="w-full flex items-center justify-center gap-2 py-3 text-[14px] font-bold text-white rounded-[12px] transition-all hover:-translate-y-0.5 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-3 text-[14px] font-bold text-white rounded-[var(--tf-radius-sm)] transition-all hover:-translate-y-0.5 disabled:opacity-50"
             style={{ background: "var(--tf-accent)" }}
           >
             {importando ? (

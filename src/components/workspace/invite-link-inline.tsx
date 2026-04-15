@@ -86,7 +86,7 @@ export function InviteLinkInline({ workspaceId }: InviteLinkInlineProps) {
         <button
           onClick={gerarLink}
           disabled={gerando}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-[8px] text-[11px] font-semibold border transition-all"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-[var(--tf-radius-xs)] text-[11px] font-semibold border transition-all"
           style={{
             borderColor: "var(--tf-border)",
             color: "var(--tf-text-secondary)",

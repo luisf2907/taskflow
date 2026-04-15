@@ -123,7 +123,7 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
         {abaAtiva === "regras" && !criando && (
           <button
             onClick={() => setCriando(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-[8px]"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-[var(--tf-radius-xs)]"
             style={{ background: "var(--tf-accent)", color: "white", transition: "opacity 0.15s ease" }}
           >
             <Plus size={13} /> Nova Regra
@@ -132,10 +132,10 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-[10px]" style={{ background: "var(--tf-bg-secondary)" }}>
+      <div className="flex gap-1 p-1 rounded-[var(--tf-radius-xs)]" style={{ background: "var(--tf-bg-secondary)" }}>
         <button
           onClick={() => setAbaAtiva("regras")}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-[8px] transition-all"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-[var(--tf-radius-xs)] transition-all"
           style={{
             background: abaAtiva === "regras" ? "var(--tf-surface)" : "transparent",
             color: abaAtiva === "regras" ? "var(--tf-text)" : "var(--tf-text-tertiary)",
@@ -146,7 +146,7 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
         </button>
         <button
           onClick={() => setAbaAtiva("historico")}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-[8px] transition-all"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-[var(--tf-radius-xs)] transition-all"
           style={{
             background: abaAtiva === "historico" ? "var(--tf-surface)" : "transparent",
             color: abaAtiva === "historico" ? "var(--tf-text)" : "var(--tf-text-tertiary)",
@@ -166,7 +166,7 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
           {automacoes.map((auto) => (
             <div
               key={auto.id}
-              className="flex items-center gap-3 p-3.5 rounded-[14px] border group"
+              className="flex items-center gap-3 p-3.5 rounded-[var(--tf-radius-md)] border group"
               style={{
                 borderColor: "var(--tf-border)",
                 background: auto.ativo ? "var(--tf-surface)" : "var(--tf-bg-secondary)",
@@ -206,7 +206,7 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
               {/* Delete */}
               <button
                 onClick={() => excluir(auto.id)}
-                className="p-1.5 rounded-[8px] opacity-0 group-hover:opacity-100"
+                className="p-1.5 rounded-[var(--tf-radius-xs)] opacity-0 group-hover:opacity-100"
                 style={{ color: "var(--tf-text-tertiary)", transition: "opacity 0.15s ease" }}
                 title="Excluir regra"
               >
@@ -220,7 +220,7 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
       {/* Form de criação */}
       {criando && (
         <div
-          className="rounded-[14px] p-5 space-y-4 border"
+          className="rounded-[var(--tf-radius-md)] p-5 space-y-4 border"
           style={{ borderColor: "var(--tf-accent)", background: "var(--tf-surface)" }}
         >
           <div className="flex items-center justify-between">
@@ -237,8 +237,8 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Ex: Auto-assign QA"
-              className="w-full bg-transparent px-3 py-2.5 text-[13px] rounded-[8px] outline-none"
-              style={{ border: "2px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
+              className="w-full bg-transparent px-3 py-2.5 text-[13px] rounded-[var(--tf-radius-xs)] outline-none"
+              style={{ border: "1px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
               autoFocus
@@ -251,8 +251,8 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
             <select
               value={triggerTipo}
               onChange={(e) => setTriggerTipo(e.target.value as TriggerTipo)}
-              className="w-full px-3 py-2.5 text-[13px] rounded-[8px] outline-none cursor-pointer"
-              style={{ border: "2px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
+              className="w-full px-3 py-2.5 text-[13px] rounded-[var(--tf-radius-xs)] outline-none cursor-pointer"
+              style={{ border: "1px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
             >
               {(Object.keys(TRIGGER_LABELS) as TriggerTipo[]).map((t) => (
                 <option key={t} value={t}>{TRIGGER_LABELS[t]}</option>
@@ -263,8 +263,8 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
               <select
                 value={triggerColunaId}
                 onChange={(e) => setTriggerColunaId(e.target.value)}
-                className="w-full px-3 py-2.5 text-[13px] rounded-[8px] outline-none mt-2 cursor-pointer"
-                style={{ border: "2px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
+                className="w-full px-3 py-2.5 text-[13px] rounded-[var(--tf-radius-xs)] outline-none mt-2 cursor-pointer"
+                style={{ border: "1px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
               >
                 <option value="">Selecionar coluna...</option>
                 {colunas.map((c) => (
@@ -280,8 +280,8 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
             <select
               value={acaoTipo}
               onChange={(e) => setAcaoTipo(e.target.value as AcaoTipo)}
-              className="w-full px-3 py-2.5 text-[13px] rounded-[8px] outline-none cursor-pointer"
-              style={{ border: "2px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
+              className="w-full px-3 py-2.5 text-[13px] rounded-[var(--tf-radius-xs)] outline-none cursor-pointer"
+              style={{ border: "1px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
             >
               {(Object.keys(ACAO_LABELS) as AcaoTipo[]).map((a) => (
                 <option key={a} value={a}>{ACAO_LABELS[a]}</option>
@@ -292,8 +292,8 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
               <select
                 value={acaoColunaId}
                 onChange={(e) => setAcaoColunaId(e.target.value)}
-                className="w-full px-3 py-2.5 text-[13px] rounded-[8px] outline-none mt-2 cursor-pointer"
-                style={{ border: "2px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
+                className="w-full px-3 py-2.5 text-[13px] rounded-[var(--tf-radius-xs)] outline-none mt-2 cursor-pointer"
+                style={{ border: "1px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
               >
                 <option value="">Selecionar coluna...</option>
                 {colunas.map((c) => (
@@ -306,8 +306,8 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
               <select
                 value={acaoMembroId}
                 onChange={(e) => setAcaoMembroId(e.target.value)}
-                className="w-full px-3 py-2.5 text-[13px] rounded-[8px] outline-none mt-2 cursor-pointer"
-                style={{ border: "2px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
+                className="w-full px-3 py-2.5 text-[13px] rounded-[var(--tf-radius-xs)] outline-none mt-2 cursor-pointer"
+                style={{ border: "1px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
               >
                 <option value="">Selecionar membro...</option>
                 {membros.map((m) => (
@@ -320,8 +320,8 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
               <select
                 value={acaoEtiquetaId}
                 onChange={(e) => setAcaoEtiquetaId(e.target.value)}
-                className="w-full px-3 py-2.5 text-[13px] rounded-[8px] outline-none mt-2 cursor-pointer"
-                style={{ border: "2px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
+                className="w-full px-3 py-2.5 text-[13px] rounded-[var(--tf-radius-xs)] outline-none mt-2 cursor-pointer"
+                style={{ border: "1px solid var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-bg-secondary)" }}
               >
                 <option value="">Selecionar etiqueta...</option>
                 {etiquetas.map((e) => (
@@ -335,7 +335,7 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
           <button
             onClick={handleCriar}
             disabled={!nome.trim()}
-            className="w-full py-2.5 text-[13px] font-semibold text-white rounded-[8px] disabled:opacity-40"
+            className="w-full py-2.5 text-[13px] font-semibold text-white rounded-[var(--tf-radius-xs)] disabled:opacity-40"
             style={{ background: "var(--tf-accent)", transition: "opacity 0.15s ease" }}
           >
             Criar Automação
@@ -346,7 +346,7 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
       {/* Empty state */}
       {automacoes.length === 0 && !criando && (
         <div
-          className="rounded-[14px] border-2 border-dashed py-8 flex flex-col items-center gap-2"
+          className="rounded-[var(--tf-radius-md)] border-2 border-dashed py-8 flex flex-col items-center gap-2"
           style={{ borderColor: "var(--tf-border)" }}
         >
           <Zap size={24} style={{ color: "var(--tf-border)" }} />
@@ -370,7 +370,7 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
             </div>
           ) : logs.length === 0 ? (
             <div
-              className="rounded-[14px] border-2 border-dashed py-8 flex flex-col items-center gap-2"
+              className="rounded-[var(--tf-radius-md)] border-2 border-dashed py-8 flex flex-col items-center gap-2"
               style={{ borderColor: "var(--tf-border)" }}
             >
               <History size={24} style={{ color: "var(--tf-border)" }} />
@@ -389,7 +389,7 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
               return (
                 <div
                   key={log.id}
-                  className="flex items-start gap-3 p-3.5 rounded-[14px] border"
+                  className="flex items-start gap-3 p-3.5 rounded-[var(--tf-radius-md)] border"
                   style={{
                     borderColor: log.sucesso ? "var(--tf-border)" : "var(--tf-danger)",
                     background: log.sucesso ? "var(--tf-surface)" : "color-mix(in srgb, var(--tf-danger) 5%, var(--tf-surface))",

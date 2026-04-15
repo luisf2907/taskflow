@@ -40,7 +40,7 @@ export function RepoBranches({
           placeholder="Filtrar branches..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          className="w-full py-2 pr-3 pl-[34px] text-[13px] rounded-[8px] outline-none"
+          className="w-full py-2 pr-3 pl-[34px] text-[13px] rounded-[var(--tf-radius-xs)] outline-none"
           style={{
             background: "var(--tf-bg-secondary)",
             border: "1px solid var(--tf-border)",
@@ -55,7 +55,7 @@ export function RepoBranches({
           Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="flex items-center gap-[10px] px-3 py-[10px] rounded-[8px]"
+              className="flex items-center gap-[10px] px-3 py-[10px] rounded-[var(--tf-radius-xs)]"
               style={{ backgroundColor: "var(--tf-bg-secondary)" }}
             >
               <div
@@ -95,7 +95,7 @@ export function RepoBranches({
               <button
                 key={branch.name}
                 onClick={() => onTrocarBranch(branch.name)}
-                className="flex items-center gap-[10px] px-3 py-[10px] rounded-[8px] border-none cursor-pointer text-left w-full transition-all duration-150"
+                className="flex items-center gap-[10px] px-3 py-[10px] rounded-[var(--tf-radius-xs)] border-none cursor-pointer text-left w-full transition-all duration-150"
                 style={{
                   backgroundColor: isAtiva
                     ? "color-mix(in srgb, var(--tf-accent) 12%, transparent)"
