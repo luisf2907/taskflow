@@ -104,11 +104,12 @@ export function WorkspaceSwitcher({ aberta, onNovoWorkspace }: WorkspaceSwitcher
       <Dropdown
         trigger={trigger}
         className={cn(
-          // Expandida: largura cabe exatamente no container px-2 da sidebar
-          // (232px aside - 2*8 padding = 216px), evitando qualquer overflow.
+          // Expandida: !w-full faz o dropdown casar exatamente com a largura
+          // do trigger (que preenche o container px-2 da sidebar). Evita o
+          // mismatch de 2px do valor fixo antigo que ignorava o border do aside.
           // Colapsada: abre pro lado direito fora da sidebar.
           aberta
-            ? "!w-[216px] !min-w-0"
+            ? "!w-full !min-w-0"
             : "!w-[240px] !right-auto !left-full !ml-2"
         )}
       >
