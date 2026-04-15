@@ -1,20 +1,30 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { Github, Kanban, Loader2, Mail, ArrowRight, ArrowLeft, KeyRound } from "lucide-react";
+import {
+  Github,
+  Kanban,
+  Loader2,
+  Mail,
+  ArrowRight,
+  ArrowLeft,
+  KeyRound,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
-// Mapear erros do Supabase para mensagens amigáveis
 function humanizarErro(msg: string): string {
   const m = msg.toLowerCase();
   if (m.includes("invalid login credentials")) return "Email ou senha incorretos.";
-  if (m.includes("user already registered")) return "Esse email já está cadastrado. Tente fazer login.";
+  if (m.includes("user already registered"))
+    return "Esse email já está cadastrado. Tente fazer login.";
   if (m.includes("email not confirmed")) return "Confirme seu email antes de fazer login.";
-  if (m.includes("password") && m.includes("at least")) return "A senha precisa ter pelo menos 6 caracteres.";
-  if (m.includes("rate limit") || m.includes("too many")) return "Muitas tentativas. Aguarde um momento.";
-  if (m.includes("email rate limit")) return "Muitos emails enviados. Aguarde antes de tentar novamente.";
+  if (m.includes("password") && m.includes("at least"))
+    return "A senha precisa ter pelo menos 6 caracteres.";
+  if (m.includes("rate limit") || m.includes("too many"))
+    return "Muitas tentativas. Aguarde um momento.";
+  if (m.includes("email rate limit"))
+    return "Muitos emails enviados. Aguarde antes de tentar novamente.";
   return "Algo deu errado. Tente novamente.";
 }
 
@@ -31,13 +41,15 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const errorParam = searchParams.get("error");
 
-  const [modo, setModo] = useState<"login" | "cadastro" | "recuperar" | "email-enviado">("login");
+  const [modo, setModo] = useState<
+    "login" | "cadastro" | "recuperar" | "email-enviado"
+  >("login");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [nome, setNome] = useState("");
   const [erro, setErro] = useState(errorParam || "");
   const [carregando, setCarregando] = useState(false);
-  const [emailConfirmacao, setEmailConfirmacao] = useState(""); // email para mostrar no card
+  const [emailConfirmacao, setEmailConfirmacao] = useState("");
 
   async function handleEmailAuth(e: React.FormEvent) {
     e.preventDefault();
@@ -56,20 +68,21 @@ function LoginContent() {
         });
         if (error) throw error;
 
-        // Se identities está vazio, o email já existe (Supabase retorna sucesso mas sem identity)
         if (data.user && data.user.identities && data.user.identities.length === 0) {
           setErro("Esse email já está cadastrado. Tente fazer login.");
           setCarregando(false);
           return;
         }
 
-        // Mostrar tela de confirmação de email
         setEmailConfirmacao(email);
         setModo("email-enviado");
         setCarregando(false);
         return;
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password: senha,
+        });
         if (error) throw error;
       }
       router.push("/dashboard");
@@ -105,16 +118,16 @@ function LoginContent() {
 
   async function handleReenviarEmail() {
     setCarregando(true);
+    setErro("");
     try {
       const { error } = await supabase.auth.resend({
         type: "signup",
         email: emailConfirmacao,
       });
       if (error) throw error;
-      toast.success("Email reenviado! Verifique sua caixa de entrada.");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro desconhecido";
-      toast.error(humanizarErro(msg));
+      setErro(humanizarErro(msg));
     } finally {
       setCarregando(false);
     }
@@ -126,7 +139,6 @@ function LoginContent() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
       options: {
-        scopes: "repo",
         redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     });
@@ -142,35 +154,29 @@ function LoginContent() {
     setEmailConfirmacao("");
   }
 
-  const inputClass = "w-full px-4 py-3 rounded-[14px] text-[14px] outline-none transition-all duration-150";
-
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden hero-grid"
       style={{ background: "var(--tf-bg)" }}
     >
-      {/* Background decoration */}
-      <div
-        className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full opacity-[0.07] blur-3xl pointer-events-none"
-        style={{ background: "var(--tf-accent)" }}
-      />
-      <div
-        className="absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-[0.05] blur-3xl pointer-events-none"
-        style={{ background: "var(--tf-accent-yellow)" }}
-      />
-
-      <div className="w-full max-w-[420px] relative z-10">
+      <div className="w-full max-w-[400px] relative z-10">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-10">
+        <div className="flex items-center justify-center gap-2.5 mb-8">
           <div
-            className="w-11 h-11 rounded-[14px] flex items-center justify-center"
-            style={{ background: "var(--tf-accent)" }}
+            className="w-9 h-9 flex items-center justify-center"
+            style={{
+              background: "var(--tf-accent)",
+              borderRadius: "var(--tf-radius-sm)",
+            }}
           >
-            <Kanban size={22} className="text-white" strokeWidth={2.5} />
+            <Kanban size={17} className="text-white" strokeWidth={1.75} />
           </div>
           <span
-            className="text-2xl font-black tracking-tight"
-            style={{ color: "var(--tf-text)" }}
+            className="text-[1.375rem] font-semibold"
+            style={{
+              color: "var(--tf-text)",
+              letterSpacing: "-0.02em",
+            }}
           >
             Taskflow
           </span>
@@ -178,72 +184,127 @@ function LoginContent() {
 
         {/* Card */}
         <div
-          className="rounded-[32px] overflow-hidden"
-          style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
+          className="overflow-hidden"
+          style={{
+            background: "var(--tf-surface)",
+            border: "1px solid var(--tf-border)",
+            borderRadius: "var(--tf-radius-lg)",
+          }}
         >
-          {/* ═══ TELA: EMAIL ENVIADO ═══ */}
           {modo === "email-enviado" ? (
-            <div className="px-8 py-10 text-center space-y-5">
+            <div className="px-7 py-8 text-center space-y-4">
               <div
-                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
-                style={{ background: "var(--tf-accent-light)" }}
+                className="w-12 h-12 flex items-center justify-center mx-auto"
+                style={{
+                  background: "var(--tf-accent-light)",
+                  border: "1px solid var(--tf-accent)",
+                  borderRadius: "var(--tf-radius-sm)",
+                  color: "var(--tf-accent)",
+                }}
               >
-                <Mail size={28} style={{ color: "var(--tf-accent)" }} strokeWidth={2} />
+                <Mail size={22} strokeWidth={1.5} />
               </div>
               <div>
-                <h2 className="text-lg font-black tracking-tight" style={{ color: "var(--tf-text)" }}>
-                  Verifique seu email
+                <p
+                  className="label-mono mb-1"
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                >
+                  Email enviado
+                </p>
+                <h2
+                  className="text-[1.125rem] font-semibold"
+                  style={{ color: "var(--tf-text)", letterSpacing: "-0.01em" }}
+                >
+                  Verifique sua caixa de entrada
                 </h2>
-                <p className="text-[13px] mt-2 leading-relaxed" style={{ color: "var(--tf-text-secondary)" }}>
-                  Enviamos um link de confirmação para{" "}
-                  <strong style={{ color: "var(--tf-text)" }}>{emailConfirmacao}</strong>
+                <p
+                  className="text-[0.8125rem] mt-2 leading-relaxed"
+                  style={{
+                    color: "var(--tf-text-secondary)",
+                    letterSpacing: "-0.005em",
+                  }}
+                >
+                  Enviamos um link para{" "}
+                  <span
+                    style={{
+                      color: "var(--tf-text)",
+                      fontFamily: "var(--tf-font-mono)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {emailConfirmacao}
+                  </span>
                 </p>
               </div>
 
-              <div className="space-y-2.5 pt-2">
+              <div className="space-y-2 pt-2">
                 <button
                   onClick={handleReenviarEmail}
                   disabled={carregando}
-                  className="w-full px-4 py-3 rounded-[14px] text-[13px] font-semibold transition-all duration-150 hover:opacity-90 disabled:opacity-50"
-                  style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text)" }}
+                  className="w-full h-10 text-[0.8125rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)] disabled:opacity-50"
+                  style={{
+                    background: "var(--tf-bg-secondary)",
+                    color: "var(--tf-text)",
+                    border: "1px solid var(--tf-border)",
+                    borderRadius: "var(--tf-radius-xs)",
+                    letterSpacing: "-0.005em",
+                  }}
                 >
                   {carregando ? (
-                    <Loader2 size={14} className="animate-spin mx-auto" />
+                    <Loader2 size={13} className="animate-spin mx-auto" />
                   ) : (
                     "Reenviar email"
                   )}
                 </button>
                 <button
                   onClick={voltarParaLogin}
-                  className="w-full px-4 py-2.5 text-[13px] font-medium transition-all duration-150"
-                  style={{ color: "var(--tf-text-tertiary)" }}
+                  className="w-full h-9 text-[0.6875rem] font-medium transition-colors hover:text-[var(--tf-text)]"
+                  style={{
+                    color: "var(--tf-text-tertiary)",
+                    fontFamily: "var(--tf-font-mono)",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
                 >
                   ← Usar outro email
                 </button>
               </div>
             </div>
           ) : modo === "recuperar" ? (
-            /* ═══ TELA: RECUPERAR SENHA ═══ */
             <>
-              <div className="px-8 pt-8 pb-2">
+              <div className="px-7 pt-6 pb-2">
                 <button
                   onClick={voltarParaLogin}
-                  className="flex items-center gap-1.5 text-[12px] font-medium mb-4 transition-all duration-150 hover:opacity-70"
-                  style={{ color: "var(--tf-text-tertiary)" }}
+                  className="inline-flex items-center gap-1 text-[0.6875rem] font-medium mb-4 transition-colors hover:text-[var(--tf-accent)]"
+                  style={{
+                    color: "var(--tf-text-tertiary)",
+                    fontFamily: "var(--tf-font-mono)",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
                 >
-                  <ArrowLeft size={13} />
+                  <ArrowLeft size={11} strokeWidth={1.75} />
                   Voltar ao login
                 </button>
-                <h1 className="text-xl font-black tracking-tight" style={{ color: "var(--tf-text)" }}>
-                  Recuperar senha
+                <p className="label-mono mb-1" style={{ color: "var(--tf-text-tertiary)" }}>
+                  Recuperar acesso
+                </p>
+                <h1
+                  className="text-[1.25rem] font-semibold"
+                  style={{ color: "var(--tf-text)", letterSpacing: "-0.015em" }}
+                >
+                  Redefinir senha
                 </h1>
-                <p className="text-[13px] mt-1" style={{ color: "var(--tf-text-tertiary)" }}>
-                  Enviaremos um link para redefinir sua senha.
+                <p
+                  className="text-[0.8125rem] mt-1.5"
+                  style={{ color: "var(--tf-text-secondary)", letterSpacing: "-0.005em" }}
+                >
+                  Enviaremos um link pro seu email.
                 </p>
               </div>
 
-              <div className="px-8 pb-8 pt-4 space-y-4">
-                <form onSubmit={handleRecuperarSenha} className="space-y-3">
+              <div className="px-7 pb-7 pt-4 space-y-3">
+                <form onSubmit={handleRecuperarSenha} className="space-y-2.5">
                   <input
                     type="email"
                     placeholder="Seu email"
@@ -251,33 +312,32 @@ function LoginContent() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     autoFocus
-                    className={inputClass}
-                    style={{ background: "var(--tf-bg-secondary)", border: "2px solid transparent", color: "var(--tf-text)" }}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "transparent")}
+                    className="auth-input w-full h-10 px-3 text-[0.8125rem] outline-none"
+                    style={{
+                      color: "var(--tf-text)",
+                      borderRadius: "var(--tf-radius-xs)",
+                      letterSpacing: "-0.005em",
+                    }}
                   />
 
-                  {erro && (
-                    <div
-                      className="text-[12px] px-4 py-2.5 rounded-[8px] font-medium"
-                      style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}
-                    >
-                      {erro}
-                    </div>
-                  )}
+                  {erro && <ErroBox mensagem={erro} />}
 
                   <button
                     type="submit"
                     disabled={carregando}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-[14px] text-[14px] font-semibold text-white transition-all duration-150 hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
-                    style={{ background: "var(--tf-accent)" }}
+                    className="w-full flex items-center justify-center gap-1.5 h-10 text-[0.8125rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-50"
+                    style={{
+                      background: "var(--tf-accent)",
+                      border: "1px solid var(--tf-accent)",
+                      borderRadius: "var(--tf-radius-xs)",
+                    }}
                   >
                     {carregando ? (
-                      <Loader2 size={16} className="animate-spin" />
+                      <Loader2 size={14} className="animate-spin" />
                     ) : (
                       <>
-                        <KeyRound size={16} />
-                        Enviar link de recuperação
+                        <KeyRound size={13} strokeWidth={1.75} />
+                        Enviar link
                       </>
                     )}
                   </button>
@@ -285,42 +345,71 @@ function LoginContent() {
               </div>
             </>
           ) : (
-            /* ═══ TELA: LOGIN / CADASTRO ═══ */
             <>
-              <div className="px-8 pt-8 pb-2">
-                <h1 className="text-xl font-black tracking-tight" style={{ color: "var(--tf-text)" }}>
+              <div className="px-7 pt-6 pb-2">
+                <p
+                  className="label-mono mb-1"
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                >
+                  {modo === "login" ? "Acessar conta" : "Nova conta"}
+                </p>
+                <h1
+                  className="text-[1.25rem] font-semibold"
+                  style={{ color: "var(--tf-text)", letterSpacing: "-0.015em" }}
+                >
                   {modo === "login" ? "Bem-vindo de volta" : "Criar sua conta"}
                 </h1>
-                <p className="text-[13px] mt-1" style={{ color: "var(--tf-text-tertiary)" }}>
+                <p
+                  className="text-[0.8125rem] mt-1.5"
+                  style={{
+                    color: "var(--tf-text-secondary)",
+                    letterSpacing: "-0.005em",
+                  }}
+                >
                   {modo === "login"
                     ? "Entre para continuar de onde parou."
                     : "Comece a organizar seus projetos."}
                 </p>
               </div>
 
-              <div className="px-8 pb-8 pt-4 space-y-5">
+              <div className="px-7 pb-7 pt-4 space-y-4">
                 {/* GitHub OAuth */}
                 <button
                   onClick={handleGithubLogin}
                   disabled={carregando}
-                  className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 rounded-[14px] text-[14px] font-semibold transition-all duration-150 hover:opacity-90 disabled:opacity-50"
-                  style={{ background: "var(--tf-text)", color: "var(--tf-surface)" }}
+                  className="w-full flex items-center justify-center gap-2 h-10 text-[0.8125rem] font-medium transition-colors hover:opacity-90 disabled:opacity-50"
+                  style={{
+                    background: "var(--tf-text)",
+                    color: "var(--tf-surface)",
+                    border: "1px solid var(--tf-text)",
+                    borderRadius: "var(--tf-radius-xs)",
+                    letterSpacing: "-0.005em",
+                  }}
                 >
-                  <Github size={18} />
+                  <Github size={15} strokeWidth={1.75} />
                   Continuar com GitHub
                 </button>
 
                 {/* Divider */}
-                <div className="flex items-center gap-4">
-                  <div className="flex-1 h-px" style={{ background: "var(--tf-border)" }} />
-                  <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-tertiary)" }}>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex-1 h-px"
+                    style={{ background: "var(--tf-border)" }}
+                  />
+                  <span
+                    className="label-mono"
+                    style={{ color: "var(--tf-text-tertiary)" }}
+                  >
                     ou
                   </span>
-                  <div className="flex-1 h-px" style={{ background: "var(--tf-border)" }} />
+                  <div
+                    className="flex-1 h-px"
+                    style={{ background: "var(--tf-border)" }}
+                  />
                 </div>
 
                 {/* Email form */}
-                <form onSubmit={handleEmailAuth} className="space-y-3">
+                <form onSubmit={handleEmailAuth} className="space-y-2.5">
                   {modo === "cadastro" && (
                     <input
                       type="text"
@@ -328,10 +417,12 @@ function LoginContent() {
                       value={nome}
                       onChange={(e) => setNome(e.target.value)}
                       required
-                      className={inputClass}
-                      style={{ background: "var(--tf-bg-secondary)", border: "2px solid transparent", color: "var(--tf-text)" }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "transparent")}
+                      className="auth-input w-full h-10 px-3 text-[0.8125rem] outline-none"
+                      style={{
+                        color: "var(--tf-text)",
+                        borderRadius: "var(--tf-radius-xs)",
+                        letterSpacing: "-0.005em",
+                      }}
                     />
                   )}
                   <input
@@ -340,10 +431,12 @@ function LoginContent() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className={inputClass}
-                    style={{ background: "var(--tf-bg-secondary)", border: "2px solid transparent", color: "var(--tf-text)" }}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "transparent")}
+                    className="auth-input w-full h-10 px-3 text-[0.8125rem] outline-none"
+                    style={{
+                      color: "var(--tf-text)",
+                      borderRadius: "var(--tf-radius-xs)",
+                      letterSpacing: "-0.005em",
+                    }}
                   />
                   <div>
                     <input
@@ -353,18 +446,28 @@ function LoginContent() {
                       onChange={(e) => setSenha(e.target.value)}
                       required
                       minLength={6}
-                      className={inputClass}
-                      style={{ background: "var(--tf-bg-secondary)", border: "2px solid transparent", color: "var(--tf-text)" }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "transparent")}
+                      className="auth-input w-full h-10 px-3 text-[0.8125rem] outline-none"
+                      style={{
+                        color: "var(--tf-text)",
+                        borderRadius: "var(--tf-radius-xs)",
+                        letterSpacing: "-0.005em",
+                      }}
                     />
                     {modo === "login" && (
-                      <div className="flex justify-end mt-1.5">
+                      <div className="flex justify-end mt-2">
                         <button
                           type="button"
-                          onClick={() => { setModo("recuperar"); setErro(""); }}
-                          className="text-[12px] font-medium transition-all duration-150 hover:underline underline-offset-2"
-                          style={{ color: "var(--tf-accent)" }}
+                          onClick={() => {
+                            setModo("recuperar");
+                            setErro("");
+                          }}
+                          className="text-[0.6875rem] font-medium transition-colors hover:brightness-110"
+                          style={{
+                            color: "var(--tf-accent)",
+                            fontFamily: "var(--tf-font-mono)",
+                            letterSpacing: "0.04em",
+                            textTransform: "uppercase",
+                          }}
                         >
                           Esqueceu a senha?
                         </button>
@@ -372,32 +475,29 @@ function LoginContent() {
                     )}
                   </div>
 
-                  {erro && (
-                    <div
-                      className="text-[12px] px-4 py-2.5 rounded-[8px] font-medium"
-                      style={{ background: "var(--tf-danger-bg)", color: "var(--tf-danger)" }}
-                    >
-                      {erro}
-                    </div>
-                  )}
+                  {erro && <ErroBox mensagem={erro} />}
 
                   <button
                     type="submit"
                     disabled={carregando}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-[14px] text-[14px] font-semibold text-white transition-all duration-150 hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
-                    style={{ background: "var(--tf-accent)" }}
+                    className="w-full flex items-center justify-center gap-1.5 h-10 text-[0.8125rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-50"
+                    style={{
+                      background: "var(--tf-accent)",
+                      border: "1px solid var(--tf-accent)",
+                      borderRadius: "var(--tf-radius-xs)",
+                    }}
                   >
                     {carregando ? (
-                      <Loader2 size={16} className="animate-spin" />
+                      <Loader2 size={14} className="animate-spin" />
                     ) : modo === "login" ? (
                       <>
                         Entrar
-                        <ArrowRight size={16} />
+                        <ArrowRight size={13} strokeWidth={1.75} />
                       </>
                     ) : (
                       <>
                         Criar conta
-                        <ArrowRight size={16} />
+                        <ArrowRight size={13} strokeWidth={1.75} />
                       </>
                     )}
                   </button>
@@ -409,18 +509,65 @@ function LoginContent() {
 
         {/* Toggle mode */}
         {modo !== "email-enviado" && modo !== "recuperar" && (
-          <p className="text-[13px] text-center mt-6" style={{ color: "var(--tf-text-secondary)" }}>
+          <p
+            className="text-[0.8125rem] text-center mt-5"
+            style={{
+              color: "var(--tf-text-secondary)",
+              letterSpacing: "-0.005em",
+            }}
+          >
             {modo === "login" ? "Não tem conta?" : "Já tem conta?"}{" "}
             <button
-              onClick={() => { setModo(modo === "login" ? "cadastro" : "login"); setErro(""); }}
-              className="font-semibold transition-all duration-150 hover:underline underline-offset-2"
-              style={{ color: "var(--tf-accent)" }}
+              onClick={() => {
+                setModo(modo === "login" ? "cadastro" : "login");
+                setErro("");
+              }}
+              className="font-medium transition-colors hover:brightness-110"
+              style={{
+                color: "var(--tf-accent)",
+                fontFamily: "var(--tf-font-mono)",
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+              }}
             >
               {modo === "login" ? "Cadastre-se" : "Fazer login"}
             </button>
           </p>
         )}
       </div>
+
+      <style jsx>{`
+        .auth-input {
+          background: var(--tf-bg-secondary);
+          border: 1px solid var(--tf-border);
+          transition: border-color 0.15s ease, background 0.15s ease;
+        }
+        .auth-input:focus {
+          border-color: var(--tf-accent);
+          background: var(--tf-surface);
+        }
+        .auth-input::placeholder {
+          color: var(--tf-text-tertiary);
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function ErroBox({ mensagem }: { mensagem: string }) {
+  return (
+    <div
+      className="text-[0.75rem] px-3 py-2 font-medium"
+      style={{
+        background: "var(--tf-danger-bg)",
+        color: "var(--tf-danger)",
+        border: "1px solid var(--tf-danger)",
+        borderLeft: "3px solid var(--tf-danger)",
+        borderRadius: "var(--tf-radius-xs)",
+        letterSpacing: "-0.005em",
+      }}
+    >
+      {mensagem}
     </div>
   );
 }
