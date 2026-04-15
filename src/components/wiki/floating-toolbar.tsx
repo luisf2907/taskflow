@@ -80,7 +80,7 @@ function BlockTypeDropdown({ editor, onClose }: { editor: Editor; onClose: () =>
 
   return (
     <div
-      className="absolute left-0 top-full mt-1 rounded-[10px] py-1 min-w-[170px] z-50"
+      className="absolute left-0 top-full mt-1 rounded-[var(--tf-radius-xs)] py-1 min-w-[170px] z-50"
       style={{
         background: "var(--tf-surface)",
         border: "1px solid var(--tf-border)",
@@ -107,7 +107,7 @@ function BlockTypeDropdown({ editor, onClose }: { editor: Editor; onClose: () =>
 function MoreDropdown({ editor, onClose }: { editor: Editor; onClose: () => void }) {
   return (
     <div
-      className="absolute right-0 top-full mt-1 rounded-[10px] py-1 min-w-[160px] z-50"
+      className="absolute right-0 top-full mt-1 rounded-[var(--tf-radius-xs)] py-1 min-w-[160px] z-50"
       style={{
         background: "var(--tf-surface)",
         border: "1px solid var(--tf-border)",
@@ -280,7 +280,7 @@ export function FloatingToolbar({ editor }: { editor: Editor }) {
       <div
         role="toolbar"
         aria-label="Barra de formatacao"
-        className="flex items-center rounded-[10px] shadow-2xl"
+        className="flex items-center rounded-[var(--tf-radius-xs)] shadow-2xl"
         style={{
           background: "var(--tf-surface)",
           border: "1px solid var(--tf-border)",

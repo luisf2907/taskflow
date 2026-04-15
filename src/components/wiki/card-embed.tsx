@@ -142,7 +142,7 @@ function CardPopup({
         role="dialog"
         aria-modal="true"
         aria-label={card?.titulo || "Detalhes do card"}
-        className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[520px] max-h-[80vh] flex flex-col rounded-[20px] overflow-hidden"
+        className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[520px] max-h-[80vh] flex flex-col rounded-[var(--tf-radius-lg)] overflow-hidden"
         style={{
           background: "var(--tf-surface)",
           border: "1px solid var(--tf-border)",
@@ -165,7 +165,7 @@ function CardPopup({
             >
               <div className="flex items-start gap-3 min-w-0">
                 <div
-                  className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 mt-0.5"
+                  className="w-9 h-9 rounded-[var(--tf-radius-xs)] flex items-center justify-center shrink-0 mt-0.5"
                   style={{ background: "var(--tf-accent-light)" }}
                 >
                   <Kanban size={18} style={{ color: "var(--tf-accent-text)" }} />
@@ -198,7 +198,7 @@ function CardPopup({
               <button
                 type="button"
                 onClick={onFechar}
-                className="p-1.5 rounded-[8px] hover:bg-[var(--tf-surface-hover)] transition-colors shrink-0"
+                className="p-1.5 rounded-[var(--tf-radius-xs)] hover:bg-[var(--tf-surface-hover)] transition-colors shrink-0"
                 style={{ color: "var(--tf-text-tertiary)" }}
                 aria-label="Fechar"
               >
@@ -312,7 +312,7 @@ function CardPopup({
             >
               <a
                 href={`/workspace/${card.workspace_id}`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[12px] font-medium transition-colors hover:bg-[var(--tf-surface-hover)]"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[12px] font-medium transition-colors hover:bg-[var(--tf-surface-hover)]"
                 style={{ color: "var(--tf-text-secondary)" }}
               >
                 <ExternalLink size={12} />
@@ -348,7 +348,7 @@ function MetaItem({
 }) {
   return (
     <div
-      className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
+      className="flex items-center gap-2 px-3 py-2 rounded-[var(--tf-radius-xs)]"
       style={{ background: "var(--tf-bg-secondary)" }}
     >
       <span style={{ color: "var(--tf-text-tertiary)" }}>{icon}</span>
@@ -401,7 +401,7 @@ function CardEmbedView(props: ReactNodeViewProps) {
   return (
     <NodeViewWrapper className="my-2">
       <div
-        className="flex items-center gap-3 px-4 py-3 rounded-[12px] border transition-colors hover:bg-[var(--tf-surface-hover)]"
+        className="flex items-center gap-3 px-4 py-3 rounded-[var(--tf-radius-sm)] border transition-colors hover:bg-[var(--tf-surface-hover)]"
         style={{
           background: "var(--tf-surface)",
           borderColor: "var(--tf-border)",
@@ -412,7 +412,7 @@ function CardEmbedView(props: ReactNodeViewProps) {
         title={card ? "Clique para ver detalhes" : undefined}
       >
         <div
-          className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
+          className="w-8 h-8 rounded-[var(--tf-radius-xs)] flex items-center justify-center shrink-0"
           style={{ background: "var(--tf-accent-light)" }}
         >
           <Kanban

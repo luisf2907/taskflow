@@ -93,7 +93,7 @@ export function TableControls({ editor, containerRef }: TableControlsProps) {
   return (
     <div
       ref={barRef}
-      className="absolute z-20 flex items-center gap-0.5 px-1.5 py-1 rounded-[8px]"
+      className="absolute z-20 flex items-center gap-0.5 px-1.5 py-1 rounded-[var(--tf-radius-xs)]"
       style={{
         top: `${pos.top}px`,
         left: `${pos.left}px`,

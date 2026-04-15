@@ -62,7 +62,7 @@ function TreeNode({
     <div>
       <div
         className={cn(
-          "group flex items-center gap-1 py-[5px] pr-2 rounded-[8px] relative transition-colors",
+          "group flex items-center gap-1 py-[5px] pr-2 rounded-[var(--tf-radius-xs)] relative transition-colors",
           ativo
             ? "font-medium"
             : "hover:bg-[var(--tf-surface-hover)]",
@@ -180,7 +180,7 @@ function TreeNode({
                   onClick={() => setMenuAberto(false)}
                 />
                 <div
-                  className="absolute right-0 top-full mt-1 z-50 rounded-[10px] overflow-hidden min-w-[140px] py-1"
+                  className="absolute right-0 top-full mt-1 z-50 rounded-[var(--tf-radius-xs)] overflow-hidden min-w-[140px] py-1"
                   style={{
                     background: "var(--tf-surface)",
                     border: "1px solid var(--tf-border)",
@@ -276,7 +276,7 @@ export function PageTree({
         style={{ borderColor: "var(--tf-border)" }}
       >
         <span
-          className="text-[11px] font-bold uppercase tracking-widest"
+          className="label-mono"
           style={{ color: "var(--tf-text-tertiary)" }}
         >
           Páginas
@@ -296,7 +296,7 @@ export function PageTree({
       {arvore.length > 0 && (
         <div className="px-3 pt-2">
           <div
-            className="flex items-center gap-2 px-2.5 py-1.5 rounded-[8px]"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--tf-radius-xs)]"
             style={{
               background: "var(--tf-bg-secondary)",
               border: "1px solid var(--tf-border)",
@@ -353,7 +353,7 @@ export function PageTree({
             <button
               type="button"
               onClick={() => onCriarPagina(null)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-[8px] text-[13px] font-medium"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[13px] font-medium"
               style={{
                 background: "var(--tf-accent)",
                 color: "white",

@@ -17,7 +17,7 @@ const MODOS: { id: WikiEditMode; icon: React.ComponentType<{ size?: number }>; l
 export function WikiModeSwitcher({ modo, onChange }: WikiModeSwitcherProps) {
   return (
     <div
-      className="flex rounded-[8px] p-0.5 shrink-0"
+      className="flex rounded-[var(--tf-radius-xs)] p-0.5 shrink-0"
       style={{ background: "var(--tf-bg-secondary)" }}
     >
       {MODOS.map(({ id, icon: Icon, label }) => (

@@ -131,7 +131,7 @@ export default function ReunioesPage() {
         <Header onMenuMobile={toggleSidebar} />
 
         <div
-          className="flex-1 rounded-[32px] mb-4 overflow-hidden flex flex-col scroll-clip-lg"
+          className="flex-1 rounded-[var(--tf-radius-xl)] mb-4 overflow-hidden flex flex-col scroll-clip-lg"
           style={{
             background: "var(--tf-surface)",
             border: "1px solid var(--tf-border)",
@@ -168,7 +168,7 @@ export default function ReunioesPage() {
                 </div>
                 <button
                   onClick={() => setModalOpen(true)}
-                  className="px-4 py-2 rounded-[10px] text-[12px] font-bold text-white flex items-center gap-2 flex-shrink-0 transition-all duration-150 hover:opacity-90"
+                  className="px-4 py-2 rounded-[var(--tf-radius-xs)] text-[12px] font-bold text-white flex items-center gap-2 flex-shrink-0 transition-all duration-150 hover:opacity-90"
                   style={{ background: "var(--tf-accent)" }}
                 >
                   <Plus size={14} />
@@ -180,7 +180,7 @@ export default function ReunioesPage() {
             {/* Aviso se o usuario nao cadastrou a voz */}
             {!isEnrolled && (
               <div
-                className="flex items-start gap-3 p-4 rounded-[14px]"
+                className="flex items-start gap-3 p-4 rounded-[var(--tf-radius-md)]"
                 style={{
                   background: "var(--tf-warning-bg, rgba(251, 191, 36, 0.08))",
                   border: "1px solid color-mix(in srgb, var(--tf-accent-yellow) 15%, transparent)",
@@ -226,7 +226,7 @@ export default function ReunioesPage() {
               </div>
             ) : reunioes.length === 0 ? (
               <div
-                className="rounded-[20px] p-12 text-center"
+                className="rounded-[var(--tf-radius-lg)] p-12 text-center"
                 style={{ background: "var(--tf-bg-secondary)" }}
               >
                 <div
@@ -253,7 +253,7 @@ export default function ReunioesPage() {
                 </p>
                 <button
                   onClick={() => setModalOpen(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[var(--tf-radius-xs)] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
                   style={{ background: "var(--tf-accent)" }}
                 >
                   <Plus size={14} />
@@ -317,7 +317,7 @@ function ReuniaoCard({ reuniao, onOpen, onDelete }: ReuniaoCardProps) {
 
   return (
     <div
-      className="group rounded-[14px] p-4 flex items-center gap-4 transition-all duration-150"
+      className="group rounded-[var(--tf-radius-md)] p-4 flex items-center gap-4 transition-all duration-150"
       style={{
         background: "var(--tf-bg-secondary)",
         border: "1px solid var(--tf-border)",
@@ -328,7 +328,7 @@ function ReuniaoCard({ reuniao, onOpen, onDelete }: ReuniaoCardProps) {
         className="flex-1 min-w-0 text-left flex items-center gap-4"
       >
         <div
-          className="w-10 h-10 rounded-[12px] flex items-center justify-center flex-shrink-0"
+          className="w-10 h-10 rounded-[var(--tf-radius-sm)] flex items-center justify-center flex-shrink-0"
           style={{ background: statusInfo.bg }}
         >
           {statusInfo.icon}
@@ -372,7 +372,7 @@ function ReuniaoCard({ reuniao, onOpen, onDelete }: ReuniaoCardProps) {
           e.stopPropagation();
           onDelete();
         }}
-        className="p-2 rounded-[8px] flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-150 hover:!opacity-100"
+        className="p-2 rounded-[var(--tf-radius-xs)] flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-150 hover:!opacity-100"
         style={{ color: "var(--tf-text-tertiary)" }}
         title="Apagar reuniao"
       >

@@ -57,14 +57,14 @@ export function MarkdownPreview({ conteudo }: MarkdownPreviewProps) {
             if (cardMatch) {
               return (
                 <div
-                  className="flex items-center gap-3 px-4 py-3 my-2 rounded-[12px] border"
+                  className="flex items-center gap-3 px-4 py-3 my-2 rounded-[var(--tf-radius-sm)] border"
                   style={{
                     background: "var(--tf-surface)",
                     borderColor: "var(--tf-border)",
                   }}
                 >
                   <div
-                    className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
+                    className="w-8 h-8 rounded-[var(--tf-radius-xs)] flex items-center justify-center shrink-0"
                     style={{ background: "var(--tf-accent-light)" }}
                   >
                     <Kanban size={16} style={{ color: "var(--tf-accent-text)" }} />
@@ -134,7 +134,7 @@ export function MarkdownPreview({ conteudo }: MarkdownPreviewProps) {
           },
           pre: ({ children }) => (
             <pre
-              className="rounded-[10px] px-5 py-4 my-[6px] overflow-auto font-mono text-[0.85em] leading-[1.6]"
+              className="rounded-[var(--tf-radius-xs)] px-5 py-4 my-[6px] overflow-auto font-mono text-[0.85em] leading-[1.6]"
               style={{
                 background: "var(--tf-bg-secondary)",
                 border: "1px solid var(--tf-border)",
@@ -146,7 +146,7 @@ export function MarkdownPreview({ conteudo }: MarkdownPreviewProps) {
           table: ({ children }) => (
             <div className="overflow-auto my-[6px]">
               <table
-                className="w-full border-collapse overflow-hidden rounded-[10px]"
+                className="w-full border-collapse overflow-hidden rounded-[var(--tf-radius-xs)]"
                 style={{ border: "1px solid var(--tf-border)" }}
               >
                 {children}
@@ -176,7 +176,7 @@ export function MarkdownPreview({ conteudo }: MarkdownPreviewProps) {
             <hr className="my-5 border-none" style={{ borderTop: "1px solid var(--tf-border)" }} />
           ),
           img: ({ src, alt }) => (
-            <img src={src} alt={alt || ""} className="max-w-full rounded-[10px] my-2" />
+            <img src={src} alt={alt || ""} className="max-w-full rounded-[var(--tf-radius-xs)] my-2" />
           ),
           input: ({ type, checked, ...props }) => {
             if (type === "checkbox") {

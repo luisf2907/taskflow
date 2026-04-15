@@ -265,7 +265,7 @@ export default function WikiSlugPage() {
         <Header onMenuMobile={toggleSidebar} />
 
         <div
-          className="flex-1 rounded-[32px] mb-4 overflow-hidden flex scroll-clip-lg"
+          className="flex-1 rounded-[var(--tf-radius-xl)] mb-4 overflow-hidden flex scroll-clip-lg"
           style={{
             background: "var(--tf-surface)",
             border: "1px solid var(--tf-border)",

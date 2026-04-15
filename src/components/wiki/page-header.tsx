@@ -98,7 +98,7 @@ export function PageHeader({
             <button
               type="button"
               onClick={() => capaInputRef.current?.click()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[11px] font-medium text-white/90 backdrop-blur-sm transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[11px] font-medium text-white/90 backdrop-blur-sm transition-colors"
               style={{ background: "rgba(0,0,0,0.5)" }}
             >
               <ImagePlus size={12} /> Trocar
@@ -106,7 +106,7 @@ export function PageHeader({
             <button
               type="button"
               onClick={() => onCapaChange(null)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[11px] font-medium text-white/90 backdrop-blur-sm transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[11px] font-medium text-white/90 backdrop-blur-sm transition-colors"
               style={{ background: "rgba(0,0,0,0.5)" }}
             >
               <X size={12} /> Remover
@@ -178,7 +178,7 @@ export function PageHeader({
           <button
             type="button"
             onClick={() => setEmojiPickerAberto(!emojiPickerAberto)}
-            className="w-10 h-10 flex items-center justify-center rounded-[10px] text-2xl hover:bg-[var(--tf-surface-hover)] transition-colors shrink-0 mt-1"
+            className="w-10 h-10 flex items-center justify-center rounded-[var(--tf-radius-xs)] text-2xl hover:bg-[var(--tf-surface-hover)] transition-colors shrink-0 mt-1"
             title="Alterar ícone"
           >
             {pagina.icone || (
@@ -197,7 +197,7 @@ export function PageHeader({
                 onClick={() => setEmojiPickerAberto(false)}
               />
               <div
-                className="absolute left-0 top-full mt-1 z-50 rounded-[12px] p-3 w-[260px]"
+                className="absolute left-0 top-full mt-1 z-50 rounded-[var(--tf-radius-sm)] p-3 w-[260px]"
                 style={{
                   background: "var(--tf-surface)",
                   border: "1px solid var(--tf-border)",

@@ -256,7 +256,7 @@ export default function ReuniaoDetailPage() {
         <Header onMenuMobile={toggleSidebar} />
 
         <div
-          className="flex-1 rounded-[32px] mb-4 overflow-hidden flex flex-col scroll-clip-lg"
+          className="flex-1 rounded-[var(--tf-radius-xl)] mb-4 overflow-hidden flex flex-col scroll-clip-lg"
           style={{
             background: "var(--tf-surface)",
             border: "1px solid var(--tf-border)",
@@ -360,7 +360,7 @@ export default function ReuniaoDetailPage() {
             {/* Custom Audio Player */}
             {audioUrl && (
               <div
-                className="rounded-[14px] p-4"
+                className="rounded-[var(--tf-radius-md)] p-4"
                 style={{
                   background: "var(--tf-bg-secondary)",
                   border: "1px solid var(--tf-border)",
@@ -395,7 +395,7 @@ export default function ReuniaoDetailPage() {
 
                 {/* Player UI */}
                 <div
-                  className="flex items-center gap-3 rounded-[10px] px-3 py-2.5"
+                  className="flex items-center gap-3 rounded-[var(--tf-radius-xs)] px-3 py-2.5"
                   style={{ background: "var(--tf-surface)" }}
                 >
                   {/* Play/Pause */}
@@ -473,7 +473,7 @@ export default function ReuniaoDetailPage() {
             {reuniao.status === "done" && (
               <div className="space-y-4">
                 <h2
-                  className="text-[11px] font-bold uppercase tracking-widest"
+                  className="label-mono"
                   style={{ color: "var(--tf-text-tertiary)" }}
                 >
                   Transcricao
@@ -481,7 +481,7 @@ export default function ReuniaoDetailPage() {
 
                 {grouped.length === 0 ? (
                   <div
-                    className="rounded-[14px] p-8 text-center"
+                    className="rounded-[var(--tf-radius-md)] p-8 text-center"
                     style={{ background: "var(--tf-bg-secondary)" }}
                   >
                     <p
@@ -613,7 +613,7 @@ function SpeakerBlock({
             return (
               <div
                 key={fala.id}
-                className="group flex items-center gap-1 rounded-[8px] px-2.5 py-1.5 transition-all duration-200"
+                className="group flex items-center gap-1 rounded-[var(--tf-radius-xs)] px-2.5 py-1.5 transition-all duration-200"
                 style={{
                   background: active
                     ? "var(--tf-accent-light)"
@@ -747,7 +747,7 @@ function ResumoIaCard({
       <div className="flex items-center justify-center">
         <button
           onClick={onGerar}
-          className="flex items-center gap-2.5 px-5 py-2.5 rounded-[12px] text-[13px] font-bold text-white transition-all duration-150 hover:opacity-90"
+          className="flex items-center gap-2.5 px-5 py-2.5 rounded-[var(--tf-radius-sm)] text-[13px] font-bold text-white transition-all duration-150 hover:opacity-90"
           style={{ background: "var(--tf-accent)" }}
         >
           <Sparkles size={15} />
@@ -760,7 +760,7 @@ function ResumoIaCard({
   if (loading) {
     return (
       <div
-        className="flex items-center gap-3 p-5 rounded-[14px]"
+        className="flex items-center gap-3 p-5 rounded-[var(--tf-radius-md)]"
         style={{
           background: "var(--tf-bg-secondary)",
           border: "1px solid var(--tf-border)",
@@ -785,7 +785,7 @@ function ResumoIaCard({
 
   return (
     <div
-      className="rounded-[14px] p-5 space-y-4"
+      className="rounded-[var(--tf-radius-md)] p-5 space-y-4"
       style={{
         background: "var(--tf-bg-secondary)",
         border: "1px solid var(--tf-border)",
@@ -796,7 +796,7 @@ function ResumoIaCard({
         <div className="flex items-center gap-2">
           <Sparkles size={14} style={{ color: "var(--tf-accent)" }} />
           <span
-            className="text-[11px] font-bold uppercase tracking-widest"
+            className="label-mono"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
             Resumo da IA
@@ -804,7 +804,7 @@ function ResumoIaCard({
         </div>
         <button
           onClick={onGerar}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-[10px] font-semibold transition-all duration-150 hover:opacity-70"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--tf-radius-xs)] text-[10px] font-semibold transition-all duration-150 hover:opacity-70"
           style={{
             color: "var(--tf-text-tertiary)",
             background: "var(--tf-surface)",
@@ -907,7 +907,7 @@ function InfoBox({
 }) {
   return (
     <div
-      className="flex items-start gap-3 p-4 rounded-[14px]"
+      className="flex items-start gap-3 p-4 rounded-[var(--tf-radius-md)]"
       style={{
         background: "var(--tf-bg-secondary)",
         border: "1px solid var(--tf-border)",

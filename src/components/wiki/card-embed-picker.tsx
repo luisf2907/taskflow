@@ -105,7 +105,7 @@ export function CardEmbedPicker({
         {/* Busca */}
         <div className="px-4 py-3">
           <div
-            className="flex items-center gap-2 px-3 py-2 rounded-[10px]"
+            className="flex items-center gap-2 px-3 py-2 rounded-[var(--tf-radius-xs)]"
             style={{
               background: "var(--tf-bg-secondary)",
               border: "1px solid var(--tf-border)",
@@ -147,10 +147,10 @@ export function CardEmbedPicker({
                 key={card.id}
                 type="button"
                 onClick={() => handleSelecionar(card.id)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-[10px] text-left transition-colors hover:bg-[var(--tf-surface-hover)]"
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-[var(--tf-radius-xs)] text-left transition-colors hover:bg-[var(--tf-surface-hover)]"
               >
                 <div
-                  className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
+                  className="w-8 h-8 rounded-[var(--tf-radius-xs)] flex items-center justify-center shrink-0"
                   style={{ background: "var(--tf-accent-light)" }}
                 >
                   <Kanban

@@ -216,7 +216,7 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
     if (items.length === 0) {
       return (
         <div
-          className="rounded-[12px] p-3 text-[13px]"
+          className="rounded-[var(--tf-radius-sm)] p-3 text-[13px]"
           style={{
             background: "var(--tf-surface)",
             border: "1px solid var(--tf-border)",
@@ -234,7 +234,7 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
         ref={containerRef}
         role="listbox"
         aria-label="Comandos"
-        className="rounded-[12px] overflow-hidden overflow-y-auto max-h-[320px] min-w-[240px]"
+        className="rounded-[var(--tf-radius-sm)] overflow-hidden overflow-y-auto max-h-[320px] min-w-[240px]"
         style={{
           background: "var(--tf-surface)",
           border: "1px solid var(--tf-border)",
@@ -260,7 +260,7 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
             }}
           >
             <span
-              className="flex items-center justify-center w-8 h-8 rounded-[8px] shrink-0"
+              className="flex items-center justify-center w-8 h-8 rounded-[var(--tf-radius-xs)] shrink-0"
               style={{
                 background: "var(--tf-bg-secondary)",
                 color: "var(--tf-text-secondary)",
