@@ -14,11 +14,13 @@ import {
   GitPullRequest,
   Paperclip,
 } from "lucide-react";
+import { motion } from "motion/react";
 import { memo, useMemo } from "react";
 import { CartaoComResumo } from "@/hooks/use-cartoes";
 import { formatarData, statusData } from "./seletor-data";
 import { GrupoAvatar } from "./avatar";
 import { getContrastTextColor } from "@/lib/colors";
+import { fadeUp, staggerContainer } from "@/lib/motion/presets";
 
 interface CartaoProps {
   cartao: CartaoComResumo;
@@ -93,12 +95,19 @@ export const Cartao = memo(function Cartao({
       )}
 
       <div className={etiquetasDoCartao.length > 0 ? "pl-1.5" : ""}>
-        {/* Etiquetas como pills compactas */}
+        {/* Etiquetas como pills compactas — stagger ao montar e quando
+            uma nova etiqueta aparece (key-based mount) */}
         {etiquetasDoCartao.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-1.5">
+          <motion.div
+            className="flex flex-wrap gap-1 mb-1.5"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
             {etiquetasDoCartao.map((etiqueta) => (
-              <span
+              <motion.span
                 key={etiqueta.id}
+                variants={fadeUp}
                 className="px-1.5 h-[16px] flex items-center text-[0.625rem] font-medium leading-none"
                 style={{
                   backgroundColor: etiqueta.cor,
@@ -108,9 +117,9 @@ export const Cartao = memo(function Cartao({
                 }}
               >
                 {etiqueta.nome}
-              </span>
+              </motion.span>
             ))}
-          </div>
+          </motion.div>
         )}
 
         {/* Título */}

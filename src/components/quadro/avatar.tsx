@@ -2,7 +2,10 @@
 
 import { cn } from "@/lib/utils";
 import { Membro } from "@/types";
+import { motion } from "motion/react";
 import Image from "next/image";
+
+import { duration, easeOutExpo, springSnappy } from "@/lib/motion/presets";
 
 interface AvatarProps {
   membro: Membro;
@@ -75,6 +78,36 @@ interface GrupoAvatarProps {
   tamanho?: "sm" | "md" | "lg";
 }
 
+// Variants locais — avatar entra com scale + fade (feeling "pop"),
+// ligeiramente mais dramatico que fadeUp pra valorizar pessoas.
+const avatarStagger = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.03,
+    },
+  },
+};
+
+const avatarPop = {
+  hidden: { opacity: 0, scale: 0.6 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: springSnappy,
+  },
+};
+
+const avatarFade = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: duration.fast, ease: easeOutExpo },
+  },
+};
+
 export function GrupoAvatar({
   membros,
   max = 3,
@@ -84,20 +117,27 @@ export function GrupoAvatar({
   const restante = membros.length - max;
 
   return (
-    <div className="flex -space-x-1">
+    <motion.div
+      className="flex -space-x-1"
+      variants={avatarStagger}
+      initial="hidden"
+      animate="visible"
+    >
       {visiveis.map((membro) => (
-        <div
+        <motion.div
           key={membro.id}
+          variants={avatarPop}
           style={{
             outline: "2px solid var(--tf-surface)",
             borderRadius: "var(--tf-radius-xs)",
           }}
         >
           <Avatar membro={membro} tamanho={tamanho} />
-        </div>
+        </motion.div>
       ))}
       {restante > 0 && (
-        <div
+        <motion.div
+          variants={avatarFade}
           className={cn(
             "flex items-center justify-center font-semibold text-white shrink-0",
             TAMANHOS[tamanho]
@@ -111,8 +151,8 @@ export function GrupoAvatar({
           }}
         >
           +{restante}
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }
