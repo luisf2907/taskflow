@@ -57,7 +57,7 @@ export function SeletorCartao({ cartoes, carregando, onSelecionar }: SeletorCart
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Buscar card..."
-          className="w-full pl-8 pr-3 py-2 rounded-[10px] border text-sm"
+          className="w-full pl-8 pr-3 py-2 rounded-[var(--tf-radius-xs)] border text-sm"
           style={{
             borderColor: "var(--tf-border)",
             background: "var(--tf-surface)",
@@ -78,7 +78,7 @@ export function SeletorCartao({ cartoes, carregando, onSelecionar }: SeletorCart
           <button
             key={cartao.id}
             onClick={() => onSelecionar(cartao.id)}
-            className="w-full text-left p-3 rounded-[10px] border transition-smooth cursor-pointer group"
+            className="w-full text-left p-3 rounded-[var(--tf-radius-xs)] border transition-smooth cursor-pointer group"
             style={{
               borderColor: "var(--tf-border)",
               background: "var(--tf-surface)",

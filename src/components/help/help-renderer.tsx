@@ -77,7 +77,7 @@ function BlocoRenderer({ bloco }: { bloco: HelpBlock }) {
       const Icon = config.icon;
       return (
         <div
-          className="flex items-start gap-3 p-4 rounded-[12px] border-l-4"
+          className="flex items-start gap-3 p-4 rounded-[var(--tf-radius-sm)] border-l-4"
           style={{ background: config.bg, borderColor: config.border }}
         >
           <Icon size={18} style={{ color: config.color }} className="shrink-0 mt-0.5" />
@@ -91,7 +91,7 @@ function BlocoRenderer({ bloco }: { bloco: HelpBlock }) {
     case "codigo":
       return (
         <pre
-          className="p-4 rounded-[12px] overflow-x-auto text-[12px] font-mono"
+          className="p-4 rounded-[var(--tf-radius-sm)] overflow-x-auto text-[12px] font-mono"
           style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text)" }}
         >
           <code>{bloco.conteudo as string}</code>

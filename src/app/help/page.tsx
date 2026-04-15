@@ -74,7 +74,7 @@ export default function HelpPage() {
                 <Link
                   key={artigo.id}
                   href={`/help/${artigo.id}`}
-                  className="block p-4 rounded-[12px] border transition-all hover:-translate-y-0.5 no-underline"
+                  className="block p-4 rounded-[var(--tf-radius-sm)] border transition-all hover:-translate-y-0.5 no-underline"
                   style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
                 >
                   <p className="text-[14px] font-bold" style={{ color: "var(--tf-text)" }}>
@@ -104,7 +104,7 @@ export default function HelpPage() {
                   <Link
                     key={artigo.id}
                     href={`/help/${artigo.id}`}
-                    className="block p-4 rounded-[12px] border transition-all hover:-translate-y-0.5 no-underline"
+                    className="block p-4 rounded-[var(--tf-radius-sm)] border transition-all hover:-translate-y-0.5 no-underline"
                     style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
                   >
                     <p className="text-[14px] font-bold" style={{ color: "var(--tf-text)" }}>
@@ -136,7 +136,7 @@ export default function HelpPage() {
                     >
                       <div className="flex items-start gap-3 mb-3">
                         <div
-                          className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
+                          className="w-10 h-10 rounded-[var(--tf-radius-xs)] flex items-center justify-center shrink-0"
                           style={{ background: "var(--tf-accent-light)" }}
                         >
                           <Icon size={20} style={{ color: "var(--tf-accent)" }} />
@@ -163,7 +163,7 @@ export default function HelpPage() {
 
         {/* Footer CTA */}
         <div
-          className="mt-16 rounded-[20px] p-8 text-center"
+          className="mt-16 rounded-[var(--tf-radius-lg)] p-8 text-center"
           style={{ background: "var(--tf-bg-secondary)" }}
         >
           <h3 className="text-[16px] font-bold mb-1" style={{ color: "var(--tf-text)" }}>
@@ -174,7 +174,7 @@ export default function HelpPage() {
           </p>
           <a
             href="mailto:contato@taskflow.app"
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-[12px] text-[13px] font-bold text-white no-underline"
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-[var(--tf-radius-sm)] text-[13px] font-bold text-white no-underline"
             style={{ background: "var(--tf-accent)" }}
           >
             Entrar em contato <ArrowRight size={14} />

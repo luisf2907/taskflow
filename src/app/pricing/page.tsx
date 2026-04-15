@@ -113,7 +113,7 @@ export default function PricingPage() {
               style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border-subtle)" }}
             >
               <div
-                className="w-10 h-10 rounded-[12px] flex items-center justify-center shrink-0"
+                className="w-10 h-10 rounded-[var(--tf-radius-sm)] flex items-center justify-center shrink-0"
                 style={{ background: "var(--tf-accent-light)" }}
               >
                 <f.icon size={20} style={{ color: "var(--tf-accent)" }} />
@@ -239,7 +239,7 @@ export default function PricingPage() {
 
         {/* CTA */}
         <div
-          className="rounded-[32px] p-10 md:p-16 text-center"
+          className="rounded-[var(--tf-radius-xl)] p-10 md:p-16 text-center"
           style={{ background: "linear-gradient(135deg, var(--tf-accent), #00A89D)" }}
         >
           <h2 className="text-[24px] md:text-[32px] font-black tracking-tight text-white mb-3">
@@ -250,7 +250,7 @@ export default function PricingPage() {
           </p>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-[20px] text-[15px] font-bold no-underline transition-all hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-[var(--tf-radius-lg)] text-[15px] font-bold no-underline transition-all hover:-translate-y-0.5"
             style={{ background: "#FFFFFF", color: "var(--tf-accent)" }}
           >
             Comece Gratis <ArrowRight size={16} />

@@ -41,7 +41,7 @@ export function BarraAcoes({
       {/* Seletor de valor final */}
       {mostraValores && status === "revelado" && (
         <div
-          className="p-3 rounded-[12px] border space-y-2"
+          className="p-3 rounded-[var(--tf-radius-sm)] border space-y-2"
           style={{ borderColor: "var(--tf-border)", background: "var(--tf-bg-secondary)" }}
         >
           <p className="text-xs font-medium" style={{ color: "var(--tf-text-secondary)" }}>
@@ -53,7 +53,7 @@ export function BarraAcoes({
             {estatisticas.media > 0 && (
               <button
                 onClick={() => handleFinalizar(Math.round(estatisticas.media))}
-                className="px-3 py-1.5 rounded-[8px] text-xs font-bold border-2 transition-smooth hover:scale-105"
+                className="px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-xs font-bold border-2 transition-smooth hover:scale-105"
                 style={{
                   borderColor: "var(--tf-accent)",
                   background: "var(--tf-accent)",
@@ -66,7 +66,7 @@ export function BarraAcoes({
             {estatisticas.moda !== Math.round(estatisticas.media) && (
               <button
                 onClick={() => handleFinalizar(estatisticas.moda)}
-                className="px-3 py-1.5 rounded-[8px] text-xs font-bold border transition-smooth hover:scale-105"
+                className="px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-xs font-bold border transition-smooth hover:scale-105"
                 style={{
                   borderColor: "var(--tf-accent)",
                   color: "var(--tf-accent)",
@@ -105,7 +105,7 @@ export function BarraAcoes({
               value={valorCustom}
               onChange={(e) => setValorCustom(e.target.value)}
               placeholder="Outro valor..."
-              className="flex-1 px-3 py-1.5 rounded-[8px] border text-xs"
+              className="flex-1 px-3 py-1.5 rounded-[var(--tf-radius-xs)] border text-xs"
               style={{
                 borderColor: "var(--tf-border)",
                 background: "var(--tf-surface)",

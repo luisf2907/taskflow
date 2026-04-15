@@ -53,7 +53,7 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
                 <Link
                   key={a.id}
                   href={`/help/${a.id}`}
-                  className="block px-3 py-2 rounded-[8px] text-[12px] font-medium no-underline transition-all"
+                  className="block px-3 py-2 rounded-[var(--tf-radius-xs)] text-[12px] font-medium no-underline transition-all"
                   style={{
                     background: a.id === artigo.id ? "var(--tf-accent-light)" : "transparent",
                     color: a.id === artigo.id ? "var(--tf-accent)" : "var(--tf-text-secondary)",
@@ -113,7 +113,7 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
               {anterior ? (
                 <Link
                   href={`/help/${anterior.id}`}
-                  className="block p-4 rounded-[12px] border no-underline transition-all hover:-translate-y-0.5"
+                  className="block p-4 rounded-[var(--tf-radius-sm)] border no-underline transition-all hover:-translate-y-0.5"
                   style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
                 >
                   <div className="flex items-center gap-1 text-[10px] font-bold uppercase mb-1" style={{ color: "var(--tf-text-tertiary)" }}>
@@ -128,7 +128,7 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
               {proximo && (
                 <Link
                   href={`/help/${proximo.id}`}
-                  className="block p-4 rounded-[12px] border no-underline transition-all hover:-translate-y-0.5 text-right"
+                  className="block p-4 rounded-[var(--tf-radius-sm)] border no-underline transition-all hover:-translate-y-0.5 text-right"
                   style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
                 >
                   <div className="flex items-center justify-end gap-1 text-[10px] font-bold uppercase mb-1" style={{ color: "var(--tf-text-tertiary)" }}>

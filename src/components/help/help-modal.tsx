@@ -58,7 +58,7 @@ export function HelpModal() {
       onClick={(e) => { if (e.target === e.currentTarget) fechar(); }}
     >
       <div
-        className="w-full max-w-[640px] h-fit max-h-[80vh] rounded-[20px] overflow-hidden border flex flex-col"
+        className="w-full max-w-[640px] h-fit max-h-[80vh] rounded-[var(--tf-radius-lg)] overflow-hidden border flex flex-col"
         style={{
           background: "var(--tf-surface)",
           borderColor: "var(--tf-border)",
@@ -110,7 +110,7 @@ export function HelpModal() {
                   key={artigo.id}
                   href={`/help/${artigo.id}`}
                   onClick={fechar}
-                  className="block p-3 rounded-[10px] no-underline transition-colors"
+                  className="block p-3 rounded-[var(--tf-radius-xs)] no-underline transition-colors"
                   style={{ background: "transparent" }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-bg-secondary)")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
@@ -144,13 +144,13 @@ export function HelpModal() {
                       key={cat.id}
                       href={`/help/${artigos[0]?.id || ""}`}
                       onClick={fechar}
-                      className="flex flex-col items-center gap-2 p-3 rounded-[10px] no-underline transition-all"
+                      className="flex flex-col items-center gap-2 p-3 rounded-[var(--tf-radius-xs)] no-underline transition-all"
                       style={{ background: "var(--tf-bg-secondary)" }}
                       onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
                       onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
                     >
                       <div
-                        className="w-10 h-10 rounded-[10px] flex items-center justify-center"
+                        className="w-10 h-10 rounded-[var(--tf-radius-xs)] flex items-center justify-center"
                         style={{ background: "var(--tf-accent-light)" }}
                       >
                         <Icon size={18} style={{ color: "var(--tf-accent)" }} />
@@ -173,7 +173,7 @@ export function HelpModal() {
                     key={artigo.id}
                     href={`/help/${artigo.id}`}
                     onClick={fechar}
-                    className="block p-2.5 rounded-[8px] no-underline transition-colors"
+                    className="block p-2.5 rounded-[var(--tf-radius-xs)] no-underline transition-colors"
                     onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-bg-secondary)")}
                     onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                   >

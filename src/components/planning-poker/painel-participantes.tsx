@@ -32,7 +32,7 @@ export function PainelParticipantes({ membros, votos, status, estatisticas }: Pa
       {/* Header com estatisticas */}
       {revelado && votos.length > 0 && (
         <div
-          className="flex items-center justify-center gap-4 py-2 px-4 rounded-[12px] text-xs font-medium"
+          className="flex items-center justify-center gap-4 py-2 px-4 rounded-[var(--tf-radius-sm)] text-xs font-medium"
           style={{ background: "var(--tf-bg-secondary)" }}
           aria-live="polite"
         >
@@ -71,7 +71,7 @@ export function PainelParticipantes({ membros, votos, status, estatisticas }: Pa
             <div
               key={membro.id}
               className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-[10px] border transition-all duration-300",
+                "flex items-center gap-2 px-3 py-2 rounded-[var(--tf-radius-xs)] border transition-all duration-300",
               )}
               style={{
                 borderColor: votou ? "var(--tf-accent)" : "var(--tf-border)",

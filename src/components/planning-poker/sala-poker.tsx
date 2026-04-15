@@ -40,7 +40,7 @@ export function SalaPoker({
       {/* Cartao em votacao */}
       {cartao && (
         <div
-          className="p-4 rounded-[14px] border"
+          className="p-4 rounded-[var(--tf-radius-md)] border"
           style={{ borderColor: "var(--tf-border)", background: "var(--tf-bg-secondary)" }}
         >
           <div className="flex items-start gap-3">

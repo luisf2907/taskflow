@@ -86,7 +86,7 @@ export function CartasVotacao({ valorSelecionado, onVotar, desabilitado }: Carta
             onClick={() => onVotar(valor)}
             onKeyDown={(e) => handleKeyDown(e, idx)}
             className={cn(
-              "relative flex items-center justify-center rounded-[12px] border-2 font-bold transition-all duration-200 cursor-pointer select-none",
+              "relative flex items-center justify-center rounded-[var(--tf-radius-sm)] border-2 font-bold transition-all duration-200 cursor-pointer select-none",
               "w-12 h-16 sm:w-14 sm:h-20 text-lg sm:text-xl",
               "hover:scale-105 active:scale-95",
               "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100",

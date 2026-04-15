@@ -139,7 +139,7 @@ export function GerarCardsModal({ aberto, onFechar, workspaceId, etiquetas = [],
             placeholder="Ex: Preciso de um sistema de login com Google e email, uma pagina de perfil onde o usuario possa editar seus dados, e um dashboard com graficos de uso..."
             rows={5}
             maxLength={2000}
-            className="w-full px-4 py-3 rounded-[12px] border text-sm resize-none"
+            className="w-full px-4 py-3 rounded-[var(--tf-radius-sm)] border text-sm resize-none"
             style={{
               borderColor: "var(--tf-border)",
               background: "var(--tf-surface)",
@@ -212,7 +212,7 @@ export function GerarCardsModal({ aberto, onFechar, workspaceId, etiquetas = [],
             {cardsGerados.map((card, idx) => (
               <div
                 key={idx}
-                className="p-3 rounded-[12px] border space-y-2"
+                className="p-3 rounded-[var(--tf-radius-sm)] border space-y-2"
                 style={{ borderColor: "var(--tf-border)", background: "var(--tf-surface)" }}
               >
                 {/* Header: titulo + peso + remover */}
@@ -314,7 +314,7 @@ export function GerarCardsModal({ aberto, onFechar, workspaceId, etiquetas = [],
 
           {/* Soma de pontos */}
           <div
-            className="flex items-center justify-between px-3 py-2 rounded-[10px] text-xs"
+            className="flex items-center justify-between px-3 py-2 rounded-[var(--tf-radius-xs)] text-xs"
             style={{ background: "var(--tf-bg-secondary)" }}
           >
             <span style={{ color: "var(--tf-text-secondary)" }}>Total estimado:</span>

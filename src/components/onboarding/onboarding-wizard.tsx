@@ -91,7 +91,7 @@ export default function OnboardingWizard({ initialStep = 1, onComplete, onSkip }
       style={{ background: "rgba(0, 0, 0, 0.6)", backdropFilter: "blur(4px)" }}
     >
       <div
-        className="max-w-lg w-full mx-auto mt-[15vh] rounded-[32px] p-10"
+        className="max-w-lg w-full mx-auto mt-[15vh] rounded-[var(--tf-radius-xl)] p-10"
         style={{
           background: "var(--tf-surface)",
           border: "1px solid var(--tf-border)",
@@ -135,7 +135,7 @@ export default function OnboardingWizard({ initialStep = 1, onComplete, onSkip }
 
             <button
               onClick={() => setStep(2)}
-              className="px-8 py-3.5 rounded-[14px] text-[14px] font-bold text-white hover:-translate-y-0.5 transition-all"
+              className="px-8 py-3.5 rounded-[var(--tf-radius-md)] text-[14px] font-bold text-white hover:-translate-y-0.5 transition-all"
               style={{ background: "var(--tf-accent)" }}
             >
               Começar
@@ -167,7 +167,7 @@ export default function OnboardingWizard({ initialStep = 1, onComplete, onSkip }
                   onChange={(e) => setWorkspaceName(e.target.value)}
                   placeholder="Nome do workspace"
                   maxLength={50}
-                  className="w-full px-4 py-3 text-[15px] font-medium rounded-[14px] outline-none transition-all"
+                  className="w-full px-4 py-3 text-[15px] font-medium rounded-[var(--tf-radius-md)] outline-none transition-all"
                   style={{
                     background: "var(--tf-bg)",
                     border: "1px solid var(--tf-border)",
@@ -207,7 +207,7 @@ export default function OnboardingWizard({ initialStep = 1, onComplete, onSkip }
             <button
               onClick={handleCreateWorkspace}
               disabled={!workspaceName.trim() || loading}
-              className="w-full mt-8 py-3.5 rounded-[14px] text-[14px] font-bold text-white hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:hover:translate-y-0"
+              className="w-full mt-8 py-3.5 rounded-[var(--tf-radius-md)] text-[14px] font-bold text-white hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:hover:translate-y-0"
               style={{ background: "var(--tf-accent)" }}
             >
               {loading ? "Criando..." : "Criar workspace"}
@@ -247,7 +247,7 @@ export default function OnboardingWizard({ initialStep = 1, onComplete, onSkip }
 
             <button
               onClick={() => onComplete(createdId)}
-              className="px-8 py-3.5 rounded-[14px] text-[14px] font-bold text-white hover:-translate-y-0.5 transition-all"
+              className="px-8 py-3.5 rounded-[var(--tf-radius-md)] text-[14px] font-bold text-white hover:-translate-y-0.5 transition-all"
               style={{ background: "var(--tf-accent)" }}
             >
               Ir para o workspace
