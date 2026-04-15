@@ -3,9 +3,11 @@ import { CommandPalette } from "@/components/command-palette";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { HelpModal } from "@/components/help/help-modal";
 import { OfflineBanner } from "@/components/offline-banner";
+import { RecordingIndicator } from "@/components/layout/recording-indicator";
 import { SWRProvider } from "@/components/swr-provider";
 import { ThemeInjector } from "@/components/theme-injector";
 import { ToastContainer } from "@/components/ui/toast";
+import { RecordingProvider } from "@/hooks/use-recording";
 import type { Metadata } from "next";
 import { Geist, JetBrains_Mono } from "next/font/google";
 import { readFileSync } from "fs";
@@ -79,20 +81,23 @@ export default function RootLayout({
 
         <SWRProvider>
           <ErrorBoundary>
-            <a
-              href="#main-content"
-              className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-medium"
-              style={{ background: "var(--tf-accent)", color: "#fff" }}
-            >
-              Pular para o conteúdo
-            </a>
-            <AuthListener />
-            <ThemeInjector />
-            <CommandPalette />
-            <HelpModal />
-            <OfflineBanner />
-            {children}
-            <ToastContainer />
+            <RecordingProvider>
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-medium"
+                style={{ background: "var(--tf-accent)", color: "#fff" }}
+              >
+                Pular para o conteúdo
+              </a>
+              <AuthListener />
+              <ThemeInjector />
+              <CommandPalette />
+              <HelpModal />
+              <OfflineBanner />
+              {children}
+              <RecordingIndicator />
+              <ToastContainer />
+            </RecordingProvider>
           </ErrorBoundary>
         </SWRProvider>
       </body>

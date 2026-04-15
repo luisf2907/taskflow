@@ -14,6 +14,7 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { AudioPlayer } from "@/components/ui/audio-player";
 import { toast } from "@/hooks/use-toast";
+import { useRecording } from "@/hooks/use-recording";
 
 interface NovaReuniaoModalProps {
   workspaceId: string;
@@ -22,10 +23,9 @@ interface NovaReuniaoModalProps {
 }
 
 type Tab = "upload" | "record";
-type Phase = "idle" | "recording" | "ready" | "uploading" | "processing";
+type SubmitPhase = "idle" | "uploading" | "processing";
 
-const MAX_BYTES = 200 * 1024 * 1024; // 200 MB (alinhado com o worker)
-const MAX_RECORD_SECONDS = 60 * 60; // 1 hora
+const MAX_BYTES = 200 * 1024 * 1024;
 const ALLOWED_MIME_PREFIXES = ["audio/", "video/"];
 
 export function NovaReuniaoModal({
@@ -33,52 +33,74 @@ export function NovaReuniaoModal({
   onClose,
   onCreated,
 }: NovaReuniaoModalProps) {
+  const recording = useRecording();
+
   const [tab, setTab] = useState<Tab>("upload");
-  const [titulo, setTitulo] = useState("");
-  const [descricao, setDescricao] = useState("");
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [audioName, setAudioName] = useState<string>("");
-  const [audioMime, setAudioMime] = useState<string>("");
-  const [elapsedMs, setElapsedMs] = useState(0);
+  const [submitPhase, setSubmitPhase] = useState<SubmitPhase>("idle");
   const [dragOver, setDragOver] = useState(false);
 
-  // recorder refs
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const chunksRef = useRef<BlobPart[]>([]);
-  const timerRef = useRef<number | null>(null);
-  const startRef = useRef<number>(0);
+  // Áudio vindo de upload de arquivo (separado do gravador, que vive no contexto)
+  const [uploadedBlob, setUploadedBlob] = useState<Blob | null>(null);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [uploadedName, setUploadedName] = useState<string>("");
+  const [uploadedMime, setUploadedMime] = useState<string>("");
+  const uploadedUrlRef = useRef<string | null>(null);
 
+  // Ao desmontar, só limpa URLs de upload. NÃO mexe no gravador (contexto cuida).
   useEffect(() => {
     return () => {
-      cleanupRecording();
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      if (uploadedUrlRef.current) URL.revokeObjectURL(uploadedUrlRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function cleanupRecording() {
-    if (timerRef.current !== null) {
-      window.clearInterval(timerRef.current);
-      timerRef.current = null;
+  // Sincroniza metadata (workspaceId/titulo/descricao) com o contexto quando abre
+  useEffect(() => {
+    if (!recording.workspaceId || recording.workspaceId !== workspaceId) {
+      recording.setMeta(workspaceId, recording.titulo, recording.descricao);
     }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspaceId]);
+
+  // Se já tem uma gravação em curso, força tab="record"
+  useEffect(() => {
+    if (recording.phase === "recording" || recording.phase === "stopped") {
+      setTab("record");
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recording.phase]);
+
+  // Audio "ativo" pra preview e submit — ou é um upload, ou é resultado da gravação
+  const audioBlob = uploadedBlob || recording.result?.blob || null;
+  const audioUrl = uploadedUrl || recording.result?.url || null;
+  const audioName = uploadedBlob
+    ? uploadedName
+    : recording.result
+      ? recording.result.name
+      : "";
+  const audioMime = uploadedBlob
+    ? uploadedMime
+    : recording.result
+      ? recording.result.mime
+      : "";
+
+  const titulo = recording.titulo;
+  const descricao = recording.descricao;
 
   const resetAudio = useCallback(() => {
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
-    setAudioBlob(null);
-    setAudioUrl(null);
-    setAudioName("");
-    setAudioMime("");
-    setElapsedMs(0);
-    setPhase("idle");
-  }, [audioUrl]);
+    if (uploadedUrlRef.current) {
+      URL.revokeObjectURL(uploadedUrlRef.current);
+      uploadedUrlRef.current = null;
+    }
+    setUploadedBlob(null);
+    setUploadedUrl(null);
+    setUploadedName("");
+    setUploadedMime("");
+    // Se o audio ativo era o da gravação, descarta lá também
+    if (recording.phase === "stopped") {
+      recording.discard();
+      recording.setMeta(workspaceId, titulo, descricao);
+    }
+  }, [recording, workspaceId, titulo, descricao]);
 
   // ---------- upload file ----------
   function handleFilePick(file: File) {
@@ -92,15 +114,16 @@ export function NovaReuniaoModal({
     }
     const mime = file.type || "audio/webm";
     if (!ALLOWED_MIME_PREFIXES.some((p) => mime.startsWith(p))) {
-      toast.error(`Tipo nao suportado: ${mime}`);
+      toast.error(`Tipo não suportado: ${mime}`);
       return;
     }
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
-    setAudioBlob(file);
-    setAudioUrl(URL.createObjectURL(file));
-    setAudioName(file.name);
-    setAudioMime(mime);
-    setPhase("ready");
+    if (uploadedUrlRef.current) URL.revokeObjectURL(uploadedUrlRef.current);
+    const url = URL.createObjectURL(file);
+    uploadedUrlRef.current = url;
+    setUploadedBlob(file);
+    setUploadedUrl(url);
+    setUploadedName(file.name);
+    setUploadedMime(mime);
   }
 
   function onInputFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -115,95 +138,31 @@ export function NovaReuniaoModal({
     if (f) handleFilePick(f);
   }
 
-  // ---------- record ----------
-  async function startRecording() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-      streamRef.current = stream;
-
-      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : MediaRecorder.isTypeSupported("audio/webm")
-          ? "audio/webm"
-          : "";
-      const recorder = mime
-        ? new MediaRecorder(stream, { mimeType: mime })
-        : new MediaRecorder(stream);
-      mediaRecorderRef.current = recorder;
-      chunksRef.current = [];
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-      recorder.onstop = () => {
-        const type = recorder.mimeType || "audio/webm";
-        const blob = new Blob(chunksRef.current, { type });
-        const url = URL.createObjectURL(blob);
-        setAudioBlob(blob);
-        setAudioUrl(url);
-        setAudioName("gravacao.webm");
-        setAudioMime(type);
-        setPhase("ready");
-        cleanupRecording();
-      };
-
-      startRef.current = Date.now();
-      setElapsedMs(0);
-      recorder.start(1000); // flush a cada 1s
-      setPhase("recording");
-
-      timerRef.current = window.setInterval(() => {
-        const ms = Date.now() - startRef.current;
-        setElapsedMs(ms);
-        if (
-          ms >= MAX_RECORD_SECONDS * 1000 &&
-          recorder.state !== "inactive"
-        ) {
-          recorder.stop();
-        }
-      }, 250) as unknown as number;
-    } catch (err) {
-      const msg =
-        err instanceof DOMException && err.name === "NotAllowedError"
-          ? "Acesso ao microfone negado"
-          : err instanceof Error
-            ? err.message
-            : "Falha ao acessar microfone";
-      toast.error(msg);
-      cleanupRecording();
-      setPhase("idle");
+  // ---------- record (delega ao contexto) ----------
+  async function handleStartRecording() {
+    const ok = await recording.startRecording();
+    if (!ok) {
+      toast.error("Falha ao acessar microfone");
     }
   }
 
-  function stopRecording() {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state !== "inactive"
-    ) {
-      mediaRecorderRef.current.stop();
-    }
+  async function handleStopRecording() {
+    await recording.stopRecording();
   }
 
   // ---------- submit ----------
   async function handleSubmit() {
     if (!audioBlob) {
-      toast.error("Nenhum audio selecionado");
+      toast.error("Nenhum áudio selecionado");
       return;
     }
     if (!titulo.trim()) {
-      toast.error("Titulo obrigatorio");
+      toast.error("Título obrigatório");
       return;
     }
 
-    setPhase("uploading");
+    setSubmitPhase("uploading");
 
-    // 1) POST /api/reunioes (cria linha + retorna signed upload URL)
     let createData: {
       reuniao?: { id: string };
       upload?: { signed_url: string; token: string };
@@ -222,18 +181,17 @@ export function NovaReuniaoModal({
       });
       createData = await res.json();
       if (!res.ok || !createData.reuniao || !createData.upload) {
-        throw new Error(createData.error || "Falha ao criar reuniao");
+        throw new Error(createData.error || "Falha ao criar reunião");
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao criar");
-      setPhase("ready");
+      setSubmitPhase("idle");
       return;
     }
 
     const reuniaoId = createData.reuniao.id;
     const uploadUrl = createData.upload.signed_url;
 
-    // 2) PUT direto pro Supabase Storage
     try {
       const uploadRes = await fetch(uploadUrl, {
         method: "PUT",
@@ -242,13 +200,12 @@ export function NovaReuniaoModal({
       });
       if (!uploadRes.ok) {
         throw new Error(
-          `Upload falhou: HTTP ${uploadRes.status} ${uploadRes.statusText}`,
+          `Upload falhou: HTTP ${uploadRes.status} ${uploadRes.statusText}`
         );
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro no upload");
-      setPhase("ready");
-      // Tenta limpar a reuniao orfa (best-effort)
+      setSubmitPhase("idle");
       try {
         const { supabase } = await import("@/lib/supabase/client");
         await supabase.from("reunioes").delete().eq("id", reuniaoId);
@@ -256,137 +213,180 @@ export function NovaReuniaoModal({
       return;
     }
 
-    // 3) POST /api/reunioes/[id]/process (dispara o worker async)
-    setPhase("processing");
+    setSubmitPhase("processing");
     try {
-      const procRes = await fetch(
-        `/api/reunioes/${reuniaoId}/process`,
-        { method: "POST" },
-      );
+      const procRes = await fetch(`/api/reunioes/${reuniaoId}/process`, {
+        method: "POST",
+      });
       const procData = await procRes.json();
       if (!procRes.ok && procRes.status !== 202) {
         throw new Error(procData.error || "Falha ao iniciar processamento");
       }
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Erro ao iniciar processamento",
+        err instanceof Error ? err.message : "Erro ao iniciar processamento"
       );
-      // A reuniao ja foi criada; o usuario pode ver na lista com status=pending
+      // Após submit, descarta gravação do contexto
+      recording.discard();
       onCreated();
       return;
     }
 
-    toast.success("Reuniao enviada! Processando em background...");
+    toast.success("Reunião enviada! Processando em background…");
+    // Descarta gravação do contexto após envio bem-sucedido
+    recording.discard();
     onCreated();
   }
 
-  const totalSec = Math.floor(elapsedMs / 1000);
+  const totalSec = Math.floor(recording.elapsedMs / 1000);
   const minutes = Math.floor(totalSec / 60);
   const secs = totalSec % 60;
   const timeDisplay = `${minutes}:${secs.toString().padStart(2, "0")}`;
-  const isBusy = phase === "uploading" || phase === "processing";
+  const isBusy = submitPhase !== "idle";
+  const isRecording = recording.phase === "recording";
+  const hasAudio = !!audioBlob;
+
+  // Estado visual derivado
+  let viewState: "idle" | "recording" | "ready";
+  if (isRecording) viewState = "recording";
+  else if (hasAudio) viewState = "ready";
+  else viewState = "idle";
 
   return (
     <Modal
       aberto
       onFechar={isBusy ? () => {} : onClose}
-      titulo="Nova reuniao"
+      titulo={isRecording ? "Gravando reunião…" : "Nova reunião"}
       className="max-w-lg"
     >
       <div className="space-y-4">
-        {/* Titulo */}
+        {/* Aviso quando recording + modal aberto */}
+        {isRecording && (
+          <div
+            className="flex items-start gap-2.5 p-3"
+            style={{
+              background: "var(--tf-danger-bg)",
+              border: "1px solid var(--tf-danger)",
+              borderLeft: "3px solid var(--tf-danger)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
+          >
+            <span
+              className="w-2 h-2 pulse-dot mt-1.5 shrink-0"
+              style={{
+                background: "var(--tf-danger)",
+                borderRadius: "1px",
+              }}
+            />
+            <div>
+              <p
+                className="label-mono mb-0.5"
+                style={{ color: "var(--tf-danger)" }}
+              >
+                Gravação em andamento
+              </p>
+              <p
+                className="text-[0.75rem]"
+                style={{
+                  color: "var(--tf-text-secondary)",
+                  letterSpacing: "-0.005em",
+                }}
+              >
+                Pode fechar essa janela — a gravação continua no fundo e um
+                indicador aparece no canto. Volte aqui pra parar e enviar.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Título */}
         <div>
           <label
-            className="text-[11px] font-bold uppercase tracking-wide mb-1.5 block"
+            className="label-mono mb-1.5 block"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
-            Titulo *
+            Título *
           </label>
           <input
             value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
+            onChange={(e) => recording.setTitulo(e.target.value)}
             placeholder="Ex: Daily 2026-04-09"
             disabled={isBusy}
-            className="w-full px-3.5 py-2.5 rounded-[10px] text-[13px] font-medium outline-none disabled:opacity-50 transition-all duration-150"
+            className="reuniao-input w-full h-10 px-3 text-[0.8125rem] outline-none disabled:opacity-50"
             style={{
-              background: "var(--tf-surface)",
-              border: "1.5px solid var(--tf-border)",
               color: "var(--tf-text)",
+              borderRadius: "var(--tf-radius-xs)",
+              letterSpacing: "-0.005em",
             }}
           />
         </div>
 
-        {/* Descricao */}
+        {/* Descrição */}
         <div>
           <label
-            className="text-[11px] font-bold uppercase tracking-wide mb-1.5 block"
+            className="label-mono mb-1.5 block"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
-            Descricao (opcional)
+            Descrição (opcional)
           </label>
           <input
             value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
+            onChange={(e) => recording.setDescricao(e.target.value)}
             placeholder="Sprint planning, review, etc"
             disabled={isBusy}
-            className="w-full px-3.5 py-2.5 rounded-[10px] text-[13px] outline-none disabled:opacity-50 transition-all duration-150"
+            className="reuniao-input w-full h-10 px-3 text-[0.8125rem] outline-none disabled:opacity-50"
             style={{
-              background: "var(--tf-surface)",
-              border: "1.5px solid var(--tf-border)",
               color: "var(--tf-text)",
+              borderRadius: "var(--tf-radius-xs)",
+              letterSpacing: "-0.005em",
             }}
           />
         </div>
 
-        {/* Tabs upload/record */}
-        {phase === "idle" && (
+        {/* Tabs upload/record — só quando idle */}
+        {viewState === "idle" && (
           <div
-            className="flex rounded-[10px] p-1"
-            style={{ background: "var(--tf-bg-secondary)" }}
+            className="flex p-0.5"
+            style={{
+              background: "var(--tf-bg-secondary)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
           >
-            <button
-              onClick={() => setTab("upload")}
-              className="flex-1 py-2 rounded-[8px] text-[12px] font-bold flex items-center justify-center gap-2 transition-all duration-150"
-              style={{
-                background:
-                  tab === "upload" ? "var(--tf-surface)" : "transparent",
-                color:
-                  tab === "upload"
-                    ? "var(--tf-text)"
-                    : "var(--tf-text-tertiary)",
-                boxShadow:
-                  tab === "upload"
-                    ? "0 1px 3px rgba(0,0,0,0.06)"
-                    : "none",
-              }}
-            >
-              <Upload size={12} />
-              Upload
-            </button>
-            <button
-              onClick={() => setTab("record")}
-              className="flex-1 py-2 rounded-[8px] text-[12px] font-bold flex items-center justify-center gap-2 transition-all duration-150"
-              style={{
-                background:
-                  tab === "record" ? "var(--tf-surface)" : "transparent",
-                color:
-                  tab === "record"
-                    ? "var(--tf-text)"
-                    : "var(--tf-text-tertiary)",
-                boxShadow:
-                  tab === "record"
-                    ? "0 1px 3px rgba(0,0,0,0.06)"
-                    : "none",
-              }}
-            >
-              <Mic size={12} />
-              Gravar
-            </button>
+            {(
+              [
+                { id: "upload" as const, label: "Upload", icon: Upload },
+                { id: "record" as const, label: "Gravar", icon: Mic },
+              ]
+            ).map(({ id, label, icon: Icon }) => {
+              const ativo = tab === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setTab(id)}
+                  className="flex-1 flex items-center justify-center gap-2 h-8 text-[0.6875rem] font-medium transition-colors"
+                  style={{
+                    background: ativo ? "var(--tf-surface)" : "transparent",
+                    color: ativo ? "var(--tf-text)" : "var(--tf-text-tertiary)",
+                    border: ativo
+                      ? "1px solid var(--tf-border)"
+                      : "1px solid transparent",
+                    borderRadius: "var(--tf-radius-xs)",
+                    fontFamily: "var(--tf-font-mono)",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  <Icon size={12} strokeWidth={1.75} />
+                  {label}
+                </button>
+              );
+            })}
           </div>
         )}
 
         {/* Tab: Upload */}
-        {phase === "idle" && tab === "upload" && (
+        {viewState === "idle" && tab === "upload" && (
           <label
             onDragOver={(e) => {
               e.preventDefault();
@@ -394,36 +394,44 @@ export function NovaReuniaoModal({
             }}
             onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
-            className="block rounded-[14px] p-8 text-center cursor-pointer transition-all duration-150"
+            className="block p-7 text-center cursor-pointer transition-colors"
             style={{
               background: dragOver
                 ? "var(--tf-accent-light)"
                 : "var(--tf-bg-secondary)",
-              border: dragOver
-                ? "2px dashed var(--tf-accent)"
-                : "2px dashed var(--tf-border)",
+              border: `1px dashed ${dragOver ? "var(--tf-accent)" : "var(--tf-border-strong)"}`,
+              borderRadius: "var(--tf-radius-md)",
             }}
           >
             <div
-              className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
-              style={{ background: "var(--tf-surface)" }}
+              className="w-10 h-10 mx-auto mb-3 flex items-center justify-center"
+              style={{
+                background: "var(--tf-surface)",
+                border: "1px solid var(--tf-border)",
+                borderRadius: "var(--tf-radius-xs)",
+                color: "var(--tf-text-tertiary)",
+              }}
             >
-              <Upload
-                size={20}
-                style={{ color: "var(--tf-text-tertiary)" }}
-              />
+              <Upload size={15} strokeWidth={1.75} />
             </div>
             <p
-              className="text-[13px] font-bold"
-              style={{ color: "var(--tf-text)" }}
+              className="text-[0.8125rem] font-medium"
+              style={{
+                color: "var(--tf-text)",
+                letterSpacing: "-0.005em",
+              }}
             >
               Clique ou arraste um arquivo
             </p>
             <p
-              className="text-[11px] mt-1"
-              style={{ color: "var(--tf-text-tertiary)" }}
+              className="text-[0.6875rem] mt-1"
+              style={{
+                color: "var(--tf-text-tertiary)",
+                fontFamily: "var(--tf-font-mono)",
+                letterSpacing: "0.02em",
+              }}
             >
-              Max 200 MB &middot; mp3, wav, webm, m4a, mp4, ogg
+              Máx 200 MB · mp3, wav, webm, m4a, mp4, ogg
             </p>
             <input
               type="file"
@@ -435,68 +443,98 @@ export function NovaReuniaoModal({
         )}
 
         {/* Tab: Record */}
-        {phase === "idle" && tab === "record" && (
+        {viewState === "idle" && tab === "record" && (
           <div
-            className="rounded-[14px] p-8 text-center"
-            style={{ background: "var(--tf-bg-secondary)" }}
+            className="p-7 text-center"
+            style={{
+              background: "var(--tf-bg-secondary)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-md)",
+            }}
           >
             <div
-              className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
-              style={{ background: "var(--tf-surface)" }}
+              className="w-10 h-10 mx-auto mb-3 flex items-center justify-center"
+              style={{
+                background: "var(--tf-surface)",
+                border: "1px solid var(--tf-border)",
+                borderRadius: "var(--tf-radius-xs)",
+                color: "var(--tf-text-tertiary)",
+              }}
             >
-              <Mic
-                size={20}
-                style={{ color: "var(--tf-text-tertiary)" }}
-              />
+              <Mic size={15} strokeWidth={1.75} />
             </div>
             <p
-              className="text-[13px] font-bold mb-4"
-              style={{ color: "var(--tf-text)" }}
+              className="text-[0.8125rem] font-medium mb-4"
+              style={{
+                color: "var(--tf-text)",
+                letterSpacing: "-0.005em",
+              }}
             >
               Grave direto do seu microfone
             </p>
             <button
-              onClick={startRecording}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
-              style={{ background: "var(--tf-accent)" }}
+              onClick={handleStartRecording}
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[0.8125rem] font-medium text-white transition-colors hover:brightness-110"
+              style={{
+                background: "var(--tf-accent)",
+                border: "1px solid var(--tf-accent)",
+                borderRadius: "var(--tf-radius-xs)",
+              }}
             >
-              <Mic size={14} />
-              Iniciar gravacao
+              <Mic size={13} strokeWidth={1.75} />
+              Iniciar gravação
             </button>
           </div>
         )}
 
         {/* Gravando */}
-        {phase === "recording" && (
+        {viewState === "recording" && (
           <div
-            className="rounded-[14px] p-8 text-center space-y-4"
-            style={{ background: "var(--tf-bg-secondary)" }}
+            className="p-7 text-center space-y-4"
+            style={{
+              background: "var(--tf-bg-secondary)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-md)",
+            }}
           >
             <div
-              className="w-16 h-16 rounded-full mx-auto flex items-center justify-center animate-pulse"
-              style={{ background: "rgba(239, 68, 68, 0.12)" }}
+              className="w-14 h-14 mx-auto flex items-center justify-center animate-pulse"
+              style={{
+                background: "var(--tf-danger-bg)",
+                border: "1px solid var(--tf-danger)",
+                borderRadius: "var(--tf-radius-md)",
+                color: "var(--tf-danger)",
+              }}
             >
-              <Mic size={26} style={{ color: "var(--tf-danger)" }} />
+              <Mic size={22} strokeWidth={1.75} />
             </div>
             <p
-              className="text-[24px] font-mono font-bold"
-              style={{ color: "var(--tf-text)" }}
+              className="text-[1.75rem] font-semibold"
+              style={{
+                color: "var(--tf-text)",
+                fontFamily: "var(--tf-font-mono)",
+                letterSpacing: "-0.02em",
+              }}
             >
               {timeDisplay}
             </p>
             <button
-              onClick={stopRecording}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
-              style={{ background: "var(--tf-danger)" }}
+              onClick={handleStopRecording}
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[0.8125rem] font-medium text-white transition-colors hover:brightness-110"
+              style={{
+                background: "var(--tf-danger)",
+                border: "1px solid var(--tf-danger)",
+                borderRadius: "var(--tf-radius-xs)",
+              }}
             >
-              <MicOff size={14} />
-              Parar gravacao
+              <MicOff size={13} strokeWidth={1.75} />
+              Parar gravação
             </button>
           </div>
         )}
 
         {/* Preview (ready) */}
-        {phase === "ready" && audioUrl && (
+        {viewState === "ready" && audioUrl && (
           <div
             className="p-3.5 space-y-3"
             style={{
@@ -528,7 +566,8 @@ export function NovaReuniaoModal({
               </p>
               <button
                 onClick={resetAudio}
-                className="p-1 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-danger)]"
+                disabled={isBusy}
+                className="p-1 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-danger)] disabled:opacity-50"
                 style={{
                   color: "var(--tf-text-tertiary)",
                   borderRadius: "var(--tf-radius-xs)",
@@ -544,63 +583,96 @@ export function NovaReuniaoModal({
         )}
 
         {/* Status busy */}
-        {phase === "uploading" && (
+        {submitPhase === "uploading" && (
           <div
-            className="flex items-center gap-3 p-4 rounded-[12px]"
-            style={{ background: "var(--tf-bg-secondary)" }}
+            className="flex items-center gap-2.5 p-3"
+            style={{
+              background: "var(--tf-bg-secondary)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
           >
             <Loader2
-              size={16}
+              size={14}
               className="animate-spin"
               style={{ color: "var(--tf-accent)" }}
             />
             <span
-              className="text-[13px] font-semibold"
-              style={{ color: "var(--tf-text-secondary)" }}
+              className="text-[0.8125rem] font-medium"
+              style={{
+                color: "var(--tf-text-secondary)",
+                letterSpacing: "-0.005em",
+              }}
             >
-              Enviando audio...
+              Enviando áudio…
             </span>
           </div>
         )}
-        {phase === "processing" && (
+        {submitPhase === "processing" && (
           <div
-            className="flex items-center gap-3 p-4 rounded-[12px]"
-            style={{ background: "var(--tf-bg-secondary)" }}
+            className="flex items-center gap-2.5 p-3"
+            style={{
+              background: "var(--tf-bg-secondary)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
           >
             <Loader2
-              size={16}
+              size={14}
               className="animate-spin"
               style={{ color: "var(--tf-accent)" }}
             />
             <span
-              className="text-[13px] font-semibold"
-              style={{ color: "var(--tf-text-secondary)" }}
+              className="text-[0.8125rem] font-medium"
+              style={{
+                color: "var(--tf-text-secondary)",
+                letterSpacing: "-0.005em",
+              }}
             >
-              Iniciando processamento no worker...
+              Iniciando processamento no worker…
             </span>
           </div>
         )}
 
-        {/* Acoes finais */}
-        <div className="flex items-center justify-end gap-2 pt-2">
+        {/* Ações finais */}
+        <div className="flex items-center justify-end gap-1.5 pt-2">
           <button
             onClick={onClose}
             disabled={isBusy}
-            className="px-4 py-2 rounded-[10px] text-[12px] font-semibold disabled:opacity-40 transition-all duration-150 hover:opacity-70"
-            style={{ color: "var(--tf-text-tertiary)" }}
+            className="h-9 px-3.5 text-[0.75rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)] disabled:opacity-40"
+            style={{
+              color: "var(--tf-text-secondary)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
           >
-            Cancelar
+            {isRecording ? "Fechar (gravação continua)" : "Cancelar"}
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!audioBlob || !titulo.trim() || isBusy}
-            className="px-4 py-2 rounded-[10px] text-[12px] font-bold text-white flex items-center gap-2 disabled:opacity-40 transition-all duration-150 hover:opacity-90"
-            style={{ background: "var(--tf-accent)" }}
+            disabled={!audioBlob || !titulo.trim() || isBusy || isRecording}
+            className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[0.8125rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              background: "var(--tf-accent)",
+              border: "1px solid var(--tf-accent)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
           >
-            <Check size={14} />
+            <Check size={13} strokeWidth={1.75} />
             Enviar
           </button>
         </div>
+
+        <style jsx>{`
+          .reuniao-input {
+            background: var(--tf-surface);
+            border: 1px solid var(--tf-border);
+            transition: border-color 0.15s ease;
+          }
+          .reuniao-input:focus {
+            border-color: var(--tf-accent);
+          }
+        `}</style>
       </div>
     </Modal>
   );

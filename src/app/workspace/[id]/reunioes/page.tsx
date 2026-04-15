@@ -21,6 +21,7 @@ import { useSidebar } from "@/hooks/use-sidebar";
 import { useQuadros } from "@/hooks/use-quadros";
 import { useWorkspaces } from "@/hooks/use-workspaces";
 import { toast } from "@/hooks/use-toast";
+import { useRecording } from "@/hooks/use-recording";
 import { supabase } from "@/lib/supabase/client";
 import type { Reuniao, ReuniaoStatus } from "@/types";
 
@@ -39,7 +40,16 @@ export default function ReunioesPage() {
   const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
 
   const [reunioes, setReunioes] = useState<Reuniao[] | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const recording = useRecording();
+  const modalOpen = recording.modalOpen;
+  const openNovaReuniao = () => {
+    // Se não tem uma gravação em andamento/ready, inicia nova meta
+    if (recording.phase === "idle") {
+      recording.setMeta(workspaceId, "", "");
+    }
+    recording.openModal();
+  };
+  const setModalOpen = (v: boolean) => (v ? openNovaReuniao() : recording.closeModal());
 
   const workspace = workspaces?.find((w) => w.id === workspaceId);
   const isEnrolled = Boolean(perfil?.voice_enrolled_at);
