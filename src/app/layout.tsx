@@ -7,7 +7,7 @@ import { SWRProvider } from "@/components/swr-provider";
 import { ThemeInjector } from "@/components/theme-injector";
 import { ToastContainer } from "@/components/ui/toast";
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Geist, JetBrains_Mono } from "next/font/google";
 import { readFileSync } from "fs";
 import path from "path";
 import "./globals.css";
@@ -21,9 +21,18 @@ const themeInitScript = readFileSync(
   "utf8",
 );
 
-const dmSans = DM_Sans({
+// Geist — display + body (tech-futurista sóbrio)
+const geistSans = Geist({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-geist-sans",
+  display: "swap",
+});
+
+// JetBrains Mono — números, metadados, labels, código
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
 });
 
 function getSiteUrl() {
@@ -58,13 +67,17 @@ export default function RootLayout({
   // suppressHydrationWarning: theme-init.js modifica class/data-theme
   // antes do React hidratar para evitar flash de tema errado (FOUC)
   return (
-    <html lang="pt-BR" className="h-full" suppressHydrationWarning>
+    <html
+      lang="pt-BR"
+      className={`h-full ${geistSans.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         {/* theme-init inline — roda antes da hidratação pra aplicar dark mode
             e palette customizada (evita FOUC). */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className={`${dmSans.className} h-full antialiased`} suppressHydrationWarning>
+      <body className="h-full antialiased" suppressHydrationWarning>
 
         <SWRProvider>
           <ErrorBoundary>

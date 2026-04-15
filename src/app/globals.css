@@ -26,157 +26,200 @@
 
 /* ============================================
    TASKFLOW — Design System
-   Clean, minimal teal + mint aesthetic
+   Tech-futurista sóbrio · Orange #FF5A1F
+   Dark-first, denso, técnico
    ============================================ */
 
 :root {
-  /* Cool mint/blue-gray neutrals */
-  --tf-bg: #E4F0EE;
-  --tf-bg-secondary: #DAE8E6;
+  /* Neutros (light — espelho intencional do dark) */
+  --tf-bg: #FAFAF9;
+  --tf-bg-secondary: #F3F3F1;
   --tf-surface: #FFFFFF;
-  --tf-surface-hover: #F7F9F9;
+  --tf-surface-hover: #F3F3F1;
   --tf-surface-raised: #FFFFFF;
 
-  /* Text — WCAG AA 4.5:1 minimum on surfaces */
-  --tf-text: #1C2B29;
-  --tf-text-secondary: #3D4F4C;
-  --tf-text-tertiary: #3B5450;
+  /* Text — WCAG AA */
+  --tf-text: #0F0F10;
+  --tf-text-secondary: #3F3F44;
+  --tf-text-tertiary: #6B6B70;
 
   /* Borders */
-  --tf-border: #E1EBE9;
-  --tf-border-subtle: #EDF4F3;
+  --tf-border: #E4E4E1;
+  --tf-border-subtle: #EDEDEA;
+  --tf-border-strong: #C9C9C4;
 
-  /* Accent — Primary Teal + Yellow */
-  --tf-accent: #00857A;
-  --tf-accent-hover: #006D63;
-  --tf-accent-light: #E0F2F1;
-  --tf-accent-text: #005F55;
+  /* Accent primário — Laranja queimado */
+  --tf-accent: #FF5A1F;
+  --tf-accent-hover: #E04A10;
+  --tf-accent-light: #FFE8DC;
+  --tf-accent-text: #C03E0C;
 
-  --tf-accent-yellow: #FBD051;
-  --tf-accent-yellow-hover: #EBBF41;
+  /* Accent secundário — verde-neon (sucesso/done) */
+  --tf-accent-yellow: #F5D547;
+  --tf-accent-yellow-hover: #E5C637;
 
   /* Status */
-  --tf-success: #2E8B57;
-  --tf-success-bg: #E8F5EE;
-  --tf-danger: #D84D4D;
-  --tf-danger-bg: #FBEDED;
-  --tf-warning: #8DA03B;
-  --tf-warning-bg: #F4F9DD;
-  --tf-merged: #8B5CF6;
-  --tf-merged-bg: #F3F0FF;
+  --tf-success: #059669;
+  --tf-success-bg: #ECFDF5;
+  --tf-danger: #DC2626;
+  --tf-danger-bg: #FEF2F2;
+  --tf-warning: #D97706;
+  --tf-warning-bg: #FFFBEB;
+  --tf-merged: #7C3AED;
+  --tf-merged-bg: #F5F3FF;
 
-  /* Column */
-  --tf-column: #F5F9F8;
+  /* Column / Header */
+  --tf-column: #F5F5F3;
+  --tf-header: #FAFAF9;
+  --tf-header-text: #0F0F10;
+  --tf-header-rgb: 250, 250, 249;
 
-  /* Header */
-  --tf-header: #E4F0EE;
-  --tf-header-text: #1C2B29;
+  /* Grid overlay sutil */
+  --tf-grid-line: rgba(15, 15, 16, 0.04);
+  --tf-grid-line-strong: rgba(15, 15, 16, 0.07);
 
-  /* Border Radius Scale */
-  --tf-radius-xs: 4px;
-  --tf-radius-sm: 8px;
-  --tf-radius-md: 14px;
-  --tf-radius-lg: 20px;
-  --tf-radius-xl: 32px;
+  /* Radii — reduzidos, mais técnicos */
+  --tf-radius-xs: 2px;
+  --tf-radius-sm: 4px;
+  --tf-radius-md: 6px;
+  --tf-radius-lg: 10px;
+  --tf-radius-xl: 14px;
 
-  /* Typography Scale */
-  --tf-text-2xs: 10px;
-  --tf-text-xs: 11px;
-  --tf-text-sm: 12px;
-  --tf-text-base: 13px;
-  --tf-text-md: 14px;
-  --tf-text-lg: 15px;
-  --tf-text-xl: 17px;
-  --tf-text-2xl: 22px;
-  --tf-text-3xl: 36px;
-  --tf-text-4xl: 48px;
-  --tf-text-5xl: 60px;
+  /* Typography — em rem (base 16px) */
+  --tf-text-2xs: 0.625rem;   /* 10px */
+  --tf-text-xs: 0.6875rem;   /* 11px */
+  --tf-text-sm: 0.75rem;     /* 12px */
+  --tf-text-base: 0.8125rem; /* 13px */
+  --tf-text-md: 0.875rem;    /* 14px */
+  --tf-text-lg: 0.9375rem;   /* 15px */
+  --tf-text-xl: 1.0625rem;   /* 17px */
+  --tf-text-2xl: 1.375rem;   /* 22px */
+  --tf-text-3xl: 2.25rem;    /* 36px */
+  --tf-text-4xl: 3rem;       /* 48px */
+  --tf-text-5xl: 4.5rem;     /* 72px — hero */
 
-  /* Header glass (RGB for rgba()) */
-  --tf-header-rgb: 255, 255, 255;
+  /* Font families (injetadas via next/font em layout.tsx) */
+  --tf-font-display: var(--font-geist-sans, "Geist"), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --tf-font-mono: var(--font-jetbrains-mono, "JetBrains Mono"), "Fira Code", ui-monospace, SFMono-Regular, monospace;
 
   /* Scrollbar */
-  --tf-scrollbar-thumb: rgba(61, 79, 76, 0.25);
-  --tf-scrollbar-thumb-hover: rgba(61, 79, 76, 0.45);
+  --tf-scrollbar-thumb: rgba(15, 15, 16, 0.15);
+  --tf-scrollbar-thumb-hover: rgba(255, 90, 31, 0.6);
 
-  /* Shadows — very subtle */
-  --tf-shadow-sm: 0 1px 3px rgba(28, 43, 41, 0.04);
-  --tf-shadow: 0 2px 8px rgba(28, 43, 41, 0.05);
-  --tf-shadow-md: 0 4px 16px rgba(28, 43, 41, 0.06);
-  --tf-shadow-lg: 0 8px 24px rgba(28, 43, 41, 0.08);
+  /* Shadows — light discretas, curtas */
+  --tf-shadow-sm: 0 1px 2px rgba(15, 15, 16, 0.04);
+  --tf-shadow: 0 2px 4px rgba(15, 15, 16, 0.05);
+  --tf-shadow-md: 0 4px 8px rgba(15, 15, 16, 0.06);
+  --tf-shadow-lg: 0 8px 16px rgba(15, 15, 16, 0.08);
 }
 
 .dark {
-  --tf-bg: #141A19;
-  --tf-bg-secondary: #18201E;
-  --tf-surface: #222B29;
-  --tf-surface-hover: #334440;
-  --tf-surface-raised: #283330;
+  /* Neutros dark — base preta profunda */
+  --tf-bg: #0A0A0B;
+  --tf-bg-secondary: #0F0F11;
+  --tf-surface: #111113;
+  --tf-surface-hover: #18181B;
+  --tf-surface-raised: #1A1A1D;
 
-  --tf-text: #E1EBE9;
-  --tf-text-secondary: #A8C0BA;
-  --tf-text-tertiary: #8FB3AA;
+  --tf-text: #E8E8EA;
+  --tf-text-secondary: #A8A8AE;
+  --tf-text-tertiary: #6B6B70;
 
-  --tf-border: #33423F;
-  --tf-border-subtle: #293633;
+  --tf-border: #2A2A2E;
+  --tf-border-subtle: #1E1E22;
+  --tf-border-strong: #3A3A3F;
 
-  --tf-accent: #00857A;
-  --tf-accent-hover: #00A396;
-  --tf-accent-light: #163632;
-  --tf-accent-text: #4DD0C4;
+  /* Laranja levemente mais claro em dark pra contraste */
+  --tf-accent: #FF6B35;
+  --tf-accent-hover: #FF8558;
+  --tf-accent-light: #2A1810;
+  --tf-accent-text: #FF9468;
 
-  --tf-accent-yellow: #FBD051;
-  --tf-accent-yellow-hover: #FCE18A;
+  --tf-accent-yellow: #F5D547;
+  --tf-accent-yellow-hover: #F7E078;
 
-  --tf-success: #3CB371;
-  --tf-success-bg: #1A3328;
-  --tf-danger: #E55B3C;
-  --tf-danger-bg: #3E1E1E;
-  --tf-warning: #D4A017;
-  --tf-warning-bg: #2E2A1A;
+  /* Status em dark */
+  --tf-success: #00D97E;
+  --tf-success-bg: #062C1A;
+  --tf-danger: #FF4444;
+  --tf-danger-bg: #2E1010;
+  --tf-warning: #F5A524;
+  --tf-warning-bg: #2A1F08;
   --tf-merged: #A78BFA;
-  --tf-merged-bg: #2A2040;
+  --tf-merged-bg: #1C1533;
 
-  --tf-column: #1D2624;
+  --tf-column: #0F0F11;
+  --tf-header: #0A0A0B;
+  --tf-header-text: #E8E8EA;
+  --tf-header-rgb: 10, 10, 11;
 
-  --tf-header: #141A19;
-  --tf-header-text: #E1EBE9;
-
-  --tf-header-rgb: 34, 43, 41;
+  --tf-grid-line: rgba(232, 232, 234, 0.025);
+  --tf-grid-line-strong: rgba(232, 232, 234, 0.05);
 
   /* Scrollbar */
-  --tf-scrollbar-thumb: rgba(157, 181, 175, 0.2);
-  --tf-scrollbar-thumb-hover: rgba(157, 181, 175, 0.4);
+  --tf-scrollbar-thumb: rgba(232, 232, 234, 0.12);
+  --tf-scrollbar-thumb-hover: rgba(255, 107, 53, 0.7);
 
-  --tf-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
-  --tf-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --tf-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
-  --tf-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
+  /* Sombras dark — quase inexistentes; profundidade vem de bg elevated */
+  --tf-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --tf-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  --tf-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --tf-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
 }
 
-/* Scrollbar */
-* { scrollbar-width: thin; scrollbar-color: var(--tf-scrollbar-thumb) transparent; }
-*::-webkit-scrollbar { width: 6px; height: 6px; background: transparent; }
-*::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: var(--tf-scrollbar-thumb); border-radius: 99px; }
-*::-webkit-scrollbar-thumb:hover { background: var(--tf-scrollbar-thumb-hover); }
-
-
-/* Clip scrollbar to rounded corners — nothing escapes clip-path */
-.scroll-clip-lg { clip-path: inset(0 round 32px); }
-.scroll-clip { clip-path: inset(0 round 20px); }
+/* Base typography */
+html {
+  font-family: var(--tf-font-display);
+  font-feature-settings: "ss01", "ss02", "cv11"; /* Geist stylistic sets */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 body {
   background: var(--tf-bg);
   color: var(--tf-text);
+  font-family: var(--tf-font-display);
+}
+
+/* Números em tabular lining — para mono-like feel em contadores sans */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Mono utility */
+.font-mono {
+  font-family: var(--tf-font-mono);
+  font-feature-settings: "calt" 0;
+}
+
+/* Scrollbar */
+* { scrollbar-width: thin; scrollbar-color: var(--tf-scrollbar-thumb) transparent; }
+*::-webkit-scrollbar { width: 4px; height: 4px; background: transparent; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--tf-scrollbar-thumb); border-radius: 99px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--tf-scrollbar-thumb-hover); }
+
+/* Clip scrollbar to rounded corners */
+.scroll-clip-lg { clip-path: inset(0 round var(--tf-radius-xl)); }
+.scroll-clip { clip-path: inset(0 round var(--tf-radius-lg)); }
+
+/* Seleção de texto */
+::selection {
+  background: rgba(255, 90, 31, 0.28);
+  color: var(--tf-text);
+}
+.dark ::selection {
+  background: rgba(255, 107, 53, 0.32);
+  color: #FFFFFF;
 }
 
 /* ---- ACCESSIBILITY ---- */
 
-/* Focus visible — ring indicator for keyboard navigation */
 :focus-visible {
   outline: 2px solid var(--tf-accent);
   outline-offset: 2px;
+  border-radius: var(--tf-radius-xs);
 }
 input:focus-visible,
 textarea:focus-visible,
@@ -185,7 +228,6 @@ select:focus-visible {
   outline-offset: 0;
 }
 
-/* Skip navigation link */
 .skip-nav {
   position: absolute;
   top: -100%;
@@ -193,10 +235,12 @@ select:focus-visible {
   z-index: 9999;
   padding: 8px 16px;
   background: var(--tf-accent);
-  color: white;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 700;
+  color: #FFFFFF;
+  border-radius: var(--tf-radius-sm);
+  font-family: var(--tf-font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   text-decoration: none;
   transition: top 0.15s;
 }
@@ -204,7 +248,6 @@ select:focus-visible {
   top: 16px;
 }
 
-/* Screen reader only — visually hidden but accessible */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -221,34 +264,46 @@ select:focus-visible {
 
 .column-surface {
   background: var(--tf-column);
-  border-radius: 20px;
-  border: 1px solid var(--tf-border-subtle);
+  border-radius: var(--tf-radius-lg);
+  border: 1px solid var(--tf-border);
   overflow: hidden;
-  clip-path: inset(0 round 20px);
+  clip-path: inset(0 round var(--tf-radius-lg));
 }
 
 .card-surface {
   background: var(--tf-surface);
-  border: 1px solid var(--tf-border-subtle);
-  border-radius: 14px;
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  border: 1px solid var(--tf-border);
+  border-radius: var(--tf-radius-md);
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .card-surface:hover {
-  border-color: var(--tf-border);
+  border-color: var(--tf-border-strong);
+}
+
+/* Elevated — uma camada acima de surface (modals, popovers) */
+.elevated-surface {
+  background: var(--tf-surface-raised);
+  border: 1px solid var(--tf-border);
+  border-radius: var(--tf-radius-lg);
 }
 
 /* ---- TRANSITIONS ---- */
 .transition-smooth {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ---- LABEL PILLS ---- */
 .label-pill {
   transition: all 0.15s ease;
+  font-family: var(--tf-font-mono);
+  font-size: var(--tf-text-2xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 500;
 }
 
-/* ---- BOARD BG ---- */
+/* ---- BOARD BG — grid lines ao invés de dots ---- */
 .board-area {
   position: relative;
 }
@@ -257,10 +312,13 @@ select:focus-visible {
   content: "";
   position: absolute;
   inset: 0;
-  opacity: 0.03;
-  background-image: radial-gradient(circle at 1px 1px, var(--tf-text) 0.5px, transparent 0);
-  background-size: 24px 24px;
+  background-image:
+    linear-gradient(to right, var(--tf-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--tf-grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
   pointer-events: none;
+  mask-image: radial-gradient(ellipse at center, black 50%, transparent 95%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 50%, transparent 95%);
 }
 
 /* ---- HOVER UTILITIES ---- */
@@ -286,11 +344,13 @@ select:focus-visible {
 }
 
 .hover-menu-item {
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  border-left: 2px solid transparent;
 }
 .hover-menu-item:hover {
   background: var(--tf-surface-hover);
   color: var(--tf-text);
+  border-left-color: var(--tf-accent);
 }
 
 .sidebar-link:not([data-active="true"]):hover {
@@ -303,32 +363,47 @@ select:focus-visible {
   100% { opacity: 1; clip-path: inset(0 0 0 0); transform: translateY(0); }
 }
 
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+.pulse-dot {
+  animation: pulseDot 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 /* ---- LANDING PAGE ---- */
-@keyframes landing-float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
-}
-@keyframes landing-float-delay {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
 @keyframes landing-fade-up {
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.landing-float { animation: landing-float 6s ease-in-out infinite; }
-.landing-float-delay { animation: landing-float-delay 5s ease-in-out 1s infinite; }
 .landing-fade-up { animation: landing-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .landing-fade-up-2 { animation: landing-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards; opacity: 0; }
 .landing-fade-up-3 { animation: landing-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards; opacity: 0; }
 
+/* Hero grid — full bleed grid lines for landing */
+.hero-grid {
+  position: relative;
+}
+.hero-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--tf-grid-line-strong) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--tf-grid-line-strong) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+  pointer-events: none;
+}
+
 /* Respect user preference for reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .landing-float,
-  .landing-float-delay { animation: none; }
   .landing-fade-up,
   .landing-fade-up-2,
   .landing-fade-up-3 { animation: none; opacity: 1; }
+  .pulse-dot { animation: none; }
   .sidebar-ease { transition-duration: 0.01ms !important; }
   * {
     animation-duration: 0.01ms !important;
@@ -340,19 +415,19 @@ select:focus-visible {
 
 /* ---- SIDEBAR TRANSITIONS ---- */
 .sidebar-ease {
-  transition: width 500ms cubic-bezier(0.25, 1, 0.5, 1);
+  transition: width 320ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 .sidebar-item {
-  transition: all 500ms cubic-bezier(0.25, 1, 0.5, 1);
+  transition: all 260ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 .sidebar-fade {
-  transition: opacity 400ms cubic-bezier(0.25, 1, 0.5, 1), transform 400ms cubic-bezier(0.25, 1, 0.5, 1);
+  transition: opacity 200ms cubic-bezier(0.32, 0.72, 0, 1), transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 .sidebar-sub {
-  transition: max-height 400ms cubic-bezier(0.25, 1, 0.5, 1), opacity 300ms cubic-bezier(0.25, 1, 0.5, 1);
+  transition: max-height 320ms cubic-bezier(0.32, 0.72, 0, 1), opacity 220ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 .sidebar-chevron {
-  transition: transform 400ms cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 260ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @layer utilities {
@@ -365,31 +440,36 @@ select:focus-visible {
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
   }
+
+  /* Mono label helper */
+  .label-mono {
+    font-family: var(--tf-font-mono);
+    font-size: var(--tf-text-2xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tf-text-tertiary);
+    font-weight: 500;
+  }
 }
 
 /* ---- WIKI EDITOR (TipTap — Notion-like blocks) ---- */
 
-/* Editor wrapper — espaço para block handles à esquerda */
 .wiki-editor-wrapper {
   position: relative;
   margin-left: 56px;
 }
 
-/* Conteúdo base */
 .wiki-content {
   color: var(--tf-text);
-  font-size: 15px;
+  font-size: var(--tf-text-lg);
   line-height: 1.65;
 }
 
 .wiki-content > *:first-child { margin-top: 0; }
 
-/* ── BLOCK STYLING (Notion-like) ──
-   Cada bloco top-level tem padding + border-radius + hover highlight
-*/
 .wiki-blocks > * {
   padding: 3px 4px;
-  border-radius: 4px;
+  border-radius: var(--tf-radius-xs);
   transition: background 0.1s ease;
 }
 .wiki-blocks > *:hover {
@@ -400,39 +480,40 @@ select:focus-visible {
   outline: none;
 }
 
-/* ── HEADINGS ── */
+/* Headings — tighter tracking, display feel */
 .wiki-content h1 {
-  font-size: 1.875em;
-  font-weight: 700;
-  line-height: 1.3;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   margin-top: 1.2em;
   margin-bottom: 0.3em;
   color: var(--tf-text);
 }
 .wiki-content h2 {
-  font-size: 1.5em;
-  font-weight: 650;
-  line-height: 1.35;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
   margin-top: 1.1em;
   margin-bottom: 0.2em;
   color: var(--tf-text);
 }
 .wiki-content h3 {
-  font-size: 1.2em;
+  font-size: 1.2rem;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
   margin-top: 1em;
   margin-bottom: 0.15em;
   color: var(--tf-text);
 }
 
-/* ── PARAGRAPHS ── */
 .wiki-content p {
   margin-top: 2px;
   margin-bottom: 2px;
 }
 
-/* ── LISTS ── */
 .wiki-content ul, .wiki-content ol {
   padding-left: 1.5em;
   margin-top: 2px;
@@ -443,74 +524,69 @@ select:focus-visible {
 .wiki-content li { margin-top: 1px; margin-bottom: 1px; }
 .wiki-content li p { margin: 0; }
 
-/* ── BLOCKQUOTE ── */
 .wiki-content blockquote {
-  border-left: 3px solid var(--tf-accent);
+  border-left: 2px solid var(--tf-accent);
   padding-left: 1em;
   margin: 4px 0;
   color: var(--tf-text-secondary);
 }
 
-/* ── CODE BLOCKS ── */
 .wiki-content pre {
   background: var(--tf-bg-secondary);
   border: 1px solid var(--tf-border);
-  border-radius: 10px;
-  padding: 16px 20px;
+  border-radius: var(--tf-radius-md);
+  padding: 14px 18px;
   overflow-x: auto;
-  font-family: "JetBrains Mono", "Fira Code", monospace;
-  font-size: 0.85em;
+  font-family: var(--tf-font-mono);
+  font-size: 0.8125rem;
   line-height: 1.6;
   margin: 6px 0;
 }
 
-/* ── INLINE CODE ── */
 .wiki-content code {
   background: var(--tf-bg-secondary);
-  border-radius: 4px;
-  padding: 0.15em 0.4em;
-  font-family: "JetBrains Mono", "Fira Code", monospace;
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: var(--tf-radius-xs);
+  padding: 0.1em 0.35em;
+  font-family: var(--tf-font-mono);
   font-size: 0.875em;
   color: var(--tf-accent-text);
 }
 .wiki-content pre code {
   background: none;
+  border: none;
   padding: 0;
   border-radius: 0;
   color: inherit;
 }
 
-/* ── DIVIDER ── */
 .wiki-content hr {
   border: none;
   border-top: 1px solid var(--tf-border);
   margin: 20px 0;
 }
 
-/* ── IMAGES ── */
 .wiki-content img {
   max-width: 100%;
   height: auto;
-  border-radius: 10px;
+  border-radius: var(--tf-radius-md);
   margin: 8px 0;
 }
 
-/* ── LINKS ── */
 .wiki-content a, .wiki-content .wiki-link {
   color: var(--tf-accent);
   text-decoration: underline;
+  text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
 .wiki-content a:hover, .wiki-content .wiki-link:hover { opacity: 0.8; }
 
-/* ── HIGHLIGHT ── */
 .wiki-content mark {
-  background-color: rgba(255, 207, 64, 0.3);
-  border-radius: 2px;
+  background-color: rgba(245, 213, 71, 0.3);
+  border-radius: var(--tf-radius-xs);
   padding: 0.1em 0.2em;
 }
 
-/* ── TASK LIST ── */
 .wiki-content ul[data-type="taskList"] {
   list-style: none;
   padding-left: 0;
@@ -522,23 +598,22 @@ select:focus-visible {
 }
 .wiki-content ul[data-type="taskList"] li label { margin-top: 0.25em; }
 .wiki-content ul[data-type="taskList"] li label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   accent-color: var(--tf-accent);
-  border-radius: 4px;
+  border-radius: var(--tf-radius-xs);
 }
 .wiki-content ul[data-type="taskList"] li[data-checked="true"] > div > p {
   text-decoration: line-through;
   color: var(--tf-text-tertiary);
 }
 
-/* ── TABLE ── */
 .wiki-content table {
   border-collapse: collapse;
   width: 100%;
   margin: 6px 0;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: var(--tf-radius-md);
   border: 1px solid var(--tf-border);
 }
 .wiki-content th, .wiki-content td {
@@ -552,9 +627,10 @@ select:focus-visible {
   background: var(--tf-bg-secondary);
   font-weight: 600;
   font-size: 0.9em;
+  font-family: var(--tf-font-mono);
+  letter-spacing: 0.01em;
 }
 
-/* ── PLACEHOLDERS ── */
 .wiki-content .is-empty::before {
   content: attr(data-placeholder);
   float: left;
@@ -564,7 +640,6 @@ select:focus-visible {
   font-style: normal;
 }
 
-/* ── FOCUS — Remove browser outline ── */
 .wiki-content:focus,
 .wiki-content.ProseMirror-focused {
   outline: none !important;
@@ -572,28 +647,25 @@ select:focus-visible {
   box-shadow: none !important;
 }
 
-/* ── SELECTION — somente em nós atômicos (imagens, embeds) ── */
 .wiki-content img.ProseMirror-selectednode,
 .wiki-content [data-type="card-embed"].ProseMirror-selectednode,
 .wiki-content .tableWrapper.ProseMirror-selectednode {
   outline: 2px solid var(--tf-accent);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: var(--tf-radius-sm);
 }
 
-/* ── TABLE RESIZE ── */
 .wiki-content .column-resize-handle {
   position: absolute;
   right: -2px;
   top: 0;
   bottom: -2px;
-  width: 4px;
+  width: 2px;
   background-color: var(--tf-accent);
   pointer-events: none;
 }
 .wiki-content .tableWrapper { overflow-x: auto; }
 
-/* ── DROPCURSOR ── */
 .ProseMirror-dropcursor {
   border-color: var(--tf-accent) !important;
 }
