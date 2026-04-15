@@ -17,40 +17,54 @@ export function TaskLineItem({ task }: TaskLineItemProps) {
   return (
     <button
       onClick={() => router.push(`/quadro/${task.quadro_id}`)}
-      className="w-full flex items-center gap-3 p-3.5 rounded-[20px] transition-all hover:-translate-y-1 group text-left"
+      className="w-full flex items-center gap-2.5 p-2.5 transition-colors group text-left"
       style={{
         background: "var(--tf-surface)",
         border: "1px solid var(--tf-border)",
+        borderRadius: "var(--tf-radius-xs)",
       }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.borderColor = "var(--tf-border-strong)")
+      }
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.borderColor = "var(--tf-border)")
+      }
     >
       <div
-        className="w-10 h-10 rounded-[14px] flex items-center justify-center shrink-0 transition-colors"
+        className="w-8 h-8 flex items-center justify-center shrink-0"
         style={{
-          background: concluida ? "var(--tf-accent-light)" : "var(--tf-bg)",
-          color: concluida ? "var(--tf-accent)" : "var(--tf-text-tertiary)",
+          background: concluida ? "var(--tf-success-bg)" : "var(--tf-bg-secondary)",
+          color: concluida ? "var(--tf-success)" : "var(--tf-text-tertiary)",
+          border: `1px solid ${concluida ? "var(--tf-success)" : "var(--tf-border)"}`,
+          borderRadius: "var(--tf-radius-xs)",
         }}
       >
         {concluida ? (
-          <CheckCircle2 size={18} strokeWidth={2.5} />
+          <CheckCircle2 size={14} strokeWidth={1.75} />
         ) : (
-          <Target size={18} strokeWidth={2.5} />
+          <Target size={14} strokeWidth={1.75} />
         )}
       </div>
       <div className="flex-1 min-w-0">
         <p
-          className="text-[13px] font-bold truncate tracking-tight transition-colors group-hover:text-amber-500"
+          className="text-[0.8125rem] font-medium truncate transition-colors group-hover:text-[var(--tf-accent)]"
           style={{
             color: concluida ? "var(--tf-text-tertiary)" : "var(--tf-text)",
             textDecoration: concluida ? "line-through" : "none",
+            letterSpacing: "-0.005em",
           }}
         >
           {task.titulo}
         </p>
         <p
-          className="text-[11px] font-medium truncate mt-0.5"
-          style={{ color: "var(--tf-text-tertiary)" }}
+          className="text-[0.625rem] truncate mt-0.5"
+          style={{
+            color: "var(--tf-text-tertiary)",
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.02em",
+          }}
         >
-          Ult. mov: {new Date(task.atualizado_em).toLocaleDateString("pt-BR")}
+          {new Date(task.atualizado_em).toLocaleDateString("pt-BR")}
         </p>
       </div>
     </button>

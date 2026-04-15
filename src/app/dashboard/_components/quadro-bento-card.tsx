@@ -14,33 +14,70 @@ export function QuadroBentoCard({ quadro }: QuadroBentoCardProps) {
   return (
     <button
       onClick={() => router.push(`/quadro/${quadro.id}`)}
-      className="group text-left rounded-[32px] overflow-hidden p-6 relative flex flex-col transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 min-w-[260px] max-w-[300px] flex-shrink-0 snap-start"
+      className="group text-left overflow-hidden p-4 relative flex flex-col transition-colors min-w-[240px] max-w-[280px] h-[140px] flex-shrink-0 snap-start"
       style={{
-        background: `linear-gradient(135deg, ${quadro.cor}, ${quadro.cor}dd)`,
+        background: quadro.cor,
+        borderRadius: "var(--tf-radius-md)",
       }}
     >
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.04] transition-colors duration-300" />
-      <div className="relative z-10 w-full">
-        <div className="flex justify-between items-start mb-3">
-          <div className="w-10 h-10 rounded-[14px] bg-white/20 backdrop-blur-md flex items-center justify-center">
-            <Grid3X3 size={20} className="text-white" />
-          </div>
+      {/* Hover overlay — subtle dim */}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.08] transition-colors" />
+
+      <div className="relative z-10 flex justify-between items-start mb-2">
+        <div
+          className="w-8 h-8 flex items-center justify-center"
+          style={{
+            background: "rgba(255,255,255,0.18)",
+            border: "1px solid rgba(255,255,255,0.25)",
+            borderRadius: "var(--tf-radius-xs)",
+          }}
+        >
+          <Grid3X3 size={15} className="text-white" strokeWidth={1.75} />
         </div>
-        <h3 className="text-white font-extrabold text-[17px] leading-tight line-clamp-2 tracking-tight drop-shadow-sm">
-          {quadro.nome}
-        </h3>
+        <span
+          className="text-[0.5625rem] font-medium text-white/80 px-1.5 h-[17px] inline-flex items-center"
+          style={{
+            border: "1px solid rgba(255,255,255,0.25)",
+            borderRadius: "var(--tf-radius-xs)",
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+          }}
+        >
+          Sprint
+        </span>
       </div>
 
-      <div className="relative z-10 flex items-center justify-between w-full mt-4">
-        <p className="text-white/85 text-[12px] font-bold flex items-center gap-1.5 backdrop-blur-sm bg-black/10 px-3 py-1.5 rounded-full">
-          <Clock size={12} />
+      <h3
+        className="relative z-10 text-white font-semibold text-[0.9375rem] leading-tight line-clamp-2 mt-auto"
+        style={{ letterSpacing: "-0.01em" }}
+      >
+        {quadro.nome}
+      </h3>
+
+      <div className="relative z-10 flex items-center justify-between w-full mt-2.5">
+        <p
+          className="text-white/80 text-[0.625rem] flex items-center gap-1"
+          style={{
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.02em",
+          }}
+        >
+          <Clock size={10} strokeWidth={1.75} />
           {new Date(quadro.atualizado_em).toLocaleDateString("pt-BR", {
             day: "2-digit",
             month: "short",
           })}
         </p>
-        <div className="w-8 h-8 flex-shrink-0 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-300">
-          <ArrowRight size={14} className="text-white" />
+        <div
+          className="w-6 h-6 flex-shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{
+            background: "rgba(255,255,255,0.2)",
+            border: "1px solid rgba(255,255,255,0.25)",
+            borderRadius: "var(--tf-radius-xs)",
+          }}
+        >
+          <ArrowRight size={11} className="text-white" strokeWidth={1.75} />
         </div>
       </div>
     </button>

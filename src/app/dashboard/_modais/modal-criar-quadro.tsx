@@ -97,7 +97,7 @@ export function ModalCriarQuadro({
     <Modal aberto={aberto} onFechar={handleFechar} titulo="Criar sprint">
       <div className="space-y-5">
         <div
-          className="h-28 rounded-[20px] flex items-end p-5 transition-colors"
+          className="h-28 rounded-[var(--tf-radius-lg)] flex items-end p-5 transition-colors"
           style={{
             background: `linear-gradient(135deg, ${novaCor}, ${novaCor}bb)`,
           }}
@@ -120,7 +120,7 @@ export function ModalCriarQuadro({
             onKeyDown={(e) => {
               if (e.key === "Enter") handleCriar();
             }}
-            className="w-full px-4 py-3 text-[15px] font-medium rounded-[14px] outline-none transition-all"
+            className="w-full px-4 py-3 text-[15px] font-medium rounded-[var(--tf-radius-md)] outline-none transition-all"
             style={{
               background: "var(--tf-bg-secondary)",
               border: "2px solid transparent",
@@ -145,7 +145,7 @@ export function ModalCriarQuadro({
             <div className="relative">
               <button
                 onClick={() => setMostrarWorkspaces(!mostrarWorkspaces)}
-                className="w-full text-left text-sm px-3 py-2 rounded-[8px] border flex items-center gap-2"
+                className="w-full text-left text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border flex items-center gap-2"
                 style={{
                   background: "var(--tf-bg)",
                   borderColor: "var(--tf-border)",
@@ -179,7 +179,7 @@ export function ModalCriarQuadro({
               </button>
               {mostrarWorkspaces && (
                 <div
-                  className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto rounded-[8px] border"
+                  className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto rounded-[var(--tf-radius-xs)] border"
                   style={{
                     background: "var(--tf-surface)",
                     borderColor: "var(--tf-border)",
@@ -204,7 +204,7 @@ export function ModalCriarQuadro({
                       }
                     >
                       <div
-                        className="w-6 h-6 rounded-[8px] shrink-0 flex items-center justify-center"
+                        className="w-6 h-6 rounded-[var(--tf-radius-xs)] shrink-0 flex items-center justify-center"
                         style={{ background: ws.cor }}
                       >
                         <Folder size={12} className="text-white" />
@@ -238,7 +238,7 @@ export function ModalCriarQuadro({
                 value={novoMeta}
                 onChange={(e) => setNovoMeta(e.target.value)}
                 placeholder="O que queremos alcançar nessa sprint?"
-                className="w-full px-5 py-3.5 text-[15px] font-medium rounded-[20px] outline-none transition-all"
+                className="w-full px-5 py-3.5 text-[15px] font-medium rounded-[var(--tf-radius-lg)] outline-none transition-all"
                 style={{
                   background: "var(--tf-bg-secondary)",
                   border: "2px solid transparent",
@@ -265,7 +265,7 @@ export function ModalCriarQuadro({
                   type="date"
                   value={novoDataInicio}
                   onChange={(e) => setNovoDataInicio(e.target.value)}
-                  className="w-full px-5 py-3.5 text-[15px] font-medium rounded-[20px] outline-none transition-all"
+                  className="w-full px-5 py-3.5 text-[15px] font-medium rounded-[var(--tf-radius-lg)] outline-none transition-all"
                   style={{
                     background: "var(--tf-bg-secondary)",
                     border: "2px solid transparent",
@@ -290,7 +290,7 @@ export function ModalCriarQuadro({
                   type="date"
                   value={novoDataFim}
                   onChange={(e) => setNovoDataFim(e.target.value)}
-                  className="w-full px-5 py-3.5 text-[15px] font-medium rounded-[20px] outline-none transition-all"
+                  className="w-full px-5 py-3.5 text-[15px] font-medium rounded-[var(--tf-radius-lg)] outline-none transition-all"
                   style={{
                     background: "var(--tf-bg-secondary)",
                     border: "2px solid transparent",
@@ -320,7 +320,7 @@ export function ModalCriarQuadro({
               <button
                 key={cor}
                 onClick={() => setNovaCor(cor)}
-                className={`w-10 h-10 rounded-[14px] transition-all ${
+                className={`w-10 h-10 rounded-[var(--tf-radius-md)] transition-all ${
                   novaCor === cor ? "ring-2 ring-offset-2 scale-110" : "hover:scale-110"
                 }`}
                 style={{ backgroundColor: cor }}
@@ -332,7 +332,7 @@ export function ModalCriarQuadro({
         <button
           onClick={handleCriar}
           disabled={!novoNome.trim() || !novoWorkspaceId}
-          className="w-full py-4 text-[15px] font-bold text-white rounded-[20px] transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+          className="w-full py-4 text-[15px] font-bold text-white rounded-[var(--tf-radius-lg)] transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
           style={{ background: "var(--tf-accent)" }}
         >
           Criar Sprint

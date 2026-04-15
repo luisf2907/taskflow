@@ -27,7 +27,7 @@ export function ModalConfirmExcluirWs({
       <div className="flex gap-2 justify-end">
         <button
           onClick={onFechar}
-          className="px-4 py-2 text-[13px] font-medium rounded-[10px]"
+          className="px-4 py-2 text-[13px] font-medium rounded-[var(--tf-radius-xs)]"
           style={{
             color: "var(--tf-text-secondary)",
             background: "var(--tf-bg-secondary)",
@@ -40,7 +40,7 @@ export function ModalConfirmExcluirWs({
             await onConfirmar(workspaceId);
             onFechar();
           }}
-          className="px-4 py-2 text-[13px] font-bold text-white rounded-[10px]"
+          className="px-4 py-2 text-[13px] font-bold text-white rounded-[var(--tf-radius-xs)]"
           style={{ background: "var(--tf-danger)" }}
         >
           Sim, excluir

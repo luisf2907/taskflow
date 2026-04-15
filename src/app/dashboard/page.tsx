@@ -215,7 +215,7 @@ export default function PaginaInicial() {
       <div className="flex-1 flex flex-col overflow-hidden px-2 lg:px-4">
         <Header onMenuMobile={toggleSidebar} />
 
-        <div className="flex-1 rounded-[32px] mb-4 overflow-hidden flex flex-col scroll-clip-lg" style={{ background: "var(--tf-surface)" }}>
+        <div className="flex-1 mb-4 overflow-hidden flex flex-col scroll-clip-lg" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", borderRadius: "var(--tf-radius-xl)" }}>
         <main
           id="main-content"
           className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col xl:flex-row gap-8"
@@ -227,12 +227,20 @@ export default function PaginaInicial() {
                 {/* Hero skeleton */}
                 <div className="flex items-center gap-3">
                   <div
-                    className="h-8 w-32 rounded-full"
-                    style={{ background: "var(--tf-bg-secondary)" }}
+                    className="h-7 w-32"
+                    style={{
+                      background: "var(--tf-bg-secondary)",
+                      border: "1px solid var(--tf-border)",
+                      borderRadius: "var(--tf-radius-xs)",
+                    }}
                   />
                   <div
-                    className="h-8 w-24 rounded-full"
-                    style={{ background: "var(--tf-bg-secondary)" }}
+                    className="h-7 w-24"
+                    style={{
+                      background: "var(--tf-bg-secondary)",
+                      border: "1px solid var(--tf-border)",
+                      borderRadius: "var(--tf-radius-xs)",
+                    }}
                   />
                 </div>
                 {/* Cards skeleton */}
@@ -240,8 +248,8 @@ export default function PaginaInicial() {
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="rounded-[32px] h-[150px] min-w-[260px] flex-shrink-0"
-                      style={{ background: "var(--tf-bg-secondary)" }}
+                      className="h-[140px] min-w-[240px] flex-shrink-0"
+                      style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", borderRadius: "var(--tf-radius-md)" }}
                     />
                   ))}
                 </div>
@@ -250,8 +258,8 @@ export default function PaginaInicial() {
                   {[1, 2].map((i) => (
                     <div
                       key={i}
-                      className="rounded-[32px] h-[220px]"
-                      style={{ background: "var(--tf-bg-secondary)" }}
+                      className="h-[200px]"
+                      style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", borderRadius: "var(--tf-radius-md)" }}
                     />
                   ))}
                 </div>
@@ -259,64 +267,97 @@ export default function PaginaInicial() {
             ) : (
               <>
                 {/* ── HERO SECTION & INSIGHTS ── */}
-                <div className="flex flex-col mb-10 md:mb-14">
-                  <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-6">
-                    <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-col mb-8 md:mb-10">
+                  <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <div
-                        className="px-3.5 py-1.5 rounded-full text-[12px] font-black tracking-wide flex items-center gap-1.5"
+                        className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[0.6875rem] font-medium"
                         style={{
                           background: "var(--tf-accent-light)",
-                          color: "var(--tf-accent)",
+                          color: "var(--tf-accent-text)",
+                          border: "1px solid var(--tf-accent)",
+                          borderRadius: "var(--tf-radius-xs)",
+                          fontFamily: "var(--tf-font-mono)",
+                          letterSpacing: "0.02em",
+                          textTransform: "uppercase",
                         }}
                       >
-                        <Activity size={14} />
-                        {quadros.length} Sprints Ativas
+                        <Activity size={11} strokeWidth={1.75} />
+                        {quadros.length} sprints ativas
                       </div>
                       {tasksDoneToday > 0 && (
-                        <div className="px-3.5 py-1.5 rounded-full text-[12px] font-black tracking-wide flex items-center gap-1.5 bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400">
-                          <Flame size={14} />
-                          {tasksDoneToday} Concluídas Hoje
+                        <div
+                          className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[0.6875rem] font-medium"
+                          style={{
+                            background: "var(--tf-warning-bg)",
+                            color: "var(--tf-warning)",
+                            border: "1px solid var(--tf-warning)",
+                            borderRadius: "var(--tf-radius-xs)",
+                            fontFamily: "var(--tf-font-mono)",
+                            letterSpacing: "0.02em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          <Flame size={11} strokeWidth={1.75} />
+                          {tasksDoneToday} concluídas hoje
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         onClick={() => setModalWorkspace(true)}
-                        className="flex items-center gap-2 justify-center px-5 py-3.5 text-[14px] font-bold rounded-[20px] transition-all"
+                        className="inline-flex items-center gap-1.5 h-9 px-3 text-[0.75rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
                         style={{
-                          background: "var(--tf-bg-secondary)",
-                          color: "var(--tf-text)",
+                          background: "var(--tf-surface)",
+                          color: "var(--tf-text-secondary)",
+                          border: "1px solid var(--tf-border)",
+                          borderRadius: "var(--tf-radius-xs)",
+                          fontFamily: "var(--tf-font-mono)",
+                          letterSpacing: "0.04em",
+                          textTransform: "uppercase",
                         }}
                       >
-                        <Layers size={18} />
+                        <Layers size={13} strokeWidth={1.75} />
                         Workspace
                       </button>
                       <button
                         onClick={() => abrirModalCriarQuadro()}
-                        className="flex items-center gap-2 justify-center px-6 py-3.5 text-[14px] font-bold rounded-[20px] transition-all hover:-translate-y-0.5"
+                        className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[0.8125rem] font-medium transition-colors hover:brightness-110"
                         style={{
                           background: "var(--tf-accent)",
                           color: "white",
+                          border: "1px solid var(--tf-accent)",
+                          borderRadius: "var(--tf-radius-xs)",
+                          letterSpacing: "-0.005em",
                         }}
                       >
-                        <Plus size={18} strokeWidth={2.5} />
-                        Nova Sprint
+                        <Plus size={14} strokeWidth={2} />
+                        Nova sprint
                       </button>
                     </div>
                   </div>
 
                   {/* Context and Titles */}
                   <div>
+                    <p className="label-mono mb-2" style={{ color: "var(--tf-text-tertiary)" }}>
+                      {saudacao()}
+                    </p>
                     <h1
-                      className="text-4xl lg:text-[44px] leading-tight font-black tracking-tight"
-                      style={{ color: "var(--tf-text)" }}
+                      className="text-[2.25rem] lg:text-[2.75rem] leading-tight font-semibold"
+                      style={{
+                        color: "var(--tf-text)",
+                        letterSpacing: "-0.03em",
+                      }}
                     >
-                      {saudacao()},<br className="xl:hidden" /> {nomeUsuario}.
+                      Olá, {nomeUsuario}.
                     </h1>
                     <p
-                      className="text-base mt-3 font-bold"
-                      style={{ color: "var(--tf-text-secondary)" }}
+                      className="text-[0.875rem] mt-2"
+                      style={{
+                        color: "var(--tf-text-secondary)",
+                        letterSpacing: "-0.005em",
+                      }}
                     >
                       Seu espaço de trabalho está focado e produtivo.
                     </p>
@@ -326,51 +367,68 @@ export default function PaginaInicial() {
                 {/* Empty State Geral */}
                 {quadros.length === 0 && workspaces.length === 0 && (
                   <div
-                    className="flex flex-col justify-center items-center text-center py-20 px-6 rounded-[32px] border-2 border-dashed mx-auto w-full max-w-2xl"
+                    className="flex flex-col justify-center items-center text-center py-14 px-6 mx-auto w-full max-w-xl"
                     style={{
-                      borderColor: "var(--tf-border)",
+                      border: "1px dashed var(--tf-border-strong)",
                       background: "var(--tf-bg-secondary)",
+                      borderRadius: "var(--tf-radius-md)",
                     }}
                   >
                     <div
-                      className="w-24 h-24 rounded-[32px] flex items-center justify-center mb-6 transform hover:scale-110 transition-transform"
-                      style={{ background: "var(--tf-surface)" }}
+                      className="w-12 h-12 flex items-center justify-center mb-4"
+                      style={{
+                        background: "var(--tf-surface)",
+                        border: "1px solid var(--tf-border)",
+                        borderRadius: "var(--tf-radius-sm)",
+                        color: "var(--tf-accent)",
+                      }}
                     >
-                      <Sparkles
-                        size={40}
-                        style={{ color: "var(--tf-accent)" }}
-                      />
+                      <Sparkles size={22} strokeWidth={1.75} />
                     </div>
+                    <p className="label-mono mb-1" style={{ color: "var(--tf-text-tertiary)" }}>
+                      Começo do zero
+                    </p>
                     <h2
-                      className="text-3xl font-black mb-3 tracking-tight"
-                      style={{ color: "var(--tf-text)" }}
+                      className="text-[1.375rem] font-semibold mb-2"
+                      style={{ color: "var(--tf-text)", letterSpacing: "-0.015em" }}
                     >
-                      O palco está vazio!
+                      O palco está vazio
                     </h2>
                     <p
-                      className="text-base mb-8 max-w-md font-medium"
-                      style={{ color: "var(--tf-text-secondary)" }}
+                      className="text-[0.8125rem] mb-6 max-w-md"
+                      style={{
+                        color: "var(--tf-text-secondary)",
+                        letterSpacing: "-0.005em",
+                      }}
                     >
                       Comece sua jornada criando seu primeiro grande projeto ou
                       uma sprint rápida. O que vamos construir hoje?
                     </p>
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-2">
                       <button
                         onClick={() => setModalWorkspace(true)}
-                        className="px-8 py-3.5 font-bold rounded-[20px] hover:-translate-y-1 transition-transform w-full sm:w-auto text-white"
-                        style={{ background: "var(--tf-accent)" }}
+                        className="h-10 px-4 text-[0.8125rem] font-medium text-white transition-colors hover:brightness-110 w-full sm:w-auto"
+                        style={{
+                          background: "var(--tf-accent)",
+                          border: "1px solid var(--tf-accent)",
+                          borderRadius: "var(--tf-radius-xs)",
+                          letterSpacing: "-0.005em",
+                        }}
                       >
-                        Criar Workspace
+                        Criar workspace
                       </button>
                       <button
                         onClick={() => abrirModalCriarQuadro()}
-                        className="px-8 py-3.5 font-bold rounded-[20px] transition-all hover:bg-black/5 w-full sm:w-auto"
+                        className="h-10 px-4 text-[0.8125rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)] w-full sm:w-auto"
                         style={{
                           color: "var(--tf-text)",
-                          border: "2px solid var(--tf-border)",
+                          border: "1px solid var(--tf-border-strong)",
+                          borderRadius: "var(--tf-radius-xs)",
+                          background: "var(--tf-surface)",
+                          letterSpacing: "-0.005em",
                         }}
                       >
-                        Quadro Avulso
+                        Quadro avulso
                       </button>
                     </div>
                   </div>
@@ -380,10 +438,10 @@ export default function PaginaInicial() {
                 {recentes.length > 0 && (
                   <section className="mb-8">
                     <h2
-                      className="text-[19px] font-black tracking-tight mb-5 flex items-center gap-2"
-                      style={{ color: "var(--tf-text)" }}
+                      className="label-mono mb-4 flex items-center gap-2"
+                      style={{ color: "var(--tf-text-secondary)" }}
                     >
-                      Acessados Recentemente
+                      Acessados recentemente
                     </h2>
 
                     {/* Scroll Horizontal */}
@@ -402,10 +460,10 @@ export default function PaginaInicial() {
                 {workspaces.length > 0 && (
                   <section className="mb-8">
                     <h2
-                      className="text-[19px] font-black tracking-tight mb-6"
-                      style={{ color: "var(--tf-text)" }}
+                      className="label-mono mb-4"
+                      style={{ color: "var(--tf-text-secondary)" }}
                     >
-                      Seus Projetos
+                      Seus projetos
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
                       {workspaces.map((ws) => (
@@ -426,10 +484,10 @@ export default function PaginaInicial() {
                 {quadrosAvulsos.length > 0 && (
                   <section>
                     <h2
-                      className="text-[19px] font-black tracking-tight mb-2 flex items-center gap-2"
-                      style={{ color: "var(--tf-text)" }}
+                      className="label-mono mb-3 flex items-center gap-2"
+                      style={{ color: "var(--tf-text-secondary)" }}
                     >
-                      <Grid3X3 size={20} /> Quadros Soltos
+                      <Grid3X3 size={12} strokeWidth={1.75} /> Quadros soltos
                     </h2>
                     <div
                       className="flex overflow-x-auto gap-4 pt-3 pb-3 snap-x no-scrollbar scroll-pl-4 -mx-4 px-4"
@@ -441,27 +499,40 @@ export default function PaginaInicial() {
 
                       <button
                         onClick={() => abrirModalCriarQuadro()}
-                        className="rounded-[32px] h-[150px] min-w-[260px] flex flex-col items-center justify-center text-[15px] border-[3px] border-dashed transition-all hover:border-solid hover:-translate-y-1 group snap-start"
+                        className="h-[140px] min-w-[240px] flex flex-col items-center justify-center gap-2 transition-colors group snap-start"
                         style={{
-                          borderColor: "var(--tf-border)",
+                          border: "1px dashed var(--tf-border-strong)",
                           background: "var(--tf-bg-secondary)",
+                          borderRadius: "var(--tf-radius-md)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = "var(--tf-accent)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = "var(--tf-border-strong)";
                         }}
                       >
                         <div
-                          className="w-12 h-12 rounded-[20px] flex items-center justify-center mb-3 transition-transform group-hover:scale-110"
-                          style={{ background: "var(--tf-surface)" }}
+                          className="w-9 h-9 flex items-center justify-center transition-colors"
+                          style={{
+                            background: "var(--tf-surface)",
+                            border: "1px solid var(--tf-border)",
+                            borderRadius: "var(--tf-radius-xs)",
+                            color: "var(--tf-text-tertiary)",
+                          }}
                         >
-                          <Plus
-                            size={24}
-                            style={{ color: "var(--tf-text-secondary)" }}
-                            strokeWidth={3}
-                          />
+                          <Plus size={16} strokeWidth={1.75} />
                         </div>
                         <span
-                          className="font-extrabold tracking-tight"
-                          style={{ color: "var(--tf-text)" }}
+                          className="text-[0.6875rem] font-medium"
+                          style={{
+                            color: "var(--tf-text-secondary)",
+                            fontFamily: "var(--tf-font-mono)",
+                            letterSpacing: "0.04em",
+                            textTransform: "uppercase",
+                          }}
                         >
-                          Nova Sprint
+                          Nova sprint
                         </span>
                       </button>
                     </div>
@@ -482,61 +553,65 @@ export default function PaginaInicial() {
               background: "var(--tf-bg-secondary)/30",
             }}
           >
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <h2
-                className="text-[19px] font-black tracking-tight"
-                style={{ color: "var(--tf-text)" }}
+                className="label-mono flex items-center gap-2"
+                style={{ color: "var(--tf-text-secondary)" }}
               >
-                Minhas Tarefas
+                <Target size={11} strokeWidth={1.75} />
+                Minhas tarefas
               </h2>
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ background: "var(--tf-surface)" }}
-              >
-                <Target
-                  size={14}
-                  style={{ color: "var(--tf-text-tertiary)" }}
-                />
-              </div>
             </div>
 
             {loadingMetrics ? (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="w-full h-[64px] rounded-[14px] animate-pulse"
-                    style={{ background: "var(--tf-bg-secondary)" }}
+                    className="w-full h-[56px] animate-pulse"
+                    style={{
+                      background: "var(--tf-bg-secondary)",
+                      border: "1px solid var(--tf-border)",
+                      borderRadius: "var(--tf-radius-xs)",
+                    }}
                   />
                 ))}
               </div>
             ) : recentTasks.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {recentTasks.map((task) => (
                   <TaskLineItem key={task.id} task={task} />
                 ))}
                 <p
-                  className="text-center text-[11px] font-bold uppercase tracking-widest mt-6"
+                  className="label-mono text-center mt-5"
                   style={{ color: "var(--tf-text-tertiary)" }}
                 >
-                  Atividades Recentes
+                  Atividades recentes
                 </p>
               </div>
             ) : (
               <div
-                className="text-center py-12 px-4 rounded-[20px] border-2 border-dashed"
-                style={{ borderColor: "var(--tf-border)" }}
+                className="text-center py-10 px-4"
+                style={{
+                  border: "1px dashed var(--tf-border-strong)",
+                  borderRadius: "var(--tf-radius-md)",
+                }}
               >
                 <CheckCircle2
-                  size={32}
-                  className="mx-auto mb-3 opacity-30"
-                  style={{ color: "var(--tf-text-secondary)" }}
+                  size={24}
+                  strokeWidth={1.5}
+                  className="mx-auto mb-2"
+                  style={{ color: "var(--tf-border-strong)" }}
                 />
                 <p
-                  className="text-[13px] font-bold"
-                  style={{ color: "var(--tf-text-secondary)" }}
+                  className="text-[0.75rem]"
+                  style={{
+                    color: "var(--tf-text-tertiary)",
+                    fontFamily: "var(--tf-font-mono)",
+                    letterSpacing: "0.02em",
+                  }}
                 >
-                  Nenhuma tarefa pendente!
+                  Nenhuma tarefa pendente
                 </p>
               </div>
             )}

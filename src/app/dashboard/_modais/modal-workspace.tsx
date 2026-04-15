@@ -90,11 +90,11 @@ export function ModalWorkspace({
     >
       <div className="space-y-5">
         <div
-          className="flex items-center gap-4 p-5 rounded-[20px]"
+          className="flex items-center gap-4 p-5 rounded-[var(--tf-radius-lg)]"
           style={{ background: "var(--tf-bg-secondary)" }}
         >
           <div
-            className="w-14 h-14 rounded-[14px] flex items-center justify-center shrink-0"
+            className="w-14 h-14 rounded-[var(--tf-radius-md)] flex items-center justify-center shrink-0"
             style={{ background: wsCor }}
           >
             <Folder size={24} className="text-white" />
@@ -133,10 +133,10 @@ export function ModalWorkspace({
                 else handleCriar();
               }
             }}
-            className="w-full px-5 py-3.5 text-[15px] font-medium rounded-[20px] outline-none transition-all"
+            className="w-full px-5 py-3.5 text-[15px] font-medium rounded-[var(--tf-radius-lg)] outline-none transition-all"
             style={{
               background: "var(--tf-surface)",
-              border: "2px solid var(--tf-border)",
+              border: "1px solid var(--tf-border)",
               color: "var(--tf-text)",
             }}
             onFocus={(e) =>
@@ -160,10 +160,10 @@ export function ModalWorkspace({
             value={wsDescricao}
             onChange={(e) => setWsDescricao(e.target.value)}
             placeholder="Ex: Projetos da equipe de marketing"
-            className="w-full px-5 py-3.5 text-[15px] font-medium rounded-[20px] outline-none transition-all"
+            className="w-full px-5 py-3.5 text-[15px] font-medium rounded-[var(--tf-radius-lg)] outline-none transition-all"
             style={{
               background: "var(--tf-surface)",
-              border: "2px solid var(--tf-border)",
+              border: "1px solid var(--tf-border)",
               color: "var(--tf-text)",
             }}
             onFocus={(e) =>
@@ -187,7 +187,7 @@ export function ModalWorkspace({
               <button
                 key={cor}
                 onClick={() => setWsCor(cor)}
-                className={`w-10 h-10 rounded-[14px] transition-all ${
+                className={`w-10 h-10 rounded-[var(--tf-radius-md)] transition-all ${
                   wsCor === cor ? "ring-2 ring-offset-2 scale-110" : "hover:scale-110"
                 }`}
                 style={{ backgroundColor: cor }}
@@ -199,7 +199,7 @@ export function ModalWorkspace({
         <button
           onClick={editando ? handleSalvar : handleCriar}
           disabled={!wsNome.trim()}
-          className="w-full py-4 text-[15px] font-bold text-white rounded-[20px] transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+          className="w-full py-4 text-[15px] font-bold text-white rounded-[var(--tf-radius-lg)] transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
           style={{ background: "var(--tf-accent)" }}
         >
           {editando ? "Salvar Workspace" : "Criar Workspace"}
