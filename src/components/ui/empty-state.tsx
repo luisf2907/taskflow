@@ -12,33 +12,51 @@ interface EmptyStateProps {
 
 export function EmptyState({ icone: Icone, titulo, descricao, acaoLabel, onAcao }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+    <div className="flex flex-col items-center justify-center py-16 gap-3.5 text-center">
       <div
-        className="w-16 h-16 rounded-[20px] flex items-center justify-center"
-        style={{ background: "var(--tf-bg-secondary)" }}
+        className="w-12 h-12 flex items-center justify-center"
+        style={{
+          background: "var(--tf-surface)",
+          border: "1px solid var(--tf-border)",
+          borderRadius: "var(--tf-radius-sm)",
+          color: "var(--tf-text-tertiary)",
+        }}
       >
-        <Icone size={28} style={{ color: "var(--tf-text-tertiary)" }} />
+        <Icone size={22} strokeWidth={1.75} />
       </div>
 
-      <h3
-        className="text-[17px] font-bold"
-        style={{ color: "var(--tf-text)" }}
-      >
-        {titulo}
-      </h3>
+      <div className="flex flex-col gap-1.5">
+        <span
+          className="label-mono"
+          style={{ color: "var(--tf-text-tertiary)" }}
+        >
+          Nada por aqui
+        </span>
 
-      <p
-        className="text-[14px] max-w-sm"
-        style={{ color: "var(--tf-text-secondary)" }}
-      >
-        {descricao}
-      </p>
+        <h3
+          className="text-[1.0625rem] font-semibold"
+          style={{ color: "var(--tf-text)", letterSpacing: "-0.01em" }}
+        >
+          {titulo}
+        </h3>
+
+        <p
+          className="text-[0.8125rem] max-w-sm mx-auto"
+          style={{ color: "var(--tf-text-secondary)" }}
+        >
+          {descricao}
+        </p>
+      </div>
 
       {acaoLabel && onAcao && (
         <button
           onClick={onAcao}
-          className="px-6 py-3 rounded-[14px] text-[14px] font-bold text-white hover:-translate-y-0.5 transition-all mt-2"
-          style={{ background: "var(--tf-accent)" }}
+          className="mt-1 h-9 px-4 text-[0.8125rem] font-medium text-white transition-smooth hover:brightness-110"
+          style={{
+            background: "var(--tf-accent)",
+            border: "1px solid var(--tf-accent)",
+            borderRadius: "var(--tf-radius-sm)",
+          }}
         >
           {acaoLabel}
         </button>

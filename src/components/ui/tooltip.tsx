@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { useState, useRef } from "react";
 
 interface TooltipProps {
@@ -9,7 +10,7 @@ interface TooltipProps {
   delay?: number;
 }
 
-export function Tooltip({ content, children, position = "top", delay = 400 }: TooltipProps) {
+export function Tooltip({ content, children, position = "top", delay = 300 }: TooltipProps) {
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -23,11 +24,19 @@ export function Tooltip({ content, children, position = "top", delay = 400 }: To
     setVisible(false);
   }
 
-  const positionClasses = {
-    top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
-    bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
-    left: "right-full top-1/2 -translate-y-1/2 mr-2",
-    right: "left-full top-1/2 -translate-y-1/2 ml-2",
+  // Posicionamento via classes pra centralizar; animação interna via motion.
+  const wrapperClasses = {
+    top: "bottom-full left-1/2 -translate-x-1/2 mb-1.5",
+    bottom: "top-full left-1/2 -translate-x-1/2 mt-1.5",
+    left: "right-full top-1/2 -translate-y-1/2 mr-1.5",
+    right: "left-full top-1/2 -translate-y-1/2 ml-1.5",
+  };
+
+  const enterOffset = {
+    top: { y: 4 },
+    bottom: { y: -4 },
+    left: { x: 4 },
+    right: { x: -4 },
   };
 
   return (
@@ -39,26 +48,36 @@ export function Tooltip({ content, children, position = "top", delay = 400 }: To
       onBlur={hide}
     >
       {children}
-      {visible && (
-        <span
-          role="tooltip"
-          className={`absolute z-[200] pointer-events-none whitespace-nowrap text-[11px] font-semibold px-2.5 py-1.5 rounded-[8px] ${positionClasses[position]}`}
-          style={{
-            background: "var(--tf-text)",
-            color: "var(--tf-bg)",
-            boxShadow: "var(--tf-shadow-md)",
-            animation: "tooltipFadeIn 150ms ease-out forwards",
-          }}
-        >
-          {content}
-          <style>{`
-            @keyframes tooltipFadeIn {
-              from { opacity: 0; transform: translate(-50%, ${position === "top" ? "4px" : position === "bottom" ? "-4px" : "0"}); }
-              to { opacity: 1; transform: translate(-50%, 0); }
-            }
-          `}</style>
-        </span>
-      )}
+      <AnimatePresence>
+        {visible && (
+          <span
+            className={`absolute z-[200] pointer-events-none ${wrapperClasses[position]}`}
+          >
+            <motion.span
+              role="tooltip"
+              initial={{ opacity: 0, ...enterOffset[position] }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              exit={{ opacity: 0, ...enterOffset[position] }}
+              transition={{ duration: 0.12, ease: [0.32, 0.72, 0, 1] }}
+              className="block whitespace-nowrap"
+              style={{
+                background: "var(--tf-surface-raised)",
+                color: "var(--tf-text)",
+                border: "1px solid var(--tf-border)",
+                borderRadius: "var(--tf-radius-xs)",
+                padding: "4px 8px",
+                fontSize: "0.6875rem",
+                fontFamily: "var(--tf-font-mono)",
+                letterSpacing: "0.02em",
+                fontWeight: 500,
+                boxShadow: "var(--tf-shadow-md)",
+              }}
+            >
+              {content}
+            </motion.span>
+          </span>
+        )}
+      </AnimatePresence>
     </span>
   );
 }

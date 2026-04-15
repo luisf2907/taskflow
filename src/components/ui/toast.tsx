@@ -2,6 +2,8 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { springSoft } from "@/lib/motion/presets";
 
 const icons = {
   success: CheckCircle2,
@@ -10,67 +12,62 @@ const icons = {
 };
 
 const colors = {
-  success: { icon: "var(--tf-success)", bg: "var(--tf-success-bg)" },
-  error: { icon: "var(--tf-danger)", bg: "var(--tf-danger-bg)" },
-  info: { icon: "var(--tf-accent)", bg: "var(--tf-accent-light)" },
+  success: { icon: "var(--tf-success)", border: "var(--tf-success)" },
+  error: { icon: "var(--tf-danger)", border: "var(--tf-danger)" },
+  info: { icon: "var(--tf-accent)", border: "var(--tf-accent)" },
 };
 
 export function ToastContainer() {
   const { toasts, remove } = useToast();
 
-  if (toasts.length === 0) return null;
-
   return (
     <div
       role="alert"
       aria-live="polite"
-      className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2.5"
+      className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"
       style={{ maxWidth: 380 }}
     >
-      {toasts.map((t) => {
-        const Icon = icons[t.type];
-        const color = colors[t.type];
+      <AnimatePresence mode="popLayout">
+        {toasts.map((t) => {
+          const Icon = icons[t.type];
+          const color = colors[t.type];
 
-        return (
-          <div
-            key={t.id}
-            className="flex items-start gap-3 px-4 py-3.5 rounded-[14px] border animate-in"
-            style={{
-              background: "var(--tf-surface)",
-              borderColor: "var(--tf-border)",
-              boxShadow: "var(--tf-shadow-md)",
-              animation: "toast-in 300ms cubic-bezier(0.25, 1, 0.5, 1)",
-            }}
-          >
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-              style={{ background: color.bg }}
+          return (
+            <motion.div
+              key={t.id}
+              layout
+              initial={{ opacity: 0, x: 32, scale: 0.96 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 32, scale: 0.96, transition: { duration: 0.15 } }}
+              transition={springSoft}
+              className="flex items-start gap-3 px-3.5 py-3 pointer-events-auto"
+              style={{
+                background: "var(--tf-surface-raised)",
+                border: "1px solid var(--tf-border)",
+                borderLeft: `2px solid ${color.border}`,
+                borderRadius: "var(--tf-radius-md)",
+                boxShadow: "var(--tf-shadow-lg)",
+              }}
             >
-              <Icon size={14} style={{ color: color.icon }} strokeWidth={2.5} />
-            </div>
-            <p
-              className="text-[13px] font-medium flex-1 leading-relaxed pt-1"
-              style={{ color: "var(--tf-text)" }}
-            >
-              {t.message}
-            </p>
-            <button
-              onClick={() => remove(t.id)}
-              className="p-1 rounded-[4px] shrink-0 mt-0.5 hover:bg-[var(--tf-surface-hover)]"
-              style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
-            >
-              <X size={12} />
-            </button>
-          </div>
-        );
-      })}
-
-      <style>{`
-        @keyframes toast-in {
-          from { opacity: 0; transform: translateY(12px) scale(0.96); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
+              <Icon size={14} style={{ color: color.icon }} strokeWidth={2.25} className="mt-0.5 shrink-0" />
+              <p
+                className="text-[0.8125rem] flex-1 leading-snug"
+                style={{ color: "var(--tf-text)" }}
+              >
+                {t.message}
+              </p>
+              <button
+                onClick={() => remove(t.id)}
+                aria-label="Fechar"
+                className="p-0.5 shrink-0 mt-0.5 transition-colors hover:text-[var(--tf-text)]"
+                style={{ color: "var(--tf-text-tertiary)" }}
+              >
+                <X size={12} />
+              </button>
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
     </div>
   );
 }

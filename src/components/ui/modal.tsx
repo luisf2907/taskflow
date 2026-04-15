@@ -2,7 +2,9 @@
 
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef } from "react";
+import { fadeOnly, scaleIn } from "@/lib/motion/presets";
 
 interface ModalProps {
   aberto: boolean;
@@ -49,7 +51,6 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
     [onFechar]
   );
 
-  // Register keyboard handler
   useEffect(() => {
     if (aberto) {
       document.addEventListener("keydown", handleKeyDown);
@@ -61,7 +62,6 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
     };
   }, [aberto, handleKeyDown]);
 
-  // Auto-focus only on initial open (not on re-renders)
   useEffect(() => {
     if (aberto) {
       requestAnimationFrame(() => {
@@ -71,49 +71,76 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
         firstFocusable?.focus();
       });
     }
-     
   }, [aberto]);
 
-  if (!aberto) return null;
-
   return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-start justify-center py-[5vh] bg-black/50 backdrop-blur-sm overflow-y-auto"
-      onMouseDown={(e) => { if (e.target === overlayRef.current) onFechar(); }}
-    >
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={titulo || "Modal"}
-        className={cn("rounded-[32px] w-full max-w-lg mx-4 border my-auto", className)}
-        style={{
-          background: "var(--tf-surface)",
-          borderColor: "var(--tf-border)",
-          maxHeight: "90vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {titulo && (
-          <div
-            className="flex items-center justify-between px-6 py-4 border-b shrink-0"
-            style={{ borderColor: "var(--tf-border)" }}
+    <AnimatePresence>
+      {aberto && (
+        <motion.div
+          ref={overlayRef}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          variants={fadeOnly}
+          className="fixed inset-0 z-50 flex items-start justify-center py-[5vh] overflow-y-auto"
+          style={{
+            background: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+          }}
+          onMouseDown={(e) => {
+            if (e.target === overlayRef.current) onFechar();
+          }}
+        >
+          <motion.div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={titulo || "Modal"}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={scaleIn}
+            className={cn(
+              "w-full max-w-lg mx-4 my-auto rounded-[var(--tf-radius-lg)] border",
+              className
+            )}
+            style={{
+              background: "var(--tf-surface)",
+              borderColor: "var(--tf-border)",
+              boxShadow: "var(--tf-shadow-lg)",
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+            }}
           >
-            <h2 className="text-base font-semibold" style={{ color: "var(--tf-text)" }}>{titulo}</h2>
-            <button
-              onClick={onFechar}
-              aria-label="Fechar modal"
-              className="p-1 rounded-[8px] transition-smooth"
-              style={{ color: "var(--tf-text-tertiary)" }}
-            >
-              <X size={18} />
-            </button>
-          </div>
-        )}
-        <div className="p-6 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>{children}</div>
-      </div>
-    </div>
+            {titulo && (
+              <div
+                className="flex items-center justify-between px-5 py-3.5 border-b shrink-0"
+                style={{ borderColor: "var(--tf-border)" }}
+              >
+                <h2
+                  className="text-[0.9375rem] font-semibold"
+                  style={{ color: "var(--tf-text)", letterSpacing: "-0.01em" }}
+                >
+                  {titulo}
+                </h2>
+                <button
+                  onClick={onFechar}
+                  aria-label="Fechar modal"
+                  className="p-1 rounded-[var(--tf-radius-xs)] transition-smooth hover:bg-[var(--tf-surface-hover)]"
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+            <div className="p-5 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+              {children}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

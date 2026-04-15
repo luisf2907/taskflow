@@ -1,7 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "motion/react";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { scaleIn } from "@/lib/motion/presets";
 
 const DropdownContext = createContext<(() => void) | undefined>(undefined);
 
@@ -25,50 +27,52 @@ export function Dropdown({ trigger, children, className, closeOnClick = true }: 
     return () => document.removeEventListener("mousedown", handleClickFora);
   }, []);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (!aberto) {
-      if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
-        e.preventDefault();
-        setAberto(true);
-        // Focus first item after opening
-        setTimeout(() => {
-          const items = menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
-          items?.[0]?.focus();
-        }, 0);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!aberto) {
+        if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+          e.preventDefault();
+          setAberto(true);
+          setTimeout(() => {
+            const items = menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+            items?.[0]?.focus();
+          }, 0);
+        }
+        return;
       }
-      return;
-    }
 
-    const items = menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
-    if (!items?.length) return;
+      const items = menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+      if (!items?.length) return;
 
-    const current = document.activeElement as HTMLElement;
-    const idx = Array.from(items).indexOf(current as HTMLButtonElement);
+      const current = document.activeElement as HTMLElement;
+      const idx = Array.from(items).indexOf(current as HTMLButtonElement);
 
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        items[(idx + 1) % items.length]?.focus();
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        items[(idx - 1 + items.length) % items.length]?.focus();
-        break;
-      case "Escape":
-        e.preventDefault();
-        setAberto(false);
-        (ref.current?.querySelector('[aria-haspopup]') as HTMLElement)?.focus();
-        break;
-      case "Home":
-        e.preventDefault();
-        items[0]?.focus();
-        break;
-      case "End":
-        e.preventDefault();
-        items[items.length - 1]?.focus();
-        break;
-    }
-  }, [aberto]);
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          items[(idx + 1) % items.length]?.focus();
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          items[(idx - 1 + items.length) % items.length]?.focus();
+          break;
+        case "Escape":
+          e.preventDefault();
+          setAberto(false);
+          (ref.current?.querySelector("[aria-haspopup]") as HTMLElement)?.focus();
+          break;
+        case "Home":
+          e.preventDefault();
+          items[0]?.focus();
+          break;
+        case "End":
+          e.preventDefault();
+          items[items.length - 1]?.focus();
+          break;
+      }
+    },
+    [aberto]
+  );
 
   return (
     <div ref={ref} className="relative" onKeyDown={handleKeyDown}>
@@ -93,18 +97,33 @@ export function Dropdown({ trigger, children, className, closeOnClick = true }: 
       >
         {trigger}
       </div>
-      {aberto && (
-        <div
-          ref={menuRef}
-          role="menu"
-          className={cn("absolute right-0 mt-1 min-w-[180px] rounded-[14px] py-1.5 z-50 border", className)}
-          style={{ background: "var(--tf-surface-raised)", borderColor: "var(--tf-border)" }}
-        >
-          <DropdownContext.Provider value={closeOnClick ? () => setAberto(false) : undefined}>
-            {children}
-          </DropdownContext.Provider>
-        </div>
-      )}
+      <AnimatePresence>
+        {aberto && (
+          <motion.div
+            ref={menuRef}
+            role="menu"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={scaleIn}
+            className={cn(
+              "absolute right-0 mt-1 min-w-[200px] py-1 z-50 border",
+              "rounded-[var(--tf-radius-md)]",
+              className
+            )}
+            style={{
+              background: "var(--tf-surface-raised)",
+              borderColor: "var(--tf-border)",
+              boxShadow: "var(--tf-shadow-md)",
+              transformOrigin: "top right",
+            }}
+          >
+            <DropdownContext.Provider value={closeOnClick ? () => setAberto(false) : undefined}>
+              {children}
+            </DropdownContext.Provider>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -122,18 +141,26 @@ export function DropdownItem({ children, onClick, perigo, className }: DropdownI
     <button
       role="menuitem"
       tabIndex={-1}
-      onClick={() => { onClick?.(); closeDropdown?.(); }}
+      onClick={() => {
+        onClick?.();
+        closeDropdown?.();
+      }}
       className={cn(
-        "w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-smooth rounded-[8px] mx-1 outline-none",
+        "w-full flex items-center gap-2.5 px-2.5 py-1.5 text-[0.8125rem] transition-smooth outline-none",
+        "rounded-[var(--tf-radius-xs)] mx-1",
         className
       )}
       style={{
         color: perigo ? "var(--tf-danger)" : "var(--tf-text)",
         width: "calc(100% - 8px)",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = perigo ? "var(--tf-danger-bg)" : "var(--tf-surface-hover)")}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.background = perigo ? "var(--tf-danger-bg)" : "var(--tf-surface-hover)")
+      }
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-      onFocus={(e) => (e.currentTarget.style.background = perigo ? "var(--tf-danger-bg)" : "var(--tf-surface-hover)")}
+      onFocus={(e) =>
+        (e.currentTarget.style.background = perigo ? "var(--tf-danger-bg)" : "var(--tf-surface-hover)")
+      }
       onBlur={(e) => (e.currentTarget.style.background = "transparent")}
     >
       {children}
