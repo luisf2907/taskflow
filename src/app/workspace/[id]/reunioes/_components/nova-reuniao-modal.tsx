@@ -13,6 +13,7 @@ import {
 
 import { Modal } from "@/components/ui/modal";
 import { AudioPlayer } from "@/components/ui/audio-player";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { toast } from "@/hooks/use-toast";
 import { useRecording } from "@/hooks/use-recording";
 
@@ -345,44 +346,19 @@ export function NovaReuniaoModal({
 
         {/* Tabs upload/record — só quando idle */}
         {viewState === "idle" && (
-          <div
-            className="flex p-0.5"
-            style={{
-              background: "var(--tf-bg-secondary)",
-              border: "1px solid var(--tf-border)",
-              borderRadius: "var(--tf-radius-xs)",
-            }}
-          >
-            {(
-              [
-                { id: "upload" as const, label: "Upload", icon: Upload },
-                { id: "record" as const, label: "Gravar", icon: Mic },
-              ]
-            ).map(({ id, label, icon: Icon }) => {
-              const ativo = tab === id;
-              return (
-                <button
-                  key={id}
-                  onClick={() => setTab(id)}
-                  className="flex-1 flex items-center justify-center gap-2 h-8 text-[0.6875rem] font-medium transition-colors"
-                  style={{
-                    background: ativo ? "var(--tf-surface)" : "transparent",
-                    color: ativo ? "var(--tf-text)" : "var(--tf-text-tertiary)",
-                    border: ativo
-                      ? "1px solid var(--tf-border)"
-                      : "1px solid transparent",
-                    borderRadius: "var(--tf-radius-xs)",
-                    fontFamily: "var(--tf-font-mono)",
-                    letterSpacing: "0.04em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  <Icon size={12} strokeWidth={1.75} />
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          <SegmentedControl
+            items={[
+              { id: "upload", label: "Upload", icon: Upload },
+              { id: "record", label: "Gravar", icon: Mic },
+            ]}
+            value={tab}
+            onChange={setTab}
+            variant="pill"
+            size="sm"
+            fullWidth
+            monoCaps
+            aria-label="Fonte do áudio"
+          />
         )}
 
         {/* Tab: Upload */}

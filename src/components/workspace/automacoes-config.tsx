@@ -6,6 +6,8 @@ import { Coluna, Etiqueta, Membro, TriggerTipo, AcaoTipo } from "@/types";
 import { Plus, Trash2, Zap, ZapOff, ArrowRight, X, History, CheckCircle2, XCircle } from "lucide-react";
 import { useState } from "react";
 
+import { SegmentedControl } from "@/components/ui/segmented-control";
+
 interface AutomacoesConfigProps {
   workspaceId: string;
   colunas: Coluna[];
@@ -132,30 +134,18 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-[var(--tf-radius-xs)]" style={{ background: "var(--tf-bg-secondary)" }}>
-        <button
-          onClick={() => setAbaAtiva("regras")}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-[var(--tf-radius-xs)] transition-all"
-          style={{
-            background: abaAtiva === "regras" ? "var(--tf-surface)" : "transparent",
-            color: abaAtiva === "regras" ? "var(--tf-text)" : "var(--tf-text-tertiary)",
-            boxShadow: abaAtiva === "regras" ? "var(--tf-shadow-sm)" : "none",
-          }}
-        >
-          <Zap size={13} /> Regras
-        </button>
-        <button
-          onClick={() => setAbaAtiva("historico")}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-[var(--tf-radius-xs)] transition-all"
-          style={{
-            background: abaAtiva === "historico" ? "var(--tf-surface)" : "transparent",
-            color: abaAtiva === "historico" ? "var(--tf-text)" : "var(--tf-text-tertiary)",
-            boxShadow: abaAtiva === "historico" ? "var(--tf-shadow-sm)" : "none",
-          }}
-        >
-          <History size={13} /> Histórico {logs.length > 0 && <span className="text-[10px] opacity-60">({logs.length})</span>}
-        </button>
-      </div>
+      <SegmentedControl
+        items={[
+          { id: "regras", label: "Regras", icon: Zap },
+          { id: "historico", label: "Histórico", icon: History, count: logs.length },
+        ]}
+        value={abaAtiva}
+        onChange={setAbaAtiva}
+        variant="pill"
+        size="md"
+        fullWidth
+        aria-label="Seção de automações"
+      />
 
       {/* ══════ ABA REGRAS ══════ */}
       {abaAtiva === "regras" && <>

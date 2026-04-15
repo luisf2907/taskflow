@@ -17,6 +17,8 @@ import {
 } from "@/hooks/use-github";
 import type { GitHubCommit } from "@/types/github";
 
+import { SegmentedControl } from "@/components/ui/segmented-control";
+
 interface PRDetalheProps {
   owner: string;
   nome: string;
@@ -359,37 +361,18 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
       </div>
 
       {/* ─── Tabs ─── */}
-      <div className="flex gap-0.5" style={{ borderBottom: "1px solid var(--tf-border)" }}>
-        {([
-          { id: "arquivos" as const, label: "Arquivos", icon: FileText, count: files.length },
-          { id: "commits" as const, label: "Commits", icon: GitCommit, count: commits.length },
-          { id: "resumo" as const, label: "Comentários", icon: MessageSquare, count: comments.length },
-        ]).map(({ id, label, icon: Icon, count }) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className="flex items-center gap-[5px] px-3.5 py-2 text-[13px] border-none cursor-pointer bg-transparent transition-all duration-150"
-            style={{
-              fontWeight: tab === id ? 600 : 400,
-              borderBottom: `2px solid ${tab === id ? "var(--tf-accent)" : "transparent"}`,
-              color: tab === id ? "var(--tf-accent-text)" : "var(--tf-text-tertiary)",
-            }}
-          >
-            <Icon size={14} /> {label}
-            {count > 0 && (
-              <span
-                className="text-[10px] font-semibold px-[5px] rounded-[var(--tf-radius-xs)]"
-                style={{
-                  background: tab === id ? "var(--tf-accent-light)" : "var(--tf-bg-secondary)",
-                  color: tab === id ? "var(--tf-accent-text)" : "var(--tf-text-tertiary)",
-                }}
-              >
-                {count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        items={[
+          { id: "arquivos", label: "Arquivos", icon: FileText, count: files.length },
+          { id: "commits", label: "Commits", icon: GitCommit, count: commits.length },
+          { id: "resumo", label: "Comentários", icon: MessageSquare, count: comments.length },
+        ]}
+        value={tab}
+        onChange={setTab}
+        variant="underline"
+        size="md"
+        aria-label="Seções do Pull Request"
+      />
 
       {/* ─── Tab Content ─── */}
       <div className="flex gap-4 items-start">

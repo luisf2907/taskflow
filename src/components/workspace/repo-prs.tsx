@@ -20,6 +20,8 @@ import { PRDetalhe } from "./pr-detalhe";
 import useSWR from "swr";
 import type { GitHubPR } from "@/types/github";
 
+import { SegmentedControl } from "@/components/ui/segmented-control";
+
 
 interface RepoPRsProps {
   owner: string;
@@ -345,28 +347,14 @@ export function RepoPRs({ owner, nome, repoId, workspaceId, membros }: RepoPRsPr
             Pull Requests
           </span>
 
-          <div
-            className="flex gap-0.5 rounded-[var(--tf-radius-xs)] p-0.5"
-            style={{ background: "var(--tf-bg)" }}
-          >
-            {ABAS.map((a) => (
-              <button
-                key={a.valor}
-                onClick={() => setAba(a.valor)}
-                className={`px-3 py-1 rounded-[4px] border-none cursor-pointer text-xs transition-all duration-150 ${aba === a.valor ? "font-semibold" : "font-normal"}`}
-                style={{
-                  color:
-                    aba === a.valor
-                      ? "var(--tf-text)"
-                      : "var(--tf-text-tertiary)",
-                  background:
-                    aba === a.valor ? "var(--tf-surface)" : "transparent",
-                }}
-              >
-                {a.rotulo}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            items={ABAS.map((a) => ({ id: a.valor, label: a.rotulo }))}
+            value={aba}
+            onChange={setAba}
+            variant="pill"
+            size="sm"
+            aria-label="Filtrar Pull Requests"
+          />
 
           <div className="ml-auto flex items-center gap-1.5">
             {!carregando && (
