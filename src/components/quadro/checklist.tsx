@@ -1,8 +1,152 @@
 "use client";
 
 import { ChecklistComItens } from "@/types";
-import { Check, Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+
+import { duration, easeOutExpo, springSnappy } from "@/lib/motion/presets";
+import { usePrefersReducedMotion } from "@/lib/motion/use-reduced-motion";
+
+// ────────────────────────────────────────────────
+// Checkbox animado (scale do fundo + path-draw do check)
+// ────────────────────────────────────────────────
+
+interface AnimatedCheckboxProps {
+  checked: boolean;
+  onToggle: () => void;
+}
+
+function AnimatedCheckbox({ checked, onToggle }: AnimatedCheckboxProps) {
+  const reduceMotion = usePrefersReducedMotion();
+
+  return (
+    <motion.button
+      type="button"
+      onClick={onToggle}
+      whileTap={reduceMotion ? undefined : { scale: 0.88 }}
+      transition={springSnappy}
+      className="relative mt-0.5 shrink-0 w-[14px] h-[14px] outline-none"
+      style={{ borderRadius: "var(--tf-radius-xs)" }}
+      role="checkbox"
+      aria-checked={checked}
+    >
+      {/* Trilho vazio — sempre presente, transiciona cor da borda */}
+      <span
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          border: `1px solid ${
+            checked ? "var(--tf-accent)" : "var(--tf-border-strong)"
+          }`,
+          borderRadius: "var(--tf-radius-xs)",
+          transition: "border-color 160ms cubic-bezier(0.32, 0.72, 0, 1)",
+        }}
+      />
+
+      {/* Fundo accent que cresce de dentro pra fora quando marca */}
+      <AnimatePresence initial={false}>
+        {checked && (
+          <motion.span
+            key="fill"
+            aria-hidden
+            className="absolute inset-0"
+            style={{
+              background: "var(--tf-accent)",
+              borderRadius: "var(--tf-radius-xs)",
+              transformOrigin: "center",
+            }}
+            initial={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.4 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={
+              reduceMotion
+                ? { opacity: 0 }
+                : { opacity: 0, scale: 0.4, transition: { duration: duration.fast } }
+            }
+            transition={springSnappy}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Check — desenha o path quando marca */}
+      <AnimatePresence initial={false}>
+        {checked && (
+          <motion.svg
+            key="check"
+            aria-hidden
+            viewBox="0 0 12 12"
+            width="12"
+            height="12"
+            fill="none"
+            stroke="white"
+            strokeWidth={2.2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="absolute inset-0 m-auto"
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: duration.instant } }}
+            transition={{ duration: duration.instant }}
+          >
+            <motion.path
+              d="M2.5 6.2 L5 8.5 L9.5 3.8"
+              initial={reduceMotion ? { pathLength: 1 } : { pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              exit={{ pathLength: 0, transition: { duration: duration.fast } }}
+              transition={{
+                duration: duration.normal,
+                ease: easeOutExpo,
+                // Pequeno delay pra check aparecer depois do fundo acabar de crescer
+                delay: reduceMotion ? 0 : 0.06,
+              }}
+            />
+          </motion.svg>
+        )}
+      </AnimatePresence>
+    </motion.button>
+  );
+}
+
+// ────────────────────────────────────────────────
+// Texto do item — risco animado + fade de cor
+// ────────────────────────────────────────────────
+
+function ItemLabel({ texto, checked }: { texto: string; checked: boolean }) {
+  const reduceMotion = usePrefersReducedMotion();
+
+  return (
+    <span
+      className="relative text-[0.8125rem] flex-1 leading-snug"
+      style={{
+        color: checked ? "var(--tf-text-tertiary)" : "var(--tf-text)",
+        letterSpacing: "-0.005em",
+        transition: "color 200ms cubic-bezier(0.32, 0.72, 0, 1)",
+      }}
+    >
+      <span className="relative inline-block">
+        {texto}
+        {/* Linha do strikethrough — scaleX animado */}
+        <motion.span
+          aria-hidden
+          className="absolute left-0 right-0 pointer-events-none"
+          style={{
+            top: "50%",
+            height: 1,
+            background: "currentColor",
+            transformOrigin: "left center",
+          }}
+          initial={false}
+          animate={{ scaleX: checked ? 1 : 0 }}
+          transition={
+            reduceMotion
+              ? { duration: 0 }
+              : { duration: duration.normal, ease: easeOutExpo }
+          }
+        />
+      </span>
+    </span>
+  );
+}
 
 interface ChecklistProps {
   checklist: ChecklistComItens;
@@ -59,41 +203,11 @@ export function ChecklistComponent({
             className="flex items-start gap-2 py-1 px-2 group/item transition-colors hover:bg-[var(--tf-surface-hover)]"
             style={{ borderRadius: "var(--tf-radius-xs)" }}
           >
-            <button
-              onClick={() => onToggleItem(item.id, !item.concluido)}
-              className="mt-0.5 shrink-0"
-            >
-              {item.concluido ? (
-                <div
-                  className="w-[14px] h-[14px] flex items-center justify-center"
-                  style={{
-                    background: "var(--tf-accent)",
-                    border: "1px solid var(--tf-accent)",
-                    borderRadius: "var(--tf-radius-xs)",
-                  }}
-                >
-                  <Check size={9} className="text-white" strokeWidth={3} />
-                </div>
-              ) : (
-                <div
-                  className="w-[14px] h-[14px] transition-colors hover:border-[var(--tf-accent)]"
-                  style={{
-                    border: "1px solid var(--tf-border-strong)",
-                    borderRadius: "var(--tf-radius-xs)",
-                  }}
-                />
-              )}
-            </button>
-            <span
-              className="text-[0.8125rem] flex-1 leading-snug"
-              style={{
-                color: item.concluido ? "var(--tf-text-tertiary)" : "var(--tf-text)",
-                textDecoration: item.concluido ? "line-through" : "none",
-                letterSpacing: "-0.005em",
-              }}
-            >
-              {item.texto}
-            </span>
+            <AnimatedCheckbox
+              checked={item.concluido}
+              onToggle={() => onToggleItem(item.id, !item.concluido)}
+            />
+            <ItemLabel texto={item.texto} checked={item.concluido} />
             <button
               onClick={() => onExcluirItem(item.id)}
               className="p-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
