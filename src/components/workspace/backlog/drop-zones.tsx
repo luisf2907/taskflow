@@ -11,13 +11,14 @@ export function BacklogPuroDropZone({ children }: { children: ReactNode }) {
   return (
     <div
       ref={setNodeRef}
-      className="rounded-[14px] transition-all duration-200 min-h-[80px]"
+      className="transition-all duration-200 min-h-[80px]"
       style={{
-        padding: isOver ? "12px" : "0",
+        padding: isOver ? "10px" : "0",
         border: isOver
-          ? "2px solid var(--tf-accent)"
-          : "2px solid transparent",
+          ? "1px dashed var(--tf-accent)"
+          : "1px dashed transparent",
         background: isOver ? "var(--tf-accent-light)" : "transparent",
+        borderRadius: "var(--tf-radius-md)",
       }}
     >
       {children}
@@ -32,11 +33,7 @@ interface SprintDropZoneProps {
   children: ReactNode;
 }
 
-export function SprintDropZone({
-  sprintId,
-  cor,
-  children,
-}: SprintDropZoneProps) {
+export function SprintDropZone({ sprintId, cor, children }: SprintDropZoneProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: `sprint-drop-${sprintId}`,
     data: { sprintId },
@@ -45,11 +42,12 @@ export function SprintDropZone({
   return (
     <div
       ref={setNodeRef}
-      className="rounded-[14px] transition-all duration-200 min-h-[80px]"
+      className="transition-all duration-200 min-h-[80px]"
       style={{
-        padding: isOver ? "12px" : "0",
-        border: isOver ? `2px solid ${cor}` : "2px solid transparent",
-        background: isOver ? `${cor}15` : "transparent",
+        padding: isOver ? "10px" : "0",
+        border: isOver ? `1px dashed ${cor}` : "1px dashed transparent",
+        background: isOver ? `color-mix(in srgb, ${cor} 12%, transparent)` : "transparent",
+        borderRadius: "var(--tf-radius-md)",
       }}
     >
       {children}

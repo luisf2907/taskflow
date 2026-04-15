@@ -201,69 +201,94 @@ export function TimelineView({
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <div
-            className="flex rounded-[8px] p-0.5"
-            style={{ background: "var(--tf-bg-secondary)" }}
+            className="flex p-0.5"
+            style={{
+              background: "var(--tf-bg-secondary)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
           >
-            {(["semana", "mes", "trimestre"] as Zoom[]).map((z) => (
-              <button
-                key={z}
-                onClick={() => setZoom(z)}
-                className="px-3 py-1.5 text-[11px] font-bold rounded-[8px] capitalize"
-                style={{
-                  background:
-                    zoom === z ? "var(--tf-surface)" : "transparent",
-                  color:
-                    zoom === z ? "var(--tf-text)" : "var(--tf-text-tertiary)",
-                  boxShadow:
-                    zoom === z ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-                }}
-              >
-                {z === "semana" ? "Semana" : z === "mes" ? "Mês" : "Trimestre"}
-              </button>
-            ))}
+            {(["semana", "mes", "trimestre"] as Zoom[]).map((z) => {
+              const ativo = zoom === z;
+              return (
+                <button
+                  key={z}
+                  onClick={() => setZoom(z)}
+                  className="h-7 px-2.5 text-[0.6875rem] font-medium transition-colors"
+                  style={{
+                    background: ativo ? "var(--tf-surface)" : "transparent",
+                    color: ativo ? "var(--tf-text)" : "var(--tf-text-tertiary)",
+                    border: ativo ? "1px solid var(--tf-border)" : "1px solid transparent",
+                    borderRadius: "var(--tf-radius-xs)",
+                    fontFamily: "var(--tf-font-mono)",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {z === "semana" ? "Semana" : z === "mes" ? "Mês" : "Trimestre"}
+                </button>
+              );
+            })}
           </div>
 
           <div
-            className="text-[11px] px-2.5 py-1.5 rounded-[8px]"
-            style={{
-              background: "var(--tf-accent-light)",
-              color: "var(--tf-accent)",
-            }}
-          >
-            💡 Arraste as barras para mover/redimensionar. Use o ponto da borda
-            direita para criar dependências.
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={scrollToHoje}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-[8px]"
+            className="hidden md:block text-[0.6875rem] px-2.5 h-7 flex items-center"
             style={{
               background: "var(--tf-accent-light)",
               color: "var(--tf-accent-text)",
+              border: "1px solid var(--tf-accent)",
+              borderRadius: "var(--tf-radius-xs)",
+              fontFamily: "var(--tf-font-mono)",
+              letterSpacing: "0.02em",
+              lineHeight: "calc(1.75rem - 2px)",
             }}
           >
-            <Clock size={12} /> Hoje
+            Arraste barras p/ mover · borda direita cria dependências
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button
+            onClick={scrollToHoje}
+            className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[0.6875rem] font-medium transition-colors hover:brightness-110"
+            style={{
+              background: "var(--tf-accent-light)",
+              color: "var(--tf-accent-text)",
+              border: "1px solid var(--tf-accent)",
+              borderRadius: "var(--tf-radius-xs)",
+              fontFamily: "var(--tf-font-mono)",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+            }}
+          >
+            <Clock size={11} strokeWidth={1.75} /> Hoje
           </button>
 
           <button
             onClick={() => {
               if (scrollRef.current) scrollRef.current.scrollLeft -= 200;
             }}
-            className="p-1.5 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
-            style={{ color: "var(--tf-text-tertiary)" }}
+            className="p-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]"
+            style={{
+              color: "var(--tf-text-tertiary)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
+            aria-label="Anterior"
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={14} strokeWidth={1.75} />
           </button>
           <button
             onClick={() => {
               if (scrollRef.current) scrollRef.current.scrollLeft += 200;
             }}
-            className="p-1.5 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
-            style={{ color: "var(--tf-text-tertiary)" }}
+            className="p-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]"
+            style={{
+              color: "var(--tf-text-tertiary)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
+            aria-label="Próximo"
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={14} strokeWidth={1.75} />
           </button>
         </div>
       </div>
@@ -271,36 +296,50 @@ export function TimelineView({
       {/* Drag preview tooltip */}
       {drag && (
         <div
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-[10px] z-[100] text-[12px] font-bold"
-          style={{ background: "var(--tf-text)", color: "var(--tf-bg)" }}
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 px-3 h-8 flex items-center z-[100] text-[0.75rem] font-medium"
+          style={{
+            background: "var(--tf-surface-raised)",
+            color: "var(--tf-text)",
+            border: "1px solid var(--tf-accent)",
+            borderRadius: "var(--tf-radius-xs)",
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.02em",
+            boxShadow: "var(--tf-shadow-lg)",
+          }}
         >
           {formatarData(drag.currentInicio)} → {formatarData(drag.currentFim)}
           {" · "}
-          {diasEntre(drag.currentInicio, drag.currentFim)} dias
+          {diasEntre(drag.currentInicio, drag.currentFim)}d
         </div>
       )}
 
       {/* Timeline */}
       <div
         ref={scrollRef}
-        className="overflow-x-auto rounded-[20px] border no-scrollbar"
+        className="overflow-x-auto no-scrollbar"
         style={{
           background: "var(--tf-surface)",
-          borderColor: "var(--tf-border)",
+          border: "1px solid var(--tf-border)",
+          borderRadius: "var(--tf-radius-md)",
         }}
       >
         {sprintsComDatas.length === 0 && sprintsSemDatas.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Calendar size={32} style={{ color: "var(--tf-border)" }} />
-            <p
-              className="text-[14px] font-bold"
-              style={{ color: "var(--tf-text-secondary)" }}
-            >
+          <div className="flex flex-col items-center justify-center py-16 gap-2">
+            <Calendar
+              size={24}
+              strokeWidth={1.5}
+              style={{ color: "var(--tf-border-strong)" }}
+            />
+            <p className="label-mono" style={{ color: "var(--tf-text-tertiary)" }}>
               Nenhuma sprint ainda
             </p>
             <p
-              className="text-[12px]"
-              style={{ color: "var(--tf-text-tertiary)" }}
+              className="text-[0.75rem]"
+              style={{
+                color: "var(--tf-text-tertiary)",
+                fontFamily: "var(--tf-font-mono)",
+                letterSpacing: "0.02em",
+              }}
             >
               Crie sprints com datas para visualizá-las na timeline
             </p>
@@ -560,7 +599,7 @@ export function TimelineView({
                     y={rect.y}
                     width={rect.w}
                     height={rect.h}
-                    rx={8}
+                    rx={2}
                     fill={sprint.cor}
                     opacity={sprint.status_sprint === "concluida" ? 0.4 : 0.85}
                     stroke={
@@ -581,7 +620,7 @@ export function TimelineView({
                       y={rect.y}
                       width={rect.w * (progresso / 100)}
                       height={rect.h}
-                      rx={8}
+                      rx={2}
                       fill={sprint.cor}
                       opacity={1}
                       pointerEvents="none"
@@ -661,27 +700,32 @@ export function TimelineView({
       {/* Sprints sem datas */}
       {sprintsSemDatas.length > 0 && (
         <div className="space-y-2">
-          <p
-            className="text-[11px] font-bold uppercase tracking-widest"
-            style={{ color: "var(--tf-text-tertiary)" }}
-          >
+          <p className="label-mono" style={{ color: "var(--tf-text-tertiary)" }}>
             Sem datas definidas
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {sprintsSemDatas.map((s) => (
               <button
                 key={s.id}
                 onClick={() => onSprintClick(s.id)}
-                className="flex items-center gap-2 px-3 py-2 rounded-[8px] border text-[12px] font-semibold hover:border-[var(--tf-accent)]"
+                className="flex items-center gap-2 h-8 px-2.5 text-[0.75rem] font-medium transition-colors"
                 style={{
-                  borderColor: "var(--tf-border)",
+                  border: "1px solid var(--tf-border)",
                   color: "var(--tf-text-secondary)",
                   background: "var(--tf-surface)",
+                  borderRadius: "var(--tf-radius-xs)",
+                  letterSpacing: "-0.005em",
                 }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.borderColor = "var(--tf-accent)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.borderColor = "var(--tf-border)")
+                }
               >
                 <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ background: s.cor }}
+                  className="w-2 h-2 shrink-0"
+                  style={{ background: s.cor, borderRadius: "1px" }}
                 />
                 {s.nome}
               </button>

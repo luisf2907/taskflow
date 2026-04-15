@@ -346,16 +346,24 @@ export function MetricasWorkspace({
 
   if (sprintsParaMetricas.length === 0) {
     return (
-      <div className="text-center py-16">
+      <div className="text-center py-14">
         <BarChart3
-          size={32}
+          size={26}
+          strokeWidth={1.5}
           className="mx-auto mb-3"
-          style={{ color: "var(--tf-text-tertiary)" }}
+          style={{ color: "var(--tf-border-strong)" }}
         />
-        <h3 className="text-base font-bold mb-1" style={{ color: "var(--tf-text)" }}>
+        <p className="label-mono mb-1" style={{ color: "var(--tf-text-tertiary)" }}>
           Sem dados ainda
-        </h3>
-        <p className="text-sm" style={{ color: "var(--tf-text-tertiary)" }}>
+        </p>
+        <p
+          className="text-[0.75rem]"
+          style={{
+            color: "var(--tf-text-tertiary)",
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.02em",
+          }}
+        >
           Conclua ou ative sprints para ver métricas
         </p>
       </div>
@@ -363,20 +371,23 @@ export function MetricasWorkspace({
   }
 
   return (
-    <div className="space-y-5 py-2">
-      {/* ── Header com Export ── */}
+    <div className="space-y-4 py-2">
+      {/* Header com Export */}
       <div className="flex items-center justify-end">
         <button
           onClick={exportarCSV}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-[8px] border"
+          className="inline-flex items-center gap-1.5 h-8 px-2.5 text-[0.6875rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
           style={{
-            borderColor: "var(--tf-border)",
+            border: "1px solid var(--tf-border)",
             color: "var(--tf-text-secondary)",
             background: "var(--tf-surface)",
-            transition: "all 0.15s ease",
+            borderRadius: "var(--tf-radius-xs)",
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
           }}
         >
-          <Download size={13} /> Exportar CSV
+          <Download size={12} strokeWidth={1.75} /> Exportar CSV
         </button>
       </div>
 
@@ -387,7 +398,7 @@ export function MetricasWorkspace({
           label="Velocity média"
           valor={`${velocityMedia} pts`}
           sub={`${sprintsConcl.length} sprints concluídas`}
-          cor="#60A5FA"
+          cor="var(--tf-accent)"
         />
         <StatCard
           icone={Target}
@@ -423,14 +434,14 @@ export function MetricasWorkspace({
           label="Total sprints"
           valor={`${sprints.length}`}
           sub={`${sprintsConcl.length} concluídas`}
-          cor="#A78BFA"
+          cor="var(--tf-merged)"
         />
         <StatCard
           icone={CheckCircle2}
           label="Backlog"
           valor={`${backlogPuro.length}`}
           sub="tarefas sem sprint"
-          cor="#FB923C"
+          cor="var(--tf-warning)"
         />
       </div>
 
@@ -451,22 +462,32 @@ export function MetricasWorkspace({
           {/* Throughput Semanal */}
           {throughputData.length >= 2 && (
             <div
-              className="rounded-[14px] border p-5"
+              className="p-4"
               style={{
                 background: "var(--tf-surface)",
-                borderColor: "var(--tf-border)",
+                border: "1px solid var(--tf-border)",
+                borderRadius: "var(--tf-radius-md)",
               }}
             >
-              <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
+              <div className="flex items-center gap-2 mb-4">
                 <Calendar
-                  size={14}
-                  className="inline mr-1.5"
+                  size={12}
+                  strokeWidth={1.75}
                   style={{ color: "var(--tf-success)" }}
                 />
-                Throughput Semanal
-              </h3>
+                <h3 className="label-mono" style={{ color: "var(--tf-text-secondary)" }}>
+                  Throughput semanal
+                </h3>
+              </div>
               <LineChart dados={throughputData} />
-              <p className="text-[11px] mt-2" style={{ color: "var(--tf-text-tertiary)" }}>
+              <p
+                className="text-[0.6875rem] mt-2"
+                style={{
+                  color: "var(--tf-text-tertiary)",
+                  fontFamily: "var(--tf-font-mono)",
+                  letterSpacing: "0.02em",
+                }}
+              >
                 Cards concluídos por semana (últimas {throughputData.length} semanas)
               </p>
             </div>
@@ -475,22 +496,32 @@ export function MetricasWorkspace({
           {/* Cycle Time por Sprint */}
           {cycleTimePerSprint.length >= 2 && (
             <div
-              className="rounded-[14px] border p-5"
+              className="p-4"
               style={{
                 background: "var(--tf-surface)",
-                borderColor: "var(--tf-border)",
+                border: "1px solid var(--tf-border)",
+                borderRadius: "var(--tf-radius-md)",
               }}
             >
-              <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
+              <div className="flex items-center gap-2 mb-4">
                 <Timer
-                  size={14}
-                  className="inline mr-1.5"
+                  size={12}
+                  strokeWidth={1.75}
                   style={{ color: "var(--tf-text-secondary)" }}
                 />
-                Cycle Time Médio por Sprint
-              </h3>
+                <h3 className="label-mono" style={{ color: "var(--tf-text-secondary)" }}>
+                  Cycle time médio por sprint
+                </h3>
+              </div>
               <LineChart dados={cycleTimePerSprint} />
-              <p className="text-[11px] mt-2" style={{ color: "var(--tf-text-tertiary)" }}>
+              <p
+                className="text-[0.6875rem] mt-2"
+                style={{
+                  color: "var(--tf-text-tertiary)",
+                  fontFamily: "var(--tf-font-mono)",
+                  letterSpacing: "0.02em",
+                }}
+              >
                 Média de dias entre criação e conclusão
               </p>
             </div>
@@ -510,20 +541,23 @@ export function MetricasWorkspace({
           {/* Velocity Trend */}
           {velocityTrend.length >= 2 && (
             <div
-              className="rounded-[14px] border p-5"
+              className="p-4"
               style={{
                 background: "var(--tf-surface)",
-                borderColor: "var(--tf-border)",
+                border: "1px solid var(--tf-border)",
+                borderRadius: "var(--tf-radius-md)",
               }}
             >
-              <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
+              <div className="flex items-center gap-2 mb-4">
                 <TrendingUp
-                  size={14}
-                  className="inline mr-1.5"
+                  size={12}
+                  strokeWidth={1.75}
                   style={{ color: "var(--tf-accent)" }}
                 />
-                Velocity Trend
-              </h3>
+                <h3 className="label-mono" style={{ color: "var(--tf-text-secondary)" }}>
+                  Velocity trend
+                </h3>
+              </div>
               <LineChart dados={velocityTrend} />
             </div>
           )}
@@ -531,20 +565,23 @@ export function MetricasWorkspace({
           {/* Distribuição por Status (donut) */}
           {statusData.length > 0 && (
             <div
-              className="rounded-[14px] border p-5"
+              className="p-4"
               style={{
                 background: "var(--tf-surface)",
-                borderColor: "var(--tf-border)",
+                border: "1px solid var(--tf-border)",
+                borderRadius: "var(--tf-radius-md)",
               }}
             >
-              <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
+              <div className="flex items-center gap-2 mb-4">
                 <Layers
-                  size={14}
-                  className="inline mr-1.5"
+                  size={12}
+                  strokeWidth={1.75}
                   style={{ color: "var(--tf-accent)" }}
                 />
-                Distribuição por Status
-              </h3>
+                <h3 className="label-mono" style={{ color: "var(--tf-text-secondary)" }}>
+                  Distribuição por status
+                </h3>
+              </div>
               <div className="flex justify-center py-2">
                 <DonutChart segmentos={statusData} />
               </div>
@@ -561,36 +598,46 @@ export function MetricasWorkspace({
           borderColor: "var(--tf-border)",
         }}
       >
-        <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
+        <div className="flex items-center gap-2 mb-4">
           <BarChart3
-            size={14}
-            className="inline mr-1.5"
+            size={12}
+            strokeWidth={1.75}
             style={{ color: "var(--tf-accent)" }}
           />
-          Velocity por Sprint
-        </h3>
+          <h3 className="label-mono" style={{ color: "var(--tf-text-secondary)" }}>
+            Velocity por sprint
+          </h3>
+        </div>
         <div className="space-y-2.5">
           {velocityData.map((v, i) => (
             <div key={i} className="flex items-center gap-3">
               <span
-                className="text-[12px] font-medium w-28 truncate text-right"
-                style={{ color: "var(--tf-text-secondary)" }}
+                className="text-[0.6875rem] w-28 truncate text-right"
+                style={{
+                  color: "var(--tf-text-secondary)",
+                  fontFamily: "var(--tf-font-mono)",
+                  letterSpacing: "-0.005em",
+                }}
               >
                 {v.nome}
               </span>
               <div
-                className="flex-1 h-7 rounded-[8px] overflow-hidden relative"
-                style={{ background: "var(--tf-bg-secondary)" }}
+                className="flex-1 h-6 overflow-hidden relative"
+                style={{
+                  background: "var(--tf-bg-secondary)",
+                  border: "1px solid var(--tf-border)",
+                  borderRadius: "var(--tf-radius-xs)",
+                }}
               >
                 <div
-                  className="absolute inset-y-0 left-0 rounded-[8px] opacity-20"
+                  className="absolute inset-y-0 left-0 opacity-20"
                   style={{
                     width: `${Math.max((v.totalPontos / maxVelocity) * 100, 4)}%`,
                     background: v.status === "ativa" ? "var(--tf-accent)" : "var(--tf-success)",
                   }}
                 />
                 <div
-                  className="absolute inset-y-0 left-0 rounded-[8px] flex items-center px-2 transition-all duration-700"
+                  className="absolute inset-y-0 left-0 flex items-center px-2 transition-all duration-500"
                   style={{
                     width: `${Math.max(
                       (v.pontosConcluidos / maxVelocity) * 100,
@@ -600,15 +647,25 @@ export function MetricasWorkspace({
                   }}
                 >
                   {v.pontosConcluidos > 0 && (
-                    <span className="text-[11px] font-bold text-white whitespace-nowrap">
+                    <span
+                      className="text-[0.625rem] font-medium text-white whitespace-nowrap"
+                      style={{
+                        fontFamily: "var(--tf-font-mono)",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
                       {v.pontosConcluidos} pts
                     </span>
                   )}
                 </div>
               </div>
               <span
-                className="text-[11px] w-20 text-right"
-                style={{ color: "var(--tf-text-tertiary)" }}
+                className="text-[0.625rem] w-20 text-right"
+                style={{
+                  color: "var(--tf-text-tertiary)",
+                  fontFamily: "var(--tf-font-mono)",
+                  letterSpacing: "0.02em",
+                }}
               >
                 {v.cardsConcluidos}/{v.totalCards} cards
               </span>
@@ -622,27 +679,46 @@ export function MetricasWorkspace({
         {/* Cards por Membro */}
         {membroData.length > 0 && (
           <div
-            className="rounded-[14px] border p-5"
+            className="p-4"
             style={{
               background: "var(--tf-surface)",
-              borderColor: "var(--tf-border)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-md)",
             }}
           >
-            <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
+            <div className="flex items-center gap-2 mb-4">
               <Users
-                size={14}
-                className="inline mr-1.5"
+                size={12}
+                strokeWidth={1.75}
                 style={{ color: "var(--tf-accent)" }}
               />
-              Carga por Membro {sprintAtiva ? `— ${sprintAtiva.nome}` : ""}
-            </h3>
+              <h3 className="label-mono" style={{ color: "var(--tf-text-secondary)" }}>
+                Carga por membro
+              </h3>
+              {sprintAtiva && (
+                <span
+                  className="text-[0.6875rem]"
+                  style={{
+                    color: "var(--tf-text-tertiary)",
+                    fontFamily: "var(--tf-font-mono)",
+                  }}
+                >
+                  · {sprintAtiva.nome}
+                </span>
+              )}
+            </div>
             <div className="space-y-3">
               {membroData.map((m, i) => (
                 <div key={i}>
                   <div className="flex items-center gap-2 mb-1">
                     <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
-                      style={{ background: m.cor }}
+                      className="w-5 h-5 flex items-center justify-center text-[0.5625rem] font-semibold text-white shrink-0"
+                      style={{
+                        background: m.cor,
+                        borderRadius: "var(--tf-radius-xs)",
+                        fontFamily: "var(--tf-font-mono)",
+                        letterSpacing: "0.02em",
+                      }}
                     >
                       {m.nome
                         .split(" ")
@@ -652,24 +728,29 @@ export function MetricasWorkspace({
                         .toUpperCase()}
                     </div>
                     <span
-                      className="text-[13px] font-medium flex-1"
-                      style={{ color: "var(--tf-text)" }}
+                      className="text-[0.8125rem] font-medium flex-1"
+                      style={{
+                        color: "var(--tf-text)",
+                        letterSpacing: "-0.005em",
+                      }}
                     >
                       {m.nome}
                     </span>
                     <span
-                      className="text-[11px]"
-                      style={{ color: "var(--tf-text-tertiary)" }}
+                      className="text-[0.625rem]"
+                      style={{
+                        color: "var(--tf-text-tertiary)",
+                        fontFamily: "var(--tf-font-mono)",
+                        letterSpacing: "0.02em",
+                      }}
                     >
                       {m.concluidos}/{m.cards} cards · {m.pontos} pts
                     </span>
                   </div>
-                  <div className="flex gap-0.5 ml-8">
+                  <div className="flex ml-7" style={{ borderRadius: "var(--tf-radius-xs)", overflow: "hidden" }}>
                     {m.concluidos > 0 && (
                       <div
-                        className={`h-4 transition-all duration-500 ${
-                          m.concluidos === m.cards ? "rounded-full" : "rounded-l-full"
-                        }`}
+                        className="h-[3px] transition-all duration-500"
                         style={{
                           width: `${(m.concluidos / maxMembroCards) * 100}%`,
                           background: "var(--tf-success)",
@@ -679,9 +760,7 @@ export function MetricasWorkspace({
                     )}
                     {m.cards - m.concluidos > 0 && (
                       <div
-                        className={`h-4 transition-all duration-500 ${
-                          m.concluidos === 0 ? "rounded-full" : "rounded-r-full"
-                        }`}
+                        className="h-[3px] transition-all duration-500"
                         style={{
                           width: `${
                             ((m.cards - m.concluidos) / maxMembroCards) * 100
@@ -696,26 +775,46 @@ export function MetricasWorkspace({
                 </div>
               ))}
               <div
-                className="flex items-center gap-4 pt-2 border-t"
+                className="flex items-center gap-4 pt-3 border-t"
                 style={{ borderColor: "var(--tf-border)" }}
               >
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded" style={{ background: "var(--tf-success)" }} />
+                  <div
+                    className="w-2 h-2"
+                    style={{
+                      background: "var(--tf-success)",
+                      borderRadius: "1px",
+                    }}
+                  />
                   <span
-                    className="text-[11px]"
-                    style={{ color: "var(--tf-text-tertiary)" }}
+                    className="text-[0.625rem]"
+                    style={{
+                      color: "var(--tf-text-tertiary)",
+                      fontFamily: "var(--tf-font-mono)",
+                      letterSpacing: "0.04em",
+                      textTransform: "uppercase",
+                    }}
                   >
                     Concluído
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div
-                    className="w-3 h-3 rounded"
-                    style={{ background: "var(--tf-accent)", opacity: 0.4 }}
+                    className="w-2 h-2"
+                    style={{
+                      background: "var(--tf-accent)",
+                      opacity: 0.4,
+                      borderRadius: "1px",
+                    }}
                   />
                   <span
-                    className="text-[11px]"
-                    style={{ color: "var(--tf-text-tertiary)" }}
+                    className="text-[0.625rem]"
+                    style={{
+                      color: "var(--tf-text-tertiary)",
+                      fontFamily: "var(--tf-font-mono)",
+                      letterSpacing: "0.04em",
+                      textTransform: "uppercase",
+                    }}
                   >
                     Pendente
                   </span>
@@ -728,45 +827,59 @@ export function MetricasWorkspace({
         {/* Sprint Completion Rate */}
         {completionData.length > 0 && (
           <div
-            className={`rounded-[14px] border p-5 ${
-              membroData.length === 0 ? "lg:col-span-2" : ""
-            }`}
+            className={`p-4 ${membroData.length === 0 ? "lg:col-span-2" : ""}`}
             style={{
               background: "var(--tf-surface)",
-              borderColor: "var(--tf-border)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-md)",
             }}
           >
-            <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
+            <div className="flex items-center gap-2 mb-4">
               <Target
-                size={14}
-                className="inline mr-1.5"
+                size={12}
+                strokeWidth={1.75}
                 style={{ color: "var(--tf-accent)" }}
               />
-              Taxa de Conclusão por Sprint
-            </h3>
+              <h3 className="label-mono" style={{ color: "var(--tf-text-secondary)" }}>
+                Taxa de conclusão por sprint
+              </h3>
+            </div>
             <div className="space-y-3">
               {completionData.map((d, i) => {
                 const cor =
-                  d.valor >= 80 ? "var(--tf-success)" : d.valor >= 50 ? "var(--tf-accent-yellow)" : "var(--tf-danger)";
+                  d.valor >= 80
+                    ? "var(--tf-success)"
+                    : d.valor >= 50
+                      ? "var(--tf-accent-yellow)"
+                      : "var(--tf-danger)";
                 return (
                   <div key={i}>
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between mb-1.5">
                       <span
-                        className="text-[12px] font-medium"
-                        style={{ color: "var(--tf-text-secondary)" }}
+                        className="text-[0.75rem] font-medium"
+                        style={{
+                          color: "var(--tf-text-secondary)",
+                          letterSpacing: "-0.005em",
+                        }}
                       >
                         {d.label}
                       </span>
-                      <span className="text-[12px] font-bold" style={{ color: cor }}>
+                      <span
+                        className="text-[0.75rem] font-medium"
+                        style={{
+                          color: cor,
+                          fontFamily: "var(--tf-font-mono)",
+                        }}
+                      >
                         {d.valor}%
                       </span>
                     </div>
                     <div
-                      className="h-3 rounded-full overflow-hidden"
-                      style={{ background: "var(--tf-bg-secondary)" }}
+                      className="h-[3px] overflow-hidden"
+                      style={{ background: "var(--tf-border)", borderRadius: "1px" }}
                     >
                       <div
-                        className="h-full rounded-full transition-all duration-700"
+                        className="h-full transition-all duration-500"
                         style={{ width: `${d.valor}%`, background: cor }}
                       />
                     </div>
@@ -781,42 +894,55 @@ export function MetricasWorkspace({
       {/* ── Distribuição por Etiqueta ── */}
       {etiquetaStats.length > 0 && (
         <div
-          className="rounded-[14px] border p-5"
+          className="p-4"
           style={{
             background: "var(--tf-surface)",
-            borderColor: "var(--tf-border)",
+            border: "1px solid var(--tf-border)",
+            borderRadius: "var(--tf-radius-md)",
           }}
         >
-          <h3 className="text-sm font-bold mb-4" style={{ color: "var(--tf-text)" }}>
-            Distribuição por Etiqueta
+          <h3 className="label-mono mb-4" style={{ color: "var(--tf-text-secondary)" }}>
+            Distribuição por etiqueta
           </h3>
           <div className="space-y-2">
             {etiquetaStats.map((e, i) => (
               <div key={i} className="flex items-center gap-3">
                 <span
-                  className="px-2 py-0.5 rounded text-[10px] font-bold text-white w-20 text-center truncate"
-                  style={{ background: e.cor }}
+                  className="inline-flex items-center justify-center h-[18px] px-1.5 text-[0.5625rem] font-medium text-white w-20 truncate"
+                  style={{
+                    background: e.cor,
+                    borderRadius: "var(--tf-radius-xs)",
+                    letterSpacing: "0.01em",
+                  }}
                 >
                   {e.nome}
                 </span>
                 <div
-                  className="flex-1 h-5 rounded overflow-hidden"
-                  style={{ background: "var(--tf-bg-secondary)" }}
+                  className="flex-1 h-[18px] overflow-hidden"
+                  style={{
+                    background: "var(--tf-bg-secondary)",
+                    border: "1px solid var(--tf-border)",
+                    borderRadius: "var(--tf-radius-xs)",
+                  }}
                 >
                   <div
-                    className="h-full rounded transition-all duration-500"
+                    className="h-full transition-all duration-500"
                     style={{
                       width: `${(e.count / maxEtCount) * 100}%`,
                       background: e.cor,
-                      opacity: 0.7,
+                      opacity: 0.6,
                     }}
                   />
                 </div>
                 <span
-                  className="text-[11px] font-medium w-24 text-right"
-                  style={{ color: "var(--tf-text-secondary)" }}
+                  className="text-[0.625rem] w-24 text-right"
+                  style={{
+                    color: "var(--tf-text-secondary)",
+                    fontFamily: "var(--tf-font-mono)",
+                    letterSpacing: "0.02em",
+                  }}
                 >
-                  {e.count} cards · {e.pontos}pts
+                  {e.count} cards · {e.pontos} pts
                 </span>
               </div>
             ))}

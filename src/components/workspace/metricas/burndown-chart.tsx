@@ -116,21 +116,42 @@ export function BurndownChart({ sprint, cards }: BurndownChartProps) {
 
   return (
     <div
-      className="rounded-[14px] border p-5"
+      className="p-4"
       style={{
         background: "var(--tf-surface)",
-        borderColor: "var(--tf-border)",
+        border: "1px solid var(--tf-border)",
+        borderRadius: "var(--tf-radius-md)",
       }}
     >
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>
-          Burndown — {sprint.nome}
-        </h3>
+        <div className="flex items-center gap-2">
+          <span className="label-mono" style={{ color: "var(--tf-text-tertiary)" }}>
+            Burndown
+          </span>
+          <span
+            className="text-[0.8125rem] font-medium"
+            style={{ color: "var(--tf-text)", letterSpacing: "-0.005em" }}
+          >
+            {sprint.nome}
+          </span>
+        </div>
         <div
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-[11px] font-bold"
-          style={{ background: `${statusCor}20`, color: statusCor }}
+          className="inline-flex items-center gap-1.5 px-2 h-[22px] text-[0.625rem] font-medium"
+          style={{
+            background: `color-mix(in srgb, ${statusCor} 12%, transparent)`,
+            color: statusCor,
+            border: `1px solid ${statusCor}`,
+            borderRadius: "var(--tf-radius-xs)",
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}
         >
-          {status === "adiantado" ? <TrendingUp size={12} /> : <Flame size={12} />}
+          {status === "adiantado" ? (
+            <TrendingUp size={11} strokeWidth={1.75} />
+          ) : (
+            <Flame size={11} strokeWidth={1.75} />
+          )}
           {delta >= 0 ? `+${delta}` : delta} pts {status}
         </div>
       </div>
@@ -139,6 +160,7 @@ export function BurndownChart({ sprint, cards }: BurndownChartProps) {
         viewBox={`0 0 ${largura} ${altura}`}
         className="w-full"
         style={{ maxHeight: altura }}
+        fontFamily="var(--tf-font-mono)"
       >
         {/* Grid */}
         {gridY.map((g, i) => (
@@ -150,14 +172,15 @@ export function BurndownChart({ sprint, cards }: BurndownChartProps) {
               y2={g.y}
               stroke="var(--tf-border)"
               strokeWidth={1}
-              strokeDasharray="4,4"
+              strokeDasharray="2,3"
             />
             <text
               x={padding.left - 8}
-              y={g.y + 4}
+              y={g.y + 3}
               textAnchor="end"
-              fontSize={10}
+              fontSize={9}
               fill="var(--tf-text-tertiary)"
+              style={{ letterSpacing: "0.04em" }}
             >
               {g.label}
             </text>
@@ -169,10 +192,11 @@ export function BurndownChart({ sprint, cards }: BurndownChartProps) {
           <text
             key={i}
             x={d.x}
-            y={padding.top + h + 20}
+            y={padding.top + h + 18}
             textAnchor="middle"
-            fontSize={10}
+            fontSize={9}
             fill="var(--tf-text-tertiary)"
+            style={{ letterSpacing: "0.04em" }}
           >
             {d.label}
           </text>
@@ -210,23 +234,25 @@ export function BurndownChart({ sprint, cards }: BurndownChartProps) {
           strokeLinecap="round"
         />
 
-        {/* Ponto ideal de hoje (marker pequeno) */}
-        <circle
-          cx={idealHojePoint.x}
-          cy={idealHojePoint.y}
-          r={3}
+        {/* Ponto ideal de hoje — quadrado */}
+        <rect
+          x={idealHojePoint.x - 2.5}
+          y={idealHojePoint.y - 2.5}
+          width={5}
+          height={5}
           fill="var(--tf-text-tertiary)"
-          opacity={0.6}
+          opacity={0.5}
         />
 
-        {/* Ponto atual */}
-        <circle
-          cx={realAtual.x}
-          cy={realAtual.y}
-          r={5}
+        {/* Ponto atual — quadrado */}
+        <rect
+          x={realAtual.x - 4}
+          y={realAtual.y - 4}
+          width={8}
+          height={8}
           fill="var(--tf-surface)"
           stroke={statusCor}
-          strokeWidth={2.5}
+          strokeWidth={1.5}
         />
 
         {/* Hoje indicator */}
@@ -242,11 +268,12 @@ export function BurndownChart({ sprint, cards }: BurndownChartProps) {
         />
         <text
           x={realAtual.x}
-          y={padding.top - 8}
+          y={padding.top - 6}
           textAnchor="middle"
           fontSize={9}
-          fontWeight={700}
+          fontWeight={600}
           fill={statusCor}
+          style={{ letterSpacing: "0.1em" }}
         >
           HOJE
         </text>
@@ -292,63 +319,66 @@ export function BurndownChart({ sprint, cards }: BurndownChartProps) {
 
       {/* Stats expandidos */}
       <div
-        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-3 pt-3 border-t"
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4 pt-4 border-t"
         style={{ borderColor: "var(--tf-border)" }}
       >
-        <div>
-          <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>
-            Total
-          </span>
-          <p className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>
-            {totalPontos} pts
-          </p>
-        </div>
-        <div>
-          <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>
-            Concluídos
-          </span>
-          <p className="text-sm font-bold" style={{ color: "var(--tf-success)" }}>
-            {pontosConcluidos} pts
-          </p>
-        </div>
-        <div>
-          <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>
-            Restantes
-          </span>
-          <p className="text-sm font-bold" style={{ color: statusCor }}>
-            {pontosRestantes} pts
-          </p>
-        </div>
-        <div>
-          <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>
-            Dias
-          </span>
-          <p className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>
-            {diasPassados}/{totalDias}
-          </p>
-        </div>
-        <div>
-          <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>
-            Velocity
-          </span>
-          <p className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>
-            {velocity.toFixed(1)} pts/dia
-          </p>
-        </div>
-        <div>
-          <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>
-            Projeção
-          </span>
-          <p className="text-sm font-bold" style={{ color: trendCor }}>
-            {projecaoData ? formatarData(projecaoData) : "—"}
-            {projecaoData && deltaDias !== 0 && (
-              <span className="text-[10px] font-medium ml-1">
-                ({deltaDias > 0 ? `+${deltaDias}` : deltaDias}d)
-              </span>
-            )}
-          </p>
-        </div>
+        <Stat label="Total" valor={`${totalPontos} pts`} />
+        <Stat label="Concluídos" valor={`${pontosConcluidos} pts`} cor="var(--tf-success)" />
+        <Stat label="Restantes" valor={`${pontosRestantes} pts`} cor={statusCor} />
+        <Stat label="Dias" valor={`${diasPassados}/${totalDias}`} />
+        <Stat label="Velocity" valor={`${velocity.toFixed(1)} pts/d`} />
+        <Stat
+          label="Projeção"
+          valor={projecaoData ? formatarData(projecaoData) : "—"}
+          cor={trendCor}
+          sub={
+            projecaoData && deltaDias !== 0
+              ? `(${deltaDias > 0 ? `+${deltaDias}` : deltaDias}d)`
+              : undefined
+          }
+        />
       </div>
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  valor,
+  sub,
+  cor,
+}: {
+  label: string;
+  valor: string;
+  sub?: string;
+  cor?: string;
+}) {
+  return (
+    <div>
+      <span
+        className="label-mono block mb-0.5"
+        style={{ color: "var(--tf-text-tertiary)" }}
+      >
+        {label}
+      </span>
+      <p
+        className="text-[0.8125rem] font-medium"
+        style={{
+          color: cor || "var(--tf-text)",
+          fontFamily: "var(--tf-font-mono)",
+          letterSpacing: "-0.005em",
+        }}
+      >
+        {valor}
+        {sub && (
+          <span
+            className="text-[0.625rem] ml-1"
+            style={{ color: "var(--tf-text-tertiary)" }}
+          >
+            {sub}
+          </span>
+        )}
+      </p>
     </div>
   );
 }

@@ -20,7 +20,7 @@ export function ExportDropdown({ cartoes, nomeWorkspace }: ExportDropdownProps) 
   function handleToggle() {
     if (!aberto && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
-      setPos({ top: rect.bottom + 8, left: rect.left + rect.width / 2 - 65 });
+      setPos({ top: rect.bottom + 6, left: rect.left + rect.width / 2 - 65 });
     }
     setAberto(!aberto);
   }
@@ -31,13 +31,14 @@ export function ExportDropdown({ cartoes, nomeWorkspace }: ExportDropdownProps) 
     setAberto(false);
   }
 
-  // Close on click outside
   useEffect(() => {
     if (!aberto) return;
     function handleClickFora(e: MouseEvent) {
       if (
-        menuRef.current && !menuRef.current.contains(e.target as Node) &&
-        btnRef.current && !btnRef.current.contains(e.target as Node)
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        btnRef.current &&
+        !btnRef.current.contains(e.target as Node)
       ) {
         setAberto(false);
       }
@@ -51,47 +52,104 @@ export function ExportDropdown({ cartoes, nomeWorkspace }: ExportDropdownProps) 
       <button
         ref={btnRef}
         onClick={handleToggle}
-        className="flex items-center gap-2 px-4 py-3 text-[13px] font-bold rounded-[20px] border transition-all hover:-translate-y-0.5"
+        className="inline-flex items-center gap-1.5 h-8 px-2.5 text-[0.6875rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
         style={{
-          borderColor: "var(--tf-border)",
+          border: "1px solid var(--tf-border)",
           color: "var(--tf-text-secondary)",
           background: "var(--tf-surface)",
+          borderRadius: "var(--tf-radius-xs)",
+          fontFamily: "var(--tf-font-mono)",
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
         }}
       >
-        <Download size={16} /> Exportar
+        <Download size={12} strokeWidth={1.75} /> Exportar
       </button>
 
       {aberto &&
         createPortal(
           <div
             ref={menuRef}
-            className="fixed rounded-[14px] border z-[70] overflow-hidden py-1.5"
+            className="fixed z-[70] overflow-hidden py-1"
             style={{
               top: pos.top,
               left: pos.left,
-              width: 130,
+              width: 140,
               background: "var(--tf-surface-raised)",
-              borderColor: "var(--tf-border)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-md)",
               boxShadow: "var(--tf-shadow-md)",
             }}
           >
+            <div
+              className="label-mono px-3 py-1.5"
+              style={{
+                color: "var(--tf-text-tertiary)",
+                borderBottom: "1px solid var(--tf-border)",
+                marginBottom: 4,
+              }}
+            >
+              Exportar como
+            </div>
             <button
               onClick={() => handleExport("csv")}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-smooth rounded-[8px] mx-1 outline-none"
-              style={{ color: "var(--tf-text)", width: "calc(100% - 8px)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-[0.8125rem] transition-colors outline-none mx-1"
+              style={{
+                color: "var(--tf-text)",
+                width: "calc(100% - 8px)",
+                borderRadius: "var(--tf-radius-xs)",
+                letterSpacing: "-0.005em",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = "var(--tf-surface-hover)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = "transparent")
+              }
             >
-              CSV
+              <span style={{ fontFamily: "var(--tf-font-mono)", fontSize: "0.75rem" }}>
+                CSV
+              </span>
+              <span
+                className="ml-auto text-[0.625rem]"
+                style={{
+                  color: "var(--tf-text-tertiary)",
+                  fontFamily: "var(--tf-font-mono)",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                planilha
+              </span>
             </button>
             <button
               onClick={() => handleExport("json")}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-smooth rounded-[8px] mx-1 outline-none"
-              style={{ color: "var(--tf-text)", width: "calc(100% - 8px)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-[0.8125rem] transition-colors outline-none mx-1"
+              style={{
+                color: "var(--tf-text)",
+                width: "calc(100% - 8px)",
+                borderRadius: "var(--tf-radius-xs)",
+                letterSpacing: "-0.005em",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = "var(--tf-surface-hover)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = "transparent")
+              }
             >
-              JSON
+              <span style={{ fontFamily: "var(--tf-font-mono)", fontSize: "0.75rem" }}>
+                JSON
+              </span>
+              <span
+                className="ml-auto text-[0.625rem]"
+                style={{
+                  color: "var(--tf-text-tertiary)",
+                  fontFamily: "var(--tf-font-mono)",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                bruto
+              </span>
             </button>
           </div>,
           document.body

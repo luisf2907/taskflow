@@ -51,7 +51,6 @@ export function BacklogRow({
       data: { tarefa },
     });
 
-  // Etiquetas do cartão (usa etiqueta_ids da junction table)
   const etiquetasDoCartao = etiquetas.filter((e) =>
     tarefa.etiqueta_ids?.includes(e.id)
   );
@@ -59,41 +58,60 @@ export function BacklogRow({
   return (
     <div
       ref={setDragRef}
-      className={`flex items-center gap-3 px-5 py-3 rounded-[14px] transition-all duration-300 ease-out group cursor-pointer border hover:-translate-y-0.5 ${
-        isDragging ? "opacity-30 scale-95" : ""
+      className={`flex items-center gap-2.5 px-3 py-2 transition-all duration-200 group cursor-pointer ${
+        isDragging ? "opacity-30" : ""
       }`}
       style={{
         background: "var(--tf-surface)",
-        borderColor: "var(--tf-border)",
+        border: "1px solid var(--tf-border)",
+        borderRadius: "var(--tf-radius-sm)",
       }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.borderColor = "var(--tf-border-strong)")
+      }
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.borderColor = "var(--tf-border)")
+      }
       onClick={onClick}
     >
       {/* Drag handle */}
       <button
         {...attributes}
         {...listeners}
-        className="p-0.5 rounded opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing shrink-0"
-        style={{ color: "var(--tf-text-tertiary)" }}
+        className="p-0.5 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing shrink-0"
+        style={{
+          color: "var(--tf-text-tertiary)",
+          borderRadius: "var(--tf-radius-xs)",
+        }}
         onClick={(e) => e.stopPropagation()}
+        aria-label="Arrastar"
       >
-        <GripVertical size={14} />
+        <GripVertical size={13} strokeWidth={1.75} />
       </button>
 
       {/* Título + etiquetas */}
       <div className="flex-1 min-w-0">
         <span
-          className="text-[13px] truncate block"
-          style={{ color: "var(--tf-text)" }}
+          className="text-[0.8125rem] truncate block"
+          style={{
+            color: "var(--tf-text)",
+            letterSpacing: "-0.005em",
+          }}
         >
           {tarefa.titulo}
         </span>
         {etiquetasDoCartao.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
+          <div className="flex flex-wrap gap-0.5 mt-1">
             {etiquetasDoCartao.map((e) => (
               <span
                 key={e.id}
-                className="px-1.5 py-[1px] rounded text-[9px] font-bold"
-                style={{ backgroundColor: e.cor, color: getContrastTextColor(e.cor) }}
+                className="inline-flex items-center h-[15px] px-1.5 text-[0.5625rem] font-medium leading-none"
+                style={{
+                  backgroundColor: e.cor,
+                  color: getContrastTextColor(e.cor),
+                  borderRadius: "var(--tf-radius-xs)",
+                  letterSpacing: "0.01em",
+                }}
               >
                 {e.nome}
               </span>
@@ -105,15 +123,15 @@ export function BacklogRow({
       {/* Status (coluna) */}
       {tarefa.coluna_nome && (
         <span
-          className="text-[11px] px-2 py-0.5 rounded-[8px] shrink-0"
+          className="inline-flex items-center h-[17px] px-1.5 text-[0.625rem] font-medium shrink-0"
           style={{
-            background: tarefa.concluido
-              ? "var(--tf-success-bg)"
-              : "var(--tf-bg-secondary)",
-            color: tarefa.concluido
-              ? "var(--tf-success)"
-              : "var(--tf-text-tertiary)",
-            fontWeight: tarefa.concluido ? 600 : 400,
+            background: tarefa.concluido ? "var(--tf-success-bg)" : "var(--tf-bg-secondary)",
+            color: tarefa.concluido ? "var(--tf-success)" : "var(--tf-text-tertiary)",
+            border: `1px solid ${tarefa.concluido ? "var(--tf-success)" : "var(--tf-border)"}`,
+            borderRadius: "var(--tf-radius-xs)",
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.02em",
+            textTransform: "uppercase",
           }}
         >
           {tarefa.concluido ? "Concluído" : tarefa.coluna_nome}
@@ -123,13 +141,16 @@ export function BacklogRow({
       {/* Peso */}
       {tarefa.peso && (
         <span
-          className="text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0"
+          className="inline-flex items-center gap-0.5 h-[17px] px-1.5 text-[0.625rem] font-medium shrink-0"
           style={{
             background: "var(--tf-accent-light)",
             color: "var(--tf-accent-text)",
+            border: "1px solid var(--tf-accent)",
+            borderRadius: "var(--tf-radius-xs)",
+            fontFamily: "var(--tf-font-mono)",
           }}
         >
-          <Zap size={9} className="inline mr-0.5" />
+          <Zap size={9} strokeWidth={2} />
           {tarefa.peso}
         </span>
       )}
@@ -141,11 +162,13 @@ export function BacklogRow({
           onClick={(e) => e.stopPropagation()}
         >
           <select
-            className="text-[12px] px-2 py-1 rounded-[8px] outline-none"
+            className="text-[0.6875rem] h-7 px-2 outline-none"
             style={{
-              background: "var(--tf-bg-secondary)",
-              border: "1px solid var(--tf-border)",
+              background: "var(--tf-surface)",
+              border: "1px solid var(--tf-accent)",
               color: "var(--tf-text)",
+              borderRadius: "var(--tf-radius-xs)",
+              fontFamily: "var(--tf-font-mono)",
             }}
             defaultValue=""
             onChange={(e) => {
@@ -155,7 +178,7 @@ export function BacklogRow({
             autoFocus
           >
             <option value="" disabled>
-              Escolher sprint...
+              Escolher sprint…
             </option>
             {sprints
               .filter((s) => s.status_sprint !== "concluida")
@@ -167,10 +190,11 @@ export function BacklogRow({
           </select>
           <button
             onClick={() => setSeletor(false)}
-            className="p-0.5"
+            className="p-0.5 transition-colors hover:text-[var(--tf-text)]"
             style={{ color: "var(--tf-text-tertiary)" }}
+            aria-label="Cancelar"
           >
-            <X size={14} />
+            <X size={12} strokeWidth={1.75} />
           </button>
         </div>
       ) : noSprint ? (
@@ -179,13 +203,18 @@ export function BacklogRow({
             e.stopPropagation();
             setSeletor(true);
           }}
-          className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth shrink-0"
+          className="inline-flex items-center gap-1 h-[22px] px-2 text-[0.625rem] font-medium opacity-0 group-hover:opacity-100 transition-all shrink-0 hover:brightness-110"
           style={{
             background: "var(--tf-accent-light)",
             color: "var(--tf-accent-text)",
+            border: "1px solid var(--tf-accent)",
+            borderRadius: "var(--tf-radius-xs)",
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.02em",
+            textTransform: "uppercase",
           }}
         >
-          <ArrowRight size={10} /> Mover pra sprint
+          <ArrowRight size={10} strokeWidth={1.75} /> Mover p/ sprint
         </button>
       ) : (
         <div
@@ -193,11 +222,13 @@ export function BacklogRow({
           onClick={(e) => e.stopPropagation()}
         >
           <select
-            className="text-[11px] px-1.5 py-0.5 rounded-[8px] outline-none transition-smooth"
+            className="text-[0.625rem] h-6 px-1.5 outline-none transition-colors"
             style={{
               background: "var(--tf-bg-secondary)",
               border: "1px solid var(--tf-border)",
               color: "var(--tf-text-secondary)",
+              borderRadius: "var(--tf-radius-xs)",
+              fontFamily: "var(--tf-font-mono)",
             }}
             defaultValue=""
             onChange={(e) => {
@@ -211,7 +242,7 @@ export function BacklogRow({
             }}
           >
             <option value="" disabled>
-              Mover...
+              Mover…
             </option>
             {sprints
               .filter(
@@ -235,11 +266,14 @@ export function BacklogRow({
             e.stopPropagation();
             onEstimar(tarefa.id);
           }}
-          className="p-1 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth shrink-0"
-          style={{ color: "var(--tf-text-tertiary)" }}
+          className="p-1 opacity-0 group-hover:opacity-100 transition-colors shrink-0 hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
+          style={{
+            color: "var(--tf-text-tertiary)",
+            borderRadius: "var(--tf-radius-xs)",
+          }}
           title="Estimar com Planning Poker"
         >
-          <Layers size={13} />
+          <Layers size={12} strokeWidth={1.75} />
         </button>
       )}
 
@@ -249,11 +283,14 @@ export function BacklogRow({
           e.stopPropagation();
           onExcluir(tarefa.id);
         }}
-        className="p-1 rounded-[8px] opacity-0 group-hover:opacity-100 transition-smooth shrink-0"
-        style={{ color: "var(--tf-text-tertiary)" }}
+        className="p-1 opacity-0 group-hover:opacity-100 transition-colors shrink-0 hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+        style={{
+          color: "var(--tf-text-tertiary)",
+          borderRadius: "var(--tf-radius-xs)",
+        }}
         title="Excluir tarefa"
       >
-        <Trash2 size={13} />
+        <Trash2 size={12} strokeWidth={1.75} />
       </button>
     </div>
   );
