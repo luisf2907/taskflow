@@ -3,8 +3,10 @@
 import { supabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Calendar, Folder, Kanban, Search, ArrowRight, FileText } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { fadeOnly, scaleIn } from "@/lib/motion/presets";
 
 type TipoResultado = "workspace" | "quadro" | "cartao";
 type FiltroTab = "todos" | "cartao" | "quadro" | "workspace";
@@ -20,11 +22,30 @@ interface Resultado {
 }
 
 const TABS: { id: FiltroTab; label: string }[] = [
-  { id: "todos", label: "Todos" },
+  { id: "todos", label: "Tudo" },
   { id: "cartao", label: "Cards" },
   { id: "quadro", label: "Sprints" },
   { id: "workspace", label: "Workspaces" },
 ];
+
+// Kbd label em mono — usado em hints de atalho.
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd
+      className="inline-flex items-center h-[18px] px-1.5 text-[0.625rem]"
+      style={{
+        background: "var(--tf-bg-secondary)",
+        color: "var(--tf-text-secondary)",
+        border: "1px solid var(--tf-border)",
+        borderRadius: "var(--tf-radius-xs)",
+        fontFamily: "var(--tf-font-mono)",
+        letterSpacing: "0.04em",
+      }}
+    >
+      {children}
+    </kbd>
+  );
+}
 
 export function CommandPalette() {
   const [aberto, setAberto] = useState(false);
@@ -61,7 +82,9 @@ export function CommandPalette() {
         else abrir();
       }
     }
-    function handleOpenEvent() { abrir(); }
+    function handleOpenEvent() {
+      abrir();
+    }
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("open-command-palette", handleOpenEvent);
     return () => {
@@ -70,8 +93,6 @@ export function CommandPalette() {
     };
   }, [aberto, abrir, fechar]);
 
-  // Busca com debounce. set-state-in-effect intencional: reage a mudança de
-  // input do usuário, dispara debounce assíncrono.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!busca.trim()) {
@@ -88,33 +109,53 @@ export function CommandPalette() {
 
       const [resWorkspaces, resQuadros, resCartoesTitulo, resCartoesDesc] = await Promise.all([
         supabase.from("workspaces").select("id, nome, cor").ilike("nome", termo).limit(5),
-        supabase.from("quadros").select("id, nome, cor, workspace_id, status_sprint").ilike("nome", termo).limit(6),
-        supabase.from("cartoes").select("id, titulo, descricao, coluna_id, workspace_id, data_conclusao").ilike("titulo", termo).limit(10),
-        supabase.from("cartoes").select("id, titulo, descricao, coluna_id, workspace_id, data_conclusao").ilike("descricao", termo).limit(5),
+        supabase
+          .from("quadros")
+          .select("id, nome, cor, workspace_id, status_sprint")
+          .ilike("nome", termo)
+          .limit(6),
+        supabase
+          .from("cartoes")
+          .select("id, titulo, descricao, coluna_id, workspace_id, data_conclusao")
+          .ilike("titulo", termo)
+          .limit(10),
+        supabase
+          .from("cartoes")
+          .select("id, titulo, descricao, coluna_id, workspace_id, data_conclusao")
+          .ilike("descricao", termo)
+          .limit(5),
       ]);
 
       const items: Resultado[] = [];
 
-      // Workspaces
       for (const ws of resWorkspaces.data || []) {
         items.push({
-          id: ws.id, tipo: "workspace", titulo: ws.nome,
-          subtitulo: "Workspace", cor: ws.cor,
+          id: ws.id,
+          tipo: "workspace",
+          titulo: ws.nome,
+          subtitulo: "Workspace",
+          cor: ws.cor,
           href: `/workspace/${ws.id}`,
         });
       }
 
-      // Quadros
       for (const q of resQuadros.data || []) {
-        const statusLabel = q.status_sprint === "ativa" ? "Ativa" : q.status_sprint === "concluida" ? "Concluida" : "Planejada";
+        const statusLabel =
+          q.status_sprint === "ativa"
+            ? "Ativa"
+            : q.status_sprint === "concluida"
+              ? "Concluida"
+              : "Planejada";
         items.push({
-          id: q.id, tipo: "quadro", titulo: q.nome,
-          subtitulo: `Sprint · ${statusLabel}`, cor: q.cor,
+          id: q.id,
+          tipo: "quadro",
+          titulo: q.nome,
+          subtitulo: `Sprint · ${statusLabel}`,
+          cor: q.cor,
           href: `/quadro/${q.id}`,
         });
       }
 
-      // Cards (titulo + descricao, deduplicate)
       const allCards = [...(resCartoesTitulo.data || []), ...(resCartoesDesc.data || [])];
       const seenCardIds = new Set<string>();
       const uniqueCards = allCards.filter((c) => {
@@ -132,7 +173,8 @@ export function CommandPalette() {
             .select("id, quadro_id, nome")
             .in("id", [...new Set(colunaIds)]);
           if (colunas) {
-            for (const col of colunas) colunaMap[col.id] = { quadro_id: col.quadro_id, nome: col.nome };
+            for (const col of colunas)
+              colunaMap[col.id] = { quadro_id: col.quadro_id, nome: col.nome };
           }
         }
 
@@ -147,7 +189,9 @@ export function CommandPalette() {
             : undefined;
 
           items.push({
-            id: c.id, tipo: "cartao", titulo: c.titulo,
+            id: c.id,
+            tipo: "cartao",
+            titulo: c.titulo,
             subtitulo: `Card · ${status}`,
             descricaoPreview: descPreview,
             href: quadroId ? `/quadro/${quadroId}` : `/workspace/${c.workspace_id}`,
@@ -160,11 +204,12 @@ export function CommandPalette() {
       setCarregando(false);
     }, 250);
 
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [busca]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Filtrar por tab
   const filtrados = tab === "todos" ? resultados : resultados.filter((r) => r.tipo === tab);
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -195,191 +240,330 @@ export function CommandPalette() {
 
   const icone = (tipo: TipoResultado) => {
     switch (tipo) {
-      case "workspace": return <Folder size={16} />;
-      case "quadro": return <Calendar size={16} />;
-      case "cartao": return <Kanban size={16} />;
+      case "workspace":
+        return <Folder size={13} strokeWidth={1.75} />;
+      case "quadro":
+        return <Calendar size={13} strokeWidth={1.75} />;
+      case "cartao":
+        return <Kanban size={13} strokeWidth={1.75} />;
     }
   };
 
   const labelTipo = (tipo: TipoResultado) => {
     switch (tipo) {
-      case "workspace": return "WORKSPACE";
-      case "quadro": return "SPRINT";
-      case "cartao": return "CARD";
+      case "workspace":
+        return "WS";
+      case "quadro":
+        return "SP";
+      case "cartao":
+        return "CARD";
     }
   };
 
-  if (!aberto) return null;
-
   return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-[100] flex justify-center pt-[18vh]"
-      style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}
-      onClick={(e) => { if (e.target === overlayRef.current) fechar(); }}
-    >
-      <div
-        className="w-full max-w-[540px] mx-4 h-fit rounded-[20px] overflow-hidden border"
-        style={{
-          background: "var(--tf-surface)",
-          borderColor: "var(--tf-border)",
-          boxShadow: "0 24px 48px rgba(0,0,0,0.2)",
-          animation: "paletteIn 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
-        }}
-      >
-        <style>{`
-          @keyframes paletteIn {
-            0% { opacity: 0; transform: scale(0.97) translateY(-8px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-          }
-        `}</style>
-
-        {/* Search Input */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: "var(--tf-border)" }}>
-          <Search size={20} style={{ color: "var(--tf-text-tertiary)" }} className="shrink-0" />
-          <input
-            ref={inputRef}
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Buscar por titulo ou descricao..."
-            className="flex-1 bg-transparent outline-none text-[15px] font-medium"
-            style={{ color: "var(--tf-text)" }}
-          />
-          <kbd
-            className="text-[10px] font-bold px-2 py-1 rounded-[8px] tracking-wide shrink-0"
-            style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}
+    <AnimatePresence>
+      {aberto && (
+        <motion.div
+          ref={overlayRef}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          variants={fadeOnly}
+          className="fixed inset-0 z-[100] flex justify-center pt-[15vh]"
+          style={{
+            background: "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+          }}
+          onClick={(e) => {
+            if (e.target === overlayRef.current) fechar();
+          }}
+        >
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={scaleIn}
+            className="w-full max-w-[600px] mx-4 h-fit overflow-hidden"
+            style={{
+              background: "var(--tf-surface-raised)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-lg)",
+              boxShadow: "var(--tf-shadow-lg)",
+            }}
           >
-            ESC
-          </kbd>
-        </div>
+            {/* Search Input */}
+            <div
+              className="flex items-center gap-2.5 px-4 h-11"
+              style={{ borderBottom: "1px solid var(--tf-border)" }}
+            >
+              <Search
+                size={15}
+                strokeWidth={1.75}
+                style={{ color: "var(--tf-text-tertiary)" }}
+                className="shrink-0"
+              />
+              <input
+                ref={inputRef}
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Buscar workspace, sprint ou card…"
+                className="flex-1 bg-transparent outline-none text-[0.875rem]"
+                style={{
+                  color: "var(--tf-text)",
+                  letterSpacing: "-0.005em",
+                }}
+              />
+              <Kbd>ESC</Kbd>
+            </div>
 
-        {/* Tabs (only show when there are results) */}
-        {busca.trim() && resultados.length > 0 && (
-          <div className="flex items-center gap-1 px-4 py-2 border-b" style={{ borderColor: "var(--tf-border)" }}>
-            {TABS.map((t) => {
-              const count = t.id === "todos" ? resultados.length : resultados.filter((r) => r.tipo === t.id).length;
-              if (t.id !== "todos" && count === 0) return null;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => { setTab(t.id); setIndiceAtivo(0); }}
-                  className="px-3 py-1 rounded-[8px] text-[11px] font-bold transition-all"
-                  style={{
-                    background: tab === t.id ? "var(--tf-accent-light)" : "transparent",
-                    color: tab === t.id ? "var(--tf-accent)" : "var(--tf-text-tertiary)",
-                  }}
+            {/* Tabs */}
+            {busca.trim() && resultados.length > 0 && (
+              <div
+                className="flex items-center gap-1 px-3 py-1.5"
+                style={{ borderBottom: "1px solid var(--tf-border)" }}
+              >
+                {TABS.map((t) => {
+                  const count =
+                    t.id === "todos"
+                      ? resultados.length
+                      : resultados.filter((r) => r.tipo === t.id).length;
+                  if (t.id !== "todos" && count === 0) return null;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        setTab(t.id);
+                        setIndiceAtivo(0);
+                      }}
+                      className="flex items-center gap-1.5 h-6 px-2 text-[0.6875rem] font-medium transition-all"
+                      style={{
+                        background:
+                          tab === t.id ? "var(--tf-accent-light)" : "transparent",
+                        color:
+                          tab === t.id ? "var(--tf-accent-text)" : "var(--tf-text-tertiary)",
+                        borderRadius: "var(--tf-radius-xs)",
+                        fontFamily: "var(--tf-font-mono)",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
+                      {t.label}
+                      {count > 0 && (
+                        <span style={{ opacity: 0.6 }}>{count}</span>
+                      )}
+                    </button>
+                  );
+                })}
+                <span
+                  className="ml-auto label-mono"
+                  style={{ color: "var(--tf-text-tertiary)" }}
                 >
-                  {t.label} {count > 0 && <span className="ml-1 opacity-60">{count}</span>}
-                </button>
-              );
-            })}
-            <span className="ml-auto text-[9px] font-bold" style={{ color: "var(--tf-text-tertiary)" }}>
-              Tab ↹ filtrar
-            </span>
-          </div>
-        )}
-
-        {/* Results */}
-        <div className="max-h-[360px] overflow-y-auto py-2 px-2" style={{ scrollbarWidth: "thin" }} aria-live="polite" aria-atomic="true">
-          {busca.trim() === "" ? (
-            <div className="flex flex-col items-center justify-center py-10 gap-2">
-              <Search size={28} style={{ color: "var(--tf-border)" }} />
-              <p className="text-[13px] font-medium" style={{ color: "var(--tf-text-tertiary)" }}>
-                Digite para buscar...
-              </p>
-              <div className="flex items-center gap-3 mt-2">
-                <kbd className="text-[10px] font-bold px-2 py-0.5 rounded-[4px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}>⌘K</kbd>
-                <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>abrir</span>
-                <kbd className="text-[10px] font-bold px-2 py-0.5 rounded-[4px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}>↑↓</kbd>
-                <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>navegar</span>
-                <kbd className="text-[10px] font-bold px-2 py-0.5 rounded-[4px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}>Tab</kbd>
-                <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>filtrar</span>
+                  Tab ↹
+                </span>
               </div>
-            </div>
-          ) : carregando ? (
-            <div className="flex items-center justify-center py-10 gap-2">
-              <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "var(--tf-accent)", borderTopColor: "transparent" }} />
-              <span className="text-[13px] font-medium" style={{ color: "var(--tf-text-tertiary)" }}>Buscando...</span>
-            </div>
-          ) : filtrados.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 gap-1">
-              <p className="text-[13px] font-bold" style={{ color: "var(--tf-text-secondary)" }}>
-                Nenhum resultado
-              </p>
-              <p className="text-[12px]" style={{ color: "var(--tf-text-tertiary)" }}>
-                Tente um termo diferente{tab !== "todos" ? " ou mude o filtro" : ""}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-0.5">
-              {filtrados.map((item, i) => (
-                <button
-                  key={`${item.tipo}-${item.id}`}
-                  onClick={() => navegar(item)}
-                  onMouseEnter={() => setIndiceAtivo(i)}
-                  className={cn("w-full flex items-center gap-3 px-3 py-2.5 rounded-[8px] text-left group")}
-                  style={{
-                    background: i === indiceAtivo ? "var(--tf-accent-light)" : "transparent",
-                    transition: "background 0.1s ease",
-                  }}
-                >
-                  <div
-                    className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
+            )}
+
+            {/* Results */}
+            <div
+              className="max-h-[380px] overflow-y-auto py-1.5 px-1.5"
+              style={{ scrollbarWidth: "thin" }}
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {busca.trim() === "" ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-3">
+                  <Search
+                    size={22}
+                    strokeWidth={1.5}
+                    style={{ color: "var(--tf-border-strong)" }}
+                  />
+                  <p
+                    className="text-[0.75rem]"
                     style={{
-                      background: item.cor || "var(--tf-bg-secondary)",
-                      color: item.cor ? "white" : "var(--tf-text-tertiary)",
+                      color: "var(--tf-text-tertiary)",
+                      fontFamily: "var(--tf-font-mono)",
                     }}
                   >
-                    {icone(item.tipo)}
+                    Digite para buscar
+                  </p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="flex items-center gap-1.5">
+                      <Kbd>↑↓</Kbd>
+                      <span className="text-[0.6875rem]" style={{ color: "var(--tf-text-tertiary)" }}>
+                        navegar
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Kbd>Tab</Kbd>
+                      <span className="text-[0.6875rem]" style={{ color: "var(--tf-text-tertiary)" }}>
+                        filtrar
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Kbd>↵</Kbd>
+                      <span className="text-[0.6875rem]" style={{ color: "var(--tf-text-tertiary)" }}>
+                        abrir
+                      </span>
+                    </span>
                   </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold truncate" style={{ color: "var(--tf-text)" }}>
-                      {item.titulo}
-                    </p>
-                    {item.descricaoPreview && (
-                      <p className="text-[11px] truncate flex items-center gap-1 mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>
-                        <FileText size={10} className="shrink-0" />
-                        {item.descricaoPreview}
-                      </p>
-                    )}
-                    {item.subtitulo && !item.descricaoPreview && (
-                      <p className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>{item.subtitulo}</p>
-                    )}
-                  </div>
-
-                  <span
-                    className="text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full shrink-0"
-                    style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}
-                  >
-                    {labelTipo(item.tipo)}
-                  </span>
-
-                  <ArrowRight
-                    size={14}
-                    className="shrink-0"
-                    style={{ color: i === indiceAtivo ? "var(--tf-accent)" : "transparent", transition: "color 0.1s ease" }}
+                </div>
+              ) : carregando ? (
+                <div className="flex items-center justify-center py-10 gap-2">
+                  <div
+                    className="w-3 h-3 border rounded-full animate-spin"
+                    style={{
+                      borderColor: "var(--tf-accent)",
+                      borderTopColor: "transparent",
+                    }}
                   />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+                  <span
+                    className="text-[0.75rem]"
+                    style={{
+                      color: "var(--tf-text-tertiary)",
+                      fontFamily: "var(--tf-font-mono)",
+                    }}
+                  >
+                    Buscando…
+                  </span>
+                </div>
+              ) : filtrados.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-1">
+                  <p
+                    className="text-[0.8125rem] font-medium"
+                    style={{ color: "var(--tf-text-secondary)" }}
+                  >
+                    Nenhum resultado
+                  </p>
+                  <p
+                    className="text-[0.6875rem]"
+                    style={{
+                      color: "var(--tf-text-tertiary)",
+                      fontFamily: "var(--tf-font-mono)",
+                    }}
+                  >
+                    tente outro termo{tab !== "todos" ? " ou outro filtro" : ""}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-0.5">
+                  {filtrados.map((item, i) => {
+                    const ativo = i === indiceAtivo;
+                    return (
+                      <button
+                        key={`${item.tipo}-${item.id}`}
+                        onClick={() => navegar(item)}
+                        onMouseEnter={() => setIndiceAtivo(i)}
+                        className={cn(
+                          "w-full flex items-center gap-2.5 px-2 py-2 text-left outline-none"
+                        )}
+                        style={{
+                          background: ativo ? "var(--tf-accent-light)" : "transparent",
+                          borderRadius: "var(--tf-radius-xs)",
+                          transition: "background 0.08s ease",
+                        }}
+                      >
+                        <div
+                          className="w-6 h-6 flex items-center justify-center shrink-0"
+                          style={{
+                            background: item.cor || "var(--tf-bg-secondary)",
+                            color: item.cor ? "#FFFFFF" : "var(--tf-text-tertiary)",
+                            border: item.cor ? "none" : "1px solid var(--tf-border)",
+                            borderRadius: "var(--tf-radius-xs)",
+                          }}
+                        >
+                          {icone(item.tipo)}
+                        </div>
 
-        {/* Footer */}
-        {filtrados.length > 0 && (
-          <div className="px-5 py-2.5 border-t flex items-center justify-between" style={{ borderColor: "var(--tf-border)" }}>
-            <span className="text-[11px] font-medium" style={{ color: "var(--tf-text-tertiary)" }}>
-              {filtrados.length} {filtrados.length === 1 ? "resultado" : "resultados"}
-            </span>
-            <div className="flex items-center gap-2">
-              <kbd className="text-[10px] font-bold px-1.5 py-0.5 rounded-[4px]" style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)" }}>↵</kbd>
-              <span className="text-[10px]" style={{ color: "var(--tf-text-tertiary)" }}>abrir</span>
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className="text-[0.8125rem] font-medium truncate"
+                            style={{
+                              color: ativo ? "var(--tf-accent-text)" : "var(--tf-text)",
+                              letterSpacing: "-0.005em",
+                            }}
+                          >
+                            {item.titulo}
+                          </p>
+                          {item.descricaoPreview ? (
+                            <p
+                              className="text-[0.6875rem] truncate flex items-center gap-1 mt-0.5"
+                              style={{ color: "var(--tf-text-tertiary)" }}
+                            >
+                              <FileText size={9} className="shrink-0" strokeWidth={1.75} />
+                              {item.descricaoPreview}
+                            </p>
+                          ) : (
+                            item.subtitulo && (
+                              <p
+                                className="text-[0.6875rem] truncate mt-0.5"
+                                style={{
+                                  color: "var(--tf-text-tertiary)",
+                                  fontFamily: "var(--tf-font-mono)",
+                                  letterSpacing: "0.02em",
+                                }}
+                              >
+                                {item.subtitulo}
+                              </p>
+                            )
+                          )}
+                        </div>
+
+                        <span
+                          className="shrink-0 label-mono"
+                          style={{
+                            color: ativo ? "var(--tf-accent)" : "var(--tf-text-tertiary)",
+                          }}
+                        >
+                          {labelTipo(item.tipo)}
+                        </span>
+
+                        <ArrowRight
+                          size={12}
+                          strokeWidth={2}
+                          className="shrink-0"
+                          style={{
+                            color: ativo ? "var(--tf-accent)" : "transparent",
+                            transition: "color 0.08s ease",
+                          }}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
-        )}
-      </div>
-    </div>
+
+            {/* Footer */}
+            {filtrados.length > 0 && (
+              <div
+                className="px-3 h-8 flex items-center justify-between"
+                style={{ borderTop: "1px solid var(--tf-border)" }}
+              >
+                <span
+                  className="text-[0.6875rem]"
+                  style={{
+                    color: "var(--tf-text-tertiary)",
+                    fontFamily: "var(--tf-font-mono)",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {filtrados.length} {filtrados.length === 1 ? "resultado" : "resultados"}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Kbd>↵</Kbd>
+                  <span
+                    className="text-[0.6875rem]"
+                    style={{ color: "var(--tf-text-tertiary)" }}
+                  >
+                    abrir
+                  </span>
+                </span>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

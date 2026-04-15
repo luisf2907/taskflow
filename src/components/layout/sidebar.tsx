@@ -1,11 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useWorkspaces } from "@/hooks/use-workspaces";
 import { useActiveWorkspace } from "@/hooks/use-active-workspace";
 import { Quadro } from "@/types";
 import {
-  Kanban,
   Folder,
   GitBranch,
   Grid3X3,
@@ -15,44 +13,114 @@ import {
   Plus,
   SidebarClose,
   SidebarOpen,
+  Kanban,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 
-function QuadroLink({ quadro, aberta, pathname }: { quadro: Quadro; aberta: boolean; pathname: string }) {
+// ─── NAV LINK ──────────────────────────────────────────
+// Linear-style: hover → border-left 2px laranja + bg sutil.
+// Active → border-left laranja full + bg-tint laranja 8%.
+interface NavLinkProps {
+  href: string;
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+  label: string;
+  active: boolean;
+  aberta: boolean;
+  tooltip?: string;
+}
+
+function NavLink({ href, icon: Icon, label, active, aberta, tooltip }: NavLinkProps) {
+  return (
+    <Link
+      href={href}
+      data-active={active}
+      title={!aberta ? (tooltip || label) : undefined}
+      className={cn(
+        "sidebar-item relative flex items-center group outline-none",
+        aberta
+          ? "gap-2.5 pl-3 pr-2 h-8 rounded-[var(--tf-radius-sm)] text-[0.8125rem]"
+          : "justify-center w-8 h-8 mx-auto rounded-[var(--tf-radius-sm)]"
+      )}
+      style={{
+        background: active ? "var(--tf-accent-light)" : "transparent",
+        color: active ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
+        fontWeight: active ? 500 : 400,
+      }}
+    >
+      {/* Border-left accent indicator */}
+      <span
+        aria-hidden
+        className="absolute left-0 top-1 bottom-1 w-[2px] rounded-r-full transition-all"
+        style={{
+          background: active ? "var(--tf-accent)" : "transparent",
+        }}
+      />
+      <Icon size={15} strokeWidth={active ? 2.25 : 1.75} />
+      {aberta && <span className="sidebar-fade truncate">{label}</span>}
+    </Link>
+  );
+}
+
+// ─── QUADRO LINK ──────────────────────────────────────
+function QuadroLink({
+  quadro,
+  aberta,
+  pathname,
+}: {
+  quadro: Quadro;
+  aberta: boolean;
+  pathname: string;
+}) {
   const ativo = pathname === `/quadro/${quadro.id}`;
   return (
     <Link
       href={`/quadro/${quadro.id}`}
       data-active={ativo && aberta}
+      title={!aberta ? quadro.nome : undefined}
       className={cn(
-        "sidebar-item sidebar-link flex items-center group relative",
-        aberta ? "gap-3 px-2 py-[6px] rounded-[8px] text-[13px]" : "justify-center w-[44px] h-[44px] rounded-[14px] mx-auto",
-        ativo ? "font-semibold" : ""
+        "sidebar-item relative flex items-center group outline-none",
+        aberta
+          ? "gap-2.5 pl-3 pr-2 h-8 rounded-[var(--tf-radius-sm)] text-[0.8125rem]"
+          : "justify-center w-8 h-8 mx-auto rounded-[var(--tf-radius-sm)]"
       )}
       style={{
-        background: ativo && aberta ? "var(--tf-accent-light)" : "transparent",
+        background: ativo ? "var(--tf-accent-light)" : "transparent",
         color: ativo ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
+        fontWeight: ativo ? 500 : 400,
       }}
-      title={!aberta ? quadro.nome : undefined}
     >
-      <div
-        className={cn(
-          "flex items-center justify-center shrink-0 sidebar-item",
-          aberta ? "w-5 h-5 rounded-[6px]" : "w-7 h-7 rounded-[8px]",
-          ativo && !aberta && "ring-2 ring-[var(--tf-accent)] ring-offset-2 ring-offset-[var(--tf-surface)]"
-        )}
+      <span
+        aria-hidden
+        className="absolute left-0 top-1 bottom-1 w-[2px] rounded-r-full transition-all"
+        style={{ background: ativo ? "var(--tf-accent)" : "transparent" }}
+      />
+      {/* Cor do quadro como dot — sem box colorido cheio */}
+      <span
+        className="w-2 h-2 shrink-0 rounded-full"
         style={{ background: quadro.cor }}
-      >
-        <Kanban size={aberta ? 10 : 14} className="text-white/90" strokeWidth={2.5} />
-      </div>
+      />
       {aberta && <span className="sidebar-fade truncate flex-1">{quadro.nome}</span>}
     </Link>
   );
 }
 
+// ─── SECTION HEADER ───────────────────────────────────
+function SectionHeader({ aberta, children }: { aberta: boolean; children: React.ReactNode }) {
+  if (!aberta) return null;
+  return (
+    <div
+      className="sidebar-fade label-mono flex items-center gap-2 px-3 mb-1 mt-1"
+      style={{ color: "var(--tf-text-tertiary)" }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ─── SIDEBAR ──────────────────────────────────────────
 interface SidebarProps {
   quadros: Quadro[];
   onNovoQuadro: () => void;
@@ -78,20 +146,31 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
     }
   }, [pathname, quadros, activeWorkspaceId, setActiveWorkspaceId]);
 
-  // Filtra os quadros do workspace atual
   const quadrosAtivos = quadros.filter((q) => q.workspace_id === activeWorkspaceId);
   const quadrosAvulsos = quadros.filter((q) => !q.workspace_id);
+
+  const hubActive =
+    pathname === `/workspace/${activeWorkspaceId}` && !pathname.includes("/repos");
+  const reposActive = pathname === `/workspace/${activeWorkspaceId}/repos`;
+  const wikiActive = pathname.startsWith(`/workspace/${activeWorkspaceId}/wiki`);
+  const meetsActive = pathname.startsWith(`/workspace/${activeWorkspaceId}/reunioes`);
 
   return (
     <>
       {/* Mobile overlay */}
       {aberta && (
-        <div className="fixed inset-0 bg-black/40 z-30 lg:hidden" onClick={onToggle} />
+        <div
+          className="fixed inset-0 z-30 lg:hidden"
+          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+          onClick={onToggle}
+        />
       )}
       <aside
         className={cn(
-          "sidebar-ease flex flex-col shrink-0 overflow-y-auto overflow-x-hidden mt-3.5 mb-3 mx-0 lg:ml-3 rounded-[32px] z-40",
-          aberta ? "w-[260px] fixed lg:relative inset-y-0 left-0 lg:inset-auto m-3 lg:mt-3.5 lg:mb-3 lg:ml-3" : "w-[68px] hidden lg:flex relative"
+          "sidebar-ease flex flex-col shrink-0 overflow-y-auto overflow-x-hidden mt-3.5 mb-3 mx-0 lg:ml-3 rounded-[var(--tf-radius-xl)] z-40",
+          aberta
+            ? "w-[232px] fixed lg:relative inset-y-0 left-0 lg:inset-auto m-3 lg:mt-3.5 lg:mb-3 lg:ml-3"
+            : "w-[52px] hidden lg:flex relative"
         )}
         style={{
           background: "var(--tf-surface)",
@@ -99,20 +178,29 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
           scrollbarWidth: "none",
         }}
       >
-        <div className={cn("py-3 flex-1 flex flex-col sidebar-item", !aberta && "items-center")}>
-          {/* Logo e Botão Togle */}
-          <div className={cn("flex items-center mb-4 mt-1", aberta ? "justify-between px-4" : "justify-center flex-col gap-4")}>
-            <Link href="/dashboard" className="flex items-center gap-3" title={!aberta ? "Home" : undefined}>
+        <div className={cn("py-2.5 flex-1 flex flex-col sidebar-item", !aberta && "items-center")}>
+          {/* Logo + Toggle */}
+          <div
+            className={cn(
+              "flex items-center mb-3",
+              aberta ? "justify-between px-3" : "justify-center flex-col gap-3"
+            )}
+          >
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2.5"
+              title={!aberta ? "Home" : undefined}
+            >
               <div
-                className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
+                className="w-7 h-7 rounded-[var(--tf-radius-sm)] flex items-center justify-center shrink-0"
                 style={{ background: "var(--tf-accent)" }}
               >
-                <Kanban size={18} className="text-white" strokeWidth={2.5} />
+                <Kanban size={15} className="text-white" strokeWidth={2.5} />
               </div>
               {aberta && (
                 <span
-                  className="sidebar-fade text-[17px] font-bold tracking-tight"
-                  style={{ color: "var(--tf-text)", opacity: 1 }}
+                  className="sidebar-fade text-[0.9375rem] font-semibold"
+                  style={{ color: "var(--tf-text)", letterSpacing: "-0.01em" }}
                 >
                   Taskflow
                 </span>
@@ -121,123 +209,117 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
 
             <button
               onClick={onToggle}
-              className="p-1.5 rounded-[8px] sidebar-item hover:bg-[var(--tf-surface-hover)]"
+              className="p-1 rounded-[var(--tf-radius-xs)] sidebar-item hover:bg-[var(--tf-surface-hover)] transition-colors"
               style={{ color: "var(--tf-text-tertiary)" }}
               aria-label={aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
               title={aberta ? "Recolher" : "Expandir"}
             >
-              {aberta ? <SidebarClose size={16} strokeWidth={1.8} /> : <SidebarOpen size={16} strokeWidth={1.8} />}
+              {aberta ? (
+                <SidebarClose size={15} strokeWidth={1.75} />
+              ) : (
+                <SidebarOpen size={15} strokeWidth={1.75} />
+              )}
             </button>
           </div>
 
-          <WorkspaceSwitcher aberta={aberta} onNovoWorkspace={() => {
-            if (window.location.pathname === "/dashboard") {
-              window.dispatchEvent(new Event("open-workspace-modal"));
-            } else {
-              window.location.href = "/dashboard?new-workspace=1";
-            }
-          }} />
+          {/* Workspace Switcher */}
+          <WorkspaceSwitcher
+            aberta={aberta}
+            onNovoWorkspace={() => {
+              if (window.location.pathname === "/dashboard") {
+                window.dispatchEvent(new Event("open-workspace-modal"));
+              } else {
+                window.location.href = "/dashboard?new-workspace=1";
+              }
+            }}
+          />
 
-          {/* Navegação Contextual (Apenas visível se tiver workspace selecionado) */}
+          {/* Navegação Contextual */}
           {activeWorkspaceId && (
-            <div className="flex flex-col mt-4">
-              <div className={cn("flex items-center mb-1", aberta ? "px-4" : "justify-center")}>
-                {aberta && (
-                  <span className="sidebar-fade text-[11px] font-bold uppercase tracking-widest text-[var(--tf-text-tertiary)] opacity-100 flex-1">
-                    Contexto
-                  </span>
+            <div className="flex flex-col mt-3">
+              <SectionHeader aberta={aberta}>Workspace</SectionHeader>
+
+              <nav
+                className={cn(
+                  aberta ? "flex flex-col gap-0.5 px-2" : "flex flex-col items-center gap-1"
                 )}
-              </div>
-              
-              <nav className={cn(aberta ? "space-y-0.5 px-3" : "flex flex-col items-center gap-2")}>
-                <Link
+              >
+                <NavLink
                   href={`/workspace/${activeWorkspaceId}`}
-                  data-active={pathname === `/workspace/${activeWorkspaceId}` && !pathname.includes("/repos")}
-                  className={cn(
-                    "sidebar-item sidebar-link flex items-center group relative",
-                    aberta ? "gap-3 px-2 py-[6px] rounded-[8px] text-[13px] font-medium" : "justify-center rounded-[14px] w-[44px] h-[44px]"
-                  )}
-                  style={{
-                    background: pathname === `/workspace/${activeWorkspaceId}` && !pathname.includes("/repos") && aberta ? "var(--tf-accent-light)" : "transparent",
-                    color: pathname === `/workspace/${activeWorkspaceId}` && !pathname.includes("/repos") ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
-                  }}
-                  title={!aberta ? "Hub do Workspace" : undefined}
-                >
-                  <LayoutDashboard size={16} strokeWidth={pathname === `/workspace/${activeWorkspaceId}` && !pathname.includes("/repos") ? 2.5 : 2} />
-                  {aberta && <span className="sidebar-fade opacity-100">Hub do Workspace</span>}
-                </Link>
-
-                <Link
+                  icon={LayoutDashboard}
+                  label="Hub"
+                  active={hubActive}
+                  aberta={aberta}
+                  tooltip="Hub do Workspace"
+                />
+                <NavLink
                   href={`/workspace/${activeWorkspaceId}/repos`}
-                  data-active={pathname === `/workspace/${activeWorkspaceId}/repos`}
-                  className={cn(
-                    "sidebar-item sidebar-link flex items-center group relative",
-                    aberta ? "gap-3 px-2 py-[6px] rounded-[8px] text-[13px] font-medium" : "justify-center rounded-[14px] w-[44px] h-[44px]"
-                  )}
-                  style={{
-                    background: pathname === `/workspace/${activeWorkspaceId}/repos` && aberta ? "var(--tf-accent-light)" : "transparent",
-                    color: pathname === `/workspace/${activeWorkspaceId}/repos` ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
-                  }}
-                  title={!aberta ? "Repositórios" : undefined}
-                >
-                  <GitBranch size={16} strokeWidth={pathname === `/workspace/${activeWorkspaceId}/repos` ? 2.5 : 2} />
-                  {aberta && <span className="sidebar-fade opacity-100">Repositórios</span>}
-                </Link>
-
-                <Link
+                  icon={GitBranch}
+                  label="Repositórios"
+                  active={reposActive}
+                  aberta={aberta}
+                />
+                <NavLink
                   href={`/workspace/${activeWorkspaceId}/wiki`}
-                  data-active={pathname.startsWith(`/workspace/${activeWorkspaceId}/wiki`)}
-                  className={cn(
-                    "sidebar-item sidebar-link flex items-center group relative",
-                    aberta ? "gap-3 px-2 py-[6px] rounded-[8px] text-[13px] font-medium" : "justify-center rounded-[14px] w-[44px] h-[44px]"
-                  )}
-                  style={{
-                    background: pathname.startsWith(`/workspace/${activeWorkspaceId}/wiki`) && aberta ? "var(--tf-accent-light)" : "transparent",
-                    color: pathname.startsWith(`/workspace/${activeWorkspaceId}/wiki`) ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
-                  }}
-                  title={!aberta ? "Wiki" : undefined}
-                >
-                  <BookOpen size={16} strokeWidth={pathname.startsWith(`/workspace/${activeWorkspaceId}/wiki`) ? 2.5 : 2} />
-                  {aberta && <span className="sidebar-fade opacity-100">Wiki</span>}
-                </Link>
-
-                <Link
+                  icon={BookOpen}
+                  label="Wiki"
+                  active={wikiActive}
+                  aberta={aberta}
+                />
+                <NavLink
                   href={`/workspace/${activeWorkspaceId}/reunioes`}
-                  data-active={pathname.startsWith(`/workspace/${activeWorkspaceId}/reunioes`)}
-                  className={cn(
-                    "sidebar-item sidebar-link flex items-center group relative",
-                    aberta ? "gap-3 px-2 py-[6px] rounded-[8px] text-[13px] font-medium" : "justify-center rounded-[14px] w-[44px] h-[44px]"
-                  )}
-                  style={{
-                    background: pathname.startsWith(`/workspace/${activeWorkspaceId}/reunioes`) && aberta ? "var(--tf-accent-light)" : "transparent",
-                    color: pathname.startsWith(`/workspace/${activeWorkspaceId}/reunioes`) ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
-                  }}
-                  title={!aberta ? "Reuniões" : undefined}
-                >
-                  <Mic size={16} strokeWidth={pathname.startsWith(`/workspace/${activeWorkspaceId}/reunioes`) ? 2.5 : 2} />
-                  {aberta && <span className="sidebar-fade opacity-100">Reuniões</span>}
-                </Link>
+                  icon={Mic}
+                  label="Reuniões"
+                  active={meetsActive}
+                  aberta={aberta}
+                />
               </nav>
 
-              {/* Quadros do Workspace */}
-              <div className={cn("mt-4", aberta ? "px-3" : "flex flex-col items-center")}>
-                <div className={cn("flex items-center mb-1", aberta ? "justify-between px-1" : "justify-center")}>
-                  {aberta && (
-                    <span className="sidebar-fade text-[11px] font-bold uppercase tracking-widest text-[var(--tf-text-tertiary)] opacity-100 flex-1">
-                      Sprints
-                    </span>
+              {/* Sprints */}
+              <div className={cn("mt-4", aberta ? "" : "flex flex-col items-center")}>
+                <div
+                  className={cn(
+                    "flex items-center mb-1",
+                    aberta ? "px-3 justify-between" : "justify-center"
                   )}
-                  <button onClick={onNovoQuadro} aria-label="Criar novo quadro" className={cn("p-1.5 rounded-[8px] hover:bg-[var(--tf-surface-hover)] sidebar-item", !aberta && "bg-[var(--tf-bg-secondary)]")} style={{ color: "var(--tf-text-tertiary)" }} title="Novo quadro">
-                    <Plus size={15} />
+                >
+                  <SectionHeader aberta={aberta}>
+                    <span className="flex-1">Sprints</span>
+                  </SectionHeader>
+                  <button
+                    onClick={onNovoQuadro}
+                    aria-label="Criar novo quadro"
+                    title="Novo quadro"
+                    className={cn(
+                      "rounded-[var(--tf-radius-xs)] sidebar-item transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]",
+                      aberta ? "p-1" : "p-1 mt-2"
+                    )}
+                    style={{ color: "var(--tf-text-tertiary)" }}
+                  >
+                    <Plus size={14} />
                   </button>
                 </div>
-                <div className={cn(aberta ? "flex flex-col space-y-0.5" : "flex flex-col items-center gap-2 mt-2")}>
+                <div
+                  className={cn(
+                    aberta ? "flex flex-col gap-0.5 px-2" : "flex flex-col items-center gap-1 mt-1"
+                  )}
+                >
                   {quadrosAtivos.length > 0 ? (
-                    quadrosAtivos.map((q) => <QuadroLink key={q.id} quadro={q} aberta={aberta} pathname={pathname} />)
+                    quadrosAtivos.map((q) => (
+                      <QuadroLink key={q.id} quadro={q} aberta={aberta} pathname={pathname} />
+                    ))
                   ) : (
                     aberta && (
-                      <div className="px-2 py-3 text-[12px] text-center border border-dashed rounded-[10px]" style={{ color: "var(--tf-text-tertiary)", borderColor: "var(--tf-border)" }}>
-                        Nenhuma sprint criada.
+                      <div
+                        className="mx-1 px-2.5 py-2 text-[0.75rem] text-center border border-dashed"
+                        style={{
+                          color: "var(--tf-text-tertiary)",
+                          borderColor: "var(--tf-border)",
+                          borderRadius: "var(--tf-radius-sm)",
+                          fontFamily: "var(--tf-font-mono)",
+                        }}
+                      >
+                        Nenhuma sprint
                       </div>
                     )
                   )}
@@ -248,32 +330,48 @@ export function Sidebar({ quadros, onNovoQuadro, aberta, onToggle }: SidebarProp
 
           {!activeWorkspaceId && aberta && (
             <div className="flex-1 px-4 flex flex-col items-center justify-center text-center pb-10">
-              <Folder size={32} style={{ color: "var(--tf-border)", marginBottom: '12px' }} />
-              <p className="text-[13px] font-medium" style={{ color: "var(--tf-text-secondary)" }}>
+              <Folder size={24} style={{ color: "var(--tf-border)", marginBottom: "10px" }} />
+              <p
+                className="text-[0.8125rem] font-medium"
+                style={{ color: "var(--tf-text-secondary)" }}
+              >
                 Selecione um Workspace
               </p>
-              <p className="text-[12px] mt-1 mb-4" style={{ color: "var(--tf-text-tertiary)" }}>
-                para ver os projetos, reuniões e repositórios.
+              <p
+                className="text-[0.6875rem] mt-1 mb-2"
+                style={{ color: "var(--tf-text-tertiary)", fontFamily: "var(--tf-font-mono)" }}
+              >
+                para ver projetos, reuniões e repos
               </p>
             </div>
           )}
 
           {/* Quadros Avulsos */}
           {quadrosAvulsos.length > 0 && (
-            <div className={cn("mt-auto flex flex-col pt-4", aberta ? "px-3" : "items-center", "border-t border-[var(--tf-border)]")}>
-              <div className={cn("flex items-center", aberta ? "px-1 mb-2" : "justify-center mb-3")}>
-                {aberta ? (
-                  <span className="sidebar-fade text-[11px] font-bold uppercase tracking-widest text-[var(--tf-text-tertiary)] opacity-100 flex-1 flex items-center gap-2">
-                    <Grid3X3 size={12} /> Quadros Soltos
-                  </span>
-                ) : (
-                  <div title="Quadros Avulsos">
-                    <Grid3X3 size={15} style={{ color: "var(--tf-text-tertiary)" }} />
-                  </div>
+            <div
+              className={cn(
+                "mt-auto flex flex-col pt-3",
+                aberta ? "" : "items-center",
+                "border-t"
+              )}
+              style={{ borderColor: "var(--tf-border)" }}
+            >
+              <SectionHeader aberta={aberta}>
+                <Grid3X3 size={11} /> <span className="flex-1">Quadros soltos</span>
+              </SectionHeader>
+              {!aberta && (
+                <div title="Quadros Avulsos" className="mb-2">
+                  <Grid3X3 size={14} style={{ color: "var(--tf-text-tertiary)" }} />
+                </div>
+              )}
+              <div
+                className={cn(
+                  aberta ? "flex flex-col gap-0.5 px-2" : "flex flex-col items-center gap-1"
                 )}
-              </div>
-              <div className={cn(aberta ? "flex flex-col space-y-0.5" : "flex flex-col items-center gap-2")}>
-                {quadrosAvulsos.map((q) => <QuadroLink key={q.id} quadro={q} aberta={aberta} pathname={pathname} />)}
+              >
+                {quadrosAvulsos.map((q) => (
+                  <QuadroLink key={q.id} quadro={q} aberta={aberta} pathname={pathname} />
+                ))}
               </div>
             </div>
           )}

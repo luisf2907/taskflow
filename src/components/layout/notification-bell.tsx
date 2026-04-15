@@ -16,68 +16,99 @@ function tempoRelativo(data: string): string {
 }
 
 export function NotificationBell() {
-  const { notificacoes, naoLidas, marcarComoLida, marcarTodasComoLidas, apagar, limparTodas } = useNotificacoes();
+  const { notificacoes, naoLidas, marcarComoLida, marcarTodasComoLidas, apagar, limparTodas } =
+    useNotificacoes();
 
   const trigger = (
-    <div
-      className="relative hover-accent-text transition-all flex items-center justify-center cursor-pointer"
-      aria-label={naoLidas > 0 ? `Notificações — ${naoLidas} não lida${naoLidas > 1 ? "s" : ""}` : "Notificações"}
+    <button
+      className="relative w-8 h-8 flex items-center justify-center transition-colors outline-none cursor-pointer"
+      aria-label={
+        naoLidas > 0
+          ? `Notificações — ${naoLidas} não lida${naoLidas > 1 ? "s" : ""}`
+          : "Notificações"
+      }
       style={{
-        width: 42,
-        height: 42,
-        borderRadius: 20,
-        background: "var(--tf-bg-secondary)",
+        borderRadius: "var(--tf-radius-sm)",
         color: "var(--tf-text-secondary)",
+        background: "transparent",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = "var(--tf-surface-hover)";
+        e.currentTarget.style.color = "var(--tf-text)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "transparent";
+        e.currentTarget.style.color = "var(--tf-text-secondary)";
       }}
     >
-      <Bell size={18} strokeWidth={2.5} aria-hidden="true" />
+      <Bell size={15} strokeWidth={1.75} aria-hidden="true" />
       {naoLidas > 0 && (
         <span
-          className="absolute -top-1 -right-1 flex items-center justify-center font-bold"
           aria-hidden="true"
+          className="absolute -top-0.5 -right-0.5 pulse-dot"
           style={{
-            width: 20,
-            height: 20,
+            width: 7,
+            height: 7,
             borderRadius: "50%",
-            background: "var(--tf-danger)",
-            color: "white",
-            fontSize: 10,
+            background: "var(--tf-accent)",
+            boxShadow: "0 0 0 2px var(--tf-surface)",
           }}
-        >
-          {naoLidas > 9 ? "9+" : naoLidas}
-        </span>
+        />
       )}
-    </div>
+    </button>
   );
 
   return (
-    <Dropdown trigger={trigger} closeOnClick={false} className="!w-[320px] !rounded-[20px] !p-0 overflow-hidden !right-auto !left-1/2 !-ml-[160px] !mt-[18px]">
+    <Dropdown
+      trigger={trigger}
+      closeOnClick={false}
+      className="!w-[340px] !p-0 overflow-hidden !right-auto !left-1/2 !-ml-[170px] !mt-2"
+    >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-3"
+        className="flex items-center justify-between px-3 py-2.5"
         style={{ borderBottom: "1px solid var(--tf-border)" }}
       >
-        <span className="font-bold" style={{ fontSize: 14, color: "var(--tf-text)" }}>
-          Notificações
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className="label-mono"
+            style={{ color: "var(--tf-text-tertiary)" }}
+          >
+            Notificações
+          </span>
+          {naoLidas > 0 && (
+            <span
+              className="text-[0.625rem] px-1.5 rounded-[var(--tf-radius-xs)]"
+              style={{
+                background: "var(--tf-accent)",
+                color: "#FFFFFF",
+                fontFamily: "var(--tf-font-mono)",
+                letterSpacing: "0.02em",
+                fontWeight: 500,
+              }}
+            >
+              {naoLidas}
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {naoLidas > 0 && (
             <button
               onClick={() => marcarTodasComoLidas()}
-              className="flex items-center gap-1 font-medium"
-              style={{ fontSize: 12, color: "var(--tf-accent)" }}
+              className="flex items-center gap-1 text-[0.6875rem] font-medium transition-colors hover:text-[var(--tf-accent)]"
+              style={{ color: "var(--tf-text-tertiary)" }}
             >
-              <CheckCheck size={14} />
-              Marcar todas
+              <CheckCheck size={12} strokeWidth={1.75} />
+              Ler todas
             </button>
           )}
           {notificacoes.length > 0 && (
             <button
               onClick={() => limparTodas()}
-              className="flex items-center gap-1 font-medium"
-              style={{ fontSize: 12, color: "var(--tf-danger)" }}
+              className="flex items-center gap-1 text-[0.6875rem] font-medium transition-colors hover:text-[var(--tf-danger)]"
+              style={{ color: "var(--tf-text-tertiary)" }}
             >
-              <Trash2 size={13} />
+              <Trash2 size={11} strokeWidth={1.75} />
               Limpar
             </button>
           )}
@@ -85,11 +116,26 @@ export function NotificationBell() {
       </div>
 
       {/* List */}
-      <div className="overflow-y-auto" style={{ maxHeight: 360 }} role="list" aria-label="Notificações">
+      <div
+        className="overflow-y-auto"
+        style={{ maxHeight: 380 }}
+        role="list"
+        aria-label="Notificações"
+      >
         {notificacoes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 gap-2">
-            <Bell size={28} style={{ color: "var(--tf-text-tertiary)" }} />
-            <span style={{ fontSize: 13, color: "var(--tf-text-tertiary)" }}>
+            <Bell
+              size={22}
+              strokeWidth={1.5}
+              style={{ color: "var(--tf-border-strong)" }}
+            />
+            <span
+              style={{
+                fontSize: "0.75rem",
+                color: "var(--tf-text-tertiary)",
+                fontFamily: "var(--tf-font-mono)",
+              }}
+            >
               Nenhuma notificação
             </span>
           </div>
@@ -98,57 +144,68 @@ export function NotificationBell() {
             <button
               key={n.id}
               role="listitem"
-              className="group flex items-start gap-3 px-4 py-3 cursor-pointer hover-surface transition-all w-full text-left"
+              className="group flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors w-full text-left hover:bg-[var(--tf-surface-hover)]"
               style={{ borderBottom: "1px solid var(--tf-border-subtle)" }}
               onClick={() => {
                 marcarComoLida(n.id);
                 if (n.link) window.location.href = n.link;
               }}
             >
-              {/* Unread dot */}
+              {/* Unread indicator — orange bar vertical */}
               <div
-                className="shrink-0"
+                className="shrink-0 self-stretch"
                 style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  marginTop: 8,
+                  width: 2,
                   background: n.lida ? "transparent" : "var(--tf-accent)",
+                  borderRadius: 2,
+                  minHeight: 32,
                 }}
               />
 
-              {/* Content */}
               <div className="flex-1 min-w-0">
-                <div
-                  className="font-semibold truncate"
-                  style={{ fontSize: 13, color: "var(--tf-text)" }}
-                >
-                  {n.titulo}
+                <div className="flex items-baseline gap-2">
+                  <span
+                    className="font-medium truncate flex-1"
+                    style={{
+                      fontSize: "0.8125rem",
+                      color: "var(--tf-text)",
+                      letterSpacing: "-0.005em",
+                    }}
+                  >
+                    {n.titulo}
+                  </span>
+                  <span
+                    className="shrink-0"
+                    style={{
+                      fontSize: "0.625rem",
+                      color: "var(--tf-text-tertiary)",
+                      fontFamily: "var(--tf-font-mono)",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {tempoRelativo(n.criado_em)}
+                  </span>
                 </div>
                 {n.mensagem && (
                   <div
                     className="line-clamp-2 mt-0.5"
-                    style={{ fontSize: 12, color: "var(--tf-text-secondary)" }}
+                    style={{ fontSize: "0.75rem", color: "var(--tf-text-secondary)" }}
                   >
                     {n.mensagem}
                   </div>
                 )}
-                <div className="mt-1" style={{ fontSize: 11, color: "var(--tf-text-tertiary)" }}>
-                  {tempoRelativo(n.criado_em)}
-                </div>
               </div>
 
-              {/* Delete button */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   apagar(n.id);
                 }}
-                className="shrink-0 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)]"
+                className="shrink-0 p-1 rounded-[var(--tf-radius-xs)] opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
                 style={{ color: "var(--tf-text-tertiary)" }}
                 title="Apagar notificação"
               >
-                <X size={13} />
+                <X size={11} />
               </button>
             </button>
           ))

@@ -3,13 +3,43 @@
 import { useWorkspaces } from "@/hooks/use-workspaces";
 import { useActiveWorkspace } from "@/hooks/use-active-workspace";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
-import { Check, ChevronsUpDown, Folder, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 interface WorkspaceSwitcherProps {
   aberta: boolean;
   onNovoWorkspace?: () => void;
+}
+
+// Quadradinho colorido com a inicial do workspace (estilo Linear).
+function WorkspaceInitial({
+  workspace,
+  size = 24,
+}: {
+  workspace: { nome: string; cor: string } | null;
+  size?: number;
+}) {
+  const initial = workspace ? workspace.nome.trim().slice(0, 1).toUpperCase() : "?";
+  return (
+    <div
+      className="flex items-center justify-center shrink-0"
+      style={{
+        width: size,
+        height: size,
+        background: workspace ? workspace.cor : "var(--tf-bg-secondary)",
+        color: workspace ? "#FFFFFF" : "var(--tf-text-tertiary)",
+        border: workspace ? "none" : "1px solid var(--tf-border)",
+        borderRadius: "var(--tf-radius-xs)",
+        fontFamily: "var(--tf-font-mono)",
+        fontSize: size <= 18 ? "0.625rem" : "0.6875rem",
+        letterSpacing: "0.02em",
+        fontWeight: 600,
+      }}
+    >
+      {initial}
+    </div>
+  );
 }
 
 export function WorkspaceSwitcher({ aberta, onNovoWorkspace }: WorkspaceSwitcherProps) {
@@ -22,75 +52,149 @@ export function WorkspaceSwitcher({ aberta, onNovoWorkspace }: WorkspaceSwitcher
   const trigger = (
     <div
       className={cn(
-        "flex items-center justify-between gap-2 px-2 py-1.5 rounded-[12px] cursor-pointer hover:bg-[var(--tf-surface-hover)] transition-colors sidebar-item",
-        !aberta && "justify-center p-2 mb-4"
+        "flex items-center gap-2 cursor-pointer transition-colors sidebar-item",
+        "hover:bg-[var(--tf-surface-hover)]",
+        aberta
+          ? "justify-between px-2 py-1.5 rounded-[var(--tf-radius-sm)]"
+          : "justify-center w-8 h-8 mx-auto rounded-[var(--tf-radius-sm)]"
       )}
     >
-      <div className="flex items-center gap-2.5 overflow-hidden">
-        <div
-          className={cn(
-            "flex items-center justify-center shrink-0 rounded-[8px]",
-            aberta ? "w-6 h-6" : "w-8 h-8"
-          )}
-          style={{ background: activeWorkspace ? activeWorkspace.cor : "var(--tf-border)" }}
-        >
-          {activeWorkspace ? (
-            <Folder size={aberta ? 12 : 16} className="text-white" strokeWidth={aberta ? 2.5 : 2} />
-          ) : (
-            <span className="text-[10px] font-bold text-white uppercase">W</span>
-          )}
-        </div>
+      <div className="flex items-center gap-2 overflow-hidden">
+        <WorkspaceInitial workspace={activeWorkspace ?? null} size={24} />
         {aberta && (
           <div className="flex flex-col truncate sidebar-fade" style={{ opacity: 1 }}>
-            <span className="text-[13px] font-semibold truncate" style={{ color: "var(--tf-text)" }}>
-              {activeWorkspace ? activeWorkspace.nome : "Selecione um Workspace"}
+            <span
+              className="text-[0.8125rem] font-medium truncate leading-tight"
+              style={{ color: "var(--tf-text)", letterSpacing: "-0.005em" }}
+            >
+              {activeWorkspace ? activeWorkspace.nome : "Selecione Workspace"}
             </span>
-            <span className="text-[11px] truncate" style={{ color: "var(--tf-text-tertiary)" }}>
-              {workspaces.length} workspace{workspaces.length !== 1 ? "s" : ""}
+            <span
+              className="text-[0.625rem] truncate leading-tight mt-0.5"
+              style={{
+                color: "var(--tf-text-tertiary)",
+                fontFamily: "var(--tf-font-mono)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              {workspaces.length} {workspaces.length === 1 ? "WORKSPACE" : "WORKSPACES"}
             </span>
           </div>
         )}
       </div>
-      {aberta && <ChevronsUpDown size={14} style={{ color: "var(--tf-text-tertiary)" }} className="shrink-0" />}
+      {aberta && (
+        <ChevronsUpDown
+          size={12}
+          style={{ color: "var(--tf-text-tertiary)" }}
+          className="shrink-0"
+          strokeWidth={1.75}
+        />
+      )}
     </div>
   );
 
+  // Dropdown SEMPRE abre pra direita da sidebar (left-full ml-2), independente
+  // de estar expandida ou colapsada. Isso evita qualquer clipping do container
+  // da sidebar e fica visualmente elegante (Linear-style).
   return (
-    <div className="px-3" title={!aberta ? (activeWorkspace?.nome || "Workspace") : undefined}>
-      <Dropdown trigger={trigger} className={cn("w-[240px]", !aberta && "left-full ml-2")}>
-        <div className="px-2 py-1.5 mb-1 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--tf-text-tertiary)" }}>
+    <div
+      className={aberta ? "px-2" : "w-full"}
+      title={!aberta ? activeWorkspace?.nome || "Workspace" : undefined}
+    >
+      <Dropdown
+        trigger={trigger}
+        className={cn(
+          // Expandida: largura cabe exatamente no container px-2 da sidebar
+          // (232px aside - 2*8 padding = 216px), evitando qualquer overflow.
+          // Colapsada: abre pro lado direito fora da sidebar.
+          aberta
+            ? "!w-[216px] !min-w-0"
+            : "!w-[240px] !right-auto !left-full !ml-2"
+        )}
+      >
+        <div
+          className="label-mono px-3 py-2"
+          style={{
+            color: "var(--tf-text-tertiary)",
+            borderBottom: "1px solid var(--tf-border)",
+          }}
+        >
           Workspaces
         </div>
-        {workspaces.map((ws) => (
-          <DropdownItem
-            key={ws.id}
-            onClick={() => {
-              setActiveWorkspaceId(ws.id);
-              router.push(`/workspace/${ws.id}`);
-            }}
-            className="justify-between"
-          >
-            <div className="flex items-center gap-2.5 truncate">
-              <div
-                className="w-5 h-5 rounded-[6px] flex items-center justify-center shrink-0"
-                style={{ background: ws.cor }}
-              >
-                <Folder size={10} className="text-white" strokeWidth={2.5} />
-              </div>
-              <span className="truncate">{ws.nome}</span>
-            </div>
-            {ws.id === activeWorkspaceId && <Check size={14} style={{ color: "var(--tf-text-secondary)" }} />}
-          </DropdownItem>
-        ))}
 
-        <div className="h-[1px] my-1.5 mx-2" style={{ background: "var(--tf-border)" }} />
-        
-        <DropdownItem onClick={onNovoWorkspace} className="gap-2.5">
-          <div className="w-5 h-5 rounded-[6px] flex items-center justify-center border border-[var(--tf-border)] shrink-0 bg-[var(--tf-surface)] text-[var(--tf-text-secondary)]">
-            <Plus size={12} strokeWidth={2.5} />
-          </div>
-          Criar Workspace
-        </DropdownItem>
+        <div className="max-h-[320px] overflow-y-auto py-1" style={{ scrollbarWidth: "thin" }}>
+          {workspaces.length === 0 ? (
+            <div
+              className="px-3 py-6 text-center text-[0.75rem]"
+              style={{
+                color: "var(--tf-text-tertiary)",
+                fontFamily: "var(--tf-font-mono)",
+              }}
+            >
+              Nenhum workspace ainda
+            </div>
+          ) : (
+            workspaces.map((ws, i) => {
+              const ativo = ws.id === activeWorkspaceId;
+              return (
+                <DropdownItem
+                  key={ws.id}
+                  onClick={() => {
+                    setActiveWorkspaceId(ws.id);
+                    router.push(`/workspace/${ws.id}`);
+                  }}
+                  className="justify-between"
+                >
+                  <div className="flex items-center gap-2.5 truncate min-w-0 flex-1">
+                    <WorkspaceInitial workspace={ws} size={18} />
+                    <span
+                      className="truncate"
+                      style={{
+                        color: ativo ? "var(--tf-accent-text)" : "var(--tf-text)",
+                        fontWeight: ativo ? 500 : 400,
+                      }}
+                    >
+                      {ws.nome}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {ativo && (
+                      <Check
+                        size={12}
+                        strokeWidth={2.25}
+                        style={{ color: "var(--tf-accent)" }}
+                      />
+                    )}
+                    {i < 9 && (
+                      <kbd
+                        className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 text-[0.625rem]"
+                        style={{
+                          color: "var(--tf-text-tertiary)",
+                          background: "var(--tf-bg-secondary)",
+                          border: "1px solid var(--tf-border)",
+                          borderRadius: "var(--tf-radius-xs)",
+                          fontFamily: "var(--tf-font-mono)",
+                        }}
+                      >
+                        {i + 1}
+                      </kbd>
+                    )}
+                  </div>
+                </DropdownItem>
+              );
+            })
+          )}
+        </div>
+
+        <div
+          className="border-t pt-1"
+          style={{ borderColor: "var(--tf-border)" }}
+        >
+          <DropdownItem onClick={onNovoWorkspace}>
+            <Plus size={13} strokeWidth={2} style={{ color: "var(--tf-accent)" }} />
+            <span style={{ color: "var(--tf-text)" }}>Criar Workspace</span>
+          </DropdownItem>
+        </div>
       </Dropdown>
     </div>
   );
