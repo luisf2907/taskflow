@@ -2,22 +2,20 @@
 
 const steps = [
   {
-    number: 1,
+    number: "01",
     title: "Crie seu workspace",
     description:
       "Monte a estrutura do seu projeto com quadros e colunas personalizadas.",
   },
   {
-    number: 2,
+    number: "02",
     title: "Adicione seu time",
-    description:
-      "Convide membros, conecte o GitHub e configure integrações.",
+    description: "Convide membros, conecte o GitHub e configure integrações.",
   },
   {
-    number: 3,
+    number: "03",
     title: "Entregue mais rápido",
-    description:
-      "Gerencie sprints, acompanhe PRs e celebre cada deploy.",
+    description: "Gerencie sprints, acompanhe PRs e celebre cada deploy.",
   },
 ];
 
@@ -25,62 +23,91 @@ export default function HowItWorksSection() {
   return (
     <section
       id="how-it-works"
-      style={{ backgroundColor: "var(--tf-surface)" }}
+      style={{ backgroundColor: "var(--tf-bg-secondary)" }}
     >
-      <div className="max-w-5xl mx-auto px-6 md:px-12 py-20 md:py-28">
+      <div className="max-w-5xl mx-auto px-6 md:px-12 py-20 md:py-24">
         {/* Header */}
-        <div className="text-center">
-          <span
-            className="text-[12px] font-bold uppercase tracking-[0.2em]"
-            style={{ color: "var(--tf-accent)" }}
-          >
-            COMO FUNCIONA
-          </span>
+        <div className="flex flex-col gap-3 mb-12">
+          <div className="flex items-center gap-2">
+            <span
+              className="w-1.5 h-1.5"
+              style={{
+                background: "var(--tf-accent)",
+                borderRadius: "1px",
+              }}
+            />
+            <p
+              className="text-[0.6875rem] font-medium"
+              style={{
+                color: "var(--tf-accent)",
+                fontFamily: "var(--tf-font-mono)",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Como funciona
+            </p>
+          </div>
           <h2
-            className="text-[36px] font-black tracking-tight mt-3"
-            style={{ color: "var(--tf-text)" }}
+            className="text-[2rem] md:text-[2.5rem] font-semibold max-w-xl"
+            style={{
+              color: "var(--tf-text)",
+              letterSpacing: "-0.025em",
+              lineHeight: 1.1,
+            }}
           >
-            Comece em minutos
+            Comece em minutos.
           </h2>
         </div>
 
         {/* Steps */}
-        <div className="flex flex-col md:flex-row gap-8 md:gap-4 mt-16 items-start">
-          {steps.map((step, i) => (
-            <div key={step.number} className="contents">
-              {/* Step card */}
-              <div className="flex-1 text-center">
-                {/* Number circle */}
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center text-[20px] font-black mx-auto"
-                  style={{
-                    backgroundColor: "var(--tf-accent-yellow)",
-                    color: "#1C2B29",
-                  }}
-                >
-                  {step.number}
-                </div>
-                <h3
-                  className="text-[17px] font-bold mt-5"
-                  style={{ color: "var(--tf-text)" }}
-                >
-                  {step.title}
-                </h3>
-                <p
-                  className="text-[14px] mt-2 max-w-[280px] mx-auto"
-                  style={{ color: "var(--tf-text-secondary)" }}
-                >
-                  {step.description}
-                </p>
-              </div>
-
-              {/* Connector line between steps (desktop only) */}
-              {i < steps.length - 1 && (
-                <div
-                  className="hidden md:block flex-1 self-center h-[2px]"
-                  style={{ backgroundColor: "var(--tf-border)" }}
-                />
-              )}
+        <div className="flex flex-col md:flex-row gap-3 md:gap-3">
+          {steps.map((step) => (
+            <div
+              key={step.number}
+              className="flex-1 p-5 transition-colors"
+              style={{
+                backgroundColor: "var(--tf-surface)",
+                border: "1px solid var(--tf-border)",
+                borderRadius: "var(--tf-radius-md)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--tf-accent)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--tf-border)";
+              }}
+            >
+              {/* Number */}
+              <span
+                className="inline-block text-[2rem] font-semibold mb-3"
+                style={{
+                  color: "var(--tf-accent)",
+                  fontFamily: "var(--tf-font-mono)",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1,
+                }}
+              >
+                {step.number}
+              </span>
+              <h3
+                className="text-[1.0625rem] font-semibold mb-2"
+                style={{
+                  color: "var(--tf-text)",
+                  letterSpacing: "-0.015em",
+                }}
+              >
+                {step.title}
+              </h3>
+              <p
+                className="text-[0.8125rem] leading-relaxed"
+                style={{
+                  color: "var(--tf-text-secondary)",
+                  letterSpacing: "-0.005em",
+                }}
+              >
+                {step.description}
+              </p>
             </div>
           ))}
         </div>
