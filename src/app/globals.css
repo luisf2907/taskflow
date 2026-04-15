@@ -167,6 +167,39 @@
   --tf-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
 }
 
+/* ============================================
+   VARIANTE ROUNDED — easter egg para contas específicas
+   que preferem o visual arredondado (pré-redesign).
+   Aplicada via src/components/user-variant-injector.tsx
+   ============================================ */
+html.variant-rounded {
+  --tf-radius-xs: 8px;
+  --tf-radius-sm: 12px;
+  --tf-radius-md: 14px;
+  --tf-radius-lg: 20px;
+  --tf-radius-xl: 32px;
+  /* Troca a cor de marca de laranja pra teal (cor histórica da v0) */
+  --tf-accent: #00857A;
+  --tf-accent-hover: #006D63;
+  --tf-accent-light: #E0F2F1;
+  --tf-accent-text: #005F55;
+  --tf-scrollbar-thumb-hover: rgba(0, 133, 122, 0.6);
+}
+html.variant-rounded.dark {
+  --tf-accent: #00857A;
+  --tf-accent-hover: #00A396;
+  --tf-accent-light: #163632;
+  --tf-accent-text: #4DD0C4;
+  --tf-scrollbar-thumb-hover: rgba(0, 163, 150, 0.7);
+}
+html.variant-rounded ::selection {
+  background: rgba(0, 133, 122, 0.28);
+}
+html.variant-rounded.dark ::selection {
+  background: rgba(0, 163, 150, 0.32);
+  color: #FFFFFF;
+}
+
 /* Base typography */
 html {
   font-family: var(--tf-font-display);

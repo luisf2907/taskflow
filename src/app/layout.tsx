@@ -7,6 +7,7 @@ import { RecordingIndicator } from "@/components/layout/recording-indicator";
 import { SWRProvider } from "@/components/swr-provider";
 import { ThemeInjector } from "@/components/theme-injector";
 import { ToastContainer } from "@/components/ui/toast";
+import { UserVariantInjector } from "@/components/user-variant-injector";
 import { RecordingProvider } from "@/hooks/use-recording";
 import type { Metadata } from "next";
 import { Geist, JetBrains_Mono } from "next/font/google";
@@ -91,6 +92,7 @@ export default function RootLayout({
               </a>
               <AuthListener />
               <ThemeInjector />
+              <UserVariantInjector />
               <CommandPalette />
               <HelpModal />
               <OfflineBanner />
