@@ -24,7 +24,6 @@ export function PainelBranch({ cartao, onAtualizar }: PainelBranchProps) {
   );
   const [inputManual, setInputManual] = useState(cartao.branch || "");
 
-  // Load repos
   useEffect(() => {
     if (!cartao.workspace_id) return;
     (async () => {
@@ -42,7 +41,6 @@ export function PainelBranch({ cartao, onAtualizar }: PainelBranchProps) {
     })();
   }, [cartao.workspace_id, repoSelecionado]);
 
-  // Load branches when repo selected
   useEffect(() => {
     if (!repoSelecionado || modo === "manual") return;
     const repo = repos.find((r) => r.id === repoSelecionado);
@@ -87,76 +85,93 @@ export function PainelBranch({ cartao, onAtualizar }: PainelBranchProps) {
     setModo("selecionar");
   }
 
-  // Se já tem branch, mostrar info + opção de limpar
+  // Estado: branch já associada
   if (cartao.branch && modo === "manual") {
-    const repoNome = repoAtual
-      ? `${repoAtual.owner}/${repoAtual.nome}`
-      : repos.find((r) => r.id === cartao.branch_repo_id)
-        ? `${repos.find((r) => r.id === cartao.branch_repo_id)!.owner}/${
-            repos.find((r) => r.id === cartao.branch_repo_id)!.nome
-          }`
-        : null;
+    const repoRef = repoAtual || repos.find((r) => r.id === cartao.branch_repo_id);
+    const repoNome = repoRef ? `${repoRef.owner}/${repoRef.nome}` : null;
 
     return (
       <div
-        className="p-4 rounded-[14px] space-y-3"
-        style={{ background: "var(--tf-bg-secondary)" }}
+        className="p-3.5 space-y-2.5"
+        style={{
+          background: "var(--tf-bg-secondary)",
+          border: "1px solid var(--tf-border)",
+          borderRadius: "var(--tf-radius-md)",
+        }}
       >
-        <p
-          className="text-[10px] font-bold uppercase tracking-widest"
-          style={{ color: "var(--tf-text-tertiary)" }}
-        >
+        <p className="label-mono" style={{ color: "var(--tf-text-tertiary)" }}>
           Branch
         </p>
         <div
-          className="flex items-center gap-2 px-3 py-2.5 rounded-[8px]"
+          className="flex items-center gap-2 px-2.5 py-2"
           style={{
             background: "var(--tf-surface)",
             border: "1px solid var(--tf-border)",
+            borderRadius: "var(--tf-radius-xs)",
           }}
         >
-          <GitBranch size={14} style={{ color: "var(--tf-accent)" }} />
+          <GitBranch size={13} strokeWidth={1.75} style={{ color: "var(--tf-accent)" }} />
           <span
-            className="text-[13px] font-mono font-medium"
-            style={{ color: "var(--tf-text)" }}
+            className="text-[0.8125rem] font-medium"
+            style={{
+              color: "var(--tf-text)",
+              fontFamily: "var(--tf-font-mono)",
+              letterSpacing: "0.01em",
+            }}
           >
             {cartao.branch}
           </span>
         </div>
         {repoNome && (
           <p
-            className="text-[11px] font-medium ml-1"
-            style={{ color: "var(--tf-text-tertiary)" }}
+            className="text-[0.6875rem]"
+            style={{
+              color: "var(--tf-text-tertiary)",
+              fontFamily: "var(--tf-font-mono)",
+            }}
           >
             {repoNome}
           </p>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {repoAtual && cartao.branch && (
             <a
               href={`https://github.com/${repoAtual.owner}/${repoAtual.nome}/tree/${cartao.branch}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[11px] font-medium hover:underline flex items-center gap-1"
-              style={{ color: "var(--tf-accent)" }}
+              className="text-[0.6875rem] font-medium hover:underline flex items-center gap-1"
+              style={{
+                color: "var(--tf-accent)",
+                fontFamily: "var(--tf-font-mono)",
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+              }}
             >
-              <ExternalLink size={10} />
+              <ExternalLink size={10} strokeWidth={1.75} />
               Ver no GitHub
             </a>
           )}
           <button
-            onClick={() => {
-              setModo("selecionar");
+            onClick={() => setModo("selecionar")}
+            className="text-[0.6875rem] font-medium hover:text-[var(--tf-text)] transition-colors"
+            style={{
+              color: "var(--tf-text-tertiary)",
+              fontFamily: "var(--tf-font-mono)",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
             }}
-            className="text-[11px] font-medium hover:underline"
-            style={{ color: "var(--tf-text-tertiary)" }}
           >
             Trocar
           </button>
           <button
             onClick={handleLimpar}
-            className="text-[11px] font-medium hover:underline"
-            style={{ color: "var(--tf-danger)" }}
+            className="text-[0.6875rem] font-medium hover:brightness-110 transition-all"
+            style={{
+              color: "var(--tf-danger)",
+              fontFamily: "var(--tf-font-mono)",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+            }}
           >
             Limpar
           </button>
@@ -167,18 +182,16 @@ export function PainelBranch({ cartao, onAtualizar }: PainelBranchProps) {
 
   return (
     <div
-      className="rounded-[14px] overflow-hidden"
+      className="overflow-hidden"
       style={{
         background: "var(--tf-bg-secondary)",
         border: "1px solid var(--tf-border)",
+        borderRadius: "var(--tf-radius-md)",
       }}
     >
       <div className="p-3 space-y-2">
-        <p
-          className="text-[10px] font-bold uppercase tracking-widest"
-          style={{ color: "var(--tf-text-tertiary)" }}
-        >
-          Associar Branch
+        <p className="label-mono" style={{ color: "var(--tf-text-tertiary)" }}>
+          Associar branch
         </p>
 
         {/* Repo selector */}
@@ -190,14 +203,13 @@ export function PainelBranch({ cartao, onAtualizar }: PainelBranchProps) {
               setBranches([]);
               setBusca("");
             }}
-            className="w-full px-3 py-2 text-[12px] rounded-[8px] outline-none"
+            className="branch-input w-full h-8 px-2.5 text-[0.75rem] outline-none"
             style={{
-              background: "var(--tf-surface)",
-              border: "1px solid var(--tf-border)",
               color: "var(--tf-text)",
+              borderRadius: "var(--tf-radius-xs)",
             }}
           >
-            <option value="">Selecionar repositório...</option>
+            <option value="">Selecionar repositório…</option>
             {repos.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.owner}/{r.nome}
@@ -208,24 +220,27 @@ export function PainelBranch({ cartao, onAtualizar }: PainelBranchProps) {
 
         {repos.length === 1 && (
           <p
-            className="text-[11px] font-medium"
-            style={{ color: "var(--tf-text-tertiary)" }}
+            className="text-[0.6875rem]"
+            style={{
+              color: "var(--tf-text-tertiary)",
+              fontFamily: "var(--tf-font-mono)",
+            }}
           >
             {repos[0].owner}/{repos[0].nome}
           </p>
         )}
 
         {/* Branch search */}
-        {repoSelecionado && (
+        {repoSelecionado && modo !== "manual" && (
           <input
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar branch..."
-            className="w-full px-3 py-2 text-[12px] rounded-[8px] outline-none"
+            placeholder="Buscar branch…"
+            className="branch-input w-full h-8 px-2.5 text-[0.75rem] outline-none"
             style={{
-              background: "var(--tf-surface)",
-              border: "1px solid var(--tf-border)",
               color: "var(--tf-text)",
+              borderRadius: "var(--tf-radius-xs)",
+              fontFamily: "var(--tf-font-mono)",
             }}
             autoFocus
           />
@@ -234,17 +249,22 @@ export function PainelBranch({ cartao, onAtualizar }: PainelBranchProps) {
         {/* Manual input toggle */}
         <button
           onClick={() => setModo(modo === "manual" ? "selecionar" : "manual")}
-          className="text-[11px] font-medium hover:underline"
-          style={{ color: "var(--tf-text-tertiary)" }}
+          className="text-[0.6875rem] font-medium hover:text-[var(--tf-text)] transition-colors"
+          style={{
+            color: "var(--tf-text-tertiary)",
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}
         >
           {modo === "manual" ? "Escolher da lista" : "Digitar manualmente"}
         </button>
       </div>
 
       {modo === "manual" ? (
-        <div className="px-3 pb-3 space-y-2">
+        <div className="px-3 pb-3">
           <div className="flex items-center gap-2">
-            <GitBranch size={13} style={{ color: "var(--tf-text-tertiary)" }} />
+            <GitBranch size={12} strokeWidth={1.75} style={{ color: "var(--tf-text-tertiary)" }} />
             <input
               value={inputManual}
               onChange={(e) => setInputManual(e.target.value)}
@@ -253,54 +273,69 @@ export function PainelBranch({ cartao, onAtualizar }: PainelBranchProps) {
                 if (e.key === "Enter") handleSalvarManual();
               }}
               placeholder="feature/minha-branch"
-              className="flex-1 px-3 py-2 text-[13px] font-mono rounded-[8px] outline-none"
+              className="flex-1 h-8 px-2.5 text-[0.8125rem] outline-none"
               style={{
                 background: "var(--tf-surface)",
-                border: "2px solid var(--tf-accent)",
+                border: "1px solid var(--tf-accent)",
+                borderRadius: "var(--tf-radius-xs)",
                 color: "var(--tf-text)",
+                fontFamily: "var(--tf-font-mono)",
               }}
               autoFocus
             />
           </div>
         </div>
       ) : repoSelecionado ? (
-        <div
-          className="max-h-[200px] overflow-y-auto"
-          style={{ scrollbarWidth: "thin" }}
-        >
+        <div className="max-h-[200px] overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
           {carregando ? (
             <div
-              className="flex items-center justify-center py-6 gap-2"
+              className="flex items-center justify-center py-5 gap-2"
               style={{ color: "var(--tf-text-tertiary)" }}
             >
-              <Loader2 size={14} className="animate-spin" />
-              <span className="text-[11px]">Carregando branches...</span>
+              <Loader2 size={12} className="animate-spin" />
+              <span
+                className="text-[0.6875rem]"
+                style={{
+                  fontFamily: "var(--tf-font-mono)",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                Carregando branches…
+              </span>
             </div>
           ) : branchesFiltradas.length === 0 ? (
             <p
-              className="text-center py-6 text-[11px]"
-              style={{ color: "var(--tf-text-tertiary)" }}
+              className="text-center py-5 text-[0.6875rem]"
+              style={{
+                color: "var(--tf-text-tertiary)",
+                fontFamily: "var(--tf-font-mono)",
+                letterSpacing: "0.02em",
+              }}
             >
               {busca ? "Nenhuma branch encontrada" : "Sem branches"}
             </p>
           ) : (
-            branchesFiltradas.map((b) => (
+            branchesFiltradas.map((b, i) => (
               <button
                 key={b}
                 onClick={() => handleSelecionarBranch(b)}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-[var(--tf-surface-hover)]"
+                className="w-full flex items-center gap-2.5 px-3 h-8 text-left transition-colors hover:bg-[var(--tf-surface-hover)]"
                 style={{
-                  transition: "background 0.1s ease",
-                  borderTop: "1px solid var(--tf-border-subtle)",
+                  borderTop: i === 0 ? "1px solid var(--tf-border)" : "1px solid var(--tf-border-subtle)",
                 }}
               >
                 <GitBranch
-                  size={12}
+                  size={11}
+                  strokeWidth={1.75}
                   style={{ color: "var(--tf-text-tertiary)" }}
                 />
                 <span
-                  className="text-[12px] font-mono font-medium"
-                  style={{ color: "var(--tf-text)" }}
+                  className="text-[0.75rem] font-medium"
+                  style={{
+                    color: "var(--tf-text)",
+                    fontFamily: "var(--tf-font-mono)",
+                    letterSpacing: "0.01em",
+                  }}
                 >
                   {b}
                 </span>
@@ -309,6 +344,17 @@ export function PainelBranch({ cartao, onAtualizar }: PainelBranchProps) {
           )}
         </div>
       ) : null}
+
+      <style jsx>{`
+        .branch-input {
+          background: var(--tf-surface);
+          border: 1px solid var(--tf-border);
+          transition: border-color 0.15s ease;
+        }
+        .branch-input:focus {
+          border-color: var(--tf-accent);
+        }
+      `}</style>
     </div>
   );
 }

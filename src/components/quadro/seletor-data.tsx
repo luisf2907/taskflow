@@ -7,7 +7,9 @@ interface SeletorDataProps {
   onChange: (data: string | null) => void;
 }
 
-export function statusData(dataEntrega: string | null): "normal" | "proximo" | "vencido" | null {
+export function statusData(
+  dataEntrega: string | null
+): "normal" | "proximo" | "vencido" | null {
   if (!dataEntrega) return null;
   const agora = new Date();
   const entrega = new Date(dataEntrega);
@@ -29,23 +31,15 @@ export function formatarData(data: string): string {
 export function SeletorData({ valor, onChange }: SeletorDataProps) {
   return (
     <div className="space-y-2">
-      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-tertiary)" }}>
+      <p className="label-mono" style={{ color: "var(--tf-text-tertiary)" }}>
         Data de Entrega
       </p>
-      <div className="flex items-center gap-2">
-        <div
-          className="flex-1 flex items-center gap-2 rounded-[14px] overflow-hidden"
-          style={{
-            background: "var(--tf-bg-secondary)",
-            border: "2px solid var(--tf-border)",
-            transition: "border-color 0.15s ease",
-          }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
-          onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
-        >
+      <div className="flex items-center gap-1.5">
+        <div className="flex-1 flex items-center gap-2 data-wrapper">
           <Calendar
-            size={13}
-            className="ml-3 shrink-0 pointer-events-none"
+            size={12}
+            strokeWidth={1.75}
+            className="ml-2.5 shrink-0 pointer-events-none"
             style={{ color: "var(--tf-text-tertiary)" }}
           />
           <input
@@ -54,23 +48,39 @@ export function SeletorData({ valor, onChange }: SeletorDataProps) {
             onChange={(e) =>
               onChange(e.target.value ? new Date(e.target.value).toISOString() : null)
             }
-            className="w-full bg-transparent pr-3 py-2.5 text-[13px] outline-none"
-            style={{ color: "var(--tf-text)" }}
+            className="w-full bg-transparent pr-2.5 py-2 text-[0.8125rem] outline-none"
+            style={{
+              color: "var(--tf-text)",
+              fontFamily: "var(--tf-font-mono)",
+              letterSpacing: "0.01em",
+            }}
           />
         </div>
         {valor && (
           <button
             onClick={() => onChange(null)}
-            className="p-2 rounded-[8px] hover:bg-[var(--tf-danger-bg)]"
-            style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
+            className="p-1.5 transition-colors hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+            style={{
+              color: "var(--tf-text-tertiary)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
             title="Remover data"
           >
-            <X size={14} />
+            <X size={13} strokeWidth={1.75} />
           </button>
         )}
       </div>
+      <style jsx>{`
+        .data-wrapper {
+          background: var(--tf-surface);
+          border: 1px solid var(--tf-border);
+          border-radius: var(--tf-radius-xs);
+          transition: border-color 0.15s ease;
+        }
+        .data-wrapper:focus-within {
+          border-color: var(--tf-accent);
+        }
+      `}</style>
     </div>
   );
 }

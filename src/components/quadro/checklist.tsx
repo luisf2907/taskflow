@@ -1,7 +1,7 @@
 "use client";
 
 import { ChecklistComItens } from "@/types";
-import { Check, Plus, Square, Trash2, X } from "lucide-react";
+import { Check, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
 interface ChecklistProps {
@@ -30,20 +30,24 @@ export function ChecklistComponent({
 
   return (
     <div className="group/checklist">
-      {/* Header */}
+      {/* Header — label-mono uppercase */}
       <div className="flex items-center justify-between mb-2">
-        <h4 className="text-[13px] font-semibold" style={{ color: "var(--tf-text)" }}>
+        <h4
+          className="label-mono"
+          style={{ color: "var(--tf-text-secondary)" }}
+        >
           {checklist.titulo}
         </h4>
         <button
           onClick={() => onExcluirChecklist(checklist.id)}
-          className="p-1 rounded-[4px] opacity-0 group-hover/checklist:opacity-100 hover:bg-[var(--tf-danger-bg)]"
-          style={{ color: "var(--tf-text-tertiary)", transition: "opacity 0.15s ease, background 0.15s ease" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
+          className="p-1 opacity-0 group-hover/checklist:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+          style={{
+            color: "var(--tf-text-tertiary)",
+            borderRadius: "var(--tf-radius-xs)",
+          }}
           title="Excluir checklist"
         >
-          <Trash2 size={13} />
+          <Trash2 size={11} strokeWidth={1.75} />
         </button>
       </div>
 
@@ -52,8 +56,8 @@ export function ChecklistComponent({
         {checklist.checklist_itens.map((item) => (
           <div
             key={item.id}
-            className="flex items-start gap-2.5 py-1.5 px-2 rounded-[8px] group/item hover:bg-[var(--tf-bg-secondary)]"
-            style={{ transition: "background 0.15s ease" }}
+            className="flex items-start gap-2 py-1 px-2 group/item transition-colors hover:bg-[var(--tf-surface-hover)]"
+            style={{ borderRadius: "var(--tf-radius-xs)" }}
           >
             <button
               onClick={() => onToggleItem(item.id, !item.concluido)}
@@ -61,35 +65,45 @@ export function ChecklistComponent({
             >
               {item.concluido ? (
                 <div
-                  className="w-4 h-4 rounded-[4px] flex items-center justify-center"
-                  style={{ background: "var(--tf-accent)" }}
+                  className="w-[14px] h-[14px] flex items-center justify-center"
+                  style={{
+                    background: "var(--tf-accent)",
+                    border: "1px solid var(--tf-accent)",
+                    borderRadius: "var(--tf-radius-xs)",
+                  }}
                 >
-                  <Check size={10} className="text-white" strokeWidth={3} />
+                  <Check size={9} className="text-white" strokeWidth={3} />
                 </div>
               ) : (
                 <div
-                  className="w-4 h-4 rounded-[4px]"
-                  style={{ border: "2px solid var(--tf-border)" }}
+                  className="w-[14px] h-[14px] transition-colors hover:border-[var(--tf-accent)]"
+                  style={{
+                    border: "1px solid var(--tf-border-strong)",
+                    borderRadius: "var(--tf-radius-xs)",
+                  }}
                 />
               )}
             </button>
             <span
-              className="text-[13px] flex-1 leading-snug"
+              className="text-[0.8125rem] flex-1 leading-snug"
               style={{
                 color: item.concluido ? "var(--tf-text-tertiary)" : "var(--tf-text)",
                 textDecoration: item.concluido ? "line-through" : "none",
+                letterSpacing: "-0.005em",
               }}
             >
               {item.texto}
             </span>
             <button
               onClick={() => onExcluirItem(item.id)}
-              className="p-0.5 rounded-[4px] opacity-0 group-hover/item:opacity-100 hover:bg-[var(--tf-danger-bg)]"
-              style={{ color: "var(--tf-text-tertiary)", transition: "opacity 0.15s ease, background 0.15s ease" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
+              className="p-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+              style={{
+                color: "var(--tf-text-tertiary)",
+                borderRadius: "var(--tf-radius-xs)",
+              }}
+              aria-label="Excluir item"
             >
-              <Trash2 size={11} />
+              <Trash2 size={10} strokeWidth={1.75} />
             </button>
           </div>
         ))}
@@ -97,50 +111,70 @@ export function ChecklistComponent({
 
       {/* Add item */}
       {adicionando ? (
-        <div
-          className="mt-2 rounded-[14px] overflow-hidden"
-          style={{
-            background: "var(--tf-bg-secondary)",
-            border: "2px solid var(--tf-accent)",
-          }}
-        >
+        <div className="mt-2 space-y-1.5">
           <input
             value={novoItem}
             onChange={(e) => setNovoItem(e.target.value)}
-            placeholder="Novo item..."
+            placeholder="Novo item…"
             maxLength={200}
-            className="w-full bg-transparent px-3 py-2.5 text-[13px] outline-none"
-            style={{ color: "var(--tf-text)" }}
+            className="checklist-input w-full h-8 px-2.5 text-[0.8125rem] outline-none"
+            style={{
+              color: "var(--tf-text)",
+              letterSpacing: "-0.005em",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
             autoFocus
             onKeyDown={(e) => {
               if (e.key === "Enter") handleCriar();
               if (e.key === "Escape") setAdicionando(false);
             }}
           />
-          <div className="flex items-center gap-2 px-3 pb-2.5">
+          <style jsx>{`
+            .checklist-input {
+              background: var(--tf-surface);
+              border: 1px solid var(--tf-border);
+              transition: border-color 0.15s ease;
+            }
+            .checklist-input:focus {
+              border-color: var(--tf-accent);
+            }
+          `}</style>
+          <div className="flex items-center gap-1">
             <button
               onClick={handleCriar}
-              className="px-3 py-1 text-[11px] font-semibold text-white rounded-[8px]"
-              style={{ background: "var(--tf-accent)" }}
+              disabled={!novoItem.trim()}
+              className="h-7 px-2.5 text-[0.75rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                background: "var(--tf-accent)",
+                border: "1px solid var(--tf-accent)",
+                borderRadius: "var(--tf-radius-xs)",
+              }}
             >
               Adicionar
             </button>
             <button
-              onClick={() => { setAdicionando(false); setNovoItem(""); }}
-              className="p-1 rounded-[4px] hover:bg-[var(--tf-surface-hover)]"
-              style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+              onClick={() => {
+                setAdicionando(false);
+                setNovoItem("");
+              }}
+              className="p-1.5 transition-colors hover:text-[var(--tf-text)]"
+              style={{ color: "var(--tf-text-tertiary)" }}
+              aria-label="Cancelar"
             >
-              <X size={14} />
+              <X size={13} strokeWidth={1.75} />
             </button>
           </div>
         </div>
       ) : (
         <button
           onClick={() => setAdicionando(true)}
-          className="flex items-center gap-1.5 mt-2 px-2 py-1.5 text-[12px] font-medium rounded-[8px] hover:bg-[var(--tf-bg-secondary)]"
-          style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+          className="flex items-center gap-1.5 mt-1.5 px-2 h-7 text-[0.75rem] transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
+          style={{
+            color: "var(--tf-text-tertiary)",
+            borderRadius: "var(--tf-radius-xs)",
+          }}
         >
-          <Plus size={13} />
+          <Plus size={12} strokeWidth={1.75} />
           Adicionar item
         </button>
       )}

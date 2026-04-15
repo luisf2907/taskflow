@@ -263,17 +263,23 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
         <div
           role="alert"
           aria-live="assertive"
-          className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-[12px] text-sm font-semibold shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2"
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-3.5 h-9 text-[0.8125rem] font-medium flex items-center gap-2.5"
           style={{
-            background: "var(--tf-danger)",
-            color: "#fff",
+            background: "var(--tf-surface-raised)",
+            color: "var(--tf-text)",
+            border: "1px solid var(--tf-danger)",
+            borderLeft: "3px solid var(--tf-danger)",
+            borderRadius: "var(--tf-radius-md)",
+            boxShadow: "var(--tf-shadow-lg)",
           }}
         >
-          <span>⚠</span>
+          <span style={{ color: "var(--tf-danger)" }}>⚠</span>
           {alertaBloqueio}
           <button
             onClick={() => setAlertaBloqueio(null)}
-            className="ml-2 p-0.5 rounded-full bg-white/20 hover:bg-white/30 border-none cursor-pointer text-white text-xs leading-none"
+            className="ml-1 p-0.5 transition-colors hover:text-[var(--tf-text)]"
+            style={{ color: "var(--tf-text-tertiary)" }}
+            aria-label="Fechar alerta"
           >
             ✕
           </button>

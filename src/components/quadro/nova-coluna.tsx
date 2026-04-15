@@ -23,21 +23,36 @@ export function NovaColuna({ onCriar }: NovaColunaProps) {
   if (!ativo) {
     return (
       <button
-        onClick={() => { setAtivo(true); setTimeout(() => inputRef.current?.focus(), 50); }}
-        className="flex items-center gap-2 w-[290px] min-w-[290px] px-5 py-4 text-[13px] font-medium rounded-[20px] transition-smooth shrink-0 border-2 border-dashed"
+        onClick={() => {
+          setAtivo(true);
+          setTimeout(() => inputRef.current?.focus(), 50);
+        }}
+        className="flex items-center justify-center gap-2 w-[290px] min-w-[290px] h-11 text-[0.75rem] font-medium transition-colors shrink-0"
         style={{
-          borderColor: "var(--tf-border)",
+          border: "1px dashed var(--tf-border-strong)",
+          borderRadius: "var(--tf-radius-lg)",
           color: "var(--tf-text-tertiary)",
+          fontFamily: "var(--tf-font-mono)",
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = "var(--tf-accent)";
+          e.currentTarget.style.color = "var(--tf-accent)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = "var(--tf-border-strong)";
+          e.currentTarget.style.color = "var(--tf-text-tertiary)";
         }}
       >
-        <Plus size={16} />
-        Adicionar lista
+        <Plus size={14} strokeWidth={1.75} />
+        Nova coluna
       </button>
     );
   }
 
   return (
-    <div className="w-[290px] min-w-[290px] column-surface p-3 space-y-2 shrink-0 rounded-[20px]">
+    <div className="w-[290px] min-w-[290px] column-surface p-2.5 space-y-2 shrink-0">
       <input
         ref={inputRef}
         value={nome}
@@ -48,27 +63,38 @@ export function NovaColuna({ onCriar }: NovaColunaProps) {
           if (e.key === "Escape") setAtivo(false);
         }}
         placeholder="Título da lista..."
-        className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
+        className="w-full h-9 px-3 text-[0.8125rem] outline-none transition-colors"
         style={{
           background: "var(--tf-surface)",
-          border: "2px solid var(--tf-accent)",
+          border: "1px solid var(--tf-accent)",
+          borderRadius: "var(--tf-radius-sm)",
           color: "var(--tf-text)",
+          letterSpacing: "-0.005em",
         }}
       />
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         <button
           onClick={handleSubmit}
-          className="px-3 py-1.5 text-xs font-semibold text-white rounded-[8px] transition-smooth"
-          style={{ background: "var(--tf-accent)" }}
+          disabled={!nome.trim()}
+          className="h-7 px-2.5 text-[0.75rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            background: "var(--tf-accent)",
+            border: "1px solid var(--tf-accent)",
+            borderRadius: "var(--tf-radius-xs)",
+          }}
         >
           Adicionar
         </button>
         <button
-          onClick={() => { setAtivo(false); setNome(""); }}
-          className="p-1.5 transition-smooth"
+          onClick={() => {
+            setAtivo(false);
+            setNome("");
+          }}
+          className="ml-auto p-1.5 transition-colors hover:text-[var(--tf-text)]"
           style={{ color: "var(--tf-text-tertiary)" }}
+          aria-label="Cancelar"
         >
-          <X size={16} />
+          <X size={14} strokeWidth={1.75} />
         </button>
       </div>
     </div>

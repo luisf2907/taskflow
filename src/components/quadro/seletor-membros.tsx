@@ -34,20 +34,36 @@ export function SeletorMembros({
 
   return (
     <div className="space-y-2">
-      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-tertiary)" }}>
+      <p className="label-mono" style={{ color: "var(--tf-text-tertiary)" }}>
         Membros
       </p>
 
       {semMembros && !criando && (
         <div className="text-center py-4">
-          <UserPlus size={20} className="mx-auto mb-2 opacity-20" style={{ color: "var(--tf-text-tertiary)" }} />
-          <p className="text-[11px] mb-3" style={{ color: "var(--tf-text-tertiary)" }}>
-            Nenhum membro criado ainda.
+          <UserPlus
+            size={18}
+            strokeWidth={1.5}
+            className="mx-auto mb-2"
+            style={{ color: "var(--tf-border-strong)" }}
+          />
+          <p
+            className="text-[0.6875rem] mb-3"
+            style={{
+              color: "var(--tf-text-tertiary)",
+              fontFamily: "var(--tf-font-mono)",
+              letterSpacing: "0.02em",
+            }}
+          >
+            Nenhum membro criado ainda
           </p>
           <button
             onClick={() => setCriando(true)}
-            className="px-4 py-1.5 text-[11px] font-semibold text-white rounded-[8px]"
-            style={{ background: "var(--tf-accent)" }}
+            className="inline-flex items-center gap-1.5 h-7 px-3 text-[0.6875rem] font-medium text-white transition-colors hover:brightness-110"
+            style={{
+              background: "var(--tf-accent)",
+              border: "1px solid var(--tf-accent)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
           >
             Criar primeiro membro
           </button>
@@ -61,26 +77,46 @@ export function SeletorMembros({
             <button
               key={membro.id}
               onClick={() => onToggle(membro.id)}
-              className="flex items-center gap-2.5 px-2.5 py-2 rounded-[8px] w-full hover:bg-[var(--tf-surface-hover)]"
-              style={{ transition: "background 0.15s ease" }}
+              className="flex items-center gap-2.5 px-2 h-9 w-full transition-colors hover:bg-[var(--tf-surface-hover)]"
+              style={{
+                borderRadius: "var(--tf-radius-xs)",
+                background: selecionado ? "var(--tf-accent-light)" : "transparent",
+              }}
             >
               <div className="relative shrink-0">
                 <Avatar membro={membro} tamanho="sm" />
                 {selecionado && (
                   <div
-                    className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
-                    style={{ background: "var(--tf-accent)" }}
+                    className="absolute -bottom-0.5 -right-0.5 w-3 h-3 flex items-center justify-center"
+                    style={{
+                      background: "var(--tf-accent)",
+                      border: "1.5px solid var(--tf-surface)",
+                      borderRadius: "var(--tf-radius-xs)",
+                    }}
                   >
-                    <Check size={8} className="text-white" strokeWidth={3} />
+                    <Check size={7} className="text-white" strokeWidth={3} />
                   </div>
                 )}
               </div>
               <div className="flex-1 text-left min-w-0">
-                <span className="text-[13px] font-medium block truncate" style={{ color: "var(--tf-text)" }}>
+                <span
+                  className="text-[0.8125rem] font-medium block truncate"
+                  style={{
+                    color: selecionado ? "var(--tf-accent-text)" : "var(--tf-text)",
+                    letterSpacing: "-0.005em",
+                  }}
+                >
                   {membro.nome}
                 </span>
                 {membro.email && (
-                  <span className="text-[10px] block truncate" style={{ color: "var(--tf-text-tertiary)" }}>
+                  <span
+                    className="text-[0.625rem] block truncate"
+                    style={{
+                      color: "var(--tf-text-tertiary)",
+                      fontFamily: "var(--tf-font-mono)",
+                      letterSpacing: "0.01em",
+                    }}
+                  >
                     {membro.email}
                   </span>
                 )}
@@ -92,42 +128,67 @@ export function SeletorMembros({
 
       {criando ? (
         <div
-          className="rounded-[14px] overflow-hidden"
-          style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-accent)" }}
+          className="p-2 space-y-1.5"
+          style={{
+            background: "var(--tf-surface)",
+            border: "1px solid var(--tf-accent)",
+            borderRadius: "var(--tf-radius-sm)",
+          }}
         >
           <input
             value={novoNome}
             onChange={(e) => setNovoNome(e.target.value)}
             placeholder="Nome do membro"
-            className="w-full bg-transparent px-3 py-2.5 text-[13px] outline-none"
-            style={{ color: "var(--tf-text)" }}
+            className="w-full h-8 px-2.5 text-[0.8125rem] outline-none"
+            style={{
+              color: "var(--tf-text)",
+              background: "var(--tf-bg-secondary)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-xs)",
+              letterSpacing: "-0.005em",
+            }}
             autoFocus
             onKeyDown={(e) => e.key === "Enter" && handleCriar()}
           />
-          <div className="border-t" style={{ borderColor: "var(--tf-border-subtle)" }}>
-            <input
-              value={novoEmail}
-              onChange={(e) => setNovoEmail(e.target.value)}
-              placeholder="Email (opcional)"
-              className="w-full bg-transparent px-3 py-2.5 text-[13px] outline-none"
-              style={{ color: "var(--tf-text)" }}
-              onKeyDown={(e) => e.key === "Enter" && handleCriar()}
-            />
-          </div>
-          <div className="flex items-center gap-2 px-3 pb-2.5">
+          <input
+            value={novoEmail}
+            onChange={(e) => setNovoEmail(e.target.value)}
+            placeholder="Email (opcional)"
+            className="w-full h-8 px-2.5 text-[0.8125rem] outline-none"
+            style={{
+              color: "var(--tf-text)",
+              background: "var(--tf-bg-secondary)",
+              border: "1px solid var(--tf-border)",
+              borderRadius: "var(--tf-radius-xs)",
+              letterSpacing: "-0.005em",
+              fontFamily: "var(--tf-font-mono)",
+            }}
+            onKeyDown={(e) => e.key === "Enter" && handleCriar()}
+          />
+          <div className="flex items-center gap-1">
             <button
               onClick={handleCriar}
-              className="px-3 py-1 text-[11px] font-semibold text-white rounded-[8px]"
-              style={{ background: "var(--tf-accent)" }}
+              disabled={!novoNome.trim()}
+              className="h-7 px-2.5 text-[0.6875rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                background: "var(--tf-accent)",
+                border: "1px solid var(--tf-accent)",
+                borderRadius: "var(--tf-radius-xs)",
+              }}
             >
               Adicionar
             </button>
             <button
-              onClick={() => { setCriando(false); setNovoNome(""); setNovoEmail(""); }}
-              className="p-1 rounded-[4px] hover:bg-[var(--tf-surface-hover)]"
-              style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+              onClick={() => {
+                setCriando(false);
+                setNovoNome("");
+                setNovoEmail("");
+              }}
+              className="ml-auto p-1.5 transition-colors hover:text-[var(--tf-text)]"
+              style={{ color: "var(--tf-text-tertiary)" }}
+              aria-label="Cancelar"
             >
-              <X size={14} />
+              <X size={13} strokeWidth={1.75} />
             </button>
           </div>
         </div>
@@ -135,10 +196,13 @@ export function SeletorMembros({
         !semMembros && (
           <button
             onClick={() => setCriando(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium rounded-[8px] w-full hover:bg-[var(--tf-surface-hover)]"
-            style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+            className="flex items-center gap-1.5 px-2 h-7 text-[0.75rem] w-full transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
+            style={{
+              color: "var(--tf-text-tertiary)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
           >
-            <Plus size={13} />
+            <Plus size={12} strokeWidth={1.75} />
             Adicionar membro
           </button>
         )

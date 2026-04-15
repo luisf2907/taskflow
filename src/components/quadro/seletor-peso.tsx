@@ -27,72 +27,98 @@ export function SeletorPeso({ valor, onChange }: SeletorPesoProps) {
 
   return (
     <div className="space-y-2.5">
-      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-tertiary)" }}>
+      <p className="label-mono" style={{ color: "var(--tf-text-tertiary)" }}>
         Story Points
       </p>
 
-      <div className="flex flex-wrap gap-1.5">
-        {FIBONACCI.map((n) => (
-          <button
-            key={n}
-            onClick={() => { onChange(valor === n ? null : n); setCustomAberto(false); }}
-            className="w-9 h-9 rounded-[8px] text-[13px] font-bold"
-            style={{
-              background: valor === n ? "var(--tf-accent)" : "var(--tf-surface)",
-              color: valor === n ? "#fff" : "var(--tf-text)",
-              border: valor === n ? "none" : "1px solid var(--tf-border)",
-              transition: "all 0.15s ease",
-            }}
-          >
-            {n}
-          </button>
-        ))}
+      <div className="flex flex-wrap gap-1">
+        {FIBONACCI.map((n) => {
+          const ativo = valor === n;
+          return (
+            <button
+              key={n}
+              onClick={() => {
+                onChange(valor === n ? null : n);
+                setCustomAberto(false);
+              }}
+              className="w-8 h-8 text-[0.8125rem] font-medium transition-colors"
+              style={{
+                background: ativo ? "var(--tf-accent)" : "var(--tf-surface)",
+                color: ativo ? "#FFFFFF" : "var(--tf-text)",
+                border: `1px solid ${ativo ? "var(--tf-accent)" : "var(--tf-border)"}`,
+                borderRadius: "var(--tf-radius-xs)",
+                fontFamily: "var(--tf-font-mono)",
+              }}
+              onMouseEnter={(e) => {
+                if (!ativo) e.currentTarget.style.borderColor = "var(--tf-accent)";
+              }}
+              onMouseLeave={(e) => {
+                if (!ativo) e.currentTarget.style.borderColor = "var(--tf-border)";
+              }}
+            >
+              {n}
+            </button>
+          );
+        })}
 
         {/* Botão custom */}
         {!customAberto ? (
           <button
             onClick={() => setCustomAberto(true)}
-            className="h-9 px-3 rounded-[8px] text-[12px] font-semibold"
+            className="h-8 px-2.5 text-[0.75rem] font-medium transition-colors"
             style={{
-              background: isCustom ? "var(--tf-accent)" : "var(--tf-surface)",
-              color: isCustom ? "#fff" : "var(--tf-text-tertiary)",
-              border: isCustom ? "none" : "1px dashed var(--tf-border)",
-              transition: "all 0.15s ease",
+              background: isCustom ? "var(--tf-accent)" : "transparent",
+              color: isCustom ? "#FFFFFF" : "var(--tf-text-tertiary)",
+              border: `1px dashed ${isCustom ? "var(--tf-accent)" : "var(--tf-border-strong)"}`,
+              borderRadius: "var(--tf-radius-xs)",
+              fontFamily: "var(--tf-font-mono)",
             }}
           >
-            {isCustom ? valor : "..."}
+            {isCustom ? valor : "…"}
           </button>
         ) : (
-          <div className="flex items-center gap-1">
-            <input
-              type="number"
-              min={1}
-              max={999}
-              value={customValor}
-              onChange={(e) => setCustomValor(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleCustomSubmit();
-                if (e.key === "Escape") { setCustomAberto(false); setCustomValor(""); }
-              }}
-              placeholder="pts"
-              className="w-14 h-9 px-2 rounded-[8px] text-[13px] font-bold text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              style={{
-                background: "var(--tf-bg-secondary)",
-                border: "2px solid var(--tf-accent)",
-                color: "var(--tf-text)",
-              }}
-              autoFocus
-            />
-          </div>
+          <input
+            type="number"
+            min={1}
+            max={999}
+            value={customValor}
+            onChange={(e) => setCustomValor(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleCustomSubmit();
+              if (e.key === "Escape") {
+                setCustomAberto(false);
+                setCustomValor("");
+              }
+            }}
+            placeholder="pts"
+            className="w-14 h-8 px-2 text-[0.8125rem] font-medium text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            style={{
+              background: "var(--tf-surface)",
+              border: "1px solid var(--tf-accent)",
+              borderRadius: "var(--tf-radius-xs)",
+              color: "var(--tf-text)",
+              fontFamily: "var(--tf-font-mono)",
+            }}
+            autoFocus
+          />
         )}
       </div>
 
       {/* Limpar */}
       {valor !== null && (
         <button
-          onClick={() => { onChange(null); setCustomAberto(false); setCustomValor(""); }}
-          className="text-[11px] font-medium hover:underline underline-offset-2"
-          style={{ color: "var(--tf-text-tertiary)", transition: "color 0.15s ease" }}
+          onClick={() => {
+            onChange(null);
+            setCustomAberto(false);
+            setCustomValor("");
+          }}
+          className="text-[0.6875rem] font-medium transition-colors hover:text-[var(--tf-danger)]"
+          style={{
+            color: "var(--tf-text-tertiary)",
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}
         >
           Limpar pontos
         </button>

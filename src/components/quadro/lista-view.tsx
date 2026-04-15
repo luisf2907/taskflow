@@ -1,10 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight, CheckSquare, Paperclip, Calendar, GitPullRequest } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  CheckSquare,
+  Paperclip,
+  Calendar,
+  GitPullRequest,
+  Check,
+} from "lucide-react";
 import type { Coluna, Etiqueta, Membro } from "@/types";
 import type { CartaoComResumo } from "@/hooks/use-cartoes";
 import { getContrastTextColor } from "@/lib/colors";
+import { Avatar } from "./avatar";
 
 interface ListaViewProps {
   colunas: Coluna[];
@@ -16,10 +25,18 @@ interface ListaViewProps {
 
 function formatarData(d: string | null): string {
   if (!d) return "";
-  return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }).replace(".", "");
+  return new Date(d)
+    .toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
+    .replace(".", "");
 }
 
-export function ListaView({ colunas, cartoesFiltradosPorColuna, etiquetas, membros, onCartaoClick }: ListaViewProps) {
+export function ListaView({
+  colunas,
+  cartoesFiltradosPorColuna,
+  etiquetas,
+  membros,
+  onCartaoClick,
+}: ListaViewProps) {
   const [colapsadas, setColapsadas] = useState<Set<string>>(new Set());
 
   function toggleColuna(id: string) {
@@ -33,7 +50,7 @@ export function ListaView({ colunas, cartoesFiltradosPorColuna, etiquetas, membr
 
   return (
     <div className="flex-1 overflow-y-auto px-4 lg:px-6 pb-6">
-      <div className="max-w-5xl mx-auto space-y-3">
+      <div className="max-w-5xl mx-auto space-y-2">
         {colunas.map((coluna) => {
           const cards = cartoesFiltradosPorColuna[coluna.id] || [];
           const colapsada = colapsadas.has(coluna.id);
@@ -41,60 +58,103 @@ export function ListaView({ colunas, cartoesFiltradosPorColuna, etiquetas, membr
           return (
             <div
               key={coluna.id}
-              className="rounded-[14px] border overflow-hidden"
-              style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
+              className="overflow-hidden"
+              style={{
+                background: "var(--tf-surface)",
+                border: "1px solid var(--tf-border)",
+                borderRadius: "var(--tf-radius-md)",
+              }}
             >
               {/* Header da coluna */}
               <button
                 onClick={() => toggleColuna(coluna.id)}
-                className="w-full flex items-center gap-2 px-4 py-3"
-                style={{ background: "var(--tf-surface-hover)", borderBottom: "1px solid var(--tf-border)" }}
+                className="w-full flex items-center gap-2 px-3 h-9 transition-colors hover:bg-[var(--tf-surface-hover)]"
+                style={{
+                  background: "var(--tf-bg-secondary)",
+                  borderBottom: colapsada ? "none" : "1px solid var(--tf-border)",
+                }}
               >
-                {colapsada ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: "var(--tf-text)" }}>
+                {colapsada ? (
+                  <ChevronRight size={12} strokeWidth={1.75} style={{ color: "var(--tf-text-tertiary)" }} />
+                ) : (
+                  <ChevronDown size={12} strokeWidth={1.75} style={{ color: "var(--tf-text-tertiary)" }} />
+                )}
+                <span
+                  className="label-mono"
+                  style={{ color: "var(--tf-text)" }}
+                >
                   {coluna.nome}
                 </span>
-                <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "var(--tf-surface)", color: "var(--tf-text-tertiary)" }}>
+                <span
+                  className="inline-flex items-center justify-center min-w-[18px] h-[17px] px-1 text-[0.625rem] font-medium"
+                  style={{
+                    background: "var(--tf-surface)",
+                    color: "var(--tf-text-tertiary)",
+                    border: "1px solid var(--tf-border)",
+                    borderRadius: "var(--tf-radius-xs)",
+                    fontFamily: "var(--tf-font-mono)",
+                  }}
+                >
                   {cards.length}
                 </span>
               </button>
 
               {/* Cards */}
               {!colapsada && (
-                <div className="divide-y" style={{ borderColor: "var(--tf-border-subtle)" }}>
+                <div>
                   {cards.length === 0 ? (
-                    <div className="px-4 py-6 text-center text-[12px]" style={{ color: "var(--tf-text-tertiary)" }}>
+                    <div
+                      className="px-4 py-6 text-center text-[0.6875rem]"
+                      style={{
+                        color: "var(--tf-text-tertiary)",
+                        fontFamily: "var(--tf-font-mono)",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
                       Nenhum card
                     </div>
                   ) : (
-                    cards.map((card) => {
-                      const cardEtiquetas = etiquetas.filter((e) => card.etiqueta_ids.includes(e.id));
-                      const cardMembros = membros.filter((m) => card.membro_ids.includes(m.id));
+                    cards.map((card, i) => {
+                      const cardEtiquetas = etiquetas.filter((e) =>
+                        card.etiqueta_ids.includes(e.id)
+                      );
+                      const cardMembros = membros.filter((m) =>
+                        card.membro_ids.includes(m.id)
+                      );
                       const concluido = !!card.data_conclusao;
 
                       return (
                         <button
                           key={card.id}
                           onClick={() => onCartaoClick(card)}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--tf-bg-secondary)]"
+                          className="w-full flex items-center gap-2.5 px-3 h-9 text-left transition-colors hover:bg-[var(--tf-surface-hover)]"
+                          style={{
+                            borderTop: i > 0 ? "1px solid var(--tf-border-subtle)" : "none",
+                          }}
                         >
-                          {/* Checkbox visual */}
+                          {/* Checkbox */}
                           <div
-                            className="w-4 h-4 rounded-[4px] border shrink-0 flex items-center justify-center"
+                            className="w-[14px] h-[14px] shrink-0 flex items-center justify-center"
                             style={{
-                              borderColor: concluido ? "var(--tf-success)" : "var(--tf-border)",
+                              border: `1px solid ${concluido ? "var(--tf-success)" : "var(--tf-border-strong)"}`,
                               background: concluido ? "var(--tf-success)" : "transparent",
+                              borderRadius: "var(--tf-radius-xs)",
                             }}
                           >
-                            {concluido && <span className="text-white text-[10px]">✓</span>}
+                            {concluido && (
+                              <Check size={9} className="text-white" strokeWidth={3} />
+                            )}
                           </div>
 
                           {/* Titulo */}
                           <span
-                            className="flex-1 text-[13px] font-medium truncate"
+                            className="flex-1 text-[0.8125rem] font-medium truncate"
                             style={{
-                              color: concluido ? "var(--tf-text-tertiary)" : "var(--tf-text)",
+                              color: concluido
+                                ? "var(--tf-text-tertiary)"
+                                : "var(--tf-text)",
                               textDecoration: concluido ? "line-through" : "none",
+                              letterSpacing: "-0.005em",
                             }}
                           >
                             {card.titulo}
@@ -102,18 +162,29 @@ export function ListaView({ colunas, cartoesFiltradosPorColuna, etiquetas, membr
 
                           {/* Etiquetas */}
                           {cardEtiquetas.length > 0 && (
-                            <div className="hidden md:flex items-center gap-1 shrink-0">
+                            <div className="hidden md:flex items-center gap-0.5 shrink-0">
                               {cardEtiquetas.slice(0, 3).map((e) => (
                                 <span
                                   key={e.id}
-                                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                                  style={{ background: e.cor, color: getContrastTextColor(e.cor) }}
+                                  className="inline-flex items-center h-[16px] px-1.5 text-[0.5625rem] font-medium leading-none"
+                                  style={{
+                                    background: e.cor,
+                                    color: getContrastTextColor(e.cor),
+                                    borderRadius: "var(--tf-radius-xs)",
+                                    letterSpacing: "0.01em",
+                                  }}
                                 >
                                   {e.nome}
                                 </span>
                               ))}
                               {cardEtiquetas.length > 3 && (
-                                <span className="text-[9px]" style={{ color: "var(--tf-text-tertiary)" }}>
+                                <span
+                                  className="text-[0.5625rem]"
+                                  style={{
+                                    color: "var(--tf-text-tertiary)",
+                                    fontFamily: "var(--tf-font-mono)",
+                                  }}
+                                >
                                   +{cardEtiquetas.length - 3}
                                 </span>
                               )}
@@ -121,28 +192,37 @@ export function ListaView({ colunas, cartoesFiltradosPorColuna, etiquetas, membr
                           )}
 
                           {/* Indicadores */}
-                          <div className="flex items-center gap-2 shrink-0 text-[10px]" style={{ color: "var(--tf-text-tertiary)" }}>
+                          <div
+                            className="flex items-center gap-2 shrink-0 text-[0.625rem]"
+                            style={{
+                              color: "var(--tf-text-tertiary)",
+                              fontFamily: "var(--tf-font-mono)",
+                            }}
+                          >
                             {card.total_checklist_itens > 0 && (
                               <span className="flex items-center gap-0.5">
-                                <CheckSquare size={11} />
+                                <CheckSquare size={10} strokeWidth={1.75} />
                                 {card.total_checklist_concluidos}/{card.total_checklist_itens}
                               </span>
                             )}
                             {card.total_anexos > 0 && (
                               <span className="flex items-center gap-0.5">
-                                <Paperclip size={11} />
+                                <Paperclip size={10} strokeWidth={1.75} />
                                 {card.total_anexos}
                               </span>
                             )}
                             {card.pr_numero && (
-                              <span className="flex items-center gap-0.5" style={{ color: "var(--tf-accent)" }}>
-                                <GitPullRequest size={11} />
+                              <span
+                                className="flex items-center gap-0.5"
+                                style={{ color: "var(--tf-accent)" }}
+                              >
+                                <GitPullRequest size={10} strokeWidth={1.75} />
                                 #{card.pr_numero}
                               </span>
                             )}
                             {card.data_entrega && (
                               <span className="flex items-center gap-0.5">
-                                <Calendar size={11} />
+                                <Calendar size={10} strokeWidth={1.75} />
                                 {formatarData(card.data_entrega)}
                               </span>
                             )}
@@ -151,8 +231,14 @@ export function ListaView({ colunas, cartoesFiltradosPorColuna, etiquetas, membr
                           {/* Peso */}
                           {card.peso != null && (
                             <span
-                              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
-                              style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent)" }}
+                              className="inline-flex items-center justify-center min-w-[22px] h-[17px] px-1.5 text-[0.625rem] font-medium shrink-0"
+                              style={{
+                                background: "var(--tf-accent-light)",
+                                color: "var(--tf-accent-text)",
+                                border: "1px solid var(--tf-accent)",
+                                borderRadius: "var(--tf-radius-xs)",
+                                fontFamily: "var(--tf-font-mono)",
+                              }}
                             >
                               {card.peso}
                             </span>
@@ -160,30 +246,33 @@ export function ListaView({ colunas, cartoesFiltradosPorColuna, etiquetas, membr
 
                           {/* Membros */}
                           {cardMembros.length > 0 && (
-                            <div className="flex items-center -space-x-1.5 shrink-0">
-                              {cardMembros.slice(0, 3).map((m) => (
-                                <div
-                                  key={m.id}
-                                  className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white border-2"
-                                  style={{ background: m.cor_avatar, borderColor: "var(--tf-surface)" }}
-                                  title={m.nome}
-                                >
-                                  {m.avatar_url ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={m.avatar_url} alt={m.nome} className="w-full h-full rounded-full object-cover" />
-                                  ) : (
-                                    m.nome.charAt(0).toUpperCase()
-                                  )}
-                                </div>
-                              ))}
-                              {cardMembros.length > 3 && (
-                                <div
-                                  className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold border-2"
-                                  style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text-tertiary)", borderColor: "var(--tf-surface)" }}
-                                >
-                                  +{cardMembros.length - 3}
-                                </div>
-                              )}
+                            <div className="shrink-0">
+                              <div className="flex -space-x-1">
+                                {cardMembros.slice(0, 3).map((m) => (
+                                  <div
+                                    key={m.id}
+                                    style={{
+                                      outline: "2px solid var(--tf-surface)",
+                                      borderRadius: "var(--tf-radius-xs)",
+                                    }}
+                                  >
+                                    <Avatar membro={m} tamanho="sm" />
+                                  </div>
+                                ))}
+                                {cardMembros.length > 3 && (
+                                  <div
+                                    className="w-6 h-6 flex items-center justify-center text-[0.5625rem] font-semibold text-white"
+                                    style={{
+                                      background: "var(--tf-text-tertiary)",
+                                      borderRadius: "var(--tf-radius-xs)",
+                                      outline: "2px solid var(--tf-surface)",
+                                      fontFamily: "var(--tf-font-mono)",
+                                    }}
+                                  >
+                                    +{cardMembros.length - 3}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
                         </button>

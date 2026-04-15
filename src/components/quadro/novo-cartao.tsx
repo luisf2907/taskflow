@@ -47,12 +47,21 @@ export const NovoCartao = memo(function NovoCartao({ onCriar }: NovoCartaoProps)
     return (
       <button
         onClick={() => setAtivo(true)}
-        className="flex items-center gap-1.5 w-full px-2.5 py-1.5 text-[13px] rounded-[8px] transition-smooth"
-        style={{ color: "var(--tf-text-tertiary)" }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
-        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+        className="flex items-center gap-1.5 w-full px-2.5 h-7 text-[0.75rem] transition-colors"
+        style={{
+          color: "var(--tf-text-tertiary)",
+          borderRadius: "var(--tf-radius-xs)",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "var(--tf-surface-hover)";
+          e.currentTarget.style.color = "var(--tf-text-secondary)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "transparent";
+          e.currentTarget.style.color = "var(--tf-text-tertiary)";
+        }}
       >
-        <Plus size={15} />
+        <Plus size={13} strokeWidth={1.75} />
         Adicionar cartão
       </button>
     );
@@ -65,54 +74,68 @@ export const NovoCartao = memo(function NovoCartao({ onCriar }: NovoCartaoProps)
         value={titulo}
         onChange={(e) => setTitulo(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(); }
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit();
+          }
           if (e.key === "Escape") handleCancel();
         }}
         placeholder="Título do cartão..."
-        className="w-full card-surface px-3 py-2 text-[13px] resize-none outline-none"
-        style={{ color: "var(--tf-text)" }}
+        className="w-full px-3 py-2 text-[0.8125rem] resize-none outline-none transition-colors"
+        style={{
+          color: "var(--tf-text)",
+          background: "var(--tf-surface)",
+          border: "1px solid var(--tf-accent)",
+          borderRadius: "var(--tf-radius-md)",
+          letterSpacing: "-0.005em",
+        }}
         rows={3}
         maxLength={500}
         autoFocus
       />
 
-      {/* Peso inline */}
       {mostrarPeso && (
         <div className="px-1 pb-1">
           <SeletorPeso valor={peso} onChange={setPeso} />
         </div>
       )}
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         <button
           onClick={handleSubmit}
           disabled={enviando || !titulo.trim()}
-          className="px-3 py-1.5 text-xs font-semibold text-white rounded-[8px] transition-smooth disabled:opacity-40"
-          style={{ background: "var(--tf-accent)" }}
+          className="h-7 px-2.5 text-[0.75rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            background: "var(--tf-accent)",
+            border: "1px solid var(--tf-accent)",
+            borderRadius: "var(--tf-radius-xs)",
+          }}
         >
           {enviando ? "Criando..." : "Adicionar"}
         </button>
 
-        {/* Toggle story points */}
         <button
           onClick={() => setMostrarPeso(!mostrarPeso)}
-          className="p-1.5 rounded-[8px] transition-smooth flex items-center gap-1"
+          className="h-7 px-1.5 flex items-center gap-1 text-[0.6875rem] font-medium transition-colors"
           style={{
             color: peso ? "var(--tf-accent)" : "var(--tf-text-tertiary)",
             background: mostrarPeso ? "var(--tf-surface-hover)" : "transparent",
+            borderRadius: "var(--tf-radius-xs)",
+            fontFamily: "var(--tf-font-mono)",
           }}
           title="Story Points"
         >
-          <Gauge size={14} />
-          {peso !== null && <span className="text-[11px] font-bold">{peso}</span>}
+          <Gauge size={12} strokeWidth={1.75} />
+          {peso !== null && <span>{peso}</span>}
         </button>
 
         <button
           onClick={handleCancel}
-          className="p-1.5 transition-smooth"
+          className="ml-auto p-1.5 transition-colors hover:text-[var(--tf-text)]"
           style={{ color: "var(--tf-text-tertiary)" }}
+          aria-label="Cancelar"
         >
-          <X size={16} />
+          <X size={14} strokeWidth={1.75} />
         </button>
       </div>
     </div>

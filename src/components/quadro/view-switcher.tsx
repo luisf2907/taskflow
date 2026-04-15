@@ -9,7 +9,11 @@ interface ViewSwitcherProps {
   onChange: (v: ViewMode) => void;
 }
 
-const VIEWS: { id: ViewMode; icon: React.ComponentType<{ size?: number }>; label: string }[] = [
+const VIEWS: {
+  id: ViewMode;
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+  label: string;
+}[] = [
   { id: "kanban", icon: Kanban, label: "Kanban" },
   { id: "lista", icon: List, label: "Lista" },
   { id: "tabela", icon: Table, label: "Tabela" },
@@ -18,24 +22,35 @@ const VIEWS: { id: ViewMode; icon: React.ComponentType<{ size?: number }>; label
 export function ViewSwitcher({ view, onChange }: ViewSwitcherProps) {
   return (
     <div
-      className="flex rounded-[8px] p-0.5 shrink-0"
-      style={{ background: "var(--tf-bg-secondary)" }}
+      className="flex shrink-0 p-0.5"
+      style={{
+        background: "var(--tf-bg-secondary)",
+        border: "1px solid var(--tf-border)",
+        borderRadius: "var(--tf-radius-xs)",
+      }}
     >
-      {VIEWS.map(({ id, icon: Icon, label }) => (
-        <button
-          key={id}
-          onClick={() => onChange(id)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-[8px] transition-all"
-          style={{
-            background: view === id ? "var(--tf-surface)" : "transparent",
-            color: view === id ? "var(--tf-text)" : "var(--tf-text-tertiary)",
-            boxShadow: view === id ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-          }}
-        >
-          <Icon size={13} />
-          <span className="hidden sm:inline">{label}</span>
-        </button>
-      ))}
+      {VIEWS.map(({ id, icon: Icon, label }) => {
+        const ativo = view === id;
+        return (
+          <button
+            key={id}
+            onClick={() => onChange(id)}
+            className="flex items-center gap-1.5 h-7 px-2.5 text-[0.6875rem] font-medium transition-colors"
+            style={{
+              background: ativo ? "var(--tf-surface)" : "transparent",
+              color: ativo ? "var(--tf-text)" : "var(--tf-text-tertiary)",
+              border: ativo ? "1px solid var(--tf-border)" : "1px solid transparent",
+              borderRadius: "var(--tf-radius-xs)",
+              fontFamily: "var(--tf-font-mono)",
+              letterSpacing: "0.02em",
+              textTransform: "uppercase",
+            }}
+          >
+            <Icon size={12} strokeWidth={1.75} />
+            <span className="hidden sm:inline">{label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

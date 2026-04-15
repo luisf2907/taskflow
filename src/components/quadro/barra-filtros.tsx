@@ -18,7 +18,12 @@ interface BarraFiltrosProps {
   membros: Membro[];
 }
 
-export function BarraFiltros({ filtros, onChange, etiquetas, membros }: BarraFiltrosProps) {
+export function BarraFiltros({
+  filtros,
+  onChange,
+  etiquetas,
+  membros,
+}: BarraFiltrosProps) {
   const [expandido, setExpandido] = useState(false);
 
   const totalAtivos =
@@ -45,19 +50,36 @@ export function BarraFiltros({ filtros, onChange, etiquetas, membros }: BarraFil
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="relative flex items-center gap-1.5">
       {/* Busca */}
       <div className="relative">
-        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--tf-text-tertiary)" }} />
+        <Search
+          size={12}
+          strokeWidth={1.75}
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ color: "var(--tf-text-tertiary)" }}
+        />
         <input
           value={filtros.texto}
           onChange={(e) => onChange({ ...filtros, texto: e.target.value })}
-          placeholder="Buscar..."
-          className="pl-8 pr-3 py-1.5 text-[13px] rounded-[8px] outline-none w-44 transition-smooth"
-          style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
-          onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
+          placeholder="Buscar…"
+          className="filtro-input pl-7 pr-3 h-7 text-[0.75rem] outline-none w-44"
+          style={{
+            color: "var(--tf-text)",
+            letterSpacing: "-0.005em",
+            borderRadius: "var(--tf-radius-xs)",
+          }}
         />
+        <style jsx>{`
+          .filtro-input {
+            background: var(--tf-surface);
+            border: 1px solid var(--tf-border);
+            transition: border-color 0.15s ease;
+          }
+          .filtro-input:focus {
+            border-color: var(--tf-accent);
+          }
+        `}</style>
       </div>
 
       {/* Toggle filtros */}
@@ -65,17 +87,31 @@ export function BarraFiltros({ filtros, onChange, etiquetas, membros }: BarraFil
         onClick={() => setExpandido(!expandido)}
         aria-expanded={expandido}
         aria-label="Filtros"
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] font-medium rounded-[8px] transition-smooth"
+        className="flex items-center gap-1.5 h-7 px-2.5 text-[0.75rem] font-medium transition-colors"
         style={{
-          background: expandido || totalAtivos > 0 ? "var(--tf-accent-light)" : "var(--tf-surface)",
-          color: expandido || totalAtivos > 0 ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
-          border: "1px solid var(--tf-border)",
+          background:
+            expandido || totalAtivos > 0 ? "var(--tf-accent-light)" : "transparent",
+          color:
+            expandido || totalAtivos > 0
+              ? "var(--tf-accent-text)"
+              : "var(--tf-text-secondary)",
+          border: `1px solid ${
+            expandido || totalAtivos > 0 ? "var(--tf-accent)" : "var(--tf-border)"
+          }`,
+          borderRadius: "var(--tf-radius-xs)",
         }}
       >
-        <Filter size={14} />
+        <Filter size={12} strokeWidth={1.75} />
         Filtros
         {totalAtivos > 0 && (
-          <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "var(--tf-accent)" }}>
+          <span
+            className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[0.625rem] font-medium text-white"
+            style={{
+              background: "var(--tf-accent)",
+              borderRadius: "var(--tf-radius-xs)",
+              fontFamily: "var(--tf-font-mono)",
+            }}
+          >
             {totalAtivos}
           </span>
         )}
@@ -85,39 +121,62 @@ export function BarraFiltros({ filtros, onChange, etiquetas, membros }: BarraFil
       {totalAtivos > 0 && (
         <button
           onClick={limpar}
-          className="flex items-center gap-1 px-2 py-1.5 text-[12px] rounded-[8px] transition-smooth"
-          style={{ color: "var(--tf-danger)" }}
+          className="flex items-center gap-1 h-7 px-2 text-[0.6875rem] font-medium transition-colors hover:bg-[var(--tf-danger-bg)]"
+          style={{
+            color: "var(--tf-danger)",
+            borderRadius: "var(--tf-radius-xs)",
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}
         >
-          <X size={12} /> Limpar
+          <X size={11} strokeWidth={1.75} /> Limpar
         </button>
       )}
 
       {/* Painel expandido */}
       {expandido && (
         <div
-          className="absolute top-full left-0 right-0 mt-2 p-4 rounded-[14px] border z-40 flex gap-6"
-          style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
+          className="absolute top-full left-0 right-0 mt-1.5 p-3.5 border z-40 flex gap-5"
+          style={{
+            background: "var(--tf-surface-raised)",
+            borderColor: "var(--tf-border)",
+            borderRadius: "var(--tf-radius-md)",
+            boxShadow: "var(--tf-shadow-md)",
+          }}
         >
           {/* Etiquetas */}
           {etiquetas.length > 0 && (
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "var(--tf-text-tertiary)" }}>Etiquetas</p>
-              <div className="flex flex-wrap gap-1.5">
-                {etiquetas.map((e) => (
-                  <button
-                    key={e.id}
-                    onClick={() => toggleEtiqueta(e.id)}
-                    className="px-2.5 py-1 rounded-[8px] text-[11px] font-bold text-white transition-smooth"
-                    style={{
-                      backgroundColor: e.cor,
-                      opacity: filtros.etiquetaIds.length === 0 || filtros.etiquetaIds.includes(e.id) ? 1 : 0.35,
-                      outline: filtros.etiquetaIds.includes(e.id) ? "2px solid var(--tf-text)" : "none",
-                      outlineOffset: "1px",
-                    }}
-                  >
-                    {e.nome}
-                  </button>
-                ))}
+              <p
+                className="label-mono mb-2"
+                style={{ color: "var(--tf-text-tertiary)" }}
+              >
+                Etiquetas
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {etiquetas.map((e) => {
+                  const ativa = filtros.etiquetaIds.includes(e.id);
+                  return (
+                    <button
+                      key={e.id}
+                      onClick={() => toggleEtiqueta(e.id)}
+                      className="h-[22px] px-2 text-[0.6875rem] font-medium text-white transition-all"
+                      style={{
+                        backgroundColor: e.cor,
+                        borderRadius: "var(--tf-radius-xs)",
+                        opacity:
+                          filtros.etiquetaIds.length === 0 || ativa ? 1 : 0.35,
+                        outline: ativa
+                          ? "2px solid var(--tf-text)"
+                          : "2px solid transparent",
+                        outlineOffset: "1px",
+                      }}
+                    >
+                      {e.nome}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -125,22 +184,40 @@ export function BarraFiltros({ filtros, onChange, etiquetas, membros }: BarraFil
           {/* Membros */}
           {membros.length > 0 && (
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "var(--tf-text-tertiary)" }}>Membros</p>
-              <div className="flex flex-wrap gap-2">
-                {membros.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => toggleMembro(m.id)}
-                    className="flex items-center gap-1.5 px-2 py-1 rounded-[8px] transition-smooth"
-                    style={{
-                      background: filtros.membroIds.includes(m.id) ? "var(--tf-accent-light)" : "var(--tf-bg-secondary)",
-                      opacity: filtros.membroIds.length === 0 || filtros.membroIds.includes(m.id) ? 1 : 0.5,
-                    }}
-                  >
-                    <Avatar membro={m} tamanho="sm" />
-                    <span className="text-[12px] font-medium" style={{ color: "var(--tf-text)" }}>{m.nome.split(" ")[0]}</span>
-                  </button>
-                ))}
+              <p
+                className="label-mono mb-2"
+                style={{ color: "var(--tf-text-tertiary)" }}
+              >
+                Membros
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {membros.map((m) => {
+                  const ativo = filtros.membroIds.includes(m.id);
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => toggleMembro(m.id)}
+                      className="flex items-center gap-1.5 h-7 pl-1 pr-2 transition-colors"
+                      style={{
+                        background: ativo ? "var(--tf-accent-light)" : "var(--tf-bg-secondary)",
+                        border: `1px solid ${ativo ? "var(--tf-accent)" : "var(--tf-border)"}`,
+                        borderRadius: "var(--tf-radius-xs)",
+                        opacity: filtros.membroIds.length === 0 || ativo ? 1 : 0.5,
+                      }}
+                    >
+                      <Avatar membro={m} tamanho="sm" />
+                      <span
+                        className="text-[0.6875rem] font-medium"
+                        style={{
+                          color: ativo ? "var(--tf-accent-text)" : "var(--tf-text)",
+                          letterSpacing: "-0.005em",
+                        }}
+                      >
+                        {m.nome.split(" ")[0]}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

@@ -12,7 +12,6 @@ import { StatusSprint } from "@/types";
 import {
   Calendar,
   CheckCircle2,
-  ChevronRight,
   Folder,
   Maximize2,
   Minimize2,
@@ -38,7 +37,28 @@ function diasRestantes(dataFim: string | null): number | null {
 
 function formatarData(data: string | null): string {
   if (!data) return "";
-  return new Date(data + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  return new Date(data + "T00:00:00").toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+  });
+}
+
+const STATUS_LABELS: Record<StatusSprint, string> = {
+  planejada: "Planejada",
+  ativa: "Ativa",
+  concluida: "Concluída",
+};
+
+function statusColor(s: StatusSprint) {
+  if (s === "ativa") return "var(--tf-success)";
+  if (s === "concluida") return "var(--tf-text-tertiary)";
+  return "var(--tf-warning)";
+}
+
+function statusBg(s: StatusSprint) {
+  if (s === "ativa") return "var(--tf-success-bg)";
+  if (s === "concluida") return "var(--tf-bg-secondary)";
+  return "var(--tf-warning-bg)";
 }
 
 export default function PaginaQuadro() {
@@ -49,7 +69,9 @@ export default function PaginaQuadro() {
   const { workspaces } = useWorkspaces();
   const quadro = quadros.find((q) => q.id === quadroId);
   useRealtimeBoard(quadroId);
-  const workspace = quadro?.workspace_id ? workspaces.find((w) => w.id === quadro.workspace_id) : null;
+  const workspace = quadro?.workspace_id
+    ? workspaces.find((w) => w.id === quadro.workspace_id)
+    : null;
 
   const [editandoNome, setEditandoNome] = useState(false);
   const [nome, setNome] = useState("");
@@ -58,14 +80,12 @@ export default function PaginaQuadro() {
   const [telaCheia, setTelaCheia] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Campos editáveis da sprint
   const [editMeta, setEditMeta] = useState("");
   const [editInicio, setEditInicio] = useState("");
   const [editFim, setEditFim] = useState("");
 
   const dias = quadro ? diasRestantes(quadro.data_fim) : null;
 
-  // Escape sai do fullscreen
   useEffect(() => {
     if (!telaCheia) return;
     function handleKey(e: KeyboardEvent) {
@@ -76,8 +96,6 @@ export default function PaginaQuadro() {
   }, [telaCheia]);
   const isSprint = !!quadro?.workspace_id;
 
-  // set-state-in-effect intencional: popular o form quando o modal abre com um
-  // quadro/sprint existente.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (quadro && modalConfig) {
@@ -103,17 +121,17 @@ export default function PaginaQuadro() {
 
   async function mudarStatus(status: StatusSprint) {
     if (!quadro) return;
-
-    // Se ativando, desativar qualquer outra sprint ativa do mesmo workspace
     if (status === "ativa" && quadro.workspace_id) {
       const outraAtiva = quadros.find(
-        (q) => q.workspace_id === quadro.workspace_id && q.status_sprint === "ativa" && q.id !== quadro.id
+        (q) =>
+          q.workspace_id === quadro.workspace_id &&
+          q.status_sprint === "ativa" &&
+          q.id !== quadro.id
       );
       if (outraAtiva) {
         await atualizar(outraAtiva.id, { status_sprint: "planejada" });
       }
     }
-
     atualizar(quadro.id, { status_sprint: status });
   }
 
@@ -133,61 +151,106 @@ export default function PaginaQuadro() {
     router.push(workspace ? `/workspace/${workspace.id}` : "/");
   }
 
+  const headerBtnStyle = {
+    color: "var(--tf-text-tertiary)",
+    borderRadius: "var(--tf-radius-xs)",
+  };
+
   return (
-    <div className="h-full flex overflow-hidden" style={{ background: "var(--tf-bg)" }}>
+    <div
+      className="h-full flex overflow-hidden"
+      style={{ background: "var(--tf-bg)" }}
+    >
       {iniciado && !telaCheia && (
-        <Sidebar quadros={quadros} onNovoQuadro={() => router.push("/dashboard")} aberta={sidebarAberta} onToggle={toggleSidebar} />
+        <Sidebar
+          quadros={quadros}
+          onNovoQuadro={() => router.push("/dashboard")}
+          aberta={sidebarAberta}
+          onToggle={toggleSidebar}
+        />
       )}
 
-      <main id="main-content" className={`flex-1 flex flex-col overflow-hidden ${telaCheia ? "p-3" : "px-2 lg:px-4"}`}>
+      <main
+        id="main-content"
+        className={`flex-1 flex flex-col overflow-hidden ${telaCheia ? "p-3" : "px-2 lg:px-4"}`}
+      >
         {!telaCheia && <Header onMenuMobile={toggleSidebar} />}
         <div
-          className="flex-1 flex flex-col overflow-hidden rounded-[32px]"
+          className="flex-1 flex flex-col overflow-hidden"
           style={{
             background: "var(--tf-surface)",
             border: "1px solid var(--tf-border)",
-            marginBottom: telaCheia ? 0 : 16,
+            borderRadius: "var(--tf-radius-xl)",
+            marginBottom: telaCheia ? 0 : 14,
           }}
         >
           {/* Board header */}
           {quadro && (
-            <div className="shrink-0">
-              <div className="flex items-center gap-4 px-6 py-3.5">
+            <div className="shrink-0" style={{ borderBottom: "1px solid var(--tf-border)" }}>
+              <div className="flex items-center gap-3 px-4 py-2.5">
                 {/* Left: Breadcrumb + Name */}
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  {/* Color indicator */}
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
                   <div
-                    className="w-9 h-9 rounded-[14px] flex items-center justify-center shrink-0"
-                    style={{ background: quadro.cor }}
+                    className="w-7 h-7 flex items-center justify-center shrink-0"
+                    style={{
+                      background: quadro.cor,
+                      borderRadius: "var(--tf-radius-xs)",
+                    }}
                   >
-                    <Folder size={16} className="text-white" />
+                    <Folder size={13} className="text-white" strokeWidth={1.75} />
                   </div>
 
-                  <div className="min-w-0">
-                    {/* Breadcrumb */}
+                  <div className="min-w-0 flex items-center gap-1.5 leading-none">
                     {workspace && (
-                      <Link
-                        href={`/workspace/${workspace.id}`}
-                        className="text-[11px] font-medium transition-smooth hover:underline block"
-                        style={{ color: "var(--tf-text-tertiary)" }}
-                      >
-                        {workspace.nome}
-                      </Link>
+                      <>
+                        <Link
+                          href={`/workspace/${workspace.id}`}
+                          className="text-[0.75rem] transition-colors hover:text-[var(--tf-accent)]"
+                          style={{
+                            color: "var(--tf-text-tertiary)",
+                            fontFamily: "var(--tf-font-mono)",
+                            letterSpacing: "0.02em",
+                          }}
+                        >
+                          {workspace.nome}
+                        </Link>
+                        <span
+                          style={{
+                            color: "var(--tf-border-strong)",
+                            fontFamily: "var(--tf-font-mono)",
+                          }}
+                        >
+                          /
+                        </span>
+                      </>
                     )}
 
-                    {/* Name */}
                     {editandoNome ? (
                       <input
-                        ref={inputRef} value={nome} onChange={(e) => setNome(e.target.value)}
+                        ref={inputRef}
+                        value={nome}
+                        onChange={(e) => setNome(e.target.value)}
                         onBlur={salvarNome}
-                        onKeyDown={(e) => { if (e.key === "Enter") salvarNome(); if (e.key === "Escape") setEditandoNome(false); }}
-                        className="text-[15px] font-bold rounded-[8px] px-2 py-0.5 outline-none -ml-2"
-                        style={{ color: "var(--tf-text)", background: "var(--tf-surface)", border: "2px solid var(--tf-accent)" }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") salvarNome();
+                          if (e.key === "Escape") setEditandoNome(false);
+                        }}
+                        className="text-[0.875rem] font-semibold px-1.5 py-0.5 outline-none"
+                        style={{
+                          color: "var(--tf-text)",
+                          background: "var(--tf-surface)",
+                          border: "1px solid var(--tf-accent)",
+                          borderRadius: "var(--tf-radius-xs)",
+                          letterSpacing: "-0.01em",
+                        }}
                       />
                     ) : (
                       <h1
-                        className="text-[15px] font-bold truncate cursor-pointer hover:opacity-70 transition-opacity"
-                        style={{ color: "var(--tf-text)" }}
+                        className="text-[0.875rem] font-semibold truncate cursor-pointer transition-colors hover:text-[var(--tf-accent)]"
+                        style={{
+                          color: "var(--tf-text)",
+                          letterSpacing: "-0.01em",
+                        }}
                         onClick={iniciarEdicao}
                         title="Clique para renomear"
                       >
@@ -198,42 +261,51 @@ export default function PaginaQuadro() {
                 </div>
 
                 {/* Center: Status + Date pills */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
                   {isSprint && (
                     <Dropdown
                       trigger={
                         <button
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-full transition-smooth hover:opacity-80"
+                          className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[0.625rem] font-medium transition-colors"
                           style={{
-                            background: quadro.status_sprint === "ativa" ? "var(--tf-success-bg)" : quadro.status_sprint === "concluida" ? "var(--tf-bg-secondary)" : "var(--tf-warning-bg)",
-                            color: quadro.status_sprint === "ativa" ? "var(--tf-success)" : quadro.status_sprint === "concluida" ? "var(--tf-text-tertiary)" : "var(--tf-warning)",
+                            background: statusBg(quadro.status_sprint),
+                            color: statusColor(quadro.status_sprint),
+                            border: `1px solid ${statusColor(quadro.status_sprint)}`,
+                            borderRadius: "var(--tf-radius-xs)",
+                            fontFamily: "var(--tf-font-mono)",
+                            letterSpacing: "0.06em",
+                            textTransform: "uppercase",
                           }}
                         >
-                          <span className="w-1.5 h-1.5 rounded-full" style={{
-                            background: quadro.status_sprint === "ativa" ? "var(--tf-success)" : quadro.status_sprint === "concluida" ? "var(--tf-text-tertiary)" : "var(--tf-warning)",
-                          }} />
-                          {quadro.status_sprint === "ativa" ? "Ativa" : quadro.status_sprint === "concluida" ? "Concluída" : "Planejada"}
+                          <span
+                            className="w-1.5 h-1.5"
+                            style={{
+                              background: statusColor(quadro.status_sprint),
+                              borderRadius: "1px",
+                            }}
+                          />
+                          {STATUS_LABELS[quadro.status_sprint]}
                         </button>
                       }
                     >
                       {quadro.status_sprint !== "ativa" && (
                         <DropdownItem onClick={() => mudarStatus("ativa")}>
-                          <Play size={14} /> Ativar sprint
+                          <Play size={12} strokeWidth={1.75} /> Ativar sprint
                         </DropdownItem>
                       )}
                       {quadro.status_sprint === "ativa" && (
                         <DropdownItem onClick={() => mudarStatus("planejada")}>
-                          <Pause size={14} /> Pausar
+                          <Pause size={12} strokeWidth={1.75} /> Pausar
                         </DropdownItem>
                       )}
                       {quadro.status_sprint !== "concluida" && (
                         <DropdownItem onClick={() => mudarStatus("concluida")}>
-                          <CheckCircle2 size={14} /> Concluir sprint
+                          <CheckCircle2 size={12} strokeWidth={1.75} /> Concluir sprint
                         </DropdownItem>
                       )}
                       {quadro.status_sprint === "concluida" && (
                         <DropdownItem onClick={() => mudarStatus("ativa")}>
-                          <RotateCcw size={14} /> Reativar sprint
+                          <RotateCcw size={12} strokeWidth={1.75} /> Reativar sprint
                         </DropdownItem>
                       )}
                     </Dropdown>
@@ -241,17 +313,33 @@ export default function PaginaQuadro() {
 
                   {isSprint && (quadro.data_inicio || quadro.data_fim) && (
                     <div
-                      className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-full"
-                      style={{ color: "var(--tf-text-secondary)", background: "var(--tf-bg-secondary)" }}
+                      className="flex items-center gap-1.5 h-7 px-2.5 text-[0.625rem] font-medium"
+                      style={{
+                        color: "var(--tf-text-secondary)",
+                        background: "var(--tf-bg-secondary)",
+                        border: "1px solid var(--tf-border)",
+                        borderRadius: "var(--tf-radius-xs)",
+                        fontFamily: "var(--tf-font-mono)",
+                        letterSpacing: "0.02em",
+                      }}
                     >
-                      <Calendar size={11} />
-                      <span>{formatarData(quadro.data_inicio)} → {formatarData(quadro.data_fim)}</span>
+                      <Calendar size={10} strokeWidth={1.75} />
+                      <span>
+                        {formatarData(quadro.data_inicio)} → {formatarData(quadro.data_fim)}
+                      </span>
                       {dias !== null && quadro.status_sprint === "ativa" && (
                         <span
-                          className="font-bold ml-0.5"
-                          style={{ color: dias <= 2 ? "var(--tf-danger)" : dias <= 5 ? "var(--tf-warning)" : "var(--tf-accent)" }}
+                          className="font-medium"
+                          style={{
+                            color:
+                              dias <= 2
+                                ? "var(--tf-danger)"
+                                : dias <= 5
+                                  ? "var(--tf-warning)"
+                                  : "var(--tf-accent)",
+                          }}
                         >
-                          {dias > 0 ? `${dias}d` : dias === 0 ? "Hoje!" : `${Math.abs(dias)}d atrasada`}
+                          {dias > 0 ? `${dias}d` : dias === 0 ? "HOJE!" : `${Math.abs(dias)}d atr.`}
                         </span>
                       )}
                     </div>
@@ -259,58 +347,86 @@ export default function PaginaQuadro() {
                 </div>
 
                 {/* Right: Actions */}
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-0.5 shrink-0">
                   {isSprint && (
                     <button
                       onClick={() => setModalConfig(true)}
-                      className="p-2 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
-                      style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+                      className="p-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]"
+                      style={headerBtnStyle}
                       title="Configurar sprint"
                     >
-                      <Settings size={16} />
+                      <Settings size={14} strokeWidth={1.75} />
                     </button>
                   )}
                   <button
                     onClick={() => setTelaCheia(!telaCheia)}
-                    className="p-2 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
-                    style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+                    className="p-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]"
+                    style={headerBtnStyle}
                     title={telaCheia ? "Sair do modo foco (Esc)" : "Modo foco"}
                   >
-                    {telaCheia ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                    {telaCheia ? (
+                      <Minimize2 size={14} strokeWidth={1.75} />
+                    ) : (
+                      <Maximize2 size={14} strokeWidth={1.75} />
+                    )}
                   </button>
                   <Dropdown
                     trigger={
                       <button
-                        className="p-2 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
-                        style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+                        className="p-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]"
+                        style={headerBtnStyle}
                       >
-                        <MoreHorizontal size={16} />
+                        <MoreHorizontal size={14} strokeWidth={1.75} />
                       </button>
                     }
                   >
-                    <DropdownItem onClick={iniciarEdicao}><Pencil size={14} /> Renomear</DropdownItem>
-                    {isSprint && <DropdownItem onClick={() => setModalConfig(true)}><Settings size={14} /> Configurar sprint</DropdownItem>}
-                    <DropdownItem perigo onClick={handleExcluir}><Trash2 size={14} /> Excluir</DropdownItem>
+                    <DropdownItem onClick={iniciarEdicao}>
+                      <Pencil size={12} strokeWidth={1.75} /> Renomear
+                    </DropdownItem>
+                    {isSprint && (
+                      <DropdownItem onClick={() => setModalConfig(true)}>
+                        <Settings size={12} strokeWidth={1.75} /> Configurar sprint
+                      </DropdownItem>
+                    )}
+                    <DropdownItem perigo onClick={handleExcluir}>
+                      <Trash2 size={12} strokeWidth={1.75} /> Excluir
+                    </DropdownItem>
                   </Dropdown>
                 </div>
               </div>
 
               {/* Meta */}
               {quadro.meta && (
-                <div className="flex items-center gap-2 px-6 pb-3 -mt-1">
-                  <Target size={11} style={{ color: "var(--tf-text-tertiary)" }} />
-                  <p className="text-[11px] font-medium" style={{ color: "var(--tf-text-tertiary)" }}>{quadro.meta}</p>
+                <div className="flex items-center gap-2 px-4 pb-2.5 -mt-0.5">
+                  <Target
+                    size={11}
+                    strokeWidth={1.75}
+                    style={{ color: "var(--tf-text-tertiary)" }}
+                  />
+                  <p
+                    className="text-[0.75rem]"
+                    style={{
+                      color: "var(--tf-text-secondary)",
+                      letterSpacing: "-0.005em",
+                    }}
+                  >
+                    {quadro.meta}
+                  </p>
                 </div>
               )}
-
             </div>
           )}
 
           {/* Board area */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Color line moved to board header */}
-            <div className="flex-1 flex overflow-hidden board-area" style={{ background: "var(--tf-bg-secondary)" }}>
-              <KanbanBoard quadroId={quadroId} workspaceId={quadro?.workspace_id || null} />
+            <div
+              className="flex-1 flex overflow-hidden board-area"
+              style={{ background: "var(--tf-bg)" }}
+            >
+              <KanbanBoard
+                quadroId={quadroId}
+                workspaceId={quadro?.workspace_id || null}
+              />
             </div>
           </div>
         </div>
@@ -326,70 +442,119 @@ export default function PaginaQuadro() {
           <div className="space-y-4">
             {/* Status atual */}
             <div>
-              <label className="text-[12px] font-semibold mb-2 block" style={{ color: "var(--tf-text-secondary)" }}>Status</label>
-              <div className="flex gap-2">
-                {(["planejada", "ativa", "concluida"] as StatusSprint[]).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => mudarStatus(s)}
-                    className="flex-1 py-2 text-[13px] font-semibold rounded-[8px] transition-smooth text-center"
-                    style={{
-                      background: quadro.status_sprint === s
-                        ? s === "ativa" ? "var(--tf-success)" : s === "concluida" ? "var(--tf-text-tertiary)" : "var(--tf-warning)"
-                        : "var(--tf-bg-secondary)",
-                      color: quadro.status_sprint === s ? "#fff" : "var(--tf-text-secondary)",
-                      border: quadro.status_sprint === s ? "none" : "1px solid var(--tf-border)",
-                    }}
-                  >
-                    {s === "planejada" ? "Planejada" : s === "ativa" ? "Ativa" : "Concluida"}
-                  </button>
-                ))}
+              <label
+                className="label-mono mb-2 block"
+                style={{ color: "var(--tf-text-tertiary)" }}
+              >
+                Status
+              </label>
+              <div className="flex gap-1">
+                {(["planejada", "ativa", "concluida"] as StatusSprint[]).map((s) => {
+                  const ativo = quadro.status_sprint === s;
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => mudarStatus(s)}
+                      className="flex-1 h-8 text-[0.75rem] font-medium transition-colors text-center"
+                      style={{
+                        background: ativo ? statusColor(s) : "transparent",
+                        color: ativo ? "#FFFFFF" : "var(--tf-text-secondary)",
+                        border: `1px solid ${ativo ? statusColor(s) : "var(--tf-border)"}`,
+                        borderRadius: "var(--tf-radius-xs)",
+                        fontFamily: "var(--tf-font-mono)",
+                        letterSpacing: "0.02em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {STATUS_LABELS[s]}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Meta */}
             <div>
-              <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Meta / Objetivo</label>
+              <label
+                className="label-mono mb-1.5 block"
+                style={{ color: "var(--tf-text-tertiary)" }}
+              >
+                Meta / Objetivo
+              </label>
               <input
                 value={editMeta}
                 onChange={(e) => setEditMeta(e.target.value)}
                 placeholder="O que queremos alcançar nessa sprint?"
-                className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
-                style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")}
+                className="sprint-input w-full h-9 px-3 text-[0.8125rem] outline-none"
+                style={{
+                  color: "var(--tf-text)",
+                  letterSpacing: "-0.005em",
+                  borderRadius: "var(--tf-radius-xs)",
+                }}
               />
             </div>
 
             {/* Datas */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Data Início</label>
+                <label
+                  className="label-mono mb-1.5 block"
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                >
+                  Data início
+                </label>
                 <input
                   type="date"
                   value={editInicio}
                   onChange={(e) => setEditInicio(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
-                  style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
+                  className="sprint-input w-full h-9 px-3 text-[0.8125rem] outline-none"
+                  style={{
+                    color: "var(--tf-text)",
+                    borderRadius: "var(--tf-radius-xs)",
+                    fontFamily: "var(--tf-font-mono)",
+                  }}
                 />
               </div>
               <div>
-                <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Data Fim</label>
+                <label
+                  className="label-mono mb-1.5 block"
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                >
+                  Data fim
+                </label>
                 <input
                   type="date"
                   value={editFim}
                   onChange={(e) => setEditFim(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-[8px] outline-none transition-smooth"
-                  style={{ background: "var(--tf-bg-secondary)", border: "2px solid var(--tf-border)", color: "var(--tf-text)" }}
+                  className="sprint-input w-full h-9 px-3 text-[0.8125rem] outline-none"
+                  style={{
+                    color: "var(--tf-text)",
+                    borderRadius: "var(--tf-radius-xs)",
+                    fontFamily: "var(--tf-font-mono)",
+                  }}
                 />
               </div>
             </div>
 
-            {/* Salvar */}
+            <style jsx>{`
+              .sprint-input {
+                background: var(--tf-surface);
+                border: 1px solid var(--tf-border);
+                transition: border-color 0.15s ease;
+              }
+              .sprint-input:focus {
+                border-color: var(--tf-accent);
+              }
+            `}</style>
+
             <button
               onClick={salvarConfigSprint}
-              className="w-full py-2.5 text-sm font-semibold text-white rounded-[8px] transition-smooth"
-              style={{ background: "var(--tf-accent)" }}
+              className="w-full h-9 text-[0.8125rem] font-medium text-white transition-colors hover:brightness-110"
+              style={{
+                background: "var(--tf-accent)",
+                border: "1px solid var(--tf-accent)",
+                borderRadius: "var(--tf-radius-xs)",
+              }}
             >
               Salvar alterações
             </button>

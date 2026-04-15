@@ -52,14 +52,12 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
 
   const historico = Array.isArray(cartao.pr_historico) ? cartao.pr_historico : [];
 
-  // Fetch PR title and repo name
   useEffect(() => {
     if (!cartao.pr_numero || !cartao.pr_repo_id) return;
     setCarregandoInfo(true);
 
     (async () => {
       try {
-        // Get repo info from Supabase
         const { supabase } = await import("@/lib/supabase/client");
         const { data: repo } = await supabase
           .from("repositorios")
@@ -74,7 +72,6 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
 
         const repoFullName = `${repo.owner}/${repo.nome}`;
 
-        // Fetch PR title from GitHub
         const res = await fetch("/api/pr-info", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -97,7 +94,6 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
     })();
   }, [cartao.pr_numero, cartao.pr_repo_id]);
 
-  // Load repos for linking when panel opens
   useEffect(() => {
     if (!vinculando || !cartao.workspace_id) return;
     (async () => {
@@ -108,7 +104,7 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
         .eq("workspace_id", cartao.workspace_id);
 
       if (repos && repos.length > 0) {
-        const repo = repos[0]; // auto-select first repo
+        const repo = repos[0];
         setRepoInfo(repo);
         setCarregandoPrs(true);
         try {
@@ -172,7 +168,6 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
       pr_repo_id: repoInfo.id,
       pr_autor: pr.user.login,
     };
-    // Auto-link branch from PR
     if (pr.head?.ref) {
       campos.branch = pr.head.ref;
       campos.branch_repo_id = repoInfo.id;
@@ -186,7 +181,7 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
     return new Date(d).toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "short",
-      year: "numeric",
+      year: "2-digit",
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -204,22 +199,26 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
       {/* PR vinculado */}
       {cartao.pr_numero && (
         <div
-          className="p-4 rounded-[14px]"
-          style={{ background: "var(--tf-bg-secondary)" }}
+          className="p-3.5"
+          style={{
+            background: "var(--tf-bg-secondary)",
+            border: "1px solid var(--tf-border)",
+            borderRadius: "var(--tf-radius-md)",
+          }}
         >
-          <div className="flex items-center gap-2 mb-1">
-            <GitPullRequest size={15} style={{ color: statusCor }} />
+          <div className="flex items-center gap-2 mb-1.5">
+            <GitPullRequest size={14} strokeWidth={1.75} style={{ color: statusCor }} />
             <span
-              className="text-[13px] font-semibold"
-              style={{ color: "var(--tf-text)" }}
+              className="text-[0.8125rem] font-medium truncate"
+              style={{ color: "var(--tf-text)", letterSpacing: "-0.005em" }}
             >
-              PR #{cartao.pr_numero}
+              <span style={{ fontFamily: "var(--tf-font-mono)" }}>#{cartao.pr_numero}</span>
               {prInfo &&
                 !carregandoInfo &&
                 prInfo.title &&
                 !prInfo.title.startsWith(`PR #${cartao.pr_numero}`) && (
                   <span
-                    className="font-normal ml-1"
+                    className="font-normal ml-2"
                     style={{ color: "var(--tf-text-secondary)" }}
                   >
                     {prInfo.title}
@@ -227,61 +226,74 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
                 )}
             </span>
             <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0"
+              className="inline-flex items-center gap-1 h-[17px] px-1.5 text-[0.625rem] font-medium shrink-0 ml-auto"
               style={{
-                background: `color-mix(in srgb, ${statusCor} 15%, transparent)`,
+                background: `color-mix(in srgb, ${statusCor} 12%, transparent)`,
                 color: statusCor,
+                border: `1px solid ${statusCor}`,
+                borderRadius: "var(--tf-radius-xs)",
+                fontFamily: "var(--tf-font-mono)",
+                letterSpacing: "0.02em",
+                textTransform: "uppercase",
               }}
             >
-              <span
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ background: statusCor }}
-              />
+              <span className="w-1.5 h-1.5" style={{ background: statusCor, borderRadius: "1px" }} />
               {statusLabel}
             </span>
-            <div className="ml-auto flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-0.5 shrink-0">
               {cartao.pr_url && (
                 <a
                   href={cartao.pr_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1 rounded-[4px] hover:bg-[var(--tf-surface-hover)]"
+                  className="p-1 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
                   style={{
                     color: "var(--tf-text-tertiary)",
-                    transition: "background 0.15s ease",
+                    borderRadius: "var(--tf-radius-xs)",
                   }}
                   title="Abrir no GitHub"
                 >
-                  <ExternalLink size={13} />
+                  <ExternalLink size={12} strokeWidth={1.75} />
                 </a>
               )}
               {!confirmDesvincular ? (
                 <button
                   onClick={() => setConfirmDesvincular(true)}
-                  className="p-1 rounded-[4px] hover:bg-[var(--tf-danger-bg)]"
+                  className="p-1 transition-colors hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
                   style={{
                     color: "var(--tf-text-tertiary)",
-                    transition: "all 0.15s ease",
+                    borderRadius: "var(--tf-radius-xs)",
                   }}
                   title="Desvincular PR"
                 >
-                  <X size={13} />
+                  <X size={12} strokeWidth={1.75} />
                 </button>
               ) : (
                 <div className="flex items-center gap-1">
                   <button
                     onClick={handleDesvincular}
-                    className="px-2 py-0.5 rounded-[4px] text-[10px] font-bold"
-                    style={{ background: "var(--tf-danger)", color: "#fff" }}
+                    className="h-6 px-2 text-[0.625rem] font-medium text-white transition-colors hover:brightness-110"
+                    style={{
+                      background: "var(--tf-danger)",
+                      border: "1px solid var(--tf-danger)",
+                      borderRadius: "var(--tf-radius-xs)",
+                      fontFamily: "var(--tf-font-mono)",
+                      letterSpacing: "0.02em",
+                      textTransform: "uppercase",
+                    }}
                   >
                     Confirmar
                   </button>
                   <button
                     onClick={() => setConfirmDesvincular(false)}
-                    className="px-2 py-0.5 rounded-[4px] text-[10px] font-bold"
+                    className="h-6 px-2 text-[0.625rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)]"
                     style={{
-                      color: "var(--tf-text-tertiary)",
-                      background: "var(--tf-surface-hover)",
+                      color: "var(--tf-text-secondary)",
+                      border: "1px solid var(--tf-border)",
+                      borderRadius: "var(--tf-radius-xs)",
+                      fontFamily: "var(--tf-font-mono)",
+                      letterSpacing: "0.02em",
+                      textTransform: "uppercase",
                     }}
                   >
                     Cancelar
@@ -291,139 +303,163 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
             </div>
           </div>
 
-          {/* Repo name + author */}
-          <div className="ml-[23px] space-y-0.5">
+          <div className="ml-[22px] space-y-0.5">
             {prInfo && !carregandoInfo && (
               <p
-                className="text-[11px] font-medium"
-                style={{ color: "var(--tf-text-tertiary)" }}
+                className="text-[0.6875rem]"
+                style={{
+                  color: "var(--tf-text-tertiary)",
+                  fontFamily: "var(--tf-font-mono)",
+                }}
               >
                 {prInfo.repoFullName}
               </p>
             )}
             {cartao.pr_autor && (
               <p
-                className="text-[11px]"
-                style={{ color: "var(--tf-text-tertiary)" }}
+                className="text-[0.6875rem]"
+                style={{
+                  color: "var(--tf-text-tertiary)",
+                  fontFamily: "var(--tf-font-mono)",
+                }}
               >
-                por{" "}
-                <strong style={{ color: "var(--tf-text-secondary)" }}>
-                  {cartao.pr_autor}
-                </strong>
+                por <span style={{ color: "var(--tf-text-secondary)" }}>{cartao.pr_autor}</span>
               </p>
             )}
           </div>
         </div>
       )}
 
-      {/* Vincular PR existente (quando não tem PR e painel está aberto) */}
+      {/* Vincular PR existente */}
       {!cartao.pr_numero && painelAberto && (
         <div>
           {!vinculando ? (
             <button
               onClick={() => setVinculando(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-[14px] text-[13px] font-medium border-2 border-dashed hover:border-solid"
+              className="w-full flex items-center justify-center gap-2 h-11 text-[0.75rem] font-medium transition-colors hover:border-[var(--tf-accent)] hover:text-[var(--tf-accent)]"
               style={{
-                borderColor: "var(--tf-border)",
+                border: "1px dashed var(--tf-border-strong)",
+                borderRadius: "var(--tf-radius-md)",
                 color: "var(--tf-text-secondary)",
-                transition: "all 0.15s ease",
+                fontFamily: "var(--tf-font-mono)",
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
               }}
             >
-              <GitPullRequest size={15} />
+              <GitPullRequest size={13} strokeWidth={1.75} />
               Vincular PR existente
             </button>
           ) : (
             <div
-              className="rounded-[14px] overflow-hidden"
+              className="overflow-hidden"
               style={{
                 background: "var(--tf-bg-secondary)",
                 border: "1px solid var(--tf-border)",
+                borderRadius: "var(--tf-radius-md)",
               }}
             >
               <div className="p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <p
-                    className="text-[11px] font-bold uppercase tracking-widest"
-                    style={{ color: "var(--tf-text-tertiary)" }}
-                  >
-                    PRs Abertas {repoInfo && `— ${repoInfo.owner}/${repoInfo.nome}`}
+                  <p className="label-mono" style={{ color: "var(--tf-text-tertiary)" }}>
+                    PRs abertas {repoInfo && `— ${repoInfo.owner}/${repoInfo.nome}`}
                   </p>
                   <button
                     onClick={() => {
                       setVinculando(false);
                       setBuscaPR("");
                     }}
-                    className="p-1 rounded-[4px]"
-                    style={{ color: "var(--tf-text-tertiary)" }}
+                    className="p-1 transition-colors hover:bg-[var(--tf-surface-hover)]"
+                    style={{
+                      color: "var(--tf-text-tertiary)",
+                      borderRadius: "var(--tf-radius-xs)",
+                    }}
                   >
-                    <X size={12} />
+                    <X size={11} strokeWidth={1.75} />
                   </button>
                 </div>
                 <input
                   value={buscaPR}
                   onChange={(e) => setBuscaPR(e.target.value)}
-                  placeholder="Buscar por título ou número..."
-                  className="w-full px-3 py-2 text-[12px] rounded-[8px] outline-none"
+                  placeholder="Buscar por título ou número…"
+                  className="pr-input w-full h-8 px-2.5 text-[0.75rem] outline-none"
                   style={{
-                    background: "var(--tf-surface)",
-                    border: "1px solid var(--tf-border)",
                     color: "var(--tf-text)",
+                    borderRadius: "var(--tf-radius-xs)",
+                    letterSpacing: "-0.005em",
                   }}
                   autoFocus
                 />
               </div>
-              <div
-                className="max-h-[200px] overflow-y-auto"
-                style={{ scrollbarWidth: "thin" }}
-              >
+              <div className="max-h-[200px] overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
                 {carregandoPrs ? (
                   <div
-                    className="flex items-center justify-center py-6 gap-2"
+                    className="flex items-center justify-center py-5 gap-2"
                     style={{ color: "var(--tf-text-tertiary)" }}
                   >
-                    <Loader2 size={14} className="animate-spin" />
-                    <span className="text-[11px]">Carregando PRs...</span>
+                    <Loader2 size={12} className="animate-spin" />
+                    <span
+                      className="text-[0.6875rem]"
+                      style={{ fontFamily: "var(--tf-font-mono)" }}
+                    >
+                      Carregando PRs…
+                    </span>
                   </div>
                 ) : prsFiltrados.length === 0 ? (
                   <p
-                    className="text-center py-6 text-[11px]"
-                    style={{ color: "var(--tf-text-tertiary)" }}
+                    className="text-center py-5 text-[0.6875rem]"
+                    style={{
+                      color: "var(--tf-text-tertiary)",
+                      fontFamily: "var(--tf-font-mono)",
+                      letterSpacing: "0.02em",
+                    }}
                   >
                     {buscaPR ? "Nenhuma PR encontrada" : "Sem PRs abertas"}
                   </p>
                 ) : (
-                  prsFiltrados.map((pr) => (
+                  prsFiltrados.map((pr, i) => (
                     <button
                       key={pr.number}
                       onClick={() => handleVincular(pr)}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-[var(--tf-surface-hover)]"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[var(--tf-surface-hover)]"
                       style={{
-                        transition: "background 0.1s ease",
-                        borderTop: "1px solid var(--tf-border-subtle)",
+                        borderTop:
+                          i === 0
+                            ? "1px solid var(--tf-border)"
+                            : "1px solid var(--tf-border-subtle)",
                       }}
                     >
                       <GitPullRequest
-                        size={13}
+                        size={12}
+                        strokeWidth={1.75}
                         style={{ color: "var(--tf-success)" }}
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span
-                            className="text-[11px] font-mono"
-                            style={{ color: "var(--tf-text-tertiary)" }}
+                            className="text-[0.6875rem]"
+                            style={{
+                              color: "var(--tf-text-tertiary)",
+                              fontFamily: "var(--tf-font-mono)",
+                            }}
                           >
                             #{pr.number}
                           </span>
                           <span
-                            className="text-[12px] font-medium truncate"
-                            style={{ color: "var(--tf-text)" }}
+                            className="text-[0.75rem] font-medium truncate"
+                            style={{
+                              color: "var(--tf-text)",
+                              letterSpacing: "-0.005em",
+                            }}
                           >
                             {pr.title}
                           </span>
                         </div>
                         <span
-                          className="text-[10px]"
-                          style={{ color: "var(--tf-text-tertiary)" }}
+                          className="text-[0.625rem]"
+                          style={{
+                            color: "var(--tf-text-tertiary)",
+                            fontFamily: "var(--tf-font-mono)",
+                          }}
                         >
                           {pr.user.login}
                         </span>
@@ -432,6 +468,16 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
                   ))
                 )}
               </div>
+              <style jsx>{`
+                .pr-input {
+                  background: var(--tf-surface);
+                  border: 1px solid var(--tf-border);
+                  transition: border-color 0.15s ease;
+                }
+                .pr-input:focus {
+                  border-color: var(--tf-accent);
+                }
+              `}</style>
             </div>
           )}
         </div>
@@ -440,24 +486,28 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
       {/* Histórico */}
       {historico.length > 0 && (
         <div className="mt-3">
-          <p
-            className="text-[10px] font-bold uppercase tracking-widest mb-2"
-            style={{ color: "var(--tf-text-tertiary)" }}
-          >
+          <p className="label-mono mb-2" style={{ color: "var(--tf-text-tertiary)" }}>
             Histórico
           </p>
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {historico.map((h, i) => {
               const cor = h.status === "merged" ? "var(--tf-merged)" : "var(--tf-danger)";
-              const iconeLabel =
-                h.status === "merged" ? "✓ Merged" : "✗ Rejeitado";
+              const iconeLabel = h.status === "merged" ? "✓ Merged" : "✗ Rejeitado";
               return (
                 <div
                   key={i}
-                  className="flex items-center gap-2 px-3 py-2 rounded-[8px] text-[11px]"
-                  style={{ background: "var(--tf-bg-secondary)" }}
+                  className="flex items-center gap-2 px-2.5 h-8 text-[0.6875rem]"
+                  style={{
+                    background: "var(--tf-bg-secondary)",
+                    border: "1px solid var(--tf-border)",
+                    borderRadius: "var(--tf-radius-xs)",
+                    fontFamily: "var(--tf-font-mono)",
+                  }}
                 >
-                  <span className="font-bold" style={{ color: cor }}>
+                  <span
+                    className="font-medium"
+                    style={{ color: cor, letterSpacing: "0.02em" }}
+                  >
                     {iconeLabel}
                   </span>
                   <a
@@ -467,15 +517,10 @@ export function PainelPR({ cartao, onAtualizar, painelAberto }: PainelPRProps) {
                     className="font-medium hover:underline"
                     style={{ color: "var(--tf-text-secondary)" }}
                   >
-                    PR #{h.numero}
+                    #{h.numero}
                   </a>
-                  <span style={{ color: "var(--tf-text-tertiary)" }}>
-                    por {h.autor}
-                  </span>
-                  <span
-                    className="ml-auto"
-                    style={{ color: "var(--tf-text-tertiary)" }}
-                  >
+                  <span style={{ color: "var(--tf-text-tertiary)" }}>{h.autor}</span>
+                  <span className="ml-auto" style={{ color: "var(--tf-text-tertiary)" }}>
                     {formatarDataPR(h.data)}
                   </span>
                 </div>

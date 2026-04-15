@@ -252,42 +252,92 @@ export function DetalheCartao({
   if (!cartao) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto">
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={handleFechar} />
-
+    <div className="fixed inset-0 z-50 overflow-y-auto">
       <div
-        className="relative rounded-[20px] w-full max-w-4xl my-8 mx-2 sm:mx-4 z-10 overflow-hidden"
-        style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)" }}
-      >
+        className="fixed inset-0"
+        onClick={handleFechar}
+        style={{
+          background: "rgba(0, 0, 0, 0.6)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      />
+
+      <div className="relative min-h-full flex items-center justify-center p-4">
+        <div
+          className="relative rounded-[var(--tf-radius-xl)] w-full max-w-4xl z-10 overflow-hidden"
+          style={{
+            background: "var(--tf-surface)",
+            border: "1px solid var(--tf-border)",
+            boxShadow: "var(--tf-shadow-lg)",
+          }}
+        >
         {/* ─── TOP BAR ─── */}
-        <div className="flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-2">
+        <div
+          className="flex items-center justify-between px-5 h-10"
+          style={{ borderBottom: "1px solid var(--tf-border)" }}
+        >
+          <div className="flex items-center gap-1.5">
             {etiquetasDoCartao.length > 0 && (
-              <div className="flex gap-1 mr-2">
-                {etiquetasDoCartao.map((e) => (
+              <div className="flex gap-1 mr-1">
+                {etiquetasDoCartao.slice(0, 5).map((e) => (
                   <span
                     key={e.id}
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: e.cor }}
+                    className="w-2 h-2"
+                    style={{
+                      backgroundColor: e.cor,
+                      borderRadius: "1px",
+                    }}
                     title={e.nome}
                   />
                 ))}
               </div>
             )}
+            <span
+              className="label-mono"
+              style={{ color: "var(--tf-text-tertiary)" }}
+            >
+              Cartão
+            </span>
             {pesoLocal && (
               <span
-                className="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}
+                className="inline-flex items-center px-1.5 h-[17px] text-[0.625rem] font-medium"
+                style={{
+                  background: "var(--tf-accent-light)",
+                  color: "var(--tf-accent-text)",
+                  border: "1px solid var(--tf-accent)",
+                  borderRadius: "var(--tf-radius-xs)",
+                  fontFamily: "var(--tf-font-mono)",
+                }}
               >
-                {pesoLocal} pts
+                {pesoLocal} PTS
               </span>
             )}
             {dataLocal && (
               <span
-                className="text-[11px] font-medium px-2 py-0.5 rounded-full"
+                className="inline-flex items-center px-1.5 h-[17px] text-[0.625rem] font-medium"
                 style={{
-                  color: dataStatus === "vencido" ? "#fff" : dataStatus === "proximo" ? "var(--tf-warning)" : "var(--tf-text-tertiary)",
-                  background: dataStatus === "vencido" ? "var(--tf-danger)" : dataStatus === "proximo" ? "var(--tf-warning-bg)" : "var(--tf-bg-secondary)",
+                  color:
+                    dataStatus === "vencido"
+                      ? "#FFFFFF"
+                      : dataStatus === "proximo"
+                        ? "var(--tf-warning)"
+                        : "var(--tf-text-tertiary)",
+                  background:
+                    dataStatus === "vencido"
+                      ? "var(--tf-danger)"
+                      : dataStatus === "proximo"
+                        ? "var(--tf-warning-bg)"
+                        : "transparent",
+                  border: `1px solid ${
+                    dataStatus === "vencido"
+                      ? "var(--tf-danger)"
+                      : dataStatus === "proximo"
+                        ? "var(--tf-warning)"
+                        : "var(--tf-border)"
+                  }`,
+                  borderRadius: "var(--tf-radius-xs)",
+                  fontFamily: "var(--tf-font-mono)",
                 }}
               >
                 {formatarData(dataLocal)}
@@ -296,11 +346,14 @@ export function DetalheCartao({
           </div>
           <button
             onClick={handleFechar}
-            className="p-1.5 rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
-            style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}
+            className="p-1 transition-colors hover:bg-[var(--tf-surface-hover)]"
+            style={{
+              color: "var(--tf-text-tertiary)",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
             aria-label="Fechar detalhes do cartão"
           >
-            <X size={18} />
+            <X size={15} strokeWidth={1.75} />
           </button>
         </div>
 
@@ -315,28 +368,53 @@ export function DetalheCartao({
                 onChange={(e) => setTitulo(e.target.value)}
                 onBlur={salvar}
                 maxLength={200}
-                className="w-full text-[22px] font-bold bg-transparent outline-none rounded-[8px] px-1 py-1 -mx-1"
-                style={{ color: "var(--tf-text)", border: "2px solid transparent", transition: "border-color 0.15s ease, background 0.15s ease" }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = "var(--tf-accent)"; e.currentTarget.style.background = "var(--tf-bg-secondary)"; }}
-                onBlurCapture={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "transparent"; }}
+                className="w-full text-[1.375rem] font-semibold bg-transparent outline-none px-1.5 py-1 -mx-1.5"
+                style={{
+                  color: "var(--tf-text)",
+                  border: "1px solid transparent",
+                  borderRadius: "var(--tf-radius-xs)",
+                  letterSpacing: "-0.02em",
+                  transition: "border-color 0.15s ease, background 0.15s ease",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "var(--tf-accent)";
+                  e.currentTarget.style.background = "var(--tf-bg-secondary)";
+                }}
+                onBlurCapture={(e) => {
+                  e.currentTarget.style.borderColor = "transparent";
+                  e.currentTarget.style.background = "transparent";
+                }}
                 placeholder="Título do cartão"
               />
 
               {/* LABELS ROW */}
-              <div className="flex flex-wrap gap-1.5 items-center">
+              <div className="flex flex-wrap gap-1 items-center">
                 {etiquetasDoCartao.map((e) => (
                   <span
                     key={e.id}
-                    className="px-2.5 py-0.5 rounded-full text-[11px] font-bold"
-                    style={{ backgroundColor: e.cor, color: getContrastTextColor(e.cor) }}
+                    className="inline-flex items-center px-2 h-[20px] text-[0.6875rem] font-medium leading-none"
+                    style={{
+                      backgroundColor: e.cor,
+                      color: getContrastTextColor(e.cor),
+                      borderRadius: "var(--tf-radius-xs)",
+                      letterSpacing: "0.01em",
+                    }}
                   >
                     {e.nome}
                   </span>
                 ))}
                 <button
-                  onClick={() => setPainelAberto(painelAberto === "etiquetas" ? null : "etiquetas")}
-                  className="px-2.5 py-0.5 rounded-full text-[11px] font-medium hover:bg-[var(--tf-surface-hover)]"
-                  style={{ color: "var(--tf-text-tertiary)", border: "1px dashed var(--tf-border)", transition: "background 0.15s ease" }}
+                  onClick={() =>
+                    setPainelAberto(painelAberto === "etiquetas" ? null : "etiquetas")
+                  }
+                  className="inline-flex items-center px-2 h-[20px] text-[0.6875rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
+                  style={{
+                    color: "var(--tf-text-tertiary)",
+                    border: "1px dashed var(--tf-border-strong)",
+                    borderRadius: "var(--tf-radius-xs)",
+                    fontFamily: "var(--tf-font-mono)",
+                    letterSpacing: "0.04em",
+                  }}
                 >
                   + etiqueta
                 </button>
@@ -345,25 +423,53 @@ export function DetalheCartao({
               {/* INLINE PANELS */}
               <div ref={painelRef} />
               {painelAberto === "etiquetas" && (
-                <div className="p-4 rounded-[14px]" style={{ background: "var(--tf-bg-secondary)" }}>
+                <div
+                  className="p-3.5"
+                  style={{
+                    background: "var(--tf-bg-secondary)",
+                    border: "1px solid var(--tf-border)",
+                    borderRadius: "var(--tf-radius-md)",
+                  }}
+                >
                   <SeletorEtiquetas etiquetas={etiquetas} selecionadas={etiquetaIds} onToggle={toggleEtiqueta} onCriar={onCriarEtiqueta} onExcluir={onExcluirEtiqueta} />
                 </div>
               )}
 
               {painelAberto === "membros" && (
-                <div className="p-4 rounded-[14px]" style={{ background: "var(--tf-bg-secondary)" }}>
+                <div
+                  className="p-3.5"
+                  style={{
+                    background: "var(--tf-bg-secondary)",
+                    border: "1px solid var(--tf-border)",
+                    borderRadius: "var(--tf-radius-md)",
+                  }}
+                >
                   <SeletorMembros membros={membros} selecionados={membroIds} onToggle={toggleMembro} onCriar={onCriarMembro} />
                 </div>
               )}
 
               {painelAberto === "data" && (
-                <div className="p-4 rounded-[14px]" style={{ background: "var(--tf-bg-secondary)" }}>
+                <div
+                  className="p-3.5"
+                  style={{
+                    background: "var(--tf-bg-secondary)",
+                    border: "1px solid var(--tf-border)",
+                    borderRadius: "var(--tf-radius-md)",
+                  }}
+                >
                   <SeletorData valor={dataLocal} onChange={handleMudarData} />
                 </div>
               )}
 
               {painelAberto === "peso" && (
-                <div className="p-4 rounded-[14px]" style={{ background: "var(--tf-bg-secondary)" }}>
+                <div
+                  className="p-3.5"
+                  style={{
+                    background: "var(--tf-bg-secondary)",
+                    border: "1px solid var(--tf-border)",
+                    borderRadius: "var(--tf-radius-md)",
+                  }}
+                >
                   <SeletorPeso valor={pesoLocal} onChange={handleMudarPeso} />
                 </div>
               )}
@@ -378,14 +484,25 @@ export function DetalheCartao({
               {/* ── DESCRIPTION ── */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <AlignLeft size={15} style={{ color: "var(--tf-text-tertiary)" }} />
-                  <h3 className="text-[13px] font-semibold" style={{ color: "var(--tf-text)" }}>
+                  <AlignLeft size={13} strokeWidth={1.75} style={{ color: "var(--tf-text-tertiary)" }} />
+                  <h3
+                    className="label-mono"
+                    style={{ color: "var(--tf-text-secondary)" }}
+                  >
                     Descrição
                   </h3>
                   {!editandoDescricao && descricao && (
-                    <button onClick={() => setEditandoDescricao(true)}
-                      className="ml-auto px-2.5 py-1 text-[11px] font-medium rounded-[8px] hover:bg-[var(--tf-surface-hover)]"
-                      style={{ color: "var(--tf-text-tertiary)", transition: "background 0.15s ease" }}>
+                    <button
+                      onClick={() => setEditandoDescricao(true)}
+                      className="ml-auto h-6 px-2 text-[0.6875rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
+                      style={{
+                        color: "var(--tf-text-tertiary)",
+                        borderRadius: "var(--tf-radius-xs)",
+                        fontFamily: "var(--tf-font-mono)",
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                      }}
+                    >
                       Editar
                     </button>
                   )}
@@ -397,24 +514,77 @@ export function DetalheCartao({
                       onChange={(e) => setDescricao(e.target.value)}
                       placeholder="Adicione uma descrição..."
                       maxLength={5000}
-                      className="w-full rounded-[14px] px-4 py-3 text-sm resize-none outline-none min-h-[100px] leading-relaxed"
-                      style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text)", border: "2px solid transparent", transition: "border-color 0.15s ease, background 0.15s ease" }}
+                      className="descricao-textarea w-full px-3.5 py-3 text-[0.8125rem] resize-none outline-none min-h-[100px] leading-relaxed"
+                      style={{
+                        color: "var(--tf-text)",
+                        borderRadius: "var(--tf-radius-md)",
+                        letterSpacing: "-0.005em",
+                      }}
                       autoFocus={editandoDescricao}
-                      onFocus={(e) => { if (!editandoDescricao) setEditandoDescricao(true); e.currentTarget.style.borderColor = "var(--tf-accent)"; e.currentTarget.style.background = "var(--tf-surface)"; }}
+                      onFocus={() => {
+                        if (!editandoDescricao) setEditandoDescricao(true);
+                      }}
                     />
+                    <style jsx>{`
+                      .descricao-textarea {
+                        background: var(--tf-bg-secondary);
+                        border: 1px solid var(--tf-border);
+                        transition: border-color 0.15s ease, background 0.15s ease;
+                      }
+                      .descricao-textarea:focus {
+                        background: var(--tf-surface);
+                        border-color: var(--tf-accent);
+                      }
+                    `}</style>
                     {editandoDescricao && (
-                      <div className="flex gap-2">
-                        <button onClick={() => { salvar(); setEditandoDescricao(false); }}
-                          className="px-4 py-1.5 text-[12px] font-semibold text-white rounded-[8px]" style={{ background: "var(--tf-accent)", transition: "opacity 0.15s ease" }}>Salvar</button>
-                        <button onClick={() => { setDescricao(cartao.descricao || ""); setEditandoDescricao(false); }}
-                          className="px-4 py-1.5 text-[12px] rounded-[8px] hover:bg-[var(--tf-surface-hover)]" style={{ color: "var(--tf-text-secondary)", transition: "background 0.15s ease" }}>Cancelar</button>
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => {
+                            salvar();
+                            setEditandoDescricao(false);
+                          }}
+                          className="h-8 px-3 text-[0.75rem] font-medium text-white transition-colors hover:brightness-110"
+                          style={{
+                            background: "var(--tf-accent)",
+                            border: "1px solid var(--tf-accent)",
+                            borderRadius: "var(--tf-radius-xs)",
+                          }}
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDescricao(cartao.descricao || "");
+                            setEditandoDescricao(false);
+                          }}
+                          className="h-8 px-3 text-[0.75rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)]"
+                          style={{
+                            color: "var(--tf-text-secondary)",
+                            border: "1px solid var(--tf-border)",
+                            borderRadius: "var(--tf-radius-xs)",
+                          }}
+                        >
+                          Cancelar
+                        </button>
                       </div>
                     )}
                   </div>
                 ) : (
                   <div
-                    className="text-sm rounded-[14px] p-4 cursor-pointer whitespace-pre-wrap leading-relaxed hover:bg-[var(--tf-surface-hover)]"
-                    style={{ background: "var(--tf-bg-secondary)", color: "var(--tf-text)", transition: "background 0.15s ease" }}
+                    className="text-[0.8125rem] px-3.5 py-3 cursor-pointer whitespace-pre-wrap leading-relaxed transition-colors"
+                    style={{
+                      background: "var(--tf-bg-secondary)",
+                      color: "var(--tf-text)",
+                      border: "1px solid var(--tf-border)",
+                      borderRadius: "var(--tf-radius-md)",
+                      letterSpacing: "-0.005em",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--tf-border-strong)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--tf-border)")
+                    }
                     onClick={() => setEditandoDescricao(true)}
                   >
                     {descricao}
@@ -435,30 +605,42 @@ export function DetalheCartao({
               {/* ── SUBTASKS / CHECKLISTS ── */}
               {checklists.length > 0 && (
                 <div>
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <CheckSquare size={15} style={{ color: "var(--tf-text-tertiary)" }} />
-                      <h3 className="text-[13px] font-semibold" style={{ color: "var(--tf-text)" }}>
+                      <CheckSquare size={13} strokeWidth={1.75} style={{ color: "var(--tf-text-tertiary)" }} />
+                      <h3
+                        className="label-mono"
+                        style={{ color: "var(--tf-text-secondary)" }}
+                      >
                         Subtarefas
                       </h3>
                     </div>
                     <span
-                      className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                      className="inline-flex items-center px-1.5 h-[17px] text-[0.625rem] font-medium"
                       style={{
-                        color: percentual === 100 ? "var(--tf-success)" : "var(--tf-text-tertiary)",
-                        background: percentual === 100 ? "var(--tf-success-bg)" : "var(--tf-bg-secondary)",
+                        color:
+                          percentual === 100 ? "var(--tf-success)" : "var(--tf-text-tertiary)",
+                        background:
+                          percentual === 100 ? "var(--tf-success-bg)" : "transparent",
+                        border: `1px solid ${percentual === 100 ? "var(--tf-success)" : "var(--tf-border)"}`,
+                        borderRadius: "var(--tf-radius-xs)",
+                        fontFamily: "var(--tf-font-mono)",
                       }}
                     >
                       {percentual}%
                     </span>
                   </div>
-                  {/* Progress bar */}
-                  <div className="h-1.5 rounded-full overflow-hidden mb-4" style={{ background: "var(--tf-border)" }}>
+                  {/* Progress bar — slim, flat */}
+                  <div
+                    className="h-[3px] overflow-hidden mb-4"
+                    style={{ background: "var(--tf-border)", borderRadius: "1px" }}
+                  >
                     <div
-                      className="h-full rounded-full"
+                      className="h-full"
                       style={{
                         width: `${percentual}%`,
-                        background: percentual === 100 ? "var(--tf-success)" : "var(--tf-accent)",
+                        background:
+                          percentual === 100 ? "var(--tf-success)" : "var(--tf-accent)",
                         transition: "width 0.5s cubic-bezier(0.25, 1, 0.5, 1)",
                       }}
                     />
@@ -482,163 +664,290 @@ export function DetalheCartao({
 
           {/* ═══ RIGHT — Properties ═══ */}
           <div
-            className="w-full md:w-[260px] shrink-0 border-t md:border-t-0 md:border-l overflow-y-auto max-h-[50vh] md:max-h-[75vh]"
-            style={{ borderColor: "var(--tf-border)" }}
+            className="w-full md:w-[240px] shrink-0 border-t md:border-t-0 md:border-l overflow-y-auto max-h-[50vh] md:max-h-[75vh]"
+            style={{
+              borderColor: "var(--tf-border)",
+              background: "var(--tf-bg-secondary)",
+            }}
           >
-            <div className="p-5 space-y-1">
-
-              {/* Property rows */}
-              <PropertyRow
-                icon={<User size={14} />}
-                label="Membros"
-                onClick={() => setPainelAberto(painelAberto === "membros" ? null : "membros")}
-                active={painelAberto === "membros"}
+            <div className="p-3 space-y-2">
+              <div
+                className="label-mono px-3 mb-1"
+                style={{ color: "var(--tf-text-tertiary)" }}
               >
-                {membrosDoCartao.length > 0 ? (
-                  <div className="flex items-center gap-1">
-                    {membrosDoCartao.slice(0, 3).map((m) => (
-                      <Avatar key={m.id} membro={m} tamanho="sm" />
-                    ))}
-                    {membrosDoCartao.length > 3 && (
-                      <span className="text-[10px] font-bold" style={{ color: "var(--tf-text-tertiary)" }}>
-                        +{membrosDoCartao.length - 3}
-                      </span>
-                    )}
-                  </div>
-                ) : null}
-              </PropertyRow>
+                Propriedades
+              </div>
 
-              <PropertyRow
-                icon={<Calendar size={14} />}
-                label="Data"
-                onClick={() => setPainelAberto(painelAberto === "data" ? null : "data")}
-                active={painelAberto === "data"}
-              >
-                {dataLocal ? (
-                  <span
-                    className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                    style={{
-                      color: dataStatus === "vencido" ? "#fff" : dataStatus === "proximo" ? "var(--tf-warning)" : "var(--tf-text-secondary)",
-                      background: dataStatus === "vencido" ? "var(--tf-danger)" : dataStatus === "proximo" ? "var(--tf-warning-bg)" : "var(--tf-bg-secondary)",
-                    }}
-                  >
-                    {formatarData(dataLocal)}
-                  </span>
-                ) : null}
-              </PropertyRow>
-
-              <PropertyRow
-                icon={<Tag size={14} />}
-                label="Etiquetas"
-                onClick={() => setPainelAberto(painelAberto === "etiquetas" ? null : "etiquetas")}
-                active={painelAberto === "etiquetas"}
-              >
-                {etiquetasDoCartao.length > 0 ? (
-                  <div className="flex gap-1">
-                    {etiquetasDoCartao.slice(0, 4).map((e) => (
-                      <div key={e.id} className="w-3.5 h-3.5 rounded-full" style={{ background: e.cor }} title={e.nome} />
-                    ))}
-                  </div>
-                ) : null}
-              </PropertyRow>
-
-              <PropertyRow
-                icon={<Zap size={14} />}
-                label="Story Points"
-                onClick={() => setPainelAberto(painelAberto === "peso" ? null : "peso")}
-                active={painelAberto === "peso"}
-              >
-                {pesoLocal ? (
-                  <span
-                    className="text-[12px] font-bold w-7 h-7 rounded-[8px] flex items-center justify-center"
-                    style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}
-                  >
-                    {pesoLocal}
-                  </span>
-                ) : null}
-              </PropertyRow>
-
-              {cartao.workspace_id && (
+              <div className="space-y-0.5">
                 <PropertyRow
-                  icon={<GitPullRequest size={14} />}
-                  label="Pull Request"
-                  onClick={() => setPainelAberto(painelAberto === "pr" ? null : "pr")}
-                  active={painelAberto === "pr"}
+                  icon={<User size={13} strokeWidth={1.75} />}
+                  label="Membros"
+                  onClick={() => setPainelAberto(painelAberto === "membros" ? null : "membros")}
+                  active={painelAberto === "membros"}
                 >
-                  {cartao.pr_numero ? (
+                  {membrosDoCartao.length > 0 ? (
+                    <div className="flex items-center gap-1">
+                      {membrosDoCartao.slice(0, 3).map((m) => (
+                        <Avatar key={m.id} membro={m} tamanho="sm" />
+                      ))}
+                      {membrosDoCartao.length > 3 && (
+                        <span
+                          className="text-[0.625rem]"
+                          style={{
+                            color: "var(--tf-text-tertiary)",
+                            fontFamily: "var(--tf-font-mono)",
+                          }}
+                        >
+                          +{membrosDoCartao.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  ) : null}
+                </PropertyRow>
+
+                <PropertyRow
+                  icon={<Calendar size={13} strokeWidth={1.75} />}
+                  label="Data"
+                  onClick={() => setPainelAberto(painelAberto === "data" ? null : "data")}
+                  active={painelAberto === "data"}
+                >
+                  {dataLocal ? (
                     <span
-                      className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                      className="inline-flex items-center px-1.5 h-[17px] text-[0.625rem] font-medium"
                       style={{
-                        background: cartao.pr_status === "open" ? "var(--tf-success-bg)" : cartao.pr_status === "merged" ? "var(--tf-merged-bg)" : "var(--tf-danger-bg)",
-                        color: cartao.pr_status === "open" ? "var(--tf-success)" : cartao.pr_status === "merged" ? "var(--tf-merged)" : "var(--tf-danger)",
+                        color:
+                          dataStatus === "vencido"
+                            ? "#FFFFFF"
+                            : dataStatus === "proximo"
+                              ? "var(--tf-warning)"
+                              : "var(--tf-text-secondary)",
+                        background:
+                          dataStatus === "vencido"
+                            ? "var(--tf-danger)"
+                            : dataStatus === "proximo"
+                              ? "var(--tf-warning-bg)"
+                              : "transparent",
+                        border: `1px solid ${
+                          dataStatus === "vencido"
+                            ? "var(--tf-danger)"
+                            : dataStatus === "proximo"
+                              ? "var(--tf-warning)"
+                              : "var(--tf-border)"
+                        }`,
+                        borderRadius: "var(--tf-radius-xs)",
+                        fontFamily: "var(--tf-font-mono)",
                       }}
                     >
-                      #{cartao.pr_numero}
+                      {formatarData(dataLocal)}
                     </span>
                   ) : null}
                 </PropertyRow>
-              )}
 
-              <PropertyRow
-                icon={<GitBranch size={14} />}
-                label="Branch"
-                onClick={() => setPainelAberto(painelAberto === "branch" ? null : "branch")}
-                active={painelAberto === "branch"}
-              >
-                {cartao.branch ? (
-                  <span className="text-[11px] font-mono font-medium truncate max-w-[100px]" style={{ color: "var(--tf-text-secondary)" }}>
-                    {cartao.branch}
-                  </span>
-                ) : null}
-              </PropertyRow>
+                <PropertyRow
+                  icon={<Tag size={13} strokeWidth={1.75} />}
+                  label="Etiquetas"
+                  onClick={() =>
+                    setPainelAberto(painelAberto === "etiquetas" ? null : "etiquetas")
+                  }
+                  active={painelAberto === "etiquetas"}
+                >
+                  {etiquetasDoCartao.length > 0 ? (
+                    <div className="flex gap-0.5">
+                      {etiquetasDoCartao.slice(0, 4).map((e) => (
+                        <div
+                          key={e.id}
+                          className="w-3 h-3"
+                          style={{
+                            background: e.cor,
+                            borderRadius: "1px",
+                          }}
+                          title={e.nome}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                </PropertyRow>
 
-              <PropertyRow
-                icon={<CheckSquare size={14} />}
-                label="Checklist"
-                onClick={() => criarChecklist()}
-              >
-                {totalItens > 0 ? (
-                  <span className="text-[11px] font-bold" style={{ color: percentual === 100 ? "var(--tf-success)" : "var(--tf-text-tertiary)" }}>
-                    {totalConcluidos}/{totalItens}
-                  </span>
-                ) : (
-                  <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>+ Criar</span>
+                <PropertyRow
+                  icon={<Zap size={13} strokeWidth={1.75} />}
+                  label="Story Points"
+                  onClick={() => setPainelAberto(painelAberto === "peso" ? null : "peso")}
+                  active={painelAberto === "peso"}
+                >
+                  {pesoLocal ? (
+                    <span
+                      className="inline-flex items-center justify-center h-[20px] min-w-[22px] px-1.5 text-[0.6875rem] font-semibold"
+                      style={{
+                        background: "var(--tf-accent-light)",
+                        color: "var(--tf-accent-text)",
+                        border: "1px solid var(--tf-accent)",
+                        borderRadius: "var(--tf-radius-xs)",
+                        fontFamily: "var(--tf-font-mono)",
+                      }}
+                    >
+                      {pesoLocal}
+                    </span>
+                  ) : null}
+                </PropertyRow>
+
+                {cartao.workspace_id && (
+                  <PropertyRow
+                    icon={<GitPullRequest size={13} strokeWidth={1.75} />}
+                    label="Pull Request"
+                    onClick={() => setPainelAberto(painelAberto === "pr" ? null : "pr")}
+                    active={painelAberto === "pr"}
+                  >
+                    {cartao.pr_numero ? (
+                      <span
+                        className="inline-flex items-center px-1.5 h-[17px] text-[0.625rem] font-medium"
+                        style={{
+                          background:
+                            cartao.pr_status === "open"
+                              ? "var(--tf-success-bg)"
+                              : cartao.pr_status === "merged"
+                                ? "var(--tf-merged-bg)"
+                                : "var(--tf-danger-bg)",
+                          color:
+                            cartao.pr_status === "open"
+                              ? "var(--tf-success)"
+                              : cartao.pr_status === "merged"
+                                ? "var(--tf-merged)"
+                                : "var(--tf-danger)",
+                          border: `1px solid ${
+                            cartao.pr_status === "open"
+                              ? "var(--tf-success)"
+                              : cartao.pr_status === "merged"
+                                ? "var(--tf-merged)"
+                                : "var(--tf-danger)"
+                          }`,
+                          borderRadius: "var(--tf-radius-xs)",
+                          fontFamily: "var(--tf-font-mono)",
+                        }}
+                      >
+                        #{cartao.pr_numero}
+                      </span>
+                    ) : null}
+                  </PropertyRow>
                 )}
-              </PropertyRow>
+
+                <PropertyRow
+                  icon={<GitBranch size={13} strokeWidth={1.75} />}
+                  label="Branch"
+                  onClick={() => setPainelAberto(painelAberto === "branch" ? null : "branch")}
+                  active={painelAberto === "branch"}
+                >
+                  {cartao.branch ? (
+                    <span
+                      className="text-[0.625rem] truncate max-w-[90px]"
+                      style={{
+                        color: "var(--tf-text-secondary)",
+                        fontFamily: "var(--tf-font-mono)",
+                      }}
+                    >
+                      {cartao.branch}
+                    </span>
+                  ) : null}
+                </PropertyRow>
+
+                <PropertyRow
+                  icon={<CheckSquare size={13} strokeWidth={1.75} />}
+                  label="Checklist"
+                  onClick={() => criarChecklist()}
+                >
+                  {totalItens > 0 ? (
+                    <span
+                      className="text-[0.625rem] font-medium"
+                      style={{
+                        color:
+                          percentual === 100
+                            ? "var(--tf-success)"
+                            : "var(--tf-text-secondary)",
+                        fontFamily: "var(--tf-font-mono)",
+                      }}
+                    >
+                      {totalConcluidos}/{totalItens}
+                    </span>
+                  ) : (
+                    <span
+                      className="text-[0.625rem]"
+                      style={{
+                        color: "var(--tf-text-tertiary)",
+                        fontFamily: "var(--tf-font-mono)",
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      + Criar
+                    </span>
+                  )}
+                </PropertyRow>
+              </div>
 
               {/* Melhorar com IA */}
               <button
                 onClick={melhorarComIA}
                 disabled={melhorandoIA}
-                className="w-full flex items-center justify-between py-2.5 px-2 rounded-[8px] group hover:bg-[var(--tf-surface-hover)] disabled:opacity-50"
-                style={{ transition: "background 0.15s ease" }}
+                className="w-full flex items-center gap-2 h-8 px-3 transition-colors hover:bg-[var(--tf-accent-light)] disabled:opacity-50 outline-none"
+                style={{
+                  color: "var(--tf-accent-text)",
+                  borderRadius: "var(--tf-radius-xs)",
+                  border: "1px dashed var(--tf-accent)",
+                }}
               >
-                <div className="flex items-center gap-2.5">
-                  <span style={{ color: "var(--tf-accent)" }}>
-                    {melhorandoIA ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                  </span>
-                  <span className="text-[13px] font-medium" style={{ color: "var(--tf-accent-text)" }}>
-                    {melhorandoIA ? "Melhorando..." : "Melhorar com IA"}
-                  </span>
-                </div>
+                {melhorandoIA ? (
+                  <Loader2 size={13} className="animate-spin" style={{ color: "var(--tf-accent)" }} />
+                ) : (
+                  <Sparkles size={13} strokeWidth={1.75} style={{ color: "var(--tf-accent)" }} />
+                )}
+                <span className="text-[0.75rem] font-medium">
+                  {melhorandoIA ? "Melhorando…" : "Melhorar com IA"}
+                </span>
               </button>
 
               {/* Activity summary */}
               {(anexos.length > 0 || comentarios.length > 0) && (
-                <div className="pt-4 mt-4 border-t space-y-2" style={{ borderColor: "var(--tf-border)" }}>
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "var(--tf-text-tertiary)" }}>Atividade</p>
+                <div
+                  className="pt-3 mt-2 border-t space-y-1"
+                  style={{ borderColor: "var(--tf-border)" }}
+                >
+                  <div
+                    className="label-mono px-3 mb-1"
+                    style={{ color: "var(--tf-text-tertiary)" }}
+                  >
+                    Atividade
+                  </div>
                   {anexos.length > 0 && (
-                    <div className="flex items-center gap-2 py-1">
-                      <Paperclip size={12} style={{ color: "var(--tf-text-tertiary)" }} />
-                      <span className="text-[11px]" style={{ color: "var(--tf-text-secondary)" }}>
+                    <div className="flex items-center gap-2 h-6 px-3">
+                      <Paperclip
+                        size={11}
+                        strokeWidth={1.75}
+                        style={{ color: "var(--tf-text-tertiary)" }}
+                      />
+                      <span
+                        className="text-[0.6875rem]"
+                        style={{
+                          color: "var(--tf-text-secondary)",
+                          fontFamily: "var(--tf-font-mono)",
+                        }}
+                      >
                         {anexos.length} {anexos.length === 1 ? "anexo" : "anexos"}
                       </span>
                     </div>
                   )}
                   {comentarios.length > 0 && (
-                    <div className="flex items-center gap-2 py-1">
-                      <Users size={12} style={{ color: "var(--tf-text-tertiary)" }} />
-                      <span className="text-[11px]" style={{ color: "var(--tf-text-secondary)" }}>
+                    <div className="flex items-center gap-2 h-6 px-3">
+                      <Users
+                        size={11}
+                        strokeWidth={1.75}
+                        style={{ color: "var(--tf-text-tertiary)" }}
+                      />
+                      <span
+                        className="text-[0.6875rem]"
+                        style={{
+                          color: "var(--tf-text-secondary)",
+                          fontFamily: "var(--tf-font-mono)",
+                        }}
+                      >
                         {comentarios.length} {comentarios.length === 1 ? "comentário" : "comentários"}
                       </span>
                     </div>
@@ -647,33 +956,60 @@ export function DetalheCartao({
               )}
 
               {/* Danger */}
-              <div className="pt-4 mt-4 border-t" style={{ borderColor: "var(--tf-border)" }}>
+              <div
+                className="pt-3 mt-2 border-t"
+                style={{ borderColor: "var(--tf-border)" }}
+              >
                 {!confirmExcluirCard ? (
                   <button
                     onClick={() => setConfirmExcluirCard(true)}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-[12px] font-medium rounded-[8px] hover:bg-[var(--tf-danger-bg)]"
-                    style={{ color: "var(--tf-danger)", transition: "background 0.15s ease" }}
+                    className="flex items-center gap-2 w-full h-8 px-3 text-[0.75rem] font-medium transition-colors hover:bg-[var(--tf-danger-bg)]"
+                    style={{
+                      color: "var(--tf-danger)",
+                      borderRadius: "var(--tf-radius-xs)",
+                    }}
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={12} strokeWidth={1.75} />
                     Excluir cartão
                   </button>
                 ) : (
-                  <div className="p-3 rounded-[10px]" style={{ background: "var(--tf-danger-bg)" }}>
-                    <p className="text-[12px] font-semibold mb-2" style={{ color: "var(--tf-danger)" }}>
-                      Tem certeza? Checklists, anexos e comentários serão perdidos.
+                  <div
+                    className="p-3 space-y-2.5"
+                    style={{
+                      background: "var(--tf-danger-bg)",
+                      border: "1px solid var(--tf-danger)",
+                      borderRadius: "var(--tf-radius-sm)",
+                    }}
+                  >
+                    <p
+                      className="text-[0.75rem]"
+                      style={{ color: "var(--tf-text)", letterSpacing: "-0.005em" }}
+                    >
+                      Checklists, anexos e comentários serão perdidos.
                     </p>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1.5">
                       <button
-                        onClick={() => { onExcluir(cartao.id); onFechar(); }}
-                        className="px-3 py-1.5 text-[11px] font-bold text-white rounded-[8px]"
-                        style={{ background: "var(--tf-danger)" }}
+                        onClick={() => {
+                          onExcluir(cartao.id);
+                          onFechar();
+                        }}
+                        className="h-7 px-2.5 text-[0.6875rem] font-medium text-white transition-colors hover:brightness-110"
+                        style={{
+                          background: "var(--tf-danger)",
+                          border: "1px solid var(--tf-danger)",
+                          borderRadius: "var(--tf-radius-xs)",
+                        }}
                       >
                         Sim, excluir
                       </button>
                       <button
                         onClick={() => setConfirmExcluirCard(false)}
-                        className="px-3 py-1.5 text-[11px] font-medium rounded-[8px]"
-                        style={{ color: "var(--tf-text-secondary)", background: "var(--tf-bg-secondary)" }}
+                        className="h-7 px-2.5 text-[0.6875rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)]"
+                        style={{
+                          color: "var(--tf-text-secondary)",
+                          border: "1px solid var(--tf-border)",
+                          borderRadius: "var(--tf-radius-xs)",
+                        }}
                       >
                         Cancelar
                       </button>
@@ -681,9 +1017,9 @@ export function DetalheCartao({
                   </div>
                 )}
               </div>
-
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
