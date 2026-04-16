@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { features } from "@/lib/features";
 import { toast } from "@/hooks/use-toast";
 import type { Perfil } from "@/types";
 
@@ -108,6 +109,37 @@ export function GithubSection({
         </h2>
       </div>
 
+      {features.vcs.tokenMode === "instance-pat" ? (
+        <div
+          className="rounded-[var(--tf-radius-md)] p-6 space-y-3"
+          style={{ background: "var(--tf-bg-secondary)" }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ background: "var(--tf-accent-light)" }}
+            >
+              <Key size={16} style={{ color: "var(--tf-accent)" }} />
+            </div>
+            <div className="flex-1">
+              <p
+                className="text-[13px] font-semibold"
+                style={{ color: "var(--tf-text)" }}
+              >
+                Token gerenciado pelo admin
+              </p>
+              <p
+                className="text-[12px] mt-0.5"
+                style={{ color: "var(--tf-text-secondary)" }}
+              >
+                Este instance usa um PAT global. Voce nao precisa conectar a
+                sua conta GitHub individualmente — as operacoes usam o token
+                compartilhado configurado pelo administrador.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
       <div
         className="rounded-[var(--tf-radius-md)] p-6"
         style={{ background: "var(--tf-bg-secondary)" }}
@@ -295,6 +327,7 @@ export function GithubSection({
           </div>
         )}
       </div>
+      )}
     </section>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { features } from "@/lib/features";
 import { useAnexos } from "@/hooks/use-anexos";
 import { useCartaoEtiquetas } from "@/hooks/use-cartao-etiquetas";
 import { useCartaoMembros } from "@/hooks/use-cartao-membros";
@@ -883,26 +884,28 @@ export function DetalheCartao({
                 </PropertyRow>
               </div>
 
-              {/* Melhorar com IA */}
-              <button
-                onClick={melhorarComIA}
-                disabled={melhorandoIA}
-                className="w-full flex items-center gap-2 h-8 px-3 transition-colors hover:bg-[var(--tf-accent-light)] disabled:opacity-50 outline-none"
-                style={{
-                  color: "var(--tf-accent-text)",
-                  borderRadius: "var(--tf-radius-xs)",
-                  border: "1px dashed var(--tf-accent)",
-                }}
-              >
-                {melhorandoIA ? (
-                  <Loader2 size={13} className="animate-spin" style={{ color: "var(--tf-accent)" }} />
-                ) : (
-                  <Sparkles size={13} strokeWidth={1.75} style={{ color: "var(--tf-accent)" }} />
-                )}
-                <span className="text-[0.75rem] font-medium">
-                  {melhorandoIA ? "Melhorando…" : "Melhorar com IA"}
-                </span>
-              </button>
+              {/* Melhorar com IA — so mostra se LLM driver ligado */}
+              {features.ai && (
+                <button
+                  onClick={melhorarComIA}
+                  disabled={melhorandoIA}
+                  className="w-full flex items-center gap-2 h-8 px-3 transition-colors hover:bg-[var(--tf-accent-light)] disabled:opacity-50 outline-none"
+                  style={{
+                    color: "var(--tf-accent-text)",
+                    borderRadius: "var(--tf-radius-xs)",
+                    border: "1px dashed var(--tf-accent)",
+                  }}
+                >
+                  {melhorandoIA ? (
+                    <Loader2 size={13} className="animate-spin" style={{ color: "var(--tf-accent)" }} />
+                  ) : (
+                    <Sparkles size={13} strokeWidth={1.75} style={{ color: "var(--tf-accent)" }} />
+                  )}
+                  <span className="text-[0.75rem] font-medium">
+                    {melhorandoIA ? "Melhorando…" : "Melhorar com IA"}
+                  </span>
+                </button>
+              )}
 
               {/* Activity summary */}
               {(anexos.length > 0 || comentarios.length > 0) && (

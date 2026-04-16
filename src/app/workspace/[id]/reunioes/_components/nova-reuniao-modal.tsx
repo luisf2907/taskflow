@@ -14,6 +14,7 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { AudioPlayer } from "@/components/ui/audio-player";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { features } from "@/lib/features";
 import { toast } from "@/hooks/use-toast";
 import { useRecording } from "@/hooks/use-recording";
 
@@ -344,13 +345,19 @@ export function NovaReuniaoModal({
           />
         </div>
 
-        {/* Tabs upload/record — só quando idle */}
+        {/* Tabs upload/record — só quando idle. Esconde "Gravar" se
+            VOICE_DRIVER=disabled (sem worker → sem transcricao). Upload
+            continua disponivel pra quem quiser guardar o audio cru. */}
         {viewState === "idle" && (
           <SegmentedControl
-            items={[
-              { id: "upload", label: "Upload", icon: Upload },
-              { id: "record", label: "Gravar", icon: Mic },
-            ]}
+            items={
+              features.voiceEnabled
+                ? [
+                    { id: "upload", label: "Upload", icon: Upload },
+                    { id: "record", label: "Gravar", icon: Mic },
+                  ]
+                : [{ id: "upload", label: "Upload", icon: Upload }]
+            }
             value={tab}
             onChange={setTab}
             variant="pill"
