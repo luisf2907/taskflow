@@ -199,6 +199,13 @@ services:
       LLM_MODEL: ${LLM_MODEL:-}
       LLM_API_KEY: ${LLM_API_KEY:-}
       EMAIL_DRIVER: ${EMAIL_DRIVER:-disabled}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_SECURE: ${SMTP_SECURE:-}
       VOICE_DRIVER: ${VOICE_DRIVER:-disabled}
       VCS_DRIVER: ${VCS_DRIVER:-github}
       VCS_TOKEN_MODE: ${VCS_TOKEN_MODE:-pat}
