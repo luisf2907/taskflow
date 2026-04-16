@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { debouncedMutate } from "@/lib/debounced-mutate";
+import { features } from "@/lib/features";
 import { PokerSessao, PokerVoto } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useEffect, useRef, useCallback, useMemo } from "react";
@@ -73,6 +74,14 @@ export function usePlanningPoker(workspaceId: string) {
   // =============================================
   useEffect(() => {
     if (!workspaceId) return;
+
+    // So conecta no Realtime do Supabase quando driver=supabase.
+    // Em pg-notify-sse/polling, planning-poker ainda nao tem triggers
+    // nem endpoint SSE dedicado (TODO: migracao completa vira na
+    // Fase 5 junto com triggers pra poker_sessoes, poker_votos e
+    // notificacoes). Sem realtime, user precisa trocar de aba ou F5
+    // pra ver votos novos — aceitavel em single-user/solo.
+    if (features.realtime.driver !== "supabase") return;
 
     const channel = supabase
       .channel(`poker-${workspaceId}`)

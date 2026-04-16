@@ -21,6 +21,12 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
       `modules/realtime.md` documenta. Polling ainda não
       implementado — se necessário, adicionar `refreshInterval`
       global no SWRConfig.
+- [ ] **Realtime de planning-poker e notificações** — os hooks
+      `use-planning-poker.ts` e `use-notificacoes.ts` ainda usam
+      `supabase.channel()` direto. Hoje: noop quando driver != supabase
+      (user vê updates só em refresh/nav). TODO: adicionar triggers
+      pg_notify em `poker_sessoes`, `poker_votos`, `notificacoes` e
+      migrar hooks pra EventSource. Fase 5.
 - [ ] **Trigger `on_auth_user_created` não funciona em self-hosted** —
       investigar causa. Workaround: CLI + solo-login fazem upsert
       manual em `public.perfis`.
