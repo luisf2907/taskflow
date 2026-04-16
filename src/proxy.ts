@@ -8,6 +8,29 @@ const supabaseUrl =
   process.env.SUPABASE_INTERNAL_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
+/**
+ * Constroi URL absoluta a partir dos headers do request.
+ *
+ * Problema: em Next.js standalone com HOSTNAME=0.0.0.0 no bind, usar
+ * `request.url` diretamente pode produzir URLs com host 0.0.0.0 — o
+ * browser recebe Location: http://0.0.0.0:3000/... e vai pro
+ * endereco errado.
+ *
+ * Fix: usar X-Forwarded-Host (se atras de proxy) ou Host do request
+ * pra construir URL que bata com o que o browser usou pra chegar ate
+ * aqui.
+ */
+function buildRedirectUrl(request: NextRequest, pathAndQuery: string): URL {
+  const host =
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("host") ??
+    request.nextUrl.host;
+  const proto =
+    request.headers.get("x-forwarded-proto") ??
+    request.nextUrl.protocol.replace(":", "");
+  return new URL(pathAndQuery, `${proto}://${host}`);
+}
+
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next({
     request: { headers: request.headers },
@@ -69,13 +92,13 @@ export async function proxy(request: NextRequest) {
 
   // Logged-in users visiting /login go to dashboard
   if (user && pathname.startsWith("/login")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(buildRedirectUrl(request, "/dashboard"));
   }
 
   // AUTH_MODE=solo: auto-login silencioso se o usuario nao tem sessao.
   // Redireciona pro handler que cria/recupera sessao do SOLO_USER_EMAIL.
   if (authMode === "solo" && !user && !pathname.startsWith("/login")) {
-    const redirectUrl = new URL("/api/auth/solo-login", request.url);
+    const redirectUrl = buildRedirectUrl(request, "/api/auth/solo-login");
     redirectUrl.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(redirectUrl);
   }
@@ -95,7 +118,7 @@ export async function proxy(request: NextRequest) {
     !pathname.startsWith("/api/api-keys") &&
     !isVoiceWebhook
   ) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(buildRedirectUrl(request, "/login"));
   }
 
   return response;

@@ -107,7 +107,19 @@ export async function GET(request: NextRequest) {
     ? nextParam
     : "/dashboard";
 
-  const response = NextResponse.redirect(new URL(safeNext, request.url));
+  // Usa Host do browser em vez de request.url — em Next.js standalone com
+  // HOSTNAME=0.0.0.0, request.url pode ter 0.0.0.0 como host, fazendo o
+  // redirect ir pra endereco errado.
+  const host =
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("host") ??
+    request.nextUrl.host;
+  const proto =
+    request.headers.get("x-forwarded-proto") ??
+    request.nextUrl.protocol.replace(":", "");
+  const redirectTo = new URL(safeNext, `${proto}://${host}`);
+
+  const response = NextResponse.redirect(redirectTo);
 
   // Cliente SSR que seta cookies na response acima
   const supabase = createSSRServerClient(
