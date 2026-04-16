@@ -28,6 +28,11 @@ const envSchema = z.object({
   NEXT_PUBLIC_REALTIME_DRIVER: z
     .enum(["supabase", "pg-notify-sse", "polling"])
     .optional(),
+  // Mirror publico de VCS_TOKEN_MODE — UI decide se mostra botao OAuth,
+  // campo PAT, ou read-only "gerenciado pelo admin" (instance-pat).
+  NEXT_PUBLIC_VCS_TOKEN_MODE: z
+    .enum(["oauth", "pat", "instance-pat"])
+    .optional(),
 });
 
 const serverEnvSchema = envSchema.extend({
@@ -151,6 +156,7 @@ function parsePublicEnv() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_REALTIME_DRIVER: process.env.NEXT_PUBLIC_REALTIME_DRIVER,
+    NEXT_PUBLIC_VCS_TOKEN_MODE: process.env.NEXT_PUBLIC_VCS_TOKEN_MODE,
   }));
 
   if (!result.success) {
@@ -170,6 +176,7 @@ function parseServerEnv() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_REALTIME_DRIVER: process.env.NEXT_PUBLIC_REALTIME_DRIVER,
+    NEXT_PUBLIC_VCS_TOKEN_MODE: process.env.NEXT_PUBLIC_VCS_TOKEN_MODE,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     SUPABASE_INTERNAL_URL: process.env.SUPABASE_INTERNAL_URL,
     ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,

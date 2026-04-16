@@ -1,3 +1,4 @@
+import { getVcsBaseUrl } from "@/lib/drivers/vcs/config";
 import type {
   GitHubBranch,
   GitHubCommit,
@@ -6,8 +7,11 @@ import type {
   GitHubRepo,
 } from "@/types/github";
 
-const BASE = "https://api.github.com";
-const FETCH_TIMEOUT = 10_000; // 10s timeout para todas as chamadas GitHub
+// Base URL do VCS — default https://api.github.com, override via
+// VCS_API_URL (GitHub Enterprise ou Gitea). Resolvido por call pra
+// refletir env nos testes, mas eh stateless/idempotente.
+const BASE = getVcsBaseUrl();
+const FETCH_TIMEOUT = 10_000; // 10s timeout para todas as chamadas
 
 // Cache simples em memória para chamadas publicas (TTL de 60s)
 const publicCache = new Map<string, { data: unknown; expiry: number }>();

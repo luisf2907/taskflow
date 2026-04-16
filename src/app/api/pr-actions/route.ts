@@ -1,4 +1,5 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
+import { getVcsToken } from "@/lib/drivers/vcs/config";
 import { closePR, mergePR, addPRComment } from "@/lib/github/client";
 import { executarAutomacoes } from "@/lib/automacoes-executor";
 import { NextRequest, NextResponse } from "next/server";
@@ -90,22 +91,16 @@ export async function POST(request: NextRequest) {
   // SECURITY: Verify user is a member of the repo's workspace
   // (RLS on repositorios already checks this via .select() above — if repoData is null, user has no access)
   // But let's also explicitly verify workspace membership for defense-in-depth
-  // 3. Buscar token GitHub do user
+  // 3. Token VCS (instance-pat global OU per-user do DB)
   const service = createServiceClient();
-  const { data: tokenData } = await service
-    .from("github_tokens")
-    .select("provider_token")
-    .eq("user_id", user.id)
-    .single();
+  const token = await getVcsToken(user.id);
 
-  if (!tokenData) {
+  if (!token) {
     return NextResponse.json(
       { error: "Conecte sua conta GitHub nas configurações para executar esta ação." },
       { status: 403 }
     );
   }
-
-  const token = tokenData.provider_token;
 
   // 4. Executar ação no GitHub
   if (action === "merge") {

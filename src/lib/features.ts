@@ -64,10 +64,14 @@ function computeFeatures() {
     voiceDriverRaw ?? (serverEnv.VOICE_WORKER_URL ? "fastapi" : "disabled");
 
   // ───── VCS ─────
+  // NEXT_PUBLIC_VCS_TOKEN_MODE permite UI decidir se mostra botao OAuth
+  // ou campo de PAT ou read-only "gerenciado pelo admin" (instance-pat).
   const vcsDriver: VcsDriver =
     (serverEnv.VCS_DRIVER as VcsDriver | undefined) ?? "github";
   const vcsTokenMode: VcsTokenMode =
-    (serverEnv.VCS_TOKEN_MODE as VcsTokenMode | undefined) ?? "oauth";
+    (process.env.NEXT_PUBLIC_VCS_TOKEN_MODE as VcsTokenMode | undefined) ??
+    (serverEnv.VCS_TOKEN_MODE as VcsTokenMode | undefined) ??
+    "oauth";
 
   // ───── Observability ─────
   const obsDriverRaw = serverEnv.OBS_DRIVER as ObsDriver | undefined;

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { ApiKeyAuth } from "@/lib/mcp-auth";
 import { createServiceClient } from "@/lib/supabase/server";
-import { decrypt } from "@/lib/crypto";
 
 export type { ApiKeyAuth };
 
@@ -29,24 +28,11 @@ export function getSearchParams(request: Request) {
   return new URL(request.url).searchParams;
 }
 
-export async function getGitHubToken(service: Service, userId: string) {
-  const { data } = await service
-    .from("github_tokens")
-    .select("provider_token, encrypted_token")
-    .eq("user_id", userId)
-    .single();
-  if (!data) return null;
-
-  // Tentar decriptar encrypted_token primeiro (se ENCRYPTION_KEY configurada)
-  if (data.encrypted_token) {
-    const decrypted = await decrypt(data.encrypted_token);
-    if (decrypted) return decrypted;
-  }
-
-  // Fallback para provider_token plaintext (backward compat / sem ENCRYPTION_KEY)
-  return data.provider_token && data.provider_token !== ""
-    ? data.provider_token
-    : null;
+export async function getGitHubToken(_service: Service, userId: string) {
+  // Delega pro driver VCS — cobre instance-pat (global) + per-user do DB.
+  // _service nao e mais usado; mantido na assinatura pra backward compat.
+  const { getVcsToken } = await import("@/lib/drivers/vcs/config");
+  return getVcsToken(userId);
 }
 
 // =============================================

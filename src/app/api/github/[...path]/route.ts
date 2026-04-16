@@ -1,8 +1,7 @@
-import { createServerClient, createServiceClient } from "@/lib/supabase/server";
+import { createServerClient } from "@/lib/supabase/server";
+import { getVcsBaseUrl, getVcsToken } from "@/lib/drivers/vcs/config";
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimitAsync } from "@/lib/api-utils";
-
-const GITHUB_BASE = "https://api.github.com";
 
 // Allowed GitHub API path prefixes to prevent abuse
 const ALLOWED_PREFIXES = ["/repos/", "/user/"];
@@ -34,23 +33,12 @@ export async function GET(
 
   // Auth
   // SEGURANÇA: o user.id abaixo vem do cookie de sessão via auth.getUser(),
-  // nunca de header/body controlado pelo cliente. Não altere essa invariante —
-  // o service client bypassa RLS, então qualquer rota que leia github_tokens
-  // por um id controlado pelo cliente vaza o provider_token de outro usuário.
+  // nunca de header/body controlado pelo cliente. Não altere essa invariante.
   const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let token: string | null = null;
-
-  if (user) {
-    const service = createServiceClient();
-    const { data: tokenData } = await service
-      .from("github_tokens")
-      .select("provider_token")
-      .eq("user_id", user.id)
-      .single();
-    token = tokenData?.provider_token || null;
-  }
+  // Token VCS (instance-pat global OU per-user do DB)
+  const token = user ? await getVcsToken(user.id) : null;
 
   const headers: Record<string, string> = {
     Accept: wantRaw ? "application/vnd.github.v3.raw" : "application/vnd.github.v3+json",
@@ -60,7 +48,7 @@ export async function GET(
   }
 
   try {
-    const res = await fetch(`${GITHUB_BASE}${fullPath}`, { headers });
+    const res = await fetch(`${getVcsBaseUrl()}${fullPath}`, { headers });
 
     if (!res.ok) {
       return NextResponse.json(
