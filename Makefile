@@ -48,6 +48,11 @@ help:
 	@echo ""
 	@echo "  make shell SERVICE=app      Entra no container"
 	@echo ""
+	@echo "  make backup                 Backup completo (DB + storage)"
+	@echo "  make backup OUT=./bkp       Backup em diretorio custom"
+	@echo "  make backup DB_ONLY=1       So o banco (sem storage)"
+	@echo "  make restore FROM=./bkp/... Restore DESTRUTIVO (adiciona YES=1 pra pular confirmacao)"
+	@echo ""
 	@echo "Variaveis:"
 	@echo "  PROFILE      solo | team | full  (atual: $(PROFILE))"
 	@echo "  SERVICE      nome do servico do compose"
@@ -164,5 +169,18 @@ shell:
 
 .PHONY: backup
 backup:
-	$(COMPOSE) exec postgres pg_dump -U postgres -d taskflow > backup-$$(date +%Y%m%d-%H%M%S).sql
-	@echo "✓ Backup gerado (schema + dados)."
+	node --env-file=$(ENV_FILE) scripts/cli.mjs backup \
+		--compose-file $(COMPOSE_FILE) \
+		$(if $(OUT),--out $(OUT),) \
+		$(if $(DB_ONLY),--db-only,) \
+		$(if $(STORAGE_ONLY),--storage-only,)
+
+.PHONY: restore
+restore:
+	@test -n "$(FROM)" || (echo "Falta FROM=<dir do backup>"; exit 1)
+	node --env-file=$(ENV_FILE) scripts/cli.mjs restore \
+		--from $(FROM) \
+		--compose-file $(COMPOSE_FILE) \
+		$(if $(YES),--yes,) \
+		$(if $(DB_ONLY),--db-only,) \
+		$(if $(STORAGE_ONLY),--storage-only,)

@@ -139,9 +139,61 @@ make ps                # status
 make down              # derruba (mantém dados)
 make clean             # APAGA TUDO (postgres + storage)
 make rebuild           # rebuild só da imagem do app
-make backup            # pg_dump pro .sql local
+make backup            # dump Postgres + tar storage em ./backups/
 make shell SERVICE=app # entra no container
 ```
+
+## Backup e restore
+
+O CLI gera um diretório com dump do Postgres, snapshot do volume de
+storage e um `manifest.json` com SHA-256 de cada componente.
+
+### Gerar backup
+
+```bash
+make backup
+# ou direto:
+node --env-file=.env.local scripts/cli.mjs backup
+```
+
+Gera `./backups/taskflow-YYYYMMDD-HHMMSS/` com:
+- `database.sql.gz` — pg_dump `--clean --if-exists`
+- `storage.tar.gz` — tar do volume `taskflow-storage-data`
+- `manifest.json` — versão, timestamp, hashes
+
+Flags úteis:
+
+```bash
+make backup OUT=./backups/pre-upgrade   # destino custom
+make backup DB_ONLY=1                   # só o banco
+make backup STORAGE_ONLY=1              # só storage
+```
+
+### Restaurar
+
+**Operação destrutiva** — sobrescreve o DB e o volume de storage
+inteiro. Precisa de `--yes` explícito (mesmo padrão do `user:delete`).
+
+```bash
+# 1. Dry-run — valida manifest, hashes e mostra o que será sobrescrito
+make restore FROM=./backups/taskflow-20260416-120000
+
+# 2. Aplica pra valer
+make restore FROM=./backups/taskflow-20260416-120000 YES=1
+
+# 3. Reinicia o app pra invalidar caches in-memory
+docker restart taskflow-app
+```
+
+Sem `make`, direto:
+
+```bash
+node --env-file=.env.local scripts/cli.mjs restore \
+  --from ./backups/taskflow-20260416-120000 --yes
+```
+
+Se algum arquivo do backup estiver corrompido (hash diferente do manifest),
+o restore aborta antes de tocar em qualquer coisa.
 
 ## Estrutura do .env.local
 
