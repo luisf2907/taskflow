@@ -67,10 +67,13 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
 
 ## Segurança
 
-- [ ] **Bucket `anexos` sem policies** — replicado do estado de
-      produção. Qualquer authenticated user faz upload/delete em
-      qualquer cartão de qualquer workspace. Fix em PR separado,
-      aplicado em ambas as versões (cloud + self-hosted).
+- [x] **Bucket `anexos` sem policies** — fechado em duas camadas:
+      (1) `guardAnexoAccess()` em `src/lib/anexos-guard.ts` valida
+      membership nos handlers `/api/storage/upload` e `/api/storage/object`
+      (unico gate real, porque `SupabaseStorageDriver` usa service_role);
+      (2) policies em `storage.objects` como defense-in-depth (bootstrap.sql
+      + `supabase/migrations/045_anexos_storage_policies.sql`).
+      Leitura continua publica — so write e restrito por workspace do cartao.
 - [ ] **Testes de RLS** (Fase 8) — 2 users de workspaces diferentes,
       garantir isolamento.
 - [ ] **Rotação de secrets** — comandos `token:rotate` e procedimento

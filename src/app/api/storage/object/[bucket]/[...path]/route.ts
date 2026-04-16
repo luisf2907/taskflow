@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 import { getLocalDiskDriverOrNull, getStorageDriver } from "@/lib/drivers/storage/factory";
 import { createServerClient } from "@/lib/supabase/server";
+import { guardAnexoAccess } from "@/lib/anexos-guard";
 
 /**
  * GET /api/storage/object/<bucket>/<path...>[?token=<t>]
@@ -91,6 +92,15 @@ export async function DELETE(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+  }
+
+  // Bucket "anexos" exige membership do workspace dono do cartao (service_role
+  // bypassa RLS, entao validamos aqui — policy em storage.objects eh defense-in-depth).
+  if (bucket === "anexos") {
+    const guard = await guardAnexoAccess(user.id, filePath);
+    if (!guard.ok) {
+      return NextResponse.json({ error: guard.error }, { status: guard.status });
+    }
   }
 
   try {

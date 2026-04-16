@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 import { getLocalDiskDriverOrNull, getStorageDriver } from "@/lib/drivers/storage/factory";
 import { createServerClient } from "@/lib/supabase/server";
+import { guardAnexoAccess } from "@/lib/anexos-guard";
 
 /**
  * POST /api/storage/upload?bucket=<b>&path=<p>[&token=<t>]
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
   }
 
   // ───── Auth ─────
+  let userId: string | null = null;
   if (token) {
     // Signed upload URL — so faz sentido em local-disk driver
     const localDriver = getLocalDiskDriverOrNull();
@@ -62,6 +64,23 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+    }
+    userId = user.id;
+  }
+
+  // ───── Bucket-specific authz ─────
+  // Bucket "anexos" exige sessao + membership do workspace dono do cartao.
+  // Driver usa service_role (bypassa RLS), entao validamos aqui.
+  if (bucket === "anexos") {
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Signed upload nao suportado no bucket anexos" },
+        { status: 400 },
+      );
+    }
+    const guard = await guardAnexoAccess(userId, filePath);
+    if (!guard.ok) {
+      return NextResponse.json({ error: guard.error }, { status: guard.status });
     }
   }
 
