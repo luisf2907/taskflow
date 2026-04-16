@@ -71,9 +71,10 @@ if [ "$ALREADY" = "1" ]; then
     log "✓ Schema base ja aplicado anteriormente."
 
     # Ainda assim, re-aplica objetos que sao idempotentes e podem ter
-    # sido adicionados em versoes posteriores (triggers realtime, RPCs,
-    # etc). Seguro — tudo aqui usa CREATE OR REPLACE / DROP IF EXISTS.
-    log "Re-aplicando objetos idempotentes (triggers realtime, etc)..."
+    # sido adicionados em versoes posteriores (triggers realtime, policies
+    # adicionadas em migrations pos-bootstrap, RPCs, etc). Seguro — tudo
+    # aqui usa CREATE OR REPLACE / DROP IF EXISTS.
+    log "Re-aplicando objetos idempotentes (triggers realtime, migrations)..."
     if [ -f /realtime-triggers.sql ]; then
         psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \
              -v ON_ERROR_STOP=1 \
@@ -81,6 +82,20 @@ if [ "$ALREADY" = "1" ]; then
              > /dev/null
         log "  ✓ Triggers realtime atualizados."
     fi
+
+    # Lista explicita de migrations seguras pra re-aplicar em upgrade.
+    # Criterio: arquivo usa DROP IF EXISTS / CREATE OR REPLACE em tudo.
+    # Adicione aqui quando uma migration nova couber nesse padrao.
+    UPGRADE_MIGRATIONS="045_anexos_storage_policies.sql"
+    for mig in $UPGRADE_MIGRATIONS; do
+        if [ -f "/migrations/$mig" ]; then
+            psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \
+                 -v ON_ERROR_STOP=1 \
+                 -f "/migrations/$mig" \
+                 > /dev/null
+            log "  ✓ Migration $mig aplicada."
+        fi
+    done
 
     log "  Pra re-aplicar schema completo: docker compose down -v (DESTROY)"
     exit 0

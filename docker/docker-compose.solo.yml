@@ -128,6 +128,7 @@ services:
     volumes:
       - ../supabase/self-hosted/bootstrap.sql:/bootstrap.sql:ro
       - ../supabase/self-hosted/realtime-triggers.sql:/realtime-triggers.sql:ro
+      - ../supabase/migrations:/migrations:ro
       - ../scripts/bootstrap.sh:/bootstrap.sh:ro
     command: ["/bin/sh", "/bootstrap.sh"]
 
