@@ -32,9 +32,14 @@ help:
 	@echo "  make rebuild                Rebuild da imagem do app"
 	@echo "  make clean                  DESTROY: derruba + apaga volumes"
 	@echo ""
-	@echo "  make admin EMAIL=X PASSWORD=Y NAME=Z"
-	@echo "                              Cria usuario admin"
-	@echo "  make health                 Valida stack end-to-end"
+	@echo "  make bootstrap EMAIL=X PASSWORD=Y [NAME=Z] [WORKSPACE=W]"
+	@echo "                              Primeiro setup (admin + workspace)"
+	@echo "  make user-create EMAIL=X PASSWORD=Y [NAME=Z]"
+	@echo "                              Cria um user"
+	@echo "  make user-list              Lista users"
+	@echo "  make user-reset-password EMAIL=X PASSWORD=Y"
+	@echo "                              Reseta senha"
+	@echo "  make user-delete EMAIL=X    Remove user"
 	@echo "  make shell SERVICE=app      Entra no container"
 	@echo ""
 	@echo "Variaveis:"
@@ -80,18 +85,47 @@ clean:
 	@read -p "Confirma? (escreva 'sim' pra prosseguir): " confirm && [ "$$confirm" = "sim" ]
 	$(COMPOSE) down -v
 
-.PHONY: admin
-admin:
+.PHONY: bootstrap
+bootstrap:
 	@test -n "$(EMAIL)" || (echo "Falta EMAIL=..."; exit 1)
 	@test -n "$(PASSWORD)" || (echo "Falta PASSWORD=..."; exit 1)
-	$(COMPOSE) exec app npx taskflow user:create \
+	node --env-file=$(ENV_FILE) scripts/cli.mjs bootstrap \
+		--admin-email "$(EMAIL)" \
+		--admin-password "$(PASSWORD)" \
+		--admin-name "$(or $(NAME),Admin)" \
+		--workspace-name "$(or $(WORKSPACE),Default)"
+
+.PHONY: user-create
+user-create:
+	@test -n "$(EMAIL)" || (echo "Falta EMAIL=..."; exit 1)
+	@test -n "$(PASSWORD)" || (echo "Falta PASSWORD=..."; exit 1)
+	node --env-file=$(ENV_FILE) scripts/cli.mjs user:create \
 		--email "$(EMAIL)" \
 		--password "$(PASSWORD)" \
-		--name "$(NAME)"
+		--name "$(or $(NAME),$(EMAIL))"
 
-.PHONY: health
-health:
-	$(COMPOSE) exec app npx taskflow health
+.PHONY: user-list
+user-list:
+	node --env-file=$(ENV_FILE) scripts/cli.mjs user:list
+
+.PHONY: user-reset-password
+user-reset-password:
+	@test -n "$(EMAIL)" || (echo "Falta EMAIL=..."; exit 1)
+	@test -n "$(PASSWORD)" || (echo "Falta PASSWORD=..."; exit 1)
+	node --env-file=$(ENV_FILE) scripts/cli.mjs user:reset-password \
+		--email "$(EMAIL)" \
+		--password "$(PASSWORD)"
+
+.PHONY: user-delete
+user-delete:
+	@test -n "$(EMAIL)" || (echo "Falta EMAIL=..."; exit 1)
+	node --env-file=$(ENV_FILE) scripts/cli.mjs user:delete \
+		--email "$(EMAIL)" \
+		--yes
+
+.PHONY: cli
+cli:
+	node --env-file=$(ENV_FILE) scripts/cli.mjs $(filter-out $@,$(MAKECMDGOALS))
 
 .PHONY: shell
 shell:
