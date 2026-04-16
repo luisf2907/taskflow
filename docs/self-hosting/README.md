@@ -27,7 +27,7 @@ Comece pelo [quickstart-solo](./quickstart-solo.md) se estiver em dúvida.
 - **Módulos** — docs por driver
   - [auth.md](./modules/auth.md)
   - [storage.md](./modules/storage.md)
-  - realtime.md *(em breve — Fase 4)*
+  - [realtime.md](./modules/realtime.md)
   - llm.md *(em breve — Fase 5)*
   - email.md *(em breve — Fase 5)*
   - voice.md *(em breve — Fase 5)*

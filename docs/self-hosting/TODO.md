@@ -14,10 +14,13 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
       supabase + local-disk implementados em `src/lib/drivers/storage/`.
       Uploads de wiki, anexos, reunião audio via signed URL, tudo via
       `/api/storage/*`. `modules/storage.md` documenta detalhes.
-- [ ] **Driver realtime `pg-notify-sse`** (Fase 4) — sem isso, kanban
-      não atualiza em tempo real pra outros usuários. Temos opção
-      `polling` como fallback, mas ainda assim precisa do código do
-      driver no cliente.
+- [x] **Driver realtime `pg-notify-sse`** (Fase 4 completa) —
+      triggers pg_notify aplicados via bootstrap.sql. SSE endpoints em
+      `/api/realtime/board/<id>` e `/api/realtime/workspace/<id>`.
+      Client adapter em `use-realtime.ts` detecta driver.
+      `modules/realtime.md` documenta. Polling ainda não
+      implementado — se necessário, adicionar `refreshInterval`
+      global no SWRConfig.
 - [ ] **Trigger `on_auth_user_created` não funciona em self-hosted** —
       investigar causa. Workaround: CLI + solo-login fazem upsert
       manual em `public.perfis`.
