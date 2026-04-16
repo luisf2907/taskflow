@@ -1,6 +1,20 @@
 import { z } from "zod";
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Helpers — empty string → undefined
+// ═══════════════════════════════════════════════════════════════════════════
+// No docker-compose, `${VAR:-}` injeta empty string ("") no container quando
+// a var nao esta setada no .env.local. Zod's z.string().url().optional()
+// rejeita "" como URL invalida — queremos tratar como "nao setada".
+function cleanEnv<T extends Record<string, string | undefined>>(raw: T) {
+  const out: Record<string, string | undefined> = {};
+  for (const [k, v] of Object.entries(raw)) {
+    out[k] = v === "" ? undefined : v;
+  }
+  return out;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Schemas — public (client-safe) e server (includes secrets)
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -126,11 +140,11 @@ const serverEnvSchema = envSchema.extend({
 // ═══════════════════════════════════════════════════════════════════════════
 
 function parsePublicEnv() {
-  const result = envSchema.safeParse({
+  const result = envSchema.safeParse(cleanEnv({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-  });
+  }));
 
   if (!result.success) {
     const formatted = result.error.issues
@@ -143,7 +157,7 @@ function parsePublicEnv() {
 }
 
 function parseServerEnv() {
-  const result = serverEnvSchema.safeParse({
+  const result = serverEnvSchema.safeParse(cleanEnv({
     // Supabase core
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -195,7 +209,7 @@ function parseServerEnv() {
 
     AUTH_MODE: process.env.AUTH_MODE,
     SOLO_USER_EMAIL: process.env.SOLO_USER_EMAIL,
-  });
+  }));
 
   if (!result.success) {
     const formatted = result.error.issues
