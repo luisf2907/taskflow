@@ -66,9 +66,23 @@ log "Checando se schema ja foi aplicado..."
 ALREADY=$(psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -tAc \
     "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='workspaces';" \
     2>/dev/null || echo "")
+
 if [ "$ALREADY" = "1" ]; then
-    log "✓ Schema ja aplicado anteriormente — nada a fazer."
-    log "  Pra re-aplicar do zero: docker compose down -v (DESTROY)"
+    log "✓ Schema base ja aplicado anteriormente."
+
+    # Ainda assim, re-aplica objetos que sao idempotentes e podem ter
+    # sido adicionados em versoes posteriores (triggers realtime, RPCs,
+    # etc). Seguro — tudo aqui usa CREATE OR REPLACE / DROP IF EXISTS.
+    log "Re-aplicando objetos idempotentes (triggers realtime, etc)..."
+    if [ -f /realtime-triggers.sql ]; then
+        psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \
+             -v ON_ERROR_STOP=1 \
+             -f /realtime-triggers.sql \
+             > /dev/null
+        log "  ✓ Triggers realtime atualizados."
+    fi
+
+    log "  Pra re-aplicar schema completo: docker compose down -v (DESTROY)"
     exit 0
 fi
 
