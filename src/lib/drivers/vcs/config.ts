@@ -1,22 +1,23 @@
 /**
- * VCS driver — configuracao e helpers de token.
+ * VCS driver — pure config helpers (safe em Client Components).
  *
- * Unifica:
- *   - Base URL da API (github.com, github enterprise, gitea)
- *   - Token per-user (OAuth/PAT do DB) OU instance-wide PAT
+ * Este arquivo NAO pode importar nada server-only (supabase/server,
+ * next/headers, fs, etc) porque `@/lib/github/client` o importa
+ * transitivamente via `@/lib/drivers/vcs/config` -> esse modulo sobe
+ * no bundle client e quebra o build com "You're importing a module
+ * that depends on next/headers".
+ *
+ * A funcao `getVcsToken` (que acessa o DB) vive em `./token.ts` com
+ * `import "server-only"` pra enforce a separacao.
  *
  * Uso nas rotas API:
- *   const token = await getVcsToken(userId);   // prioriza instance-pat
- *   const baseUrl = getVcsBaseUrl();
- *   fetch(`${baseUrl}/repos/.../pulls`, { headers: { Authorization: `Bearer ${token}` } })
+ *   import { getVcsToken } from "@/lib/drivers/vcs/token";
+ *   import { getVcsBaseUrl } from "@/lib/drivers/vcs/config";
  *
  * Gitea: a API tem alta compat com GitHub v3 pra os endpoints que o
  * app usa (repos, branches, pulls, commits, contents). Endpoints
  * nao-compativeis vao falhar com 404 — tratar caso a caso se surgir.
  */
-
-import { decrypt } from "@/lib/crypto";
-import { createServiceClient } from "@/lib/supabase/server";
 
 // ───── URL base ─────
 
@@ -49,48 +50,6 @@ export function getVcsTokenMode(): VcsTokenMode {
   const m = process.env.VCS_TOKEN_MODE;
   if (m === "pat" || m === "instance-pat") return m;
   return "oauth";
-}
-
-/**
- * Token usado pra operacoes do VCS.
- *
- * - instance-pat: retorna VCS_INSTANCE_PAT direto (global, sem user)
- * - oauth/pat: le github_tokens do DB pro userId
- *
- * Retorna null se nao encontrar (rota API deve responder 401).
- */
-export async function getVcsToken(userId: string | null): Promise<string | null> {
-  const mode = getVcsTokenMode();
-
-  // Instance-wide PAT — global, ignora userId
-  if (mode === "instance-pat") {
-    const pat = process.env.VCS_INSTANCE_PAT;
-    return pat && pat.length > 0 ? pat : null;
-  }
-
-  // Per-user token do DB (oauth ou pat user-provided)
-  if (!userId) return null;
-
-  const service = createServiceClient();
-  const { data } = await service
-    .from("github_tokens")
-    .select("provider_token, encrypted_token")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (!data) return null;
-
-  // Prefere encrypted_token (mais recente) ao provider_token (OAuth antigo)
-  if (data.encrypted_token) {
-    const plain = await decrypt(data.encrypted_token);
-    if (plain) return plain;
-  }
-
-  if (data.provider_token && data.provider_token !== "") {
-    return data.provider_token;
-  }
-
-  return null;
 }
 
 /**

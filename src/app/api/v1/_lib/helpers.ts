@@ -31,7 +31,7 @@ export function getSearchParams(request: Request) {
 export async function getGitHubToken(_service: Service, userId: string) {
   // Delega pro driver VCS — cobre instance-pat (global) + per-user do DB.
   // _service nao e mais usado; mantido na assinatura pra backward compat.
-  const { getVcsToken } = await import("@/lib/drivers/vcs/config");
+  const { getVcsToken } = await import("@/lib/drivers/vcs/token");
   return getVcsToken(userId);
 }
 

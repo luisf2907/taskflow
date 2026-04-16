@@ -1,5 +1,5 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
-import { getVcsToken } from "@/lib/drivers/vcs/config";
+import { getVcsToken } from "@/lib/drivers/vcs/token";
 import { closePR, mergePR, addPRComment } from "@/lib/github/client";
 import { executarAutomacoes } from "@/lib/automacoes-executor";
 import { NextRequest, NextResponse } from "next/server";

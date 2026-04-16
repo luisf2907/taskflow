@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase/server";
-import { getVcsBaseUrl, getVcsToken } from "@/lib/drivers/vcs/config";
+import { getVcsBaseUrl } from "@/lib/drivers/vcs/config";
+import { getVcsToken } from "@/lib/drivers/vcs/token";
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimitAsync } from "@/lib/api-utils";
 

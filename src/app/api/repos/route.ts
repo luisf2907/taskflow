@@ -1,5 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server";
-import { getVcsToken } from "@/lib/drivers/vcs/config";
+import { getVcsToken } from "@/lib/drivers/vcs/token";
 import { githubAuthFetch } from "@/lib/github/client";
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimitAsync } from "@/lib/api-utils";
