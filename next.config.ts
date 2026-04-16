@@ -17,6 +17,10 @@ const supabaseImgSrc = isSupabaseCloud
   : `${supabaseUrl}`;
 
 const nextConfig: NextConfig = {
+  // Build standalone — empacota tudo que o server precisa em .next/standalone,
+  // usado pelo Dockerfile.app do self-hosted. No cloud (Vercel) o build continua
+  // funcionando normalmente — standalone so ajuda quem vai rodar `node server.js`.
+  output: "standalone",
   images: {
     remotePatterns: [
       {
