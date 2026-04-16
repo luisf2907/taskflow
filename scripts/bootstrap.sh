@@ -56,6 +56,22 @@ for i in $(seq 1 "$MAX_WAIT"); do
   sleep 2
 done
 
+# ───── Skip se schema ja aplicado ─────
+# bootstrap.sql tem CREATE INDEX e ADD CONSTRAINT sem IF NOT EXISTS (60
+# indexes + 97 constraints vindos do dump). Em vez de tornar cada
+# statement idempotente, checamos um marcador bem conhecido — se a
+# tabela public.workspaces existir, o bootstrap ja rodou com sucesso
+# antes.
+log "Checando se schema ja foi aplicado..."
+ALREADY=$(psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -tAc \
+    "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='workspaces';" \
+    2>/dev/null || echo "")
+if [ "$ALREADY" = "1" ]; then
+    log "✓ Schema ja aplicado anteriormente — nada a fazer."
+    log "  Pra re-aplicar do zero: docker compose down -v (DESTROY)"
+    exit 0
+fi
+
 log "Aplicando bootstrap.sql..."
 psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \
      -v ON_ERROR_STOP=1 \
