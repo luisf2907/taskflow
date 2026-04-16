@@ -87,8 +87,10 @@ VOLUME /app/storage
 USER nextjs
 EXPOSE 3000
 
-# Healthcheck usa /api/health (a ser criado em Fase 2)
+# Healthcheck usa /api/health. IMPORTANTE: 127.0.0.1 em vez de localhost
+# porque em Alpine + glibc o getaddrinfo prefere ::1 (IPv6), mas Next.js
+# bind'a so em 0.0.0.0 (IPv4). Resultado com localhost: connection refused.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD wget -qO- http://localhost:3000/api/health || exit 1
+    CMD wget -qO- http://127.0.0.1:3000/api/health || exit 1
 
 CMD ["node", "server.js"]
