@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 
 import { getServerEnv } from "@/lib/env";
 import { createServiceClient } from "@/lib/supabase/server";
+import { SUPABASE_STORAGE_KEY } from "@/lib/supabase/storage-key";
 
 /**
  * Auto-login handler pro AUTH_MODE=solo.
@@ -96,6 +97,7 @@ export async function GET(request: NextRequest) {
     env.SUPABASE_INTERNAL_URL ?? env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
+      auth: { storageKey: SUPABASE_STORAGE_KEY },
       cookies: {
         getAll() {
           return request.cookies.getAll();

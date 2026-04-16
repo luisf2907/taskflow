@@ -2,6 +2,7 @@ import { createServerClient as createSSRServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { getServerEnv } from "@/lib/env";
+import { SUPABASE_STORAGE_KEY } from "./storage-key";
 
 /**
  * No self-hosted, NEXT_PUBLIC_SUPABASE_URL e a URL "externa" (ex: http://localhost:8000)
@@ -21,6 +22,7 @@ export async function createServerClient() {
     getInternalUrl(env),
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
+      auth: { storageKey: SUPABASE_STORAGE_KEY },
       cookies: {
         getAll() {
           return cookieStore.getAll();
@@ -44,6 +46,6 @@ export function createServiceClient() {
   return createClient(
     getInternalUrl(env),
     env.SUPABASE_SERVICE_ROLE_KEY,
-    { auth: { persistSession: false } }
+    { auth: { persistSession: false, storageKey: SUPABASE_STORAGE_KEY } }
   );
 }
