@@ -40,6 +40,8 @@ import {
   workspaceList,
   workspaceInvite,
 } from "./cli/workspace.mjs";
+import { backup } from "./cli/backup.mjs";
+import { restore } from "./cli/restore.mjs";
 import { log } from "./cli/lib.mjs";
 
 const COMMANDS = {
@@ -52,6 +54,8 @@ const COMMANDS = {
   "workspace:create": { fn: workspaceCreate, desc: "Cria workspace e associa owner" },
   "workspace:list": { fn: workspaceList, desc: "Lista workspaces" },
   "workspace:invite": { fn: workspaceInvite, desc: "Gera link de convite (sem email)" },
+  backup: { fn: backup, desc: "Dump Postgres + tar do volume de storage" },
+  restore: { fn: restore, desc: "Restore destrutivo a partir de backup (use --yes)" },
 };
 
 function showHelp() {
