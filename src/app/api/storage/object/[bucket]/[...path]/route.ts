@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { getLocalDiskDriverOrNull, getStorageDriver } from "@/lib/drivers/storage/factory";
+import { createServerClient } from "@/lib/supabase/server";
 
 /**
  * GET /api/storage/object/<bucket>/<path...>[?token=<t>]
@@ -68,6 +69,36 @@ export async function GET(
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "read failed";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/storage/object/<bucket>/<path...>
+ *
+ * Remove arquivo do storage. Exige sessao autenticada. Idempotente —
+ * retorna 204 mesmo se arquivo nao existia.
+ */
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ bucket: string; path: string[] }> },
+) {
+  const { bucket, path: pathSegments } = await params;
+  const filePath = pathSegments.join("/");
+
+  // Auth — so user logado pode deletar
+  const supabase = await createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+  }
+
+  try {
+    const driver = getStorageDriver();
+    await driver.delete(bucket, filePath);
+    return new NextResponse(null, { status: 204 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "delete failed";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
