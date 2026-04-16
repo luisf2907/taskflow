@@ -14,6 +14,13 @@ const serverEnvSchema = envSchema.extend({
   // ───── Supabase (obrigatorias) ─────
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 
+  // URL interna do Supabase — usada pelo server-side do Next.js quando
+  // NEXT_PUBLIC_SUPABASE_URL aponta pra um gateway externo (ex: localhost:8000
+  // no self-hosted, que de dentro do container nao resolve). Default:
+  // reutiliza NEXT_PUBLIC_SUPABASE_URL. No docker-compose setamos pra
+  // http://nginx:8000 (container hostname).
+  SUPABASE_INTERNAL_URL: z.string().url().optional(),
+
   // ───── Encryption (obrigatoria) ─────
   // AES-256-GCM key para encriptar dados sensiveis (GitHub tokens, api keys, etc.)
   // 64 hex chars = 32 bytes. Gere com: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
@@ -142,6 +149,7 @@ function parseServerEnv() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    SUPABASE_INTERNAL_URL: process.env.SUPABASE_INTERNAL_URL,
     ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
 
     // SaaS externos

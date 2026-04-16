@@ -170,6 +170,10 @@ services:
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      # URL interna: de dentro do container app, NEXT_PUBLIC_SUPABASE_URL
+      # (http://localhost:8000) nao resolve. Usamos hostname do nginx na rede
+      # docker. server.ts e proxy.ts preferem esta URL quando presente.
+      SUPABASE_INTERNAL_URL: http://nginx:8000
 
       # Driver config (do .env.solo)
       AUTH_MODE: ${AUTH_MODE:-solo}

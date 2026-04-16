@@ -2,7 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseUrl =
+  process.env.SUPABASE_INTERNAL_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 export async function proxy(request: NextRequest) {
@@ -33,6 +34,7 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+  const authMode = process.env.AUTH_MODE ?? "standard";
 
   // Public pages (no auth required)
   const publicPaths = ["/", "/pricing", "/termos", "/privacidade", "/reset-password", "/help"];
@@ -42,9 +44,27 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  // /api/health e publico — HEALTHCHECK do Docker e monitoring externo
+  if (pathname === "/api/health" || pathname.startsWith("/api/health/")) {
+    return response;
+  }
+
+  // /api/auth/solo-login e publico — faz auto-login em AUTH_MODE=solo
+  if (pathname.startsWith("/api/auth/solo-login")) {
+    return response;
+  }
+
   // Logged-in users visiting /login go to dashboard
   if (user && pathname.startsWith("/login")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // AUTH_MODE=solo: auto-login silencioso se o usuario nao tem sessao.
+  // Redireciona pro handler que cria/recupera sessao do SOLO_USER_EMAIL.
+  if (authMode === "solo" && !user && !pathname.startsWith("/login")) {
+    const redirectUrl = new URL("/api/auth/solo-login", request.url);
+    redirectUrl.searchParams.set("next", pathname + request.nextUrl.search);
+    return NextResponse.redirect(redirectUrl);
   }
 
   // Protected routes: redirect to login if not authenticated
