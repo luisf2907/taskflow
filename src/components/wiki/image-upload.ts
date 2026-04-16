@@ -1,5 +1,6 @@
-import { supabase } from "@/lib/supabase/client";
 import type { Editor } from "@tiptap/react";
+
+import { uploadFile } from "@/lib/storage-client";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
@@ -10,7 +11,10 @@ interface UploadOptions {
 }
 
 /**
- * Upload de imagem para Supabase Storage (bucket "wiki").
+ * Upload de imagem para o storage (bucket "wiki"). Usa o storage-client
+ * unificado, que por sua vez bate no driver configurado
+ * (supabase | local-disk | s3-compat).
+ *
  * Retorna URL pública ou null em caso de erro.
  */
 export async function uploadImagemWiki(
@@ -33,24 +37,15 @@ export async function uploadImagemWiki(
     .replace(/[^a-zA-Z0-9.-]/g, "_")
     .substring(0, 50);
   const path = `${options.workspaceId}/${options.paginaId}/${timestamp}_${safeName}`;
+  void ext;
 
-  const { error } = await supabase.storage
-    .from("wiki")
-    .upload(path, file, {
-      contentType: file.type,
-      upsert: false,
-    });
-
-  if (error) {
-    console.error("[wiki] Erro no upload:", error.message);
+  try {
+    const result = await uploadFile("wiki", path, file);
+    return result.url;
+  } catch (err) {
+    console.error("[wiki] Erro no upload:", err);
     return null;
   }
-
-  const { data: publicUrl } = supabase.storage
-    .from("wiki")
-    .getPublicUrl(path);
-
-  return publicUrl.publicUrl;
 }
 
 /**
