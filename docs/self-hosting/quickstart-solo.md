@@ -23,13 +23,18 @@ git checkout feat/self-hosted
 
 ### 2. Gere `.env.local` com secrets
 
+**Qualquer shell (PowerShell, bash, cmd, Git Bash):**
+```bash
+node scripts/setup-env.mjs
+```
+
+**Se você tem `make`:**
 ```bash
 make setup
 ```
 
-Isso cria `.env.local` a partir de `.env.solo.example` e anexa secrets
-seguros gerados por `scripts/gen-secrets.sh` (JWT, senhas, chave de
-criptografia).
+Ambos criam `.env.local` a partir de `.env.solo.example`, substituindo
+os placeholders por secrets seguros (JWT, senhas, chave de criptografia).
 
 > **Importante:** `ENCRYPTION_KEY` e `JWT_SECRET` **não devem ser
 > rotacionados** depois de o stack ter sido usado. Rotate

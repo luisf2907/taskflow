@@ -43,15 +43,7 @@ help:
 
 .PHONY: setup
 setup:
-	@if [ -f $(ENV_FILE) ]; then \
-		echo "ERRO: $(ENV_FILE) ja existe. Apague-o pra regerar (CUIDADO: invalida dados)."; \
-		exit 1; \
-	fi
-	@echo "# Taskflow self-hosted — gerado em $$(date)" > $(ENV_FILE)
-	@cat .env.$(PROFILE).example >> $(ENV_FILE)
-	@bash scripts/gen-secrets.sh >> $(ENV_FILE)
-	@echo "✓ $(ENV_FILE) criado com secrets seguros."
-	@echo "  Revise valores de AUTH_MODE, STORAGE_DRIVER, etc antes de 'make up'."
+	node scripts/setup-env.mjs $(PROFILE)
 
 .PHONY: up
 up:
