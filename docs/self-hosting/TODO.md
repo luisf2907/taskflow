@@ -10,9 +10,10 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
       (Fase 2 Commit A). Container app fica healthy.
 - [x] **Solo mode auto-login** — `/api/auth/solo-login` cria user se
       não existe e seta sessão (Fase 2 Commit A + hotfixes).
-- [ ] **Driver storage `local-disk`** (Fase 3) — uploads de wiki e
-      anexos hoje tentam ir pro Supabase Storage (default `supabase`).
-      No perfil solo, bucket não existe ainda.
+- [x] **Driver storage `local-disk`** (Fase 3 completa) — drivers
+      supabase + local-disk implementados em `src/lib/drivers/storage/`.
+      Uploads de wiki, anexos, reunião audio via signed URL, tudo via
+      `/api/storage/*`. `modules/storage.md` documenta detalhes.
 - [ ] **Driver realtime `pg-notify-sse`** (Fase 4) — sem isso, kanban
       não atualiza em tempo real pra outros usuários. Temos opção
       `polling` como fallback, mas ainda assim precisa do código do

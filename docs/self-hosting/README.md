@@ -26,7 +26,7 @@ Comece pelo [quickstart-solo](./quickstart-solo.md) se estiver em dúvida.
 - [TODO.md](./TODO.md) — débito técnico conhecido
 - **Módulos** — docs por driver
   - [auth.md](./modules/auth.md)
-  - storage.md *(em breve — Fase 3)*
+  - [storage.md](./modules/storage.md)
   - realtime.md *(em breve — Fase 4)*
   - llm.md *(em breve — Fase 5)*
   - email.md *(em breve — Fase 5)*
