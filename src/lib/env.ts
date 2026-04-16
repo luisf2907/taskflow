@@ -33,6 +33,10 @@ const envSchema = z.object({
   NEXT_PUBLIC_VCS_TOKEN_MODE: z
     .enum(["oauth", "pat", "instance-pat"])
     .optional(),
+  // Mirror publico de OBS_DRIVER — sentry.client.config.ts respeita.
+  NEXT_PUBLIC_OBS_DRIVER: z
+    .enum(["sentry", "glitchtip", "console", "noop"])
+    .optional(),
 });
 
 const serverEnvSchema = envSchema.extend({
@@ -157,6 +161,7 @@ function parsePublicEnv() {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_REALTIME_DRIVER: process.env.NEXT_PUBLIC_REALTIME_DRIVER,
     NEXT_PUBLIC_VCS_TOKEN_MODE: process.env.NEXT_PUBLIC_VCS_TOKEN_MODE,
+    NEXT_PUBLIC_OBS_DRIVER: process.env.NEXT_PUBLIC_OBS_DRIVER,
   }));
 
   if (!result.success) {
@@ -177,6 +182,7 @@ function parseServerEnv() {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_REALTIME_DRIVER: process.env.NEXT_PUBLIC_REALTIME_DRIVER,
     NEXT_PUBLIC_VCS_TOKEN_MODE: process.env.NEXT_PUBLIC_VCS_TOKEN_MODE,
+    NEXT_PUBLIC_OBS_DRIVER: process.env.NEXT_PUBLIC_OBS_DRIVER,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     SUPABASE_INTERNAL_URL: process.env.SUPABASE_INTERNAL_URL,
     ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,

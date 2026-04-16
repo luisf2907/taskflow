@@ -74,7 +74,9 @@ function computeFeatures() {
     "oauth";
 
   // ───── Observability ─────
-  const obsDriverRaw = serverEnv.OBS_DRIVER as ObsDriver | undefined;
+  // NEXT_PUBLIC_OBS_DRIVER tambem aceito (pros sentry.client.config.ts).
+  const publicObsDriver = process.env.NEXT_PUBLIC_OBS_DRIVER as ObsDriver | undefined;
+  const obsDriverRaw = publicObsDriver ?? (serverEnv.OBS_DRIVER as ObsDriver | undefined);
   const obsDriver: ObsDriver =
     obsDriverRaw ?? (publicSentryDsn ? "sentry" : "console");
 
