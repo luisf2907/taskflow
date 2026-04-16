@@ -45,3 +45,7 @@ next-env.d.ts
 .claude/settings.local.json
 .claude/skills/
 .claude/plans/
+
+# dumps do Supabase (schema/storage) — processados localmente, nunca commitar
+/dump-*.sql
+/schema_latest.sql
