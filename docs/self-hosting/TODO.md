@@ -4,11 +4,12 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
 
 ## Bloqueadores do perfil solo (funcionar end-to-end)
 
-- [ ] **CLI admin** (Fase 2 do plano) — `npx taskflow bootstrap`,
-      `user:create`, `user:list`, `workspace:invite`. Sem isso, não
-      há jeito limpo de criar o primeiro usuário.
-- [ ] **`/api/health` endpoint** — HEALTHCHECK do Docker depende. Sem
-      isso, container app nunca fica `healthy`.
+- [x] **CLI admin** — `scripts/cli.mjs` com `bootstrap`, `user:*`,
+      `workspace:*`, `health`. Fase 2 Commit B concluído.
+- [x] **`/api/health` endpoint** — já existia, agora público no proxy
+      (Fase 2 Commit A). Container app fica healthy.
+- [x] **Solo mode auto-login** — `/api/auth/solo-login` cria user se
+      não existe e seta sessão (Fase 2 Commit A + hotfixes).
 - [ ] **Driver storage `local-disk`** (Fase 3) — uploads de wiki e
       anexos hoje tentam ir pro Supabase Storage (default `supabase`).
       No perfil solo, bucket não existe ainda.
@@ -16,6 +17,9 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
       não atualiza em tempo real pra outros usuários. Temos opção
       `polling` como fallback, mas ainda assim precisa do código do
       driver no cliente.
+- [ ] **Trigger `on_auth_user_created` não funciona em self-hosted** —
+      investigar causa. Workaround: CLI + solo-login fazem upsert
+      manual em `public.perfis`.
 
 ## Drivers não implementados
 

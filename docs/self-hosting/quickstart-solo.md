@@ -67,22 +67,64 @@ make ps
 Espere todos ficarem `healthy` ou `running`. O container `bootstrap`
 deve ficar em `Exited (0)` — isso é o comportamento correto.
 
-### 5. Crie o admin
+### 5. Valide o stack
 
-*Pendente — Fase 2 do plano implementa a CLI.*
-
-Por enquanto, você pode criar manualmente via SQL:
+A CLI tem um comando de health que faz uma varredura completa (gateway,
+GoTrue, PostgREST, tabelas, RPCs):
 
 ```bash
-docker compose -f docker/docker-compose.solo.yml exec postgres \
-  psql -U postgres -d taskflow -c "
-  -- TODO: procedimento de criação de admin vai aqui quando a CLI
-  -- estiver pronta. Por hora, use a UI depois de habilitar signup
-  -- temporariamente.
-  "
+make health
+# ou direto:
+node --env-file=.env.local scripts/cli.mjs health
 ```
 
-### 6. Abra o app
+Esperado: todas as linhas com `✓` e mensagem final "Stack 100% saudavel."
+
+### 6. (Opcional) Pule o bootstrap se for `AUTH_MODE=solo`
+
+No perfil solo default (`AUTH_MODE=solo`), o user admin é **criado
+automaticamente** na primeira vez que você acessa `/dashboard` —
+proxy redireciona pra `/api/auth/solo-login`, handler cria
+`admin@taskflow.local` via admin API, loga você direto. Sem precisar
+rodar `bootstrap`.
+
+Pula direto pro passo 7.
+
+### 7. (Modo closed/standard) Criar primeiro admin com CLI
+
+Se você **desligou o solo mode** no `.env.local` (`AUTH_MODE=closed`
+ou `standard`), precisa criar o admin via CLI:
+
+```bash
+make bootstrap EMAIL=you@example.com PASSWORD=changeme NAME="Felipe" WORKSPACE="Home"
+```
+
+Isso cria:
+- User no GoTrue
+- Row em `public.perfis` (contorna o bug do trigger)
+- Workspace "Home" com você como admin
+
+Outros comandos úteis da CLI:
+
+```bash
+make user-create EMAIL=bruno@home.lab PASSWORD=s3cret NAME="Bruno"
+make user-list
+make user-reset-password EMAIL=bruno@home.lab PASSWORD=nova
+make user-delete EMAIL=bruno@home.lab
+
+make workspace-create NAME="Outro" OWNER=you@example.com
+make workspace-list
+make workspace-invite WORKSPACE="Outro" EMAIL=bruno@home.lab
+#   → gera link copiável, sem mandar email
+```
+
+Ou sem `make`:
+```bash
+node --env-file=.env.local scripts/cli.mjs <comando> [flags]
+node --env-file=.env.local scripts/cli.mjs help  # lista tudo
+```
+
+### 8. Abra o app
 
 ```
 http://localhost:3000

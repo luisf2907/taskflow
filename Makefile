@@ -40,6 +40,12 @@ help:
 	@echo "  make user-reset-password EMAIL=X PASSWORD=Y"
 	@echo "                              Reseta senha"
 	@echo "  make user-delete EMAIL=X    Remove user"
+	@echo ""
+	@echo "  make health                 Valida stack (todos servicos + schema)"
+	@echo "  make workspace-create NAME=X OWNER=email"
+	@echo "  make workspace-list"
+	@echo "  make workspace-invite WORKSPACE=X EMAIL=Y [PAPEL=admin]"
+	@echo ""
 	@echo "  make shell SERVICE=app      Entra no container"
 	@echo ""
 	@echo "Variaveis:"
@@ -122,6 +128,31 @@ user-delete:
 	node --env-file=$(ENV_FILE) scripts/cli.mjs user:delete \
 		--email "$(EMAIL)" \
 		--yes
+
+.PHONY: health
+health:
+	node --env-file=$(ENV_FILE) scripts/cli.mjs health
+
+.PHONY: workspace-create
+workspace-create:
+	@test -n "$(NAME)" || (echo "Falta NAME=..."; exit 1)
+	@test -n "$(OWNER)" || (echo "Falta OWNER=... (email)"; exit 1)
+	node --env-file=$(ENV_FILE) scripts/cli.mjs workspace:create \
+		--name "$(NAME)" \
+		--owner "$(OWNER)"
+
+.PHONY: workspace-list
+workspace-list:
+	node --env-file=$(ENV_FILE) scripts/cli.mjs workspace:list
+
+.PHONY: workspace-invite
+workspace-invite:
+	@test -n "$(WORKSPACE)" || (echo "Falta WORKSPACE=... (nome)"; exit 1)
+	@test -n "$(EMAIL)" || (echo "Falta EMAIL=..."; exit 1)
+	node --env-file=$(ENV_FILE) scripts/cli.mjs workspace:invite \
+		--workspace "$(WORKSPACE)" \
+		--email "$(EMAIL)" \
+		$(if $(PAPEL),--papel $(PAPEL),)
 
 .PHONY: cli
 cli:

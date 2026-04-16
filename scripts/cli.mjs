@@ -28,20 +28,30 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { bootstrap } from "./cli/bootstrap.mjs";
+import { health } from "./cli/health.mjs";
 import {
   userCreate,
   userList,
   userResetPassword,
   userDelete,
 } from "./cli/user.mjs";
+import {
+  workspaceCreate,
+  workspaceList,
+  workspaceInvite,
+} from "./cli/workspace.mjs";
 import { log } from "./cli/lib.mjs";
 
 const COMMANDS = {
   bootstrap: { fn: bootstrap, desc: "Primeiro setup (admin + workspace default)" },
+  health: { fn: health, desc: "Valida stack (postgres, gotrue, postgrest, schema)" },
   "user:create": { fn: userCreate, desc: "Cria user + perfis row" },
   "user:list": { fn: userList, desc: "Lista users do instance" },
   "user:reset-password": { fn: userResetPassword, desc: "Troca senha de user" },
   "user:delete": { fn: userDelete, desc: "Remove user (use --yes pra confirmar)" },
+  "workspace:create": { fn: workspaceCreate, desc: "Cria workspace e associa owner" },
+  "workspace:list": { fn: workspaceList, desc: "Lista workspaces" },
+  "workspace:invite": { fn: workspaceInvite, desc: "Gera link de convite (sem email)" },
 };
 
 function showHelp() {
