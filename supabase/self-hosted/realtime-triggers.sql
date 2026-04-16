@@ -76,6 +76,18 @@ BEGIN
                 'quadro_id', row_data.quadro_id,
                 'cartao_id', row_data.cartao_id
             );
+        WHEN 'notificacoes' THEN
+            payload := payload || jsonb_build_object(
+                'user_id', row_data.user_id
+            );
+        WHEN 'poker_sessoes' THEN
+            payload := payload || jsonb_build_object(
+                'workspace_id', row_data.workspace_id
+            );
+        WHEN 'poker_votos' THEN
+            payload := payload || jsonb_build_object(
+                'sessao_id', row_data.sessao_id
+            );
         ELSE
             -- tabelas nao mapeadas: so table+op+id
             NULL;
@@ -97,11 +109,14 @@ ALTER FUNCTION public.tg_realtime_notify() OWNER TO postgres;
 -- ─────────────────────────────────────────────────────────────────────────
 -- Drop-and-recreate e idempotente.
 
-DROP TRIGGER IF EXISTS tg_realtime_quadros     ON public.quadros;
-DROP TRIGGER IF EXISTS tg_realtime_colunas     ON public.colunas;
-DROP TRIGGER IF EXISTS tg_realtime_cartoes     ON public.cartoes;
-DROP TRIGGER IF EXISTS tg_realtime_comentarios ON public.comentarios;
-DROP TRIGGER IF EXISTS tg_realtime_atividades  ON public.atividades;
+DROP TRIGGER IF EXISTS tg_realtime_quadros       ON public.quadros;
+DROP TRIGGER IF EXISTS tg_realtime_colunas       ON public.colunas;
+DROP TRIGGER IF EXISTS tg_realtime_cartoes       ON public.cartoes;
+DROP TRIGGER IF EXISTS tg_realtime_comentarios   ON public.comentarios;
+DROP TRIGGER IF EXISTS tg_realtime_atividades    ON public.atividades;
+DROP TRIGGER IF EXISTS tg_realtime_notificacoes  ON public.notificacoes;
+DROP TRIGGER IF EXISTS tg_realtime_poker_sessoes ON public.poker_sessoes;
+DROP TRIGGER IF EXISTS tg_realtime_poker_votos   ON public.poker_votos;
 
 CREATE TRIGGER tg_realtime_quadros
     AFTER INSERT OR UPDATE OR DELETE ON public.quadros
@@ -121,4 +136,16 @@ CREATE TRIGGER tg_realtime_comentarios
 
 CREATE TRIGGER tg_realtime_atividades
     AFTER INSERT OR UPDATE OR DELETE ON public.atividades
+    FOR EACH ROW EXECUTE FUNCTION public.tg_realtime_notify();
+
+CREATE TRIGGER tg_realtime_notificacoes
+    AFTER INSERT OR UPDATE OR DELETE ON public.notificacoes
+    FOR EACH ROW EXECUTE FUNCTION public.tg_realtime_notify();
+
+CREATE TRIGGER tg_realtime_poker_sessoes
+    AFTER INSERT OR UPDATE OR DELETE ON public.poker_sessoes
+    FOR EACH ROW EXECUTE FUNCTION public.tg_realtime_notify();
+
+CREATE TRIGGER tg_realtime_poker_votos
+    AFTER INSERT OR UPDATE OR DELETE ON public.poker_votos
     FOR EACH ROW EXECUTE FUNCTION public.tg_realtime_notify();

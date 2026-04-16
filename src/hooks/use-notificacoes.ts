@@ -49,11 +49,19 @@ export function useNotificacoes() {
   // Realtime subscription for new notifications
   useEffect(() => {
     if (!user) return;
-    // Noop em drivers diferentes de supabase — notificacoes nao tem
-    // trigger pg_notify nem endpoint SSE dedicado ainda. User vê notifs
-    // novas quando recarrega ou navega. TODO: migracao na Fase 5.
-    if (features.realtime.driver !== "supabase") return;
+    const driver = features.realtime.driver;
 
+    // ─── pg-notify-sse: endpoint dedicado pra eventos do user ───
+    if (driver === "pg-notify-sse") {
+      const es = new EventSource(`/api/realtime/user/${user.id}`);
+      es.addEventListener("notificacoes", () => globalMutate(key));
+      return () => es.close();
+    }
+
+    // ─── polling: sem realtime, SWR cuida via revalidate ───
+    if (driver === "polling") return;
+
+    // ─── supabase (cloud default) ───
     const channel = supabase
       .channel(`notificacoes-${user.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notificacoes", filter: `user_id=eq.${user.id}` }, () => {

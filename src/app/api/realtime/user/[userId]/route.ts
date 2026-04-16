@@ -4,19 +4,18 @@ import { listenOnChannel } from "@/lib/realtime/pg-listen";
 import { createServerClient } from "@/lib/supabase/server";
 
 /**
- * GET /api/realtime/workspace/<workspaceId>
+ * GET /api/realtime/user/<userId>
  *
- * SSE endpoint pra eventos de workspace (quadros, atividades, cartoes
- * no backlog). Analogo a /board/* mas escopo mais amplo.
+ * SSE endpoint pra eventos pessoais do user — hoje: notificacoes.
+ * User so pode se inscrever no proprio id (valida sessao).
  *
- * Tables emitidas: quadros, atividades, cartoes (so com workspace_id
- * batendo).
+ * Tables emitidas: notificacoes.
  */
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ workspaceId: string }> },
+  context: { params: Promise<{ userId: string }> },
 ) {
-  const { workspaceId } = await context.params;
+  const { userId } = await context.params;
 
   const supabase = await createServerClient();
   const {
@@ -26,14 +25,9 @@ export async function GET(
     return new Response("Nao autenticado", { status: 401 });
   }
 
-  // Valida que user e membro do workspace
-  const { count } = await supabase
-    .from("workspace_usuarios")
-    .select("id", { count: "exact", head: true })
-    .eq("workspace_id", workspaceId)
-    .eq("user_id", user.id);
-  if (!count || count === 0) {
-    return new Response("Workspace nao encontrado ou sem acesso", { status: 404 });
+  // Defesa em profundidade: user so pode escutar o proprio canal
+  if (user.id !== userId) {
+    return new Response("Forbidden", { status: 403 });
   }
 
   const encoder = new TextEncoder();
@@ -50,7 +44,7 @@ export async function GET(
         }
       };
 
-      safeEnqueue(`: connected to workspace ${workspaceId}\n\n`);
+      safeEnqueue(`: connected to user ${userId}\n\n`);
 
       let handle: Awaited<ReturnType<typeof listenOnChannel>> | null = null;
       try {
@@ -59,9 +53,7 @@ export async function GET(
             table?: string;
             op?: string;
             id?: string;
-            workspace_id?: string;
-            quadro_id?: string;
-            sessao_id?: string;
+            user_id?: string;
           };
           try {
             event = JSON.parse(payloadRaw);
@@ -69,16 +61,12 @@ export async function GET(
             return;
           }
 
-          // poker_votos nao tem workspace_id direto — usa sessao_id. O
-          // client filtra pela sessao ativa. Aceita todos (volume baixo).
-          const isPokerVoto = event.table === "poker_votos";
-          if (!isPokerVoto && event.workspace_id !== workspaceId) return;
+          // Filtro: so emite se e evento do proprio user
+          if (event.user_id !== userId) return;
 
           const data = JSON.stringify({
             op: event.op,
             id: event.id,
-            quadro_id: event.quadro_id,
-            sessao_id: event.sessao_id,
           });
           safeEnqueue(`event: ${event.table}\ndata: ${data}\n\n`);
         });

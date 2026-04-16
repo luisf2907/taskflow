@@ -74,15 +74,19 @@ export function usePlanningPoker(workspaceId: string) {
   // =============================================
   useEffect(() => {
     if (!workspaceId) return;
+    const driver = features.realtime.driver;
 
-    // So conecta no Realtime do Supabase quando driver=supabase.
-    // Em pg-notify-sse/polling, planning-poker ainda nao tem triggers
-    // nem endpoint SSE dedicado (TODO: migracao completa vira na
-    // Fase 5 junto com triggers pra poker_sessoes, poker_votos e
-    // notificacoes). Sem realtime, user precisa trocar de aba ou F5
-    // pra ver votos novos — aceitavel em single-user/solo.
-    if (features.realtime.driver !== "supabase") return;
+    // ─── pg-notify-sse: reusa endpoint de workspace (ja inclui poker) ───
+    if (driver === "pg-notify-sse") {
+      const es = new EventSource(`/api/realtime/workspace/${workspaceId}`);
+      es.addEventListener("poker_sessoes", () => debouncedMutate(key));
+      es.addEventListener("poker_votos", () => debouncedMutate(key));
+      return () => es.close();
+    }
 
+    if (driver === "polling") return;
+
+    // ─── supabase (cloud default) ───
     const channel = supabase
       .channel(`poker-${workspaceId}`)
       .on(
