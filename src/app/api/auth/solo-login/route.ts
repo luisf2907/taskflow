@@ -71,6 +71,23 @@ export async function GET(request: NextRequest) {
     user = created.user;
   }
 
+  // Garante que public.perfis tem row pro user. O trigger on_auth_user_created
+  // deveria fazer isso, mas se falhar silenciosamente (ex: constraint violada,
+  // trigger desabilitado), o app fica com 406 em queries por perfil. Upsert
+  // manual e idempotente — nao sobrescreve dados se ja existir.
+  const { error: perfilErr } = await admin.from("perfis").upsert(
+    {
+      id: user.id,
+      email,
+      nome: "Solo Admin",
+    },
+    { onConflict: "id", ignoreDuplicates: true },
+  );
+  if (perfilErr) {
+    console.error("[solo-login] falha ao garantir perfis row:", perfilErr.message);
+    // nao abortamos — perfil pode ja existir ou o trigger pode ter criado
+  }
+
   // ───── Gera magic link e troca por sessao ─────
   const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
     type: "magiclink",
