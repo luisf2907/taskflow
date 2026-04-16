@@ -8,10 +8,14 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder
 const supabaseHost = new URL(supabaseUrl).hostname;
 const isSupabaseCloud = supabaseHost.endsWith(".supabase.co");
 
-// CSP: permitir tanto *.supabase.co quanto self-hosted
+// CSP: permitir tanto *.supabase.co quanto self-hosted.
+// Em self-hosted http (ex: http://localhost:8000), precisamos ws://
+// (nao wss://) pro Realtime websocket. Cloud usa sempre wss://.
+const isHttps = supabaseUrl.startsWith("https://");
+const wsScheme = isHttps ? "wss" : "ws";
 const supabaseConnectSrc = isSupabaseCloud
   ? "https://*.supabase.co wss://*.supabase.co"
-  : `${supabaseUrl} wss://${supabaseHost}`;
+  : `${supabaseUrl} ${wsScheme}://${supabaseHost}:*`;
 const supabaseImgSrc = isSupabaseCloud
   ? "https://*.supabase.co"
   : `${supabaseUrl}`;
