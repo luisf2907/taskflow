@@ -21,12 +21,22 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
       `modules/realtime.md` documenta. Polling ainda não
       implementado — se necessário, adicionar `refreshInterval`
       global no SWRConfig.
-- [ ] **Realtime de planning-poker e notificações** — os hooks
-      `use-planning-poker.ts` e `use-notificacoes.ts` ainda usam
-      `supabase.channel()` direto. Hoje: noop quando driver != supabase
-      (user vê updates só em refresh/nav). TODO: adicionar triggers
-      pg_notify em `poker_sessoes`, `poker_votos`, `notificacoes` e
-      migrar hooks pra EventSource. Fase 5.
+- [x] **Realtime de planning-poker e notificações** (Fase 5 E) —
+      triggers pg_notify em `poker_sessoes`, `poker_votos`,
+      `notificacoes`. Hooks migrados pra EventSource. Novo endpoint
+      `/api/realtime/user/[userId]` pra notifs. Poker reusa endpoint
+      de workspace.
+
+## Fase 5 completa
+
+- [x] **Email driver** — resend/smtp/console/disabled. `modules/email.md`.
+- [x] **VCS driver** — github/gitea/disabled + oauth/pat/instance-pat
+      token modes. 10 rotas refatoradas pra `getVcsToken()`.
+      `modules/vcs.md`.
+- [x] **Observability driver** — sentry/glitchtip/console/noop.
+      Sentry configs respeitam OBS_DRIVER. `modules/observability.md`.
+- [x] **UI condicional** — botões de IA, tab "Gravar" de reuniões,
+      Settings → GitHub em instance-pat mode.
 - [ ] **Trigger `on_auth_user_created` não funciona em self-hosted** —
       investigar causa. Workaround: CLI + solo-login fazem upsert
       manual em `public.perfis`.

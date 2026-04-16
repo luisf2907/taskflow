@@ -28,6 +28,9 @@ Comece pelo [quickstart-solo](./quickstart-solo.md) se estiver em dúvida.
   - [auth.md](./modules/auth.md)
   - [storage.md](./modules/storage.md)
   - [realtime.md](./modules/realtime.md)
+  - [email.md](./modules/email.md)
+  - [vcs.md](./modules/vcs.md)
+  - [observability.md](./modules/observability.md)
   - llm.md *(em breve — Fase 5)*
   - email.md *(em breve — Fase 5)*
   - voice.md *(em breve — Fase 5)*
