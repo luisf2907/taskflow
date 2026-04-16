@@ -37,16 +37,12 @@ export function useRealtimeBoard(quadroId: string | null) {
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    console.log("[realtime] useRealtimeBoard effect — quadroId:", quadroId, "driver:", driver());
     if (!quadroId) return;
     const d = driver();
 
     // ─── pg-notify-sse (self-hosted) ───
     if (d === "pg-notify-sse") {
-      console.log("[realtime] opening SSE pra board", quadroId);
       const es = new EventSource(`/api/realtime/board/${quadroId}`);
-      es.addEventListener("open", () => console.log("[realtime] SSE aberto pra board", quadroId));
-      es.addEventListener("message", (e) => console.log("[realtime] SSE msg:", e.data));
       esRef.current = es;
 
       es.addEventListener("cartoes", () => debouncedMutate(`cartoes-${quadroId}`));
