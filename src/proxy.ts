@@ -52,6 +52,16 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  // /api/realtime/* exige sessao — o handler valida, nao o proxy
+  // (proxy nao pode ler request body nem redirect em SSE). Bloqueamos
+  // aqui apenas se claramente sem auth.
+  if (pathname.startsWith("/api/realtime/")) {
+    if (!user) {
+      return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+    }
+    return response;
+  }
+
   // /api/auth/solo-login e publico — faz auto-login em AUTH_MODE=solo
   if (pathname.startsWith("/api/auth/solo-login")) {
     return response;

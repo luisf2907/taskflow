@@ -59,8 +59,13 @@ function computeFeatures() {
     (env.STORAGE_DRIVER as StorageDriver | undefined) ?? "supabase";
 
   // ───── Realtime ─────
+  // Preferir NEXT_PUBLIC_REALTIME_DRIVER porque features.ts e importado
+  // tanto no server quanto no client — no client so NEXT_PUBLIC_* sobrevive
+  // ao build. Server tambem usa o mesmo valor pra consistencia.
   const realtimeDriver: RealtimeDriver =
-    (env.REALTIME_DRIVER as RealtimeDriver | undefined) ?? "supabase";
+    (env.NEXT_PUBLIC_REALTIME_DRIVER as RealtimeDriver | undefined) ??
+    (env.REALTIME_DRIVER as RealtimeDriver | undefined) ??
+    "supabase";
 
   // ───── Voice ─────
   const voiceDriverRaw = env.VOICE_DRIVER as VoiceDriver | undefined;

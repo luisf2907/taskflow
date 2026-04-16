@@ -22,6 +22,12 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   NEXT_PUBLIC_SITE_URL: z.string().min(1).optional(),
+  // Mirror publico de REALTIME_DRIVER — client-side precisa saber qual driver
+  // usar (supabase.channel() vs EventSource). Operador seta os dois envs
+  // iguais no .env.local; futuro: derivar automatico via /api/features.
+  NEXT_PUBLIC_REALTIME_DRIVER: z
+    .enum(["supabase", "pg-notify-sse", "polling"])
+    .optional(),
 });
 
 const serverEnvSchema = envSchema.extend({
@@ -144,6 +150,7 @@ function parsePublicEnv() {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    NEXT_PUBLIC_REALTIME_DRIVER: process.env.NEXT_PUBLIC_REALTIME_DRIVER,
   }));
 
   if (!result.success) {
@@ -162,6 +169,7 @@ function parseServerEnv() {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    NEXT_PUBLIC_REALTIME_DRIVER: process.env.NEXT_PUBLIC_REALTIME_DRIVER,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     SUPABASE_INTERNAL_URL: process.env.SUPABASE_INTERNAL_URL,
     ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,

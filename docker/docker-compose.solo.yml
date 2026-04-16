@@ -154,6 +154,7 @@ services:
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        NEXT_PUBLIC_REALTIME_DRIVER: ${REALTIME_DRIVER:-pg-notify-sse}
     container_name: taskflow-app
     restart: unless-stopped
     depends_on:
@@ -186,6 +187,12 @@ services:
       STORAGE_DRIVER: ${STORAGE_DRIVER:-local-disk}
       STORAGE_LOCAL_PATH: ${STORAGE_LOCAL_PATH:-/app/storage}
       REALTIME_DRIVER: ${REALTIME_DRIVER:-pg-notify-sse}
+      NEXT_PUBLIC_REALTIME_DRIVER: ${REALTIME_DRIVER:-pg-notify-sse}
+      # pg-listen precisa das credenciais do Postgres pra abrir conexao
+      # LISTEN. Replica as do container postgres.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: taskflow
       LLM_DRIVER: ${LLM_DRIVER:-disabled}
       LLM_BASE_URL: ${LLM_BASE_URL:-}
       LLM_MODEL: ${LLM_MODEL:-}
