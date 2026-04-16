@@ -174,6 +174,11 @@ services:
       # (http://localhost:8000) nao resolve. Usamos hostname do nginx na rede
       # docker. server.ts e proxy.ts preferem esta URL quando presente.
       SUPABASE_INTERNAL_URL: http://nginx:8000
+      # JWT_SECRET e usado:
+      #   - Pelo driver local-disk pra assinar HMAC em signed upload/download URLs
+      #   - Pode ser usado futuramente pra validar JWTs em rotas que nao passam
+      #     pelo gateway nginx (tipo webhooks internos)
+      JWT_SECRET: ${JWT_SECRET}
 
       # Driver config (do .env.solo)
       AUTH_MODE: ${AUTH_MODE:-solo}
