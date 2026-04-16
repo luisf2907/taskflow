@@ -6,9 +6,14 @@ import { createServerClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/storage/upload?bucket=<b>&path=<p>[&token=<t>]
+ * PUT  /api/storage/upload?bucket=<b>&path=<p>[&token=<t>]
  *
  * Upload de arquivo. Body = multipart/form-data com campo "file" OU
  * body cru (raw bytes) se Content-Type diferente de multipart.
+ *
+ * POST = do browser com multipart (wiki, anexos).
+ * PUT  = do browser com raw body (reunioes-audio — signed upload URL,
+ *        compat com clientes que assumem semantica S3/Supabase).
  *
  * Auth:
  * - Se ?token= presente (local-disk signed upload URL), valida HMAC
@@ -99,3 +104,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
+
+// PUT comparte a mesma logica que POST — clientes que assumem semantica
+// S3/Supabase (signed upload URL + PUT raw body) funcionam sem mudanca.
+export const PUT = POST;

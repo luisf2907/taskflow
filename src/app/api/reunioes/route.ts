@@ -19,6 +19,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { applyRateLimitAsync } from "@/lib/api-utils";
+import { getStorageDriver } from "@/lib/drivers/storage/factory";
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 
 const BUCKET = "reunioes-audio";
@@ -120,17 +121,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Gera signed upload URL (service role pra poder mesmo com bucket privado)
-  const admin = createServiceClient();
-  const { data: uploadData, error: uploadErr } = await admin.storage
-    .from(BUCKET)
-    .createSignedUploadUrl(audioPath);
-
-  if (uploadErr || !uploadData) {
+  // Gera signed upload URL via driver — agnostico ao backend
+  // (Supabase Storage em cloud, HMAC em local-disk self-hosted).
+  let uploadData: { url: string; token: string; path: string };
+  try {
+    uploadData = await getStorageDriver().createSignedUploadUrl(
+      BUCKET,
+      audioPath,
+      UPLOAD_TTL_SECONDS,
+    );
+  } catch (err) {
     // Rollback: apaga a reuniao que acabamos de criar
+    const admin = createServiceClient();
     await admin.from("reunioes").delete().eq("id", reuniao.id);
+    const msg = err instanceof Error ? err.message : "erro desconhecido";
     return NextResponse.json(
-      { error: `Erro ao gerar upload URL: ${uploadErr?.message}` },
+      { error: `Erro ao gerar upload URL: ${msg}` },
       { status: 500 },
     );
   }
@@ -138,8 +144,8 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     reuniao,
     upload: {
-      path: audioPath,
-      signed_url: uploadData.signedUrl,
+      path: uploadData.path,
+      signed_url: uploadData.url,
       token: uploadData.token,
       expires_in_seconds: UPLOAD_TTL_SECONDS,
     },
