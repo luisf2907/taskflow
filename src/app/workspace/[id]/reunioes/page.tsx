@@ -437,7 +437,10 @@ function getStatusInfo(status: ReuniaoStatus): {
   }
 }
 
-function formatDuration(seconds: number): string {
+function formatDuration(seconds: number | null | undefined): string | null {
+  // Guard contra Infinity/NaN/negativos — acontece quando o worker de voz
+  // nao determina a duracao (tipico de WebM do MediaRecorder).
+  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return null;
   const m = Math.floor(seconds / 60);
   const s = Math.round(seconds % 60);
   if (m === 0) return `${s}s`;

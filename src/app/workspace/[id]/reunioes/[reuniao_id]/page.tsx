@@ -140,22 +140,51 @@ export default function ReuniaoDetailPage() {
     const onTime = () => setCurrentMs(audio.currentTime * 1000);
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
-    const onMeta = () => setDuration(audio.duration * 1000);
+    // WebM do MediaRecorder tipicamente reporta duration=Infinity no
+    // loadedmetadata (o container nao tem cue points). So aceitamos valores
+    // finitos; o fallback via duracao_seg do DB acontece mais abaixo.
+    const onMeta = () => {
+      const d = audio.duration;
+      if (Number.isFinite(d)) setDuration(d * 1000);
+    };
+    // O browser recalcula a duration depois de certas interacoes (ex: seek
+    // ate o fim). Quando isso acontece o evento `durationchange` dispara
+    // com o valor real — captamos pra atualizar.
+    const onDurChange = () => {
+      const d = audio.duration;
+      if (Number.isFinite(d)) setDuration(d * 1000);
+    };
     const onEnded = () => setIsPlaying(false);
 
     audio.addEventListener("timeupdate", onTime);
     audio.addEventListener("play", onPlay);
     audio.addEventListener("pause", onPause);
     audio.addEventListener("loadedmetadata", onMeta);
+    audio.addEventListener("durationchange", onDurChange);
     audio.addEventListener("ended", onEnded);
     return () => {
       audio.removeEventListener("timeupdate", onTime);
       audio.removeEventListener("play", onPlay);
       audio.removeEventListener("pause", onPause);
       audio.removeEventListener("loadedmetadata", onMeta);
+      audio.removeEventListener("durationchange", onDurChange);
       audio.removeEventListener("ended", onEnded);
     };
   }, [audioUrl]);
+
+  // Fallback: se o browser nao conseguiu determinar duration (WebM tipico),
+  // usa duracao_seg do DB (vem do worker de voz, confiavel).
+  useEffect(() => {
+    if (duration > 0) return;
+    const dbSeg = reuniao?.duracao_seg;
+    if (
+      typeof dbSeg === "number" &&
+      Number.isFinite(dbSeg) &&
+      dbSeg > 0
+    ) {
+      setDuration(dbSeg * 1000);
+    }
+  }, [duration, reuniao?.duracao_seg]);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
@@ -309,12 +338,15 @@ export default function ReuniaoDetailPage() {
                 <span>
                   {new Date(reuniao.criado_em).toLocaleString("pt-BR")}
                 </span>
-                {reuniao.duracao_seg !== null && (
-                  <>
-                    <span>&middot;</span>
-                    <span>{formatDuration(reuniao.duracao_seg)}</span>
-                  </>
-                )}
+                {(() => {
+                  const dur = formatDuration(reuniao.duracao_seg);
+                  return dur ? (
+                    <>
+                      <span>&middot;</span>
+                      <span>{dur}</span>
+                    </>
+                  ) : null;
+                })()}
                 <span>&middot;</span>
                 <StatusBadge status={reuniao.status} />
               </div>
@@ -930,13 +962,19 @@ function InfoBox({
 }
 
 function formatTime(ms: number): string {
+  // Guard contra Infinity/NaN/negativos — WebM sem cue points pode reportar
+  // audio.duration = Infinity ate que o browser calcule a duracao real.
+  if (!Number.isFinite(ms) || ms < 0) return "0:00";
   const totalSec = Math.floor(ms / 1000);
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function formatDuration(seconds: number): string {
+function formatDuration(seconds: number | null | undefined): string | null {
+  // Guard contra Infinity/NaN/negativos — acontece quando o worker de voz
+  // nao determina a duracao (tipico de WebM do MediaRecorder).
+  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return null;
   const m = Math.floor(seconds / 60);
   const s = Math.round(seconds % 60);
   if (m === 0) return `${s}s`;

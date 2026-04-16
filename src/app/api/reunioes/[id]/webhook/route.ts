@@ -227,7 +227,15 @@ export async function POST(
     .update({
       status: "done",
       erro_mensagem: null,
-      duracao_seg: result.duration_s,
+      // Sanitiza: worker pode mandar Infinity/NaN/negativo quando nao consegue
+      // determinar a duracao (tipico de WebM sem cue points). Guardamos null
+      // nesses casos e o frontend omite o campo no render.
+      duracao_seg:
+        typeof result.duration_s === "number" &&
+        Number.isFinite(result.duration_s) &&
+        result.duration_s >= 0
+          ? result.duration_s
+          : null,
       language: result.language,
       language_probability: result.language_probability,
       timings_ms: result.timings_ms,

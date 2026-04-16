@@ -125,7 +125,13 @@ export async function POST(request: NextRequest) {
           role: "user",
           parts: [
             {
-              text: `${PROMPT}\n\nTITULO DA REUNIAO: ${reuniao.titulo}\nDURACAO: ${reuniao.duracao_seg ? Math.round(reuniao.duracao_seg / 60) + " minutos" : "desconhecida"}\n\nTRANSCRICAO:\n${transcricao}`,
+              text: `${PROMPT}\n\nTITULO DA REUNIAO: ${reuniao.titulo}\nDURACAO: ${
+                typeof reuniao.duracao_seg === "number" &&
+                Number.isFinite(reuniao.duracao_seg) &&
+                reuniao.duracao_seg > 0
+                  ? Math.round(reuniao.duracao_seg / 60) + " minutos"
+                  : "desconhecida"
+              }\n\nTRANSCRICAO:\n${transcricao}`,
             },
           ],
         },
