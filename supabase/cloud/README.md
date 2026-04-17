@@ -3,106 +3,110 @@
 Guia pra configurar o banco de dados num projeto Supabase Cloud (sem Docker).
 
 > **Importante:** As migrations em `supabase/migrations/` estão fora de sync
-> (drift histórico). O schema consolidado e correto vive em
-> `supabase/self-hosted/bootstrap.sql`, gerado a partir do dump de produção.
+> (drift histórico). Os arquivos nesta pasta (`supabase/cloud/`) são extraídos
+> do `supabase/self-hosted/bootstrap.sql` (fonte de verdade, dump de produção)
+> e estão prontos pra colar no SQL Editor.
 
 ---
 
+## Arquivos (rodar na ordem)
+
+```
+supabase/cloud/
+├── 01-extensions.sql                        # Extensions (pgvector, pgcrypto)
+├── 02-schema.sql                            # Schema público inteiro (~2580 linhas)
+├── 03-storage-buckets.sql                   # Cria 3 buckets (wiki, reunioes-audio, anexos)
+├── 04-storage-policies.sql                  # RLS em storage.objects (todos os buckets)
+├── 05-migration-045-anexos-policies.sql     # Fix segurança bucket anexos
+├── 06-migration-046-must-change-password.sql # Coluna must_change_password em perfis
+└── README.md                                # Este guia
+```
+
 ## Resumo
 
-| Passo | O que roda | Onde |
-|-------|-----------|------|
-| 1 | Habilitar extensions | Dashboard → Database → Extensions |
-| 2 | Schema público (tabelas, funções, RLS) | SQL Editor |
-| 3 | Storage buckets | Dashboard → Storage |
-| 4 | Storage policies | SQL Editor |
-| 5 | Migrations recentes (045, 046) | SQL Editor |
-| 6 | Habilitar Realtime nas tabelas | Dashboard → Database → Replication |
+| Passo | Arquivo | Onde rodar |
+|-------|---------|------------|
+| 1 | `01-extensions.sql` | Dashboard → Database → Extensions (ou SQL Editor) |
+| 2 | `02-schema.sql` | SQL Editor |
+| 3 | `03-storage-buckets.sql` | Dashboard → Storage (ou SQL Editor) |
+| 4 | `04-storage-policies.sql` | SQL Editor |
+| 5 | `05-migration-045-*.sql` | SQL Editor |
+| 6 | `06-migration-046-*.sql` | SQL Editor |
+| 7 | Habilitar Realtime | Dashboard → Database → Replication |
 
 ---
 
 ## Passo 1 — Extensions
 
-No Dashboard do Supabase: **Database → Extensions**. Habilite:
+**Arquivo:** `01-extensions.sql`
+
+No Dashboard: **Database → Extensions**. Habilite:
 
 - **vector** (pgvector) — obrigatória, usada pra voice embeddings
 - **pgcrypto** — usada pelo GoTrue internamente
+
+Ou cole o conteúdo de `01-extensions.sql` no SQL Editor.
 
 ---
 
 ## Passo 2 — Schema público
 
-Abra **SQL Editor** no Dashboard e rode o conteúdo das **seções 1 e 2** do
-`supabase/self-hosted/bootstrap.sql` (linhas 24 até ~2614).
+**Arquivo:** `02-schema.sql` (~2580 linhas)
 
+Abra **SQL Editor** no Dashboard e cole o conteúdo inteiro do arquivo.
 Isso cria todas as tabelas, indexes, constraints, functions, triggers e
 RLS policies do schema `public`.
 
-### Como encontrar as seções
+> **Se der erro em `ALTER TABLE ... OWNER TO "postgres"`:** ignore —
+> Supabase Cloud usa roles diferentes. As tabelas são criadas normalmente.
 
-```
--- Seção 1: Extensions (linha 24-31)     → JÁ FEZ no passo 1, pode pular
--- Seção 2: Schema public (linha 33-2614) → RODAR TUDO
--- Seção 3: Storage buckets (linha 2616)  → Passo 3 (Dashboard)
--- Seção 4: Storage policies (linha 2629) → Passo 4
--- Seção 5: Realtime triggers (linha 2687)→ NÃO RODAR (é pra self-hosted)
-```
-
-> **Dica:** copie as linhas 33 até 2614 e cole no SQL Editor. Se der erro
-> em `ALTER TABLE ... OWNER TO "postgres"`, ignore — Supabase Cloud usa
-> roles diferentes. As tabelas são criadas normalmente.
-
-> **Se o SQL for grande demais pro editor:** divida em blocos (tabelas
-> primeiro, depois indexes/constraints, depois functions/triggers, depois
-> policies). Cada bloco roda independente.
+> **Se o SQL for grande demais pro editor:** divida em blocos (copie
+> metade, rode, copie o resto, rode). Cada statement é independente.
 
 ---
 
 ## Passo 3 — Storage buckets
 
-No Dashboard: **Storage → New bucket**. Crie 3 buckets:
+**Arquivo:** `03-storage-buckets.sql`
 
-| Nome | Público | Limite de tamanho | MIME types |
-|------|---------|-------------------|------------|
+Opção A — **Dashboard:** Storage → New bucket. Crie 3:
+
+| Nome | Público | Limite | MIME types |
+|------|---------|--------|------------|
 | `wiki` | ✅ Sim | 5 MB | image/jpeg, image/png, image/gif, image/webp |
 | `reunioes-audio` | ❌ Não | 50 MB | (todos) |
 | `anexos` | ✅ Sim | 50 MB | (todos) |
+
+Opção B — Cole `03-storage-buckets.sql` no SQL Editor.
 
 ---
 
 ## Passo 4 — Storage policies
 
-No **SQL Editor**, rode a **seção 4** do `bootstrap.sql` (linhas 2629-2684).
+**Arquivo:** `04-storage-policies.sql`
 
-São as policies RLS em `storage.objects` pra controlar quem pode
-upload/delete em cada bucket. Inclui as policies do bucket `anexos`
-(fix de segurança).
-
----
-
-## Passo 5 — Migrations recentes
-
-Ainda no **SQL Editor**, rode esses 2 arquivos na ordem:
-
-### `supabase/migrations/045_anexos_storage_policies.sql`
-
-Policies de segurança no bucket `anexos`. Se já rodou a seção 4 do
-bootstrap.sql acima, essas policies já existem — o arquivo usa
-`DROP POLICY IF EXISTS` e é seguro re-rodar.
-
-### `supabase/migrations/046_perfis_must_change_password.sql`
-
-Adiciona coluna `must_change_password` na tabela `perfis` (usada pelo
-CLI `user:create` no modo team pra forçar troca de senha no primeiro
-login).
-
-```sql
-ALTER TABLE public.perfis ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false;
-```
+Cole no SQL Editor. São as policies RLS em `storage.objects` pra
+controlar quem pode upload/delete em cada bucket (wiki, reunioes-audio,
+anexos). Inclui o fix de segurança do bucket `anexos`.
 
 ---
 
-## Passo 6 — Habilitar Realtime
+## Passo 5 — Migrations
+
+Cole no SQL Editor, **na ordem**:
+
+**Arquivo:** `05-migration-045-anexos-policies.sql`
+
+Policies extras do bucket `anexos`. Se já rodou o passo 4, essas
+já existem — `DROP POLICY IF EXISTS` torna seguro re-rodar.
+
+**Arquivo:** `06-migration-046-must-change-password.sql`
+
+Adiciona coluna `must_change_password` na tabela `perfis`.
+
+---
+
+## Passo 6 — Habilitar Realtime (sem arquivo, via Dashboard)
 
 O app usa Supabase Realtime (`postgres_changes`) pra atualizar o kanban,
 notificações, planning poker, etc. em tempo real.
