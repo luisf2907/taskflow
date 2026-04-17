@@ -1,0 +1,137 @@
+name: CI — Self-Hosted Smoke Test
+
+on:
+  push:
+    branches: [feat/self-hosted, main]
+  pull_request:
+    branches: [feat/self-hosted, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke-test:
+    name: Stack solo smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Generate .env.local
+        run: node scripts/setup-env.mjs solo
+
+      - name: Build and start stack
+        run: |
+          docker compose -f docker/docker-compose.solo.yml --env-file .env.local up -d --build
+          echo "Stack starting..."
+
+      - name: Wait for bootstrap
+        run: |
+          echo "Waiting for bootstrap container to finish..."
+          for i in $(seq 1 60); do
+            STATUS=$(docker inspect taskflow-bootstrap --format='{{.State.Status}}' 2>/dev/null || echo "missing")
+            if [ "$STATUS" = "exited" ]; then
+              EXIT_CODE=$(docker inspect taskflow-bootstrap --format='{{.State.ExitCode}}')
+              if [ "$EXIT_CODE" = "0" ]; then
+                echo "✓ Bootstrap completed successfully"
+                break
+              else
+                echo "✗ Bootstrap failed with exit code $EXIT_CODE"
+                docker logs taskflow-bootstrap
+                exit 1
+              fi
+            fi
+            sleep 5
+          done
+
+      - name: Wait for app healthy
+        run: |
+          echo "Waiting for app to be healthy..."
+          for i in $(seq 1 30); do
+            HEALTH=$(docker inspect taskflow-app --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' 2>/dev/null || echo "missing")
+            if [ "$HEALTH" = "healthy" ]; then
+              echo "✓ App is healthy"
+              break
+            fi
+            if [ "$i" = "30" ]; then
+              echo "✗ App not healthy after 150s"
+              docker logs taskflow-app --tail 30
+              exit 1
+            fi
+            sleep 5
+          done
+
+      - name: CLI health check
+        run: node --env-file=.env.local scripts/cli.mjs health
+
+      - name: Create admin user
+        run: |
+          node --env-file=.env.local scripts/cli.mjs bootstrap \
+            --admin-email admin@ci.test \
+            --admin-password testpass123 \
+            --admin-name "CI Admin" \
+            --workspace-name "CI Workspace"
+
+      - name: Create team user
+        run: |
+          node --env-file=.env.local scripts/cli.mjs user:create \
+            --email user@ci.test \
+            --password testpass123 \
+            --name "CI User" \
+            --no-password-change
+
+      - name: Test API endpoints
+        run: |
+          # Health endpoint
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health)
+          [ "$STATUS" = "200" ] && echo "✓ /api/health → 200" || { echo "✗ /api/health → $STATUS"; exit 1; }
+
+          # Login page loads
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/login)
+          [ "$STATUS" = "200" ] && echo "✓ /login → 200" || { echo "✗ /login → $STATUS"; exit 1; }
+
+          # Supabase gateway
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health)
+          [ "$STATUS" = "200" ] && echo "✓ gateway /health → 200" || { echo "✗ gateway /health → $STATUS"; exit 1; }
+
+          # GoTrue health
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/auth/v1/health)
+          [ "$STATUS" = "200" ] && echo "✓ /auth/v1/health → 200" || { echo "✗ /auth/v1/health → $STATUS"; exit 1; }
+
+      - name: Test RLS isolation
+        run: node --env-file=.env.local scripts/test-rls.mjs
+
+      - name: Test backup
+        run: node --env-file=.env.local scripts/cli.mjs backup --db-only --out ./test-backup
+
+      - name: Stack logs (on failure)
+        if: failure()
+        run: |
+          echo "=== App logs ==="
+          docker logs taskflow-app --tail 50
+          echo "=== GoTrue logs ==="
+          docker logs taskflow-gotrue --tail 30
+          echo "=== Bootstrap logs ==="
+          docker logs taskflow-bootstrap --tail 30
+          echo "=== Postgres logs ==="
+          docker logs taskflow-postgres --tail 30
+
+      - name: Cleanup
+        if: always()
+        run: docker compose -f docker/docker-compose.solo.yml --env-file .env.local down -v
