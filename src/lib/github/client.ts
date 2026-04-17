@@ -1,3 +1,4 @@
+import { getVcsBaseUrl } from "@/lib/drivers/vcs/config";
 import type {
   GitHubBranch,
   GitHubCommit,
@@ -6,8 +7,11 @@ import type {
   GitHubRepo,
 } from "@/types/github";
 
-const BASE = "https://api.github.com";
-const FETCH_TIMEOUT = 10_000; // 10s timeout para todas as chamadas GitHub
+// Base URL do VCS — default https://api.github.com, override via
+// VCS_API_URL (GitHub Enterprise ou Gitea). Resolvido por call pra
+// refletir env nos testes, mas eh stateless/idempotente.
+const BASE = getVcsBaseUrl();
+const FETCH_TIMEOUT = 10_000; // 10s timeout para todas as chamadas
 
 // Cache simples em memória para chamadas publicas (TTL de 60s)
 const publicCache = new Map<string, { data: unknown; expiry: number }>();
@@ -142,13 +146,19 @@ export async function buscarLinguagens(
 
 // Parsear URL ou "owner/repo" pra extrair owner e nome
 export function parsearRepo(input: string): { owner: string; nome: string } | null {
-  // Tentar URL: https://github.com/owner/repo
-  const urlMatch = input.match(/github\.com\/([^/]+)\/([^/\s?#]+)/);
-  if (urlMatch) {
-    return { owner: urlMatch[1], nome: urlMatch[2].replace(/\.git$/, "") };
+  // Tentar URL completa: https://github.com/owner/repo, https://gitea.example.com/owner/repo, etc.
+  // Aceita qualquer hostname (nao mais hardcoded github.com).
+  try {
+    const url = new URL(input.trim());
+    const parts = url.pathname.split("/").filter(Boolean);
+    if (parts.length >= 2) {
+      return { owner: parts[0], nome: parts[1].replace(/\.git$/, "") };
+    }
+  } catch {
+    // Nao e URL valida — tenta owner/repo abaixo
   }
 
-  // Tentar owner/repo
+  // Tentar owner/repo (sem hostname)
   const slashMatch = input.trim().match(/^([^/\s]+)\/([^/\s]+)$/);
   if (slashMatch) {
     return { owner: slashMatch[1], nome: slashMatch[2].replace(/\.git$/, "") };

@@ -1,0 +1,123 @@
+# ═══════════════════════════════════════════════════════════════════════
+# Taskflow dev — infra minima pra rodar `npm run dev` no host
+# ═══════════════════════════════════════════════════════════════════════
+# So sobe postgres + gotrue + postgrest + nginx. O app roda direto no
+# host com `npm run dev` (hot reload, devtools, breakpoints). Ideal
+# pra desenvolvimento do codigo da aplicacao.
+#
+# Uso:
+#   1. node scripts/setup-env.mjs solo   (gera .env.local)
+#   2. docker compose -f docker/docker-compose.dev.yml --env-file .env.local up -d
+#   3. npm run dev                        (app no host com Turbopack)
+#   4. Abre http://localhost:3000
+#
+# Diferenca do solo: NAO inclui o container `app` (roda no host).
+# O bootstrap aplica schema normalmente.
+# ═══════════════════════════════════════════════════════════════════════
+
+name: taskflow-dev
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: taskflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: taskflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d taskflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "5432:5432"   # Exposto pro host (next dev conecta direto)
+
+  gotrue:
+    image: supabase/gotrue:v2.168.0
+    container_name: taskflow-gotrue
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${NEXT_PUBLIC_SUPABASE_URL}/auth/v1
+      GOTRUE_API_EXTERNAL_URL: ${NEXT_PUBLIC_SUPABASE_URL}/auth/v1
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/taskflow?sslmode=disable&search_path=auth
+      GOTRUE_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      GOTRUE_URI_ALLOW_LIST: ${NEXT_PUBLIC_SITE_URL}/**,${NEXT_PUBLIC_SITE_URL}/auth/callback,${NEXT_PUBLIC_SITE_URL}/reset-password
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_ISSUER: ${NEXT_PUBLIC_SUPABASE_URL}/auth/v1
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_DISABLE_SIGNUP: "true"
+      GOTRUE_SMTP_ADMIN_EMAIL: admin@taskflow.local
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: 100
+      GOTRUE_RATE_LIMIT_HEADER: X-Forwarded-For
+    expose:
+      - "9999"
+
+  postgrest:
+    image: postgrest/postgrest:v12.2.0
+    container_name: taskflow-postgrest
+    restart: unless-stopped
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/taskflow
+      PGRST_DB_SCHEMAS: public,storage
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_EXP: 3600
+      PGRST_DB_MAX_ROWS: 1000
+    expose:
+      - "3000"
+
+  bootstrap:
+    image: postgres:17-alpine
+    container_name: taskflow-bootstrap
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      gotrue:
+        condition: service_started
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ../supabase/self-hosted/bootstrap.sql:/bootstrap.sql:ro
+      - ../supabase/self-hosted/realtime-triggers.sql:/realtime-triggers.sql:ro
+      - ../supabase/migrations:/migrations:ro
+      - ../scripts/bootstrap.sh:/bootstrap.sh:ro
+    command: ["/bin/sh", "/bootstrap.sh"]
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: taskflow-nginx
+    restart: unless-stopped
+    depends_on:
+      gotrue:
+        condition: service_started
+      postgrest:
+        condition: service_started
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres-data:
+    name: taskflow-postgres-data

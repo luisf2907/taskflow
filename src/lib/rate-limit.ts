@@ -1,14 +1,18 @@
 import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import { Redis as UpstashRedis } from "@upstash/redis";
+import IORedis from "ioredis";
 
 /**
- * Rate limiter backed by Upstash Redis for serverless compatibility.
- * Falls back to in-memory if UPSTASH_REDIS_REST_URL is not configured.
+ * Rate limiter with 3 backends (priority order):
  *
- * Why Upstash over in-memory?
- * In serverless (Vercel), each invocation can run on a different instance —
- * an in-memory Map is NOT shared between them, making rate limiting ineffective.
- * Upstash Redis is shared, HTTP-based (~1-5ms latency), and works on Edge.
+ * 1. REDIS_URL (TCP nativo) — pra self-hosted com container Redis local.
+ *    Usa ioredis + sliding window via INCR/EXPIRE.
+ *
+ * 2. UPSTASH_REDIS_REST_URL + TOKEN (HTTP REST) — pra Vercel/serverless.
+ *    Usa @upstash/ratelimit com sliding window.
+ *
+ * 3. In-memory Map — fallback quando nenhum Redis configurado. Suficiente
+ *    pra dev local e self-hosted com 1 container app.
  */
 
 // =============================================
@@ -59,26 +63,96 @@ function memoryRateLimit(
 }
 
 // =============================================
-// Upstash Redis rate limiter (production)
+// Redis nativo via ioredis (self-hosted)
 // =============================================
 
-let redis: Redis | null = null;
+let ioRedisClient: IORedis | null = null;
+let ioRedisAvailable = true; // flipped to false on connection error
+
+function getIORedis(): IORedis | null {
+  if (!ioRedisAvailable) return null;
+  if (ioRedisClient) return ioRedisClient;
+
+  const url = process.env.REDIS_URL;
+  if (!url) return null;
+
+  try {
+    ioRedisClient = new IORedis(url, {
+      maxRetriesPerRequest: 1,
+      lazyConnect: true,
+      enableOfflineQueue: false,
+      connectTimeout: 3000,
+    });
+    ioRedisClient.on("error", (err) => {
+      console.warn("[rate-limit] Redis connection error:", err.message);
+      ioRedisAvailable = false;
+    });
+    ioRedisClient.connect().catch(() => {
+      ioRedisAvailable = false;
+    });
+    return ioRedisClient;
+  } catch {
+    ioRedisAvailable = false;
+    return null;
+  }
+}
+
+async function ioRedisRateLimit(
+  key: string,
+  maxRequests: number,
+  windowMs: number
+): Promise<{ ok: boolean; retryAfter?: number }> {
+  const client = getIORedis();
+  if (!client) return memoryRateLimit(key, maxRequests, windowMs);
+
+  const windowSec = Math.ceil(windowMs / 1000);
+  const redisKey = `rl:${key}`;
+
+  const results = await client
+    .multi()
+    .incr(redisKey)
+    .ttl(redisKey)
+    .exec();
+
+  if (!results) return memoryRateLimit(key, maxRequests, windowMs);
+
+  const count = results[0][1] as number;
+  const ttl = results[1][1] as number;
+
+  // Se key acabou de ser criada (count=1) ou expirou (ttl=-1), seta TTL
+  if (count === 1 || ttl === -1) {
+    await client.expire(redisKey, windowSec);
+  }
+
+  if (count > maxRequests) {
+    const retryAfter = ttl > 0 ? ttl : windowSec;
+    return { ok: false, retryAfter };
+  }
+
+  return { ok: true };
+}
+
+// =============================================
+// Upstash Redis rate limiter (serverless/cloud)
+// =============================================
+
+let upstashRedis: UpstashRedis | null = null;
 const rateLimiters = new Map<string, Ratelimit>();
 
-function getRedis(): Redis | null {
-  if (redis) return redis;
+function getUpstashRedis(): UpstashRedis | null {
+  if (upstashRedis) return upstashRedis;
 
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) return null;
 
-  redis = new Redis({ url, token });
-  return redis;
+  upstashRedis = new UpstashRedis({ url, token });
+  return upstashRedis;
 }
 
 function getUpstashLimiter(prefix: string, maxRequests: number, windowMs: number): Ratelimit | null {
-  const r = getRedis();
+  const r = getUpstashRedis();
   if (!r) return null;
 
   const cacheKey = `${prefix}:${maxRequests}:${windowMs}`;
@@ -100,35 +174,44 @@ function getUpstashLimiter(prefix: string, maxRequests: number, windowMs: number
 // =============================================
 
 /**
- * Async rate limit — uses Upstash Redis in production, in-memory as fallback.
+ * Async rate limit.
+ * Priority: REDIS_URL (ioredis) > Upstash (HTTP) > in-memory.
  */
 export async function rateLimitAsync(
   key: string,
   { maxRequests = 20, windowMs = 60_000 } = {}
 ): Promise<{ ok: boolean; retryAfter?: number }> {
-  const limiter = getUpstashLimiter("async", maxRequests, windowMs);
-
-  if (!limiter) {
-    return memoryRateLimit(key, maxRequests, windowMs);
-  }
-
-  try {
-    const result = await limiter.limit(key);
-    if (!result.success) {
-      const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
-      return { ok: false, retryAfter: Math.max(retryAfter, 1) };
+  // 1. Redis nativo (self-hosted)
+  if (process.env.REDIS_URL && ioRedisAvailable) {
+    try {
+      return await ioRedisRateLimit(key, maxRequests, windowMs);
+    } catch (err) {
+      console.warn("[rate-limit] ioredis failed, trying fallback:", err instanceof Error ? err.message : err);
     }
-    return { ok: true };
-  } catch (err) {
-    console.warn("[rate-limit] Upstash failed, using in-memory:", err instanceof Error ? err.message : err);
-    return memoryRateLimit(key, maxRequests, windowMs);
   }
+
+  // 2. Upstash (cloud/serverless)
+  const limiter = getUpstashLimiter("async", maxRequests, windowMs);
+  if (limiter) {
+    try {
+      const result = await limiter.limit(key);
+      if (!result.success) {
+        const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
+        return { ok: false, retryAfter: Math.max(retryAfter, 1) };
+      }
+      return { ok: true };
+    } catch (err) {
+      console.warn("[rate-limit] Upstash failed, using in-memory:", err instanceof Error ? err.message : err);
+    }
+  }
+
+  // 3. In-memory fallback
+  return memoryRateLimit(key, maxRequests, windowMs);
 }
 
 /**
  * Synchronous in-memory rate limiter.
  * Used by applyRateLimit in api-utils.ts for non-async contexts.
- * In production with Upstash configured, prefer rateLimitAsync.
  */
 export function rateLimit(
   key: string,

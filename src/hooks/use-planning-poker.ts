@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { debouncedMutate } from "@/lib/debounced-mutate";
+import { features } from "@/lib/features";
 import { PokerSessao, PokerVoto } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useEffect, useRef, useCallback, useMemo } from "react";
@@ -73,7 +74,19 @@ export function usePlanningPoker(workspaceId: string) {
   // =============================================
   useEffect(() => {
     if (!workspaceId) return;
+    const driver = features.realtime.driver;
 
+    // ─── pg-notify-sse: reusa endpoint de workspace (ja inclui poker) ───
+    if (driver === "pg-notify-sse") {
+      const es = new EventSource(`/api/realtime/workspace/${workspaceId}`);
+      es.addEventListener("poker_sessoes", () => debouncedMutate(key));
+      es.addEventListener("poker_votos", () => debouncedMutate(key));
+      return () => es.close();
+    }
+
+    if (driver === "polling") return;
+
+    // ─── supabase (cloud default) ───
     const channel = supabase
       .channel(`poker-${workspaceId}`)
       .on(

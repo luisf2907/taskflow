@@ -1,0 +1,233 @@
+# ═══════════════════════════════════════════════════════════════════════
+# Taskflow self-hosted — perfil SOLO
+# ═══════════════════════════════════════════════════════════════════════
+# Stack minimo pra rodar 100% local, ~500MB RAM total.
+#
+# Servicos:
+#   postgres  — Postgres 17 com pgvector preinstalado (~100MB)
+#   gotrue    — Auth (closed: sem signup, sem email) (~50MB)
+#   postgrest — API REST sobre Postgres (~50MB)
+#   nginx     — Gateway routing (/auth/v1 e /rest/v1) (~10MB)
+#   bootstrap — One-shot: aplica bootstrap.sql e sai
+#   app       — Next.js standalone (~200MB)
+#
+# Uso:
+#   1. Copia .env.solo.example para .env.local
+#   2. Rode scripts/gen-secrets.sh >> .env.local pra gerar secrets
+#   3. docker compose -f docker/docker-compose.solo.yml --env-file .env.local up
+#   4. Primeiro user: docker compose exec app npx taskflow bootstrap
+#   5. Abre http://localhost:3000
+# ═══════════════════════════════════════════════════════════════════════
+
+name: taskflow-solo
+
+services:
+  # ─────────────────────────────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: taskflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: taskflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d taskflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    # So expoe pra dentro da rede — nenhuma porta publicada
+    expose:
+      - "5432"
+
+  # ─────────────────────────────────────────────────────────────────────
+  gotrue:
+    image: supabase/gotrue:v2.168.0
+    container_name: taskflow-gotrue
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      # URL externa que clientes usam pra alcancar o GoTrue. No solo, e o
+      # gateway nginx que roteia /auth/v1/* -> gotrue:9999. Usado pra
+      # montar redirect URLs de OAuth e emails.
+      API_EXTERNAL_URL: ${NEXT_PUBLIC_SUPABASE_URL}/auth/v1
+      GOTRUE_API_EXTERNAL_URL: ${NEXT_PUBLIC_SUPABASE_URL}/auth/v1
+
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/taskflow?sslmode=disable&search_path=auth
+
+      GOTRUE_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      GOTRUE_URI_ALLOW_LIST: ${NEXT_PUBLIC_SITE_URL}/**,${NEXT_PUBLIC_SITE_URL}/auth/callback,${NEXT_PUBLIC_SITE_URL}/reset-password
+
+      # JWT — usado pra assinar access tokens
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_ISSUER: ${NEXT_PUBLIC_SUPABASE_URL}/auth/v1
+      GOTRUE_JWT_AUD: authenticated
+
+      # Solo mode: sem signup, sem email, admin cria via CLI
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_DISABLE_SIGNUP: "true"
+      GOTRUE_SMTP_ADMIN_EMAIL: admin@taskflow.local
+
+      # Rate limiting (protege bruteforce)
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: 100
+      GOTRUE_RATE_LIMIT_HEADER: X-Forwarded-For
+    expose:
+      - "9999"
+    # GoTrue e uma imagem distroless — sem wget/curl/bash. Usamos um check
+    # externo via container postgres (que tem wget/pg_isready) pra validar
+    # que gotrue respondeu. Ou pulamos healthcheck e confiamos em
+    # service_started no depends_on.
+    # Por ora nao temos healthcheck interno — se precisar, o bootstrap.sh
+    # faz retry ate o schema auth aparecer.
+
+  # ─────────────────────────────────────────────────────────────────────
+  postgrest:
+    image: postgrest/postgrest:v12.2.0
+    container_name: taskflow-postgrest
+    restart: unless-stopped
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/taskflow
+      PGRST_DB_SCHEMAS: public,storage
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_EXP: 3600
+      PGRST_DB_MAX_ROWS: 1000
+    expose:
+      - "3000"
+
+  # ─────────────────────────────────────────────────────────────────────
+  bootstrap:
+    # One-shot: aplica bootstrap.sql e sai. Outros servicos esperam
+    # service_completed_successfully antes de subir.
+    image: postgres:17-alpine
+    container_name: taskflow-bootstrap
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      gotrue:
+        condition: service_started
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ../supabase/self-hosted/bootstrap.sql:/bootstrap.sql:ro
+      - ../supabase/self-hosted/realtime-triggers.sql:/realtime-triggers.sql:ro
+      - ../supabase/migrations:/migrations:ro
+      - ../scripts/bootstrap.sh:/bootstrap.sh:ro
+    command: ["/bin/sh", "/bootstrap.sh"]
+
+  # ─────────────────────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: taskflow-nginx
+    restart: unless-stopped
+    depends_on:
+      gotrue:
+        condition: service_started
+      postgrest:
+        condition: service_started
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8000:8000"
+
+  # ─────────────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.app
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        NEXT_PUBLIC_REALTIME_DRIVER: ${REALTIME_DRIVER:-pg-notify-sse}
+        NEXT_PUBLIC_VCS_TOKEN_MODE: ${VCS_TOKEN_MODE:-pat}
+        NEXT_PUBLIC_AUTH_MODE: ${AUTH_MODE:-solo}
+        NEXT_PUBLIC_GITHUB_OAUTH: ${NEXT_PUBLIC_GITHUB_OAUTH:-false}
+        NEXT_PUBLIC_OBS_DRIVER: ${OBS_DRIVER:-console}
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+    container_name: taskflow-app
+    restart: unless-stopped
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      nginx:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+
+      # Supabase core (vai pelo nginx)
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      # URL interna: de dentro do container app, NEXT_PUBLIC_SUPABASE_URL
+      # (http://localhost:8000) nao resolve. Usamos hostname do nginx na rede
+      # docker. server.ts e proxy.ts preferem esta URL quando presente.
+      SUPABASE_INTERNAL_URL: http://nginx:8000
+      # JWT_SECRET e usado:
+      #   - Pelo driver local-disk pra assinar HMAC em signed upload/download URLs
+      #   - Pode ser usado futuramente pra validar JWTs em rotas que nao passam
+      #     pelo gateway nginx (tipo webhooks internos)
+      JWT_SECRET: ${JWT_SECRET}
+
+      # Driver config (do .env.solo)
+      AUTH_MODE: ${AUTH_MODE:-solo}
+      SOLO_USER_EMAIL: ${SOLO_USER_EMAIL:-admin@taskflow.local}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local-disk}
+      STORAGE_LOCAL_PATH: ${STORAGE_LOCAL_PATH:-/app/storage}
+      REALTIME_DRIVER: ${REALTIME_DRIVER:-pg-notify-sse}
+      NEXT_PUBLIC_REALTIME_DRIVER: ${REALTIME_DRIVER:-pg-notify-sse}
+      # pg-listen precisa das credenciais do Postgres pra abrir conexao
+      # LISTEN. Replica as do container postgres.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: taskflow
+      LLM_DRIVER: ${LLM_DRIVER:-disabled}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      EMAIL_DRIVER: ${EMAIL_DRIVER:-disabled}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_SECURE: ${SMTP_SECURE:-}
+      VOICE_DRIVER: ${VOICE_DRIVER:-disabled}
+      VCS_DRIVER: ${VCS_DRIVER:-github}
+      VCS_API_URL: ${VCS_API_URL:-}
+      VCS_TOKEN_MODE: ${VCS_TOKEN_MODE:-pat}
+      NEXT_PUBLIC_VCS_TOKEN_MODE: ${VCS_TOKEN_MODE:-pat}
+      VCS_INSTANCE_PAT: ${VCS_INSTANCE_PAT:-}
+      OBS_DRIVER: ${OBS_DRIVER:-console}
+      NEXT_PUBLIC_OBS_DRIVER: ${OBS_DRIVER:-console}
+      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+    ports:
+      - "3000:3000"
+    volumes:
+      - storage-data:/app/storage
+
+volumes:
+  postgres-data:
+    name: taskflow-postgres-data
+  storage-data:
+    name: taskflow-storage-data

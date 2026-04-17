@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { features } from "@/lib/features";
 import { useAuth } from "@/hooks/use-auth";
 import { Notificacao } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
@@ -48,6 +49,19 @@ export function useNotificacoes() {
   // Realtime subscription for new notifications
   useEffect(() => {
     if (!user) return;
+    const driver = features.realtime.driver;
+
+    // ─── pg-notify-sse: endpoint dedicado pra eventos do user ───
+    if (driver === "pg-notify-sse") {
+      const es = new EventSource(`/api/realtime/user/${user.id}`);
+      es.addEventListener("notificacoes", () => globalMutate(key));
+      return () => es.close();
+    }
+
+    // ─── polling: sem realtime, SWR cuida via revalidate ───
+    if (driver === "polling") return;
+
+    // ─── supabase (cloud default) ───
     const channel = supabase
       .channel(`notificacoes-${user.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notificacoes", filter: `user_id=eq.${user.id}` }, () => {

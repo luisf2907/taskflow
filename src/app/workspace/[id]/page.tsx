@@ -63,6 +63,7 @@ import { CartaoComResumo } from "@/hooks/use-cartoes";
 import { useRealtimeWorkspace } from "@/hooks/use-realtime";
 import { usePRSync } from "@/hooks/use-pr-sync";
 import { useWorkspaceUsuarios } from "@/hooks/use-workspace-usuarios";
+import { features } from "@/lib/features";
 import { Quadro } from "@/types";
 
 // Sub-componentes extraidos desta pagina
@@ -689,14 +690,16 @@ export default function PaginaWorkspace() {
                     >
                       <Layers size={14} /> Poker
                     </button>
-                    <button
-                      onClick={() => setModalIA(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-[var(--tf-radius-xs)] transition-smooth border"
-                      style={{ borderColor: "var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-surface)" }}
-                      title="Gerar cards com IA"
-                    >
-                      <Sparkles size={14} style={{ color: "var(--tf-accent)" }} /> IA
-                    </button>
+                    {features.ai && (
+                      <button
+                        onClick={() => setModalIA(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-[var(--tf-radius-xs)] transition-smooth border"
+                        style={{ borderColor: "var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-surface)" }}
+                        title="Gerar cards com IA"
+                      >
+                        <Sparkles size={14} style={{ color: "var(--tf-accent)" }} /> IA
+                      </button>
+                    )}
                   </div>
                 </div>
 

@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { applyRateLimitAsync } from "@/lib/api-utils";
 import { getPublicEnv } from "@/lib/env";
+import { getStorageDriver } from "@/lib/drivers/storage/factory";
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import {
   voiceProcessMeetingAsync,
@@ -85,16 +86,19 @@ export async function POST(
     );
   }
 
-  // Gera signed read URL
+  // Gera signed read URL via driver — worker baixa o audio via URL assinada
   const admin = createServiceClient();
-  const { data: signed, error: signErr } = await admin.storage
-    .from(BUCKET)
-    .createSignedUrl(reuniao.audio_path, READ_TTL_SECONDS);
-  if (signErr || !signed?.signedUrl) {
+  let signedAudioUrl: string;
+  try {
+    signedAudioUrl = await getStorageDriver().createSignedDownloadUrl(
+      BUCKET,
+      reuniao.audio_path,
+      READ_TTL_SECONDS,
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "desconhecido";
     return NextResponse.json(
-      {
-        error: `Erro ao gerar signed URL: ${signErr?.message ?? "desconhecido"}`,
-      },
+      { error: `Erro ao gerar signed URL: ${msg}` },
       { status: 500 },
     );
   }
@@ -135,7 +139,7 @@ export async function POST(
   // Dispara o worker (async, retorna 202 rapidamente)
   try {
     await voiceProcessMeetingAsync({
-      audioUrl: signed.signedUrl,
+      audioUrl: signedAudioUrl,
       reuniaoId,
       callbackUrl,
       callbackToken,

@@ -8,8 +8,23 @@ function sanitizeRedirectPath(next: string | null): string {
   return next;
 }
 
+/**
+ * Constroi URL absoluta usando Host do browser (nao request.url que
+ * dentro do container resolve pra 0.0.0.0:3000).
+ */
+function buildUrl(request: NextRequest, pathAndQuery: string): URL {
+  const host =
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("host") ??
+    request.nextUrl.host;
+  const proto =
+    request.headers.get("x-forwarded-proto") ??
+    request.nextUrl.protocol.replace(":", "");
+  return new URL(pathAndQuery, `${proto}://${host}`);
+}
+
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const code = searchParams.get("code");
   const next = sanitizeRedirectPath(searchParams.get("next"));
   const errorParam = searchParams.get("error_description") || searchParams.get("error");
@@ -19,21 +34,36 @@ export async function GET(request: NextRequest) {
     const msg = errorParam.includes("expired")
       ? "Link expirado. Solicite um novo."
       : "Erro na autenticacao. Tente novamente.";
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(msg)}`, request.url));
+    return NextResponse.redirect(buildUrl(request, `/login?error=${encodeURIComponent(msg)}`));
   }
 
   if (!code) {
-    return NextResponse.redirect(new URL("/login?error=Link+invalido.+Solicite+um+novo.", request.url));
+    return NextResponse.redirect(buildUrl(request, "/login?error=Link+invalido.+Solicite+um+novo."));
   }
 
   const supabase = await createServerClient();
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data.session) {
+    // PKCE flow: se o link de verificacao abriu em contexto diferente do
+    // browser onde o signup aconteceu, o code_verifier nao existe e o
+    // exchange falha. Mas o email JA FOI verificado pelo GoTrue no /verify.
+    // Em vez de mostrar erro, redireciona pro login com mensagem positiva.
+    const isPkceError =
+      error?.message?.includes("code verifier") ||
+      error?.message?.includes("flow state") ||
+      error?.message?.includes("code challenge");
+
+    if (isPkceError || searchParams.get("type") === "signup") {
+      return NextResponse.redirect(
+        buildUrl(request, `/login?success=${encodeURIComponent("Email verificado! Faca login para continuar.")}`)
+      );
+    }
+
     const msg = error?.message?.includes("expired")
       ? "Link expirado. Solicite um novo."
       : "Falha na autenticacao. Tente novamente.";
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(msg)}`, request.url));
+    return NextResponse.redirect(buildUrl(request, `/login?error=${encodeURIComponent(msg)}`));
   }
 
   // Se o login foi via GitHub, salvar o provider_token
@@ -51,5 +81,5 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  return NextResponse.redirect(new URL(next, request.url));
+  return NextResponse.redirect(buildUrl(request, next));
 }

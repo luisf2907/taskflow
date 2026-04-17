@@ -1,4 +1,5 @@
-import { createServerClient, createServiceClient } from "@/lib/supabase/server";
+import { createServerClient } from "@/lib/supabase/server";
+import { getVcsToken } from "@/lib/drivers/vcs/token";
 import { githubAuthFetch } from "@/lib/github/client";
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimitAsync } from "@/lib/api-utils";
@@ -31,15 +32,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  // Buscar token GitHub
-  const service = createServiceClient();
-  const { data: tokenData } = await service
-    .from("github_tokens")
-    .select("provider_token")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!tokenData) {
+  // Token VCS (instance-pat OU per-user)
+  const token = await getVcsToken(user.id);
+  if (!token) {
     return NextResponse.json(
       { error: "Conecte sua conta GitHub para listar repositórios." },
       { status: 403 }
@@ -49,7 +44,7 @@ export async function GET(request: NextRequest) {
   // Buscar repos do user
   const result = await githubAuthFetch<GitHubRepoAPI[]>(
     "/user/repos?per_page=100&sort=updated&direction=desc&type=all",
-    tokenData.provider_token
+    token
   );
 
   if (result.error) {

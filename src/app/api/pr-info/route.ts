@@ -1,4 +1,6 @@
-import { createServerClient, createServiceClient } from "@/lib/supabase/server";
+import { createServerClient } from "@/lib/supabase/server";
+import { getVcsBaseUrl } from "@/lib/drivers/vcs/config";
+import { getVcsToken } from "@/lib/drivers/vcs/token";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { validateBody, applyRateLimitAsync } from "@/lib/api-utils";
@@ -25,25 +27,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  // Get GitHub token
-  const service = createServiceClient();
-  const { data: tokenData } = await service
-    .from("github_tokens")
-    .select("provider_token")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!tokenData) {
+  // Token VCS (instance-pat OU per-user)
+  const token = await getVcsToken(user.id);
+  if (!token) {
     return NextResponse.json({ error: "Sem token GitHub" }, { status: 403 });
   }
 
-  // Fetch PR from GitHub
+  // Fetch PR from VCS API (GitHub ou Gitea via VCS_API_URL)
   try {
     const res = await fetch(
-      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${prNumber}`,
+      `${getVcsBaseUrl()}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${prNumber}`,
       {
         headers: {
-          Authorization: `Bearer ${tokenData.provider_token}`,
+          Authorization: `Bearer ${token}`,
           Accept: "application/vnd.github.v3+json",
         },
       }

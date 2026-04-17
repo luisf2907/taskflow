@@ -1,4 +1,5 @@
-import { createServerClient, createServiceClient } from "@/lib/supabase/server";
+import { createServerClient } from "@/lib/supabase/server";
+import { getVcsToken } from "@/lib/drivers/vcs/token";
 import { buscarBranchesAuth } from "@/lib/github/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -25,22 +26,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  // Buscar token GitHub
-  const service = createServiceClient();
-  const { data: tokenData } = await service
-    .from("github_tokens")
-    .select("provider_token")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!tokenData) {
+  // Token: instance-pat global OU per-user do DB
+  const token = await getVcsToken(user.id);
+  if (!token) {
     return NextResponse.json(
       { error: "Conecte sua conta GitHub para acessar branches." },
       { status: 403 }
     );
   }
 
-  const result = await buscarBranchesAuth(owner, repo, tokenData.provider_token);
+  const result = await buscarBranchesAuth(owner, repo, token);
 
   if (result.error) {
     return NextResponse.json(

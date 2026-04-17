@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { features } from "@/lib/features";
 
 function humanizarErro(msg: string): string {
   const m = msg.toLowerCase();
@@ -40,6 +41,7 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const errorParam = searchParams.get("error");
+  const successParam = searchParams.get("success");
 
   const [modo, setModo] = useState<
     "login" | "cadastro" | "recuperar" | "email-enviado"
@@ -48,6 +50,7 @@ function LoginContent() {
   const [senha, setSenha] = useState("");
   const [nome, setNome] = useState("");
   const [erro, setErro] = useState(errorParam || "");
+  const [sucesso, setSucesso] = useState(successParam || "");
   const [carregando, setCarregando] = useState(false);
   const [emailConfirmacao, setEmailConfirmacao] = useState("");
 
@@ -320,6 +323,7 @@ function LoginContent() {
                     }}
                   />
 
+                  {sucesso && <SucessoBox mensagem={sucesso} />}
                   {erro && <ErroBox mensagem={erro} />}
 
                   <button
@@ -373,40 +377,44 @@ function LoginContent() {
               </div>
 
               <div className="px-7 pb-7 pt-4 space-y-4">
-                {/* GitHub OAuth */}
-                <button
-                  onClick={handleGithubLogin}
-                  disabled={carregando}
-                  className="w-full flex items-center justify-center gap-2 h-10 text-[0.8125rem] font-medium transition-colors hover:opacity-90 disabled:opacity-50"
-                  style={{
-                    background: "var(--tf-text)",
-                    color: "var(--tf-surface)",
-                    border: "1px solid var(--tf-text)",
-                    borderRadius: "var(--tf-radius-xs)",
-                    letterSpacing: "-0.005em",
-                  }}
-                >
-                  <Github size={15} strokeWidth={1.75} />
-                  Continuar com GitHub
-                </button>
+                {/* GitHub OAuth — controlado por NEXT_PUBLIC_GITHUB_OAUTH, independente do AUTH_MODE */}
+                {features.githubOAuth && (
+                  <>
+                    <button
+                      onClick={handleGithubLogin}
+                      disabled={carregando}
+                      className="w-full flex items-center justify-center gap-2 h-10 text-[0.8125rem] font-medium transition-colors hover:opacity-90 disabled:opacity-50"
+                      style={{
+                        background: "var(--tf-text)",
+                        color: "var(--tf-surface)",
+                        border: "1px solid var(--tf-text)",
+                        borderRadius: "var(--tf-radius-xs)",
+                        letterSpacing: "-0.005em",
+                      }}
+                    >
+                      <Github size={15} strokeWidth={1.75} />
+                      Continuar com GitHub
+                    </button>
 
-                {/* Divider */}
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex-1 h-px"
-                    style={{ background: "var(--tf-border)" }}
-                  />
-                  <span
-                    className="label-mono"
-                    style={{ color: "var(--tf-text-tertiary)" }}
-                  >
-                    ou
-                  </span>
-                  <div
-                    className="flex-1 h-px"
-                    style={{ background: "var(--tf-border)" }}
-                  />
-                </div>
+                    {/* Divider */}
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex-1 h-px"
+                        style={{ background: "var(--tf-border)" }}
+                      />
+                      <span
+                        className="label-mono"
+                        style={{ color: "var(--tf-text-tertiary)" }}
+                      >
+                        ou
+                      </span>
+                      <div
+                        className="flex-1 h-px"
+                        style={{ background: "var(--tf-border)" }}
+                      />
+                    </div>
+                  </>
+                )}
 
                 {/* Email form */}
                 <form onSubmit={handleEmailAuth} className="space-y-2.5">
@@ -475,6 +483,7 @@ function LoginContent() {
                     )}
                   </div>
 
+                  {sucesso && <SucessoBox mensagem={sucesso} />}
                   {erro && <ErroBox mensagem={erro} />}
 
                   <button
@@ -507,8 +516,8 @@ function LoginContent() {
           )}
         </div>
 
-        {/* Toggle mode */}
-        {modo !== "email-enviado" && modo !== "recuperar" && (
+        {/* Toggle mode — so mostra se signup habilitado (AUTH_MODE=standard) */}
+        {features.signupEnabled && modo !== "email-enviado" && modo !== "recuperar" && (
           <p
             className="text-[0.8125rem] text-center mt-5"
             style={{
@@ -550,6 +559,24 @@ function LoginContent() {
           color: var(--tf-text-tertiary);
         }
       `}</style>
+    </div>
+  );
+}
+
+function SucessoBox({ mensagem }: { mensagem: string }) {
+  return (
+    <div
+      className="text-[0.75rem] px-3 py-2 font-medium"
+      style={{
+        background: "var(--tf-success-bg)",
+        color: "var(--tf-success)",
+        border: "1px solid var(--tf-success)",
+        borderLeft: "3px solid var(--tf-success)",
+        borderRadius: "var(--tf-radius-xs)",
+        letterSpacing: "-0.005em",
+      }}
+    >
+      {mensagem}
     </div>
   );
 }

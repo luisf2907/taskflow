@@ -1,0 +1,29 @@
+# Default: deixa git decidir (auto-normalize conforme a plataforma)
+* text=auto
+
+# Shell scripts SEMPRE em LF. Se forem CRLF, Alpine quebra com
+# "/bin/sh^M: bad interpreter" dentro do container.
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Arquivos de infra Docker/nginx — forcar LF pra evitar problemas
+# dentro de containers Linux.
+Dockerfile text eol=lf
+Dockerfile.* text eol=lf
+docker-compose*.yml text eol=lf
+*.conf text eol=lf
+
+# SQL: LF pra consistencia (psql processa CRLF mas fica estranho)
+*.sql text eol=lf
+
+# Arquivos binarios conhecidos — nao mexer
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.ico binary

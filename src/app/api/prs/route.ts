@@ -1,4 +1,5 @@
-import { createServerClient, createServiceClient } from "@/lib/supabase/server";
+import { createServerClient } from "@/lib/supabase/server";
+import { getVcsToken } from "@/lib/drivers/vcs/token";
 import { buscarPRsAuth, buscarPRs } from "@/lib/github/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -29,21 +30,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ prs });
   }
 
-  // Tentar buscar com token autenticado
-  const service = createServiceClient();
-  const { data: tokenData } = await service
-    .from("github_tokens")
-    .select("provider_token")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!tokenData) {
-    // Fallback para API pública
+  // Tentar buscar com token autenticado (instance-pat ou per-user)
+  const token = await getVcsToken(user.id);
+  if (!token) {
     const prs = await buscarPRs(owner, repo, state);
     return NextResponse.json({ prs });
   }
 
-  const result = await buscarPRsAuth(owner, repo, tokenData.provider_token, state);
+  const result = await buscarPRsAuth(owner, repo, token, state);
 
   if (result.error) {
     // Fallback para API pública se token falhou

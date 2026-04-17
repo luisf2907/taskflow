@@ -1,4 +1,5 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
+import { getVcsToken } from "@/lib/drivers/vcs/token";
 import { createPR, requestReviewers } from "@/lib/github/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -52,22 +53,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Sem permissão neste workspace" }, { status: 403 });
   }
 
-  // Buscar token GitHub
+  // Token VCS (instance-pat OU per-user)
   const service = createServiceClient();
-  const { data: tokenData } = await service
-    .from("github_tokens")
-    .select("provider_token")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!tokenData) {
+  const token = await getVcsToken(user.id);
+  if (!token) {
     return NextResponse.json(
       { error: "Conecte sua conta GitHub para criar PRs." },
       { status: 403 }
     );
   }
-
-  const token = tokenData.provider_token;
 
   // Criar PR no GitHub
   const result = await createPR(
