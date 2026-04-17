@@ -61,10 +61,15 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
       container (rate limiting nativo via ioredis), AUTH_MODE=closed,
       SMTP configuravel, troca de senha obrigatoria no primeiro login
       (app_metadata + /trocar-senha). `.env.team.example` + quickstart.
-- [ ] **Perfil full** (Fase 6): docker-compose com MinIO, Supabase
-      Realtime, Voice Worker, GlitchTip. Paridade SaaS.
-- [ ] **Dockerfile do voice-worker** (Fase 6): empacotar FastAPI +
-      Whisper + pyannote + CUDA.
+- [x] **Perfil full** (Fase 6): `docker-compose.full.yml` com MinIO
+      (S3-compat), GlitchTip (error tracking), Redis. S3 driver
+      implementado (`src/lib/drivers/storage/s3.ts` via @aws-sdk).
+      `.env.full.example` + `quickstart-full.md`.
+- [x] **Dockerfile do voice-worker** (Fase 6): `docker/Dockerfile.voice-worker`
+      com CUDA 12.4, PyTorch 2.5, faster-whisper, pyannote. Baseado no
+      repo `taskflow-voice`. Referenciado (comentado) no compose full.
+- [x] **docker-compose.dev.yml** (Fase 6): so infra (postgres, gotrue,
+      postgrest, nginx) pra rodar `npm run dev` no host com hot reload.
 - [ ] **storage-api container** para perfil full (quando operador
       quiser `STORAGE_DRIVER=supabase` em self-hosted).
 

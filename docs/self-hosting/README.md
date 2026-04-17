@@ -12,7 +12,8 @@ Rode o Taskflow na sua infraestrutura, sem dependência de SaaS externos.
 |---|---|---|---|---|
 | **solo** | 1 pessoa, home lab, dev local | ~500 MB | 6 | Tudo opcional off; GitHub via PAT |
 | **team** | 2–20 pessoas, rede interna | ~700 MB | 7 | +Redis (rate limit), SMTP, troca de senha obrigatória |
-| **full** | Paridade SaaS | ~8 GB | ~12 | +MinIO, +Supabase Realtime, +Voice, +GlitchTip |
+| **full** | Paridade SaaS | ~4 GB | 10+ | +MinIO (S3), +GlitchTip (errors), +Voice (GPU) |
+| **dev** | Desenvolvimento local | ~300 MB | 5 | Só infra (postgres, gotrue, postgrest, nginx) — app no host |
 
 Comece pelo [quickstart-solo](./quickstart-solo.md) se estiver em dúvida.
 
@@ -21,7 +22,7 @@ Comece pelo [quickstart-solo](./quickstart-solo.md) se estiver em dúvida.
 - **Quickstart** — setup em 10 minutos
   - [quickstart-solo.md](./quickstart-solo.md)
   - [quickstart-team.md](./quickstart-team.md)
-  - quickstart-full.md *(em breve — Fase 6 parte 2)*
+  - [quickstart-full.md](./quickstart-full.md)
 - [configuration.md](./configuration.md) — referência completa de env vars
 - [TODO.md](./TODO.md) — débito técnico conhecido
 - **Módulos** — docs por driver
