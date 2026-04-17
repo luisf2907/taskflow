@@ -5,6 +5,7 @@
  */
 
 import { LocalDiskStorageDriver } from "./local-disk";
+import { S3CompatStorageDriver } from "./s3";
 import { SupabaseStorageDriver } from "./supabase";
 import type { StorageDriver } from "./types";
 
@@ -23,10 +24,8 @@ export function getStorageDriver(): StorageDriver {
       instance = new LocalDiskStorageDriver();
       break;
     case "s3-compat":
-      // Fase 6 — placeholder
-      throw new Error(
-        "STORAGE_DRIVER=s3-compat ainda nao implementado (planejado pra Fase 6)",
-      );
+      instance = new S3CompatStorageDriver();
+      break;
     default:
       throw new Error(`STORAGE_DRIVER desconhecido: ${driver}`);
   }
