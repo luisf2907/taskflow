@@ -40,11 +40,16 @@ export async function userCreate(argv) {
     process.exit(2);
   }
 
+  // --no-password-change pula a flag must_change_password (util pra
+  // admin que seta a senha definitiva diretamente, tipo solo mode).
+  const mustChangePassword = args["no-password-change"] !== true;
+
   const { data: created, error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
     user_metadata: { full_name: name, name },
+    app_metadata: { must_change_password: mustChangePassword },
   });
 
   if (error || !created?.user) {
@@ -52,10 +57,13 @@ export async function userCreate(argv) {
     process.exit(2);
   }
 
-  await ensurePerfilRow(admin, created.user, name);
+  await ensurePerfilRow(admin, created.user, name, { mustChangePassword });
 
   log.ok(`User criado: ${email}`);
   log.dim(`  ID: ${created.user.id}`);
+  if (mustChangePassword) {
+    log.dim(`  Senha temporaria — user vai trocar no primeiro login.`);
+  }
 }
 
 // ───── user:list ─────

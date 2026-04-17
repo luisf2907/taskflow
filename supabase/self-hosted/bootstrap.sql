@@ -914,7 +914,8 @@ CREATE TABLE IF NOT EXISTS "public"."perfis" (
     "voice_embedding" "public"."vector"(256),
     "voice_enrolled_at" timestamp with time zone,
     "voice_consent_at" timestamp with time zone,
-    "theme_preferences" "jsonb"
+    "theme_preferences" "jsonb",
+    "must_change_password" boolean DEFAULT false
 );
 
 

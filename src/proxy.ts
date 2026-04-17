@@ -63,7 +63,7 @@ export async function proxy(request: NextRequest) {
   const authMode = process.env.AUTH_MODE ?? "standard";
 
   // Public pages (no auth required)
-  const publicPaths = ["/", "/pricing", "/termos", "/privacidade", "/reset-password", "/help"];
+  const publicPaths = ["/", "/pricing", "/termos", "/privacidade", "/reset-password", "/trocar-senha", "/help"];
   // Convite e help articles sao publicos (com prefixo)
   if (pathname.startsWith("/convite/") || pathname.startsWith("/help/")) return response;
   if (publicPaths.some((p) => pathname === p)) {
@@ -93,6 +93,18 @@ export async function proxy(request: NextRequest) {
   // Logged-in users visiting /login go to dashboard
   if (user && pathname.startsWith("/login")) {
     return NextResponse.redirect(buildRedirectUrl(request, "/dashboard"));
+  }
+
+  // Forcar troca de senha no primeiro login — GoTrue app_metadata set
+  // pelo CLI user:create. Leitura direto do JWT (zero query ao DB).
+  if (
+    user &&
+    (user as { app_metadata?: Record<string, unknown> }).app_metadata?.must_change_password === true &&
+    !pathname.startsWith("/trocar-senha") &&
+    !pathname.startsWith("/api/") &&
+    !pathname.startsWith("/auth/")
+  ) {
+    return NextResponse.redirect(buildRedirectUrl(request, "/trocar-senha"));
   }
 
   // AUTH_MODE=solo: auto-login silencioso se o usuario nao tem sessao.

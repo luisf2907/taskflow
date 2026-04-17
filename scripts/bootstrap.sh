@@ -86,7 +86,7 @@ if [ "$ALREADY" = "1" ]; then
     # Lista explicita de migrations seguras pra re-aplicar em upgrade.
     # Criterio: arquivo usa DROP IF EXISTS / CREATE OR REPLACE em tudo.
     # Adicione aqui quando uma migration nova couber nesse padrao.
-    UPGRADE_MIGRATIONS="045_anexos_storage_policies.sql"
+    UPGRADE_MIGRATIONS="045_anexos_storage_policies.sql 046_perfis_must_change_password.sql"
     for mig in $UPGRADE_MIGRATIONS; do
         if [ -f "/migrations/$mig" ]; then
             psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \

@@ -90,13 +90,17 @@ export function requireArgs(args, keys) {
 // on_auth_user_created deveria fazer isso automaticamente, mas em
 // self-hosted as vezes falha silenciosamente. Upsert idempotente:
 // cria se nao existe, nao sobrescreve.
-export async function ensurePerfilRow(admin, user, nome) {
+export async function ensurePerfilRow(admin, user, nome, opts = {}) {
+  const row = {
+    id: user.id,
+    email: user.email,
+    nome: nome ?? user.email?.split("@")[0] ?? "User",
+  };
+  if (opts.mustChangePassword !== undefined) {
+    row.must_change_password = opts.mustChangePassword;
+  }
   const { error } = await admin.from("perfis").upsert(
-    {
-      id: user.id,
-      email: user.email,
-      nome: nome ?? user.email?.split("@")[0] ?? "User",
-    },
+    row,
     { onConflict: "id", ignoreDuplicates: true },
   );
   if (error) {
