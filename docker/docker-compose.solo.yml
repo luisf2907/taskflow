@@ -158,6 +158,7 @@ services:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         NEXT_PUBLIC_REALTIME_DRIVER: ${REALTIME_DRIVER:-pg-notify-sse}
         NEXT_PUBLIC_VCS_TOKEN_MODE: ${VCS_TOKEN_MODE:-pat}
+        NEXT_PUBLIC_AUTH_MODE: ${AUTH_MODE:-solo}
         NEXT_PUBLIC_OBS_DRIVER: ${OBS_DRIVER:-console}
         NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
     container_name: taskflow-app

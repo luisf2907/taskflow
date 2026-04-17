@@ -92,16 +92,9 @@ export default function TrocarSenhaPage() {
       className="min-h-screen flex items-center justify-center px-4 hero-grid"
       style={{ background: "var(--tf-bg)" }}
     >
-      <div
-        className="relative w-full max-w-[400px] px-7 py-8"
-        style={{
-          background: "var(--tf-surface)",
-          border: "1px solid var(--tf-border)",
-          borderRadius: "var(--tf-radius-lg)",
-        }}
-      >
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-2.5 mb-7">
+      <div className="w-full max-w-[400px]">
+        {/* Logo — fora do card, igual ao /login */}
+        <div className="flex items-center justify-center gap-2.5 mb-8">
           <div
             className="w-9 h-9 flex items-center justify-center"
             style={{
@@ -118,6 +111,16 @@ export default function TrocarSenhaPage() {
             Taskflow
           </span>
         </div>
+
+        {/* Card */}
+        <div
+          className="relative px-7 py-8"
+          style={{
+            background: "var(--tf-surface)",
+            border: "1px solid var(--tf-border)",
+            borderRadius: "var(--tf-radius-lg)",
+          }}
+        >
 
         {sucesso ? (
           <div className="text-center py-2">
@@ -312,6 +315,7 @@ export default function TrocarSenhaPage() {
             `}</style>
           </>
         )}
+        </div>
       </div>
     </div>
   );

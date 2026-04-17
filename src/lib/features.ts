@@ -81,7 +81,13 @@ function computeFeatures() {
     obsDriverRaw ?? (publicSentryDsn ? "sentry" : "console");
 
   // ───── Auth mode ─────
-  const authMode: AuthMode = (serverEnv.AUTH_MODE as AuthMode | undefined) ?? "standard";
+  // NEXT_PUBLIC_AUTH_MODE (build arg) pra UI client-side saber se mostra
+  // botao OAuth, tela de signup, etc. Server fallback pra AUTH_MODE.
+  const publicAuthMode = process.env.NEXT_PUBLIC_AUTH_MODE as AuthMode | undefined;
+  const authMode: AuthMode =
+    publicAuthMode ??
+    (serverEnv.AUTH_MODE as AuthMode | undefined) ??
+    "standard";
 
   return {
     llm: { driver: llmDriver, enabled: llmDriver !== "disabled" },
