@@ -99,9 +99,11 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
       `restore.mjs` com manifest + sha256. `make backup` e
       `make restore FROM=... YES=1`. Documentado em `quickstart-solo.md`.
       Fase 9 quick-win primeira parte.
-- [ ] **CLI `token:rotate`** — gera novo JWT_SECRET + re-assina sessões
-      GoTrue ativas + re-encripta `github_tokens`/`api_keys` com nova
-      `ENCRYPTION_KEY`. Fase 9 quick-win segunda parte.
+- [x] **CLI `token:rotate`** — `scripts/cli/token.mjs` com `--jwt`
+      (re-emite JWT_SECRET + ANON + SERVICE_ROLE, admin rebuilda app) e
+      `--encryption` (re-encripta github_tokens em transacao atomica, para
+      app durante ~30s). `--all` faz ambos. Documentado em
+      `modules/auth.md`. Fase 9 quick-win segunda parte.
 - [ ] Validar schema drift: script que compara dump de produção com
       `bootstrap.sql` e avisa se divergiram.
 - [ ] Make targets pra migração de storage cloud→local e health detalhado.

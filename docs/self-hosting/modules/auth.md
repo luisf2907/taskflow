@@ -100,14 +100,54 @@ https://github.com/supabase/auth/blob/master/internal/conf/configuration.go
 
 ## Rotação de secrets
 
-Rotar `JWT_SECRET` invalida todas as sessões ativas (usuários precisam
-relogar). Procedimento:
+O CLI `token:rotate` faz a rotação segura. Antes de rodar, faça backup:
 
-1. `make down`
-2. Edite `.env.local`: novo `JWT_SECRET`
-3. Regere `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY`
-   (os JWTs precisam ser reassinados com o secret novo)
-4. `make up`
+```bash
+node --env-file=.env.local scripts/cli.mjs backup
+```
 
-**Não altere `ENCRYPTION_KEY`** a menos que siga o procedimento de
-migração (em breve: `npx taskflow token:rotate`).
+### Rotacionar ENCRYPTION_KEY (re-encripta GitHub PATs)
+
+```bash
+node --env-file=.env.local scripts/cli.mjs token:rotate --encryption --yes
+```
+
+O que acontece:
+- Para o container `app` (~30s downtime)
+- Decripta todos `github_tokens.encrypted_token` com key velha
+- Re-encripta com key nova, em transação atômica (rollback se qualquer falha)
+- Atualiza `.env.local` (backup em `.env.local.bak.<ts>`)
+- Reinicia o container `app`
+
+PATs em plaintext (`provider_token`, legados de antes do ENCRYPTION_KEY) não
+são afetados e continuam funcionando.
+
+### Rotacionar JWT_SECRET (invalida sessões + signed URLs)
+
+```bash
+node --env-file=.env.local scripts/cli.mjs token:rotate --jwt --yes
+```
+
+O que acontece:
+- Gera novo `JWT_SECRET` + re-emite `ANON_KEY` e `SERVICE_ROLE_KEY`
+- Atualiza `.env.local` (backup em `.env.local.bak.<ts>`)
+- **NÃO rebuilda a imagem app** (as keys são build args — rebuild manual):
+
+```bash
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local build app
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local up -d --force-recreate
+```
+
+Consequências inevitáveis:
+- Todas as sessões ativas viram inválidas (relogin forçado)
+- Signed URLs do local-disk em voo ficam inválidas
+- Em `AUTH_MODE=solo`, o relogin é automático na próxima visita
+
+### Rotacionar ambos
+
+```bash
+node --env-file=.env.local scripts/cli.mjs token:rotate --all --yes
+```
+
+Faz `--encryption` primeiro (precisa do app rodando pra transação),
+depois `--jwt` (invalida tudo). Ao final, rebuild + up manual como acima.

@@ -261,6 +261,28 @@ VCS_TOKEN_MODE=instance-pat
 VCS_INSTANCE_PAT=ghp_xxxxx...
 ```
 
+## Rotacionar secrets
+
+Se `JWT_SECRET` ou `ENCRYPTION_KEY` vazarem, use o CLI:
+
+```bash
+# Backup antes (obrigatorio)
+node --env-file=.env.local scripts/cli.mjs backup
+
+# So ENCRYPTION_KEY (re-encripta GitHub PATs, ~30s downtime)
+node --env-file=.env.local scripts/cli.mjs token:rotate --encryption --yes
+
+# So JWT_SECRET (invalida sessoes, rebuild necessario)
+node --env-file=.env.local scripts/cli.mjs token:rotate --jwt --yes
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local build app
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local up -d --force-recreate
+
+# Ambos de uma vez
+node --env-file=.env.local scripts/cli.mjs token:rotate --all --yes
+```
+
+Detalhes completos em [modules/auth.md](./modules/auth.md#rotação-de-secrets).
+
 ## Troubleshooting rápido
 
 | Sintoma | Causa provável |
