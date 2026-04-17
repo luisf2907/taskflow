@@ -113,6 +113,10 @@ function computeFeatures() {
     vcsEnabled: vcsDriver !== "disabled",
     signupEnabled: authMode === "standard",
     soloMode: authMode === "solo",
+    // OAuth providers — controlados separadamente do AUTH_MODE.
+    // NEXT_PUBLIC_GITHUB_OAUTH=true habilita o botao "Continuar com GitHub"
+    // no login. Requer GoTrue configurado com GOTRUE_EXTERNAL_GITHUB_*.
+    githubOAuth: process.env.NEXT_PUBLIC_GITHUB_OAUTH === "true",
   } as const;
 }
 

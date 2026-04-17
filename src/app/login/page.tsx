@@ -377,8 +377,8 @@ function LoginContent() {
               </div>
 
               <div className="px-7 pb-7 pt-4 space-y-4">
-                {/* GitHub OAuth — so mostra se AUTH_MODE=standard (cloud) */}
-                {features.signupEnabled && (
+                {/* GitHub OAuth — controlado por NEXT_PUBLIC_GITHUB_OAUTH, independente do AUTH_MODE */}
+                {features.githubOAuth && (
                   <>
                     <button
                       onClick={handleGithubLogin}

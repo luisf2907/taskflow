@@ -236,6 +236,7 @@ services:
         NEXT_PUBLIC_REALTIME_DRIVER: ${REALTIME_DRIVER:-pg-notify-sse}
         NEXT_PUBLIC_VCS_TOKEN_MODE: ${VCS_TOKEN_MODE:-pat}
         NEXT_PUBLIC_AUTH_MODE: ${AUTH_MODE:-standard}
+        NEXT_PUBLIC_GITHUB_OAUTH: ${NEXT_PUBLIC_GITHUB_OAUTH:-false}
         NEXT_PUBLIC_OBS_DRIVER: ${OBS_DRIVER:-glitchtip}
         NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
     container_name: taskflow-app
