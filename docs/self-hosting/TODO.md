@@ -37,9 +37,11 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
       Sentry configs respeitam OBS_DRIVER. `modules/observability.md`.
 - [x] **UI condicional** — botões de IA, tab "Gravar" de reuniões,
       Settings → GitHub em instance-pat mode.
-- [ ] **Trigger `on_auth_user_created` não funciona em self-hosted** —
-      investigar causa. Workaround: CLI + solo-login fazem upsert
-      manual em `public.perfis`.
+- [x] **Trigger `on_auth_user_created`** — causa: `pg_dump --schema=public`
+      nao captura triggers em tabelas de outro schema (`auth.users`).
+      Fix: trigger adicionado explicitamente no bootstrap.sql (secao 4b)
+      e em `supabase/cloud/07-trigger-auth-perfis.sql`. Workaround
+      manual (CLI upsert) continua como fallback.
 
 ## Drivers não implementados
 
@@ -120,9 +122,17 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
       `--encryption` (re-encripta github_tokens em transacao atomica, para
       app durante ~30s). `--all` faz ambos. Documentado em
       `modules/auth.md`. Fase 9 quick-win segunda parte.
-- [ ] Validar schema drift: script que compara dump de produção com
-      `bootstrap.sql` e avisa se divergiram.
-- [ ] Make targets pra migração de storage cloud→local e health detalhado.
+- [x] **Polling driver** — `REALTIME_DRIVER=polling` via `refreshInterval: 10s`
+      global no SWRConfig. Hooks de realtime sao no-op; SWR revalida
+      periodicamente.
+- [x] **Gitea parser fix** — `parsearRepo()` agora aceita qualquer
+      hostname (URL generico via `new URL()`) em vez de regex hardcoded
+      `github.com`.
+- [x] **Schema drift validation** — `scripts/validate-schema.mjs`
+      compara tabelas e policies do bootstrap.sql com o DB rodando.
+- [x] **CLI migrate:storage** — `scripts/cli/migrate-storage.mjs`
+      copia arquivos entre drivers (local-disk → s3-compat, etc).
+      Roda dentro do container app. NAO deleta na origem.
 - [x] `.env.team.example`, `.env.full.example` — criados com todas
       opcoes organizadas por secao.
 
