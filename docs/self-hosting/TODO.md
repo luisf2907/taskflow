@@ -84,8 +84,8 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
       Leitura continua publica — so write e restrito por workspace do cartao.
 - [ ] **Testes de RLS** (Fase 8) — 2 users de workspaces diferentes,
       garantir isolamento.
-- [ ] **Rotação de secrets** — comandos `token:rotate` e procedimento
-      pra trocar `ENCRYPTION_KEY` com migração de dados encriptados.
+- [x] **Rotação de secrets** — CLI `token:rotate` implementado (ver
+      Fase 9 quick-win abaixo).
 
 ## Documentação
 
@@ -96,10 +96,18 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
 
 ## Observabilidade e testes
 
-- [ ] **Smoke test script** por profile (Fase 8) — `docker compose up` +
-      checks HTTP básicos.
-- [ ] **CI self-hosted** (Fase 8) — GitHub Actions que sobe stack solo
-      e roda smoke test.
+- [x] **CI self-hosted** (Fase 8) — `.github/workflows/ci-self-hosted.yml`:
+      sobe stack solo, valida health, cria users via CLI, testa endpoints,
+      roda teste RLS, testa backup. Logs em caso de falha.
+- [x] **Testes de RLS** (Fase 8) — `scripts/test-rls.mjs`: cria 2 users
+      em workspaces diferentes, valida isolamento (12 assertions). Roda
+      no CI e local.
+- [x] **Imagens Docker GHCR** (Fase 8) — `.github/workflows/publish-image.yml`:
+      build + push pra `ghcr.io/luisf2907/taskflow-app` em push pra
+      main/feat/self-hosted. Cache via GitHub Actions cache.
+- [x] **Release automation** (Fase 8) — `.github/workflows/release.yml`:
+      push de tag `v*` → build → publish imagem com tag de versao →
+      GitHub Release com changelog auto-gerado.
 
 ## Polimento (Fase 9)
 
@@ -115,7 +123,8 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
 - [ ] Validar schema drift: script que compara dump de produção com
       `bootstrap.sql` e avisa se divergiram.
 - [ ] Make targets pra migração de storage cloud→local e health detalhado.
-- [ ] `.env.team.example`, `.env.full.example`.
+- [x] `.env.team.example`, `.env.full.example` — criados com todas
+      opcoes organizadas por secao.
 
 ## Regenerar bootstrap.sql
 
