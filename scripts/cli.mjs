@@ -42,6 +42,7 @@ import {
 } from "./cli/workspace.mjs";
 import { backup } from "./cli/backup.mjs";
 import { restore } from "./cli/restore.mjs";
+import { tokenRotate } from "./cli/token.mjs";
 import { log } from "./cli/lib.mjs";
 
 const COMMANDS = {
@@ -56,6 +57,7 @@ const COMMANDS = {
   "workspace:invite": { fn: workspaceInvite, desc: "Gera link de convite (sem email)" },
   backup: { fn: backup, desc: "Dump Postgres + tar do volume de storage" },
   restore: { fn: restore, desc: "Restore destrutivo a partir de backup (use --yes)" },
+  "token:rotate": { fn: tokenRotate, desc: "Rotaciona JWT_SECRET e/ou ENCRYPTION_KEY (use --yes)" },
 };
 
 function showHelp() {
