@@ -37,9 +37,12 @@ function computeFeatures() {
       : ({} as NodeJS.ProcessEnv);
 
   // ───── LLM ─────
+  // NEXT_PUBLIC_AI_ENABLED=true pra UI saber que IA esta ativa (client-side).
+  // Server-side detecta automaticamente via GEMINI_API_KEY ou LLM_DRIVER.
+  const publicAiEnabled = process.env.NEXT_PUBLIC_AI_ENABLED === "true";
   const llmDriverRaw = serverEnv.LLM_DRIVER as LlmDriver | undefined;
   const llmDriver: LlmDriver =
-    llmDriverRaw ?? (serverEnv.GEMINI_API_KEY ? "gemini" : "disabled");
+    llmDriverRaw ?? (serverEnv.GEMINI_API_KEY || publicAiEnabled ? "gemini" : "disabled");
 
   // ───── Email ─────
   const emailDriverRaw = serverEnv.EMAIL_DRIVER as EmailDriver | undefined;
@@ -107,7 +110,7 @@ function computeFeatures() {
     auth: { mode: authMode },
 
     // Atalhos booleanos pra uso rapido na UI
-    ai: llmDriver !== "disabled",
+    ai: llmDriver !== "disabled" || publicAiEnabled,
     emailEnabled: emailDriver !== "disabled",
     voiceEnabled: voiceDriver !== "disabled",
     vcsEnabled: vcsDriver !== "disabled",
