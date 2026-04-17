@@ -1,0 +1,64 @@
+# ═══════════════════════════════════════════════════════════════════════
+# Taskflow Voice Worker — FastAPI + faster-whisper + pyannote + CUDA
+# ═══════════════════════════════════════════════════════════════════════
+# Requer GPU NVIDIA no host + nvidia-container-toolkit instalado.
+#
+# Build:
+#   docker build -f docker/Dockerfile.voice-worker -t taskflow-voice .
+#
+# Run:
+#   docker run --gpus all -p 8080:8080 \
+#     -e HF_TOKEN=hf_xxx \
+#     -e WORKER_API_KEY=changeme \
+#     taskflow-voice
+#
+# Tamanho: ~8GB (PyTorch + modelos baixam no primeiro start)
+# RAM GPU: ~4-6GB (Whisper large-v3 + pyannote)
+#
+# O worker expoe 4 endpoints:
+#   GET  /health               — liveness
+#   POST /enroll               — extract speaker embedding (multipart)
+#   POST /process-meeting      — sync transcribe+diarize (multipart)
+#   POST /process-meeting-async — async com callback webhook
+# ═══════════════════════════════════════════════════════════════════════
+
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Deps sistema (ffmpeg pra conversao de audio, gcc pra compilar native exts)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 python3.11-venv python3-pip python3.11-dev \
+    ffmpeg libsndfile1 gcc g++ \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -sf /usr/bin/python3.11 /usr/bin/python3 \
+    && ln -sf /usr/bin/python3.11 /usr/bin/python
+
+WORKDIR /app
+
+# PyTorch CUDA 12.4 (separado do requirements pra cache de layer)
+RUN pip install --no-cache-dir \
+    torch==2.5.1 torchaudio==2.5.1 \
+    --index-url https://download.pytorch.org/whl/cu124
+
+# Deps Python (requirements.txt do repo taskflow-voice)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Codigo do worker
+COPY src/ ./src/
+COPY run_worker.py .
+
+# Porta default (override via WORKER_PORT env)
+ENV WORKER_PORT=8080
+ENV WORKER_HOST=0.0.0.0
+EXPOSE 8080
+
+# Healthcheck interno
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')" || exit 1
+
+# Entrypoint
+CMD ["python3", "run_worker.py"]
