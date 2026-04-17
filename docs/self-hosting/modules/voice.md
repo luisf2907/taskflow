@@ -80,22 +80,43 @@ Browser                    App (Next.js)              Voice Worker (FastAPI)
 
 ## Setup — Docker (perfil full)
 
-O `docker-compose.full.yml` tem o voice worker comentado. Pra ativar:
+O código do voice worker vive num **repo separado** (`taskflow-voice`).
+O `docker-compose.full.yml` tem o service comentado, apontando pro repo
+vizinho via `VOICE_WORKER_PATH`.
 
-1. Descomente o service `voice-worker` no compose
-2. Edite `.env.local`:
-   ```env
-   VOICE_DRIVER=fastapi
-   VOICE_WORKER_URL=http://voice-worker:8080
-   VOICE_WORKER_API_KEY=seu-secret-aqui
-   VOICE_WEBHOOK_SECRET=outro-secret-min-32-chars
-   HF_TOKEN=hf_xxx
-   ```
-3. Build e suba:
-   ```bash
-   docker compose -f docker/docker-compose.full.yml --env-file .env.local build voice-worker
-   docker compose -f docker/docker-compose.full.yml --env-file .env.local up -d voice-worker
-   ```
+### 1. Clone o repo do worker ao lado do taskflow
+
+```bash
+# Estrutura esperada:
+# /projetos/
+#   ├── taskflow/           ← repo principal
+#   └── taskflow-voice/     ← repo do worker
+cd ..
+git clone <voice-repo-url> taskflow-voice
+```
+
+### 2. Descomente o service no compose
+
+No `docker/docker-compose.full.yml`, descomente o bloco `voice-worker`.
+
+### 3. Configure envs
+
+No `.env.local`:
+```env
+VOICE_DRIVER=fastapi
+VOICE_WORKER_URL=http://voice-worker:8080
+VOICE_WORKER_API_KEY=seu-secret-aqui
+VOICE_WEBHOOK_SECRET=outro-secret-min-32-chars
+HF_TOKEN=hf_xxx
+# VOICE_WORKER_PATH=../../taskflow-voice   # default, ajuste se necessario
+```
+
+### 4. Build e suba
+
+```bash
+docker compose -f docker/docker-compose.full.yml --env-file .env.local build voice-worker
+docker compose -f docker/docker-compose.full.yml --env-file .env.local up -d voice-worker
+```
 
 Primeiro start demora ~5 minutos (baixa modelos Whisper + pyannote).
 

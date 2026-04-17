@@ -309,19 +309,31 @@ services:
 
   # ─────────────────────────────────────────────────────────────────────
   # Voice Worker (OPCIONAL — requer GPU NVIDIA no host)
-  # Descomente e configure VOICE_WORKER_URL no .env.local
-  # Build: docker compose -f docker-compose.full.yml build voice-worker
+  #
+  # O codigo do worker vive num repo separado (taskflow-voice).
+  # VOICE_WORKER_PATH aponta pro diretorio do repo no host.
+  # Default: ../taskflow-voice (irmao do repo principal).
+  #
+  # Setup:
+  #   1. Clone o repo do worker ao lado do taskflow:
+  #      git clone <voice-repo-url> ../taskflow-voice
+  #   2. Descomente o service abaixo
+  #   3. Configure envs no .env.local (VOICE_DRIVER, HF_TOKEN, etc)
+  #   4. docker compose -f docker/docker-compose.full.yml --env-file .env.local up -d voice-worker
   # ─────────────────────────────────────────────────────────────────────
   # voice-worker:
   #   build:
-  #     context: ..
-  #     dockerfile: docker/Dockerfile.voice-worker
+  #     context: ${VOICE_WORKER_PATH:-../../taskflow-voice}
+  #     dockerfile: ${PWD}/docker/Dockerfile.voice-worker
   #   container_name: taskflow-voice-worker
   #   restart: unless-stopped
   #   environment:
-  #     API_KEY: ${VOICE_WORKER_API_KEY:-changeme}
+  #     WORKER_API_KEY: ${VOICE_WORKER_API_KEY:-changeme}
+  #     HF_TOKEN: ${HF_TOKEN:-}
   #     WHISPER_MODEL: ${WHISPER_MODEL:-large-v3}
-  #     DEVICE: cuda
+  #     DEVICE: ${VOICE_DEVICE:-cuda}
+  #     LANGUAGE: ${VOICE_LANGUAGE:-pt}
+  #     WORKER_PORT: 8080
   #   deploy:
   #     resources:
   #       reservations:
