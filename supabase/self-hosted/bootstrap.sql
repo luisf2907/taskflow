@@ -2684,6 +2684,18 @@ CREATE POLICY "anexos_delete_membros" ON "storage"."objects" FOR DELETE TO "auth
 
 
 -- ─────────────────────────────────────────────────────────────────────────
+-- 4b. Trigger cross-schema: auth.users → public.perfis
+-- ─────────────────────────────────────────────────────────────────────────
+-- Cria row em public.perfis quando um user e criado no GoTrue. Este
+-- trigger NAO foi capturado pelo pg_dump --schema=public porque vive
+-- em auth.users (schema auth). Sem ele, perfis nao eh populado
+-- automaticamente — CLI e solo-login fazem upsert manual como workaround.
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ─────────────────────────────────────────────────────────────────────────
 -- 5. Realtime triggers (pg_notify pro driver pg-notify-sse)
 -- ─────────────────────────────────────────────────────────────────────────
 -- ═══════════════════════════════════════════════════════════════════════
