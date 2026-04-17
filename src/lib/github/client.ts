@@ -146,13 +146,19 @@ export async function buscarLinguagens(
 
 // Parsear URL ou "owner/repo" pra extrair owner e nome
 export function parsearRepo(input: string): { owner: string; nome: string } | null {
-  // Tentar URL: https://github.com/owner/repo
-  const urlMatch = input.match(/github\.com\/([^/]+)\/([^/\s?#]+)/);
-  if (urlMatch) {
-    return { owner: urlMatch[1], nome: urlMatch[2].replace(/\.git$/, "") };
+  // Tentar URL completa: https://github.com/owner/repo, https://gitea.example.com/owner/repo, etc.
+  // Aceita qualquer hostname (nao mais hardcoded github.com).
+  try {
+    const url = new URL(input.trim());
+    const parts = url.pathname.split("/").filter(Boolean);
+    if (parts.length >= 2) {
+      return { owner: parts[0], nome: parts[1].replace(/\.git$/, "") };
+    }
+  } catch {
+    // Nao e URL valida — tenta owner/repo abaixo
   }
 
-  // Tentar owner/repo
+  // Tentar owner/repo (sem hostname)
   const slashMatch = input.trim().match(/^([^/\s]+)\/([^/\s]+)$/);
   if (slashMatch) {
     return { owner: slashMatch[1], nome: slashMatch[2].replace(/\.git$/, "") };
