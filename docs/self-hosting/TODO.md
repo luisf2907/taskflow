@@ -91,10 +91,9 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
 
 ## Documentação
 
-- [ ] **docs/self-hosting/modules/** — 1 arquivo por driver explicando
-      opções e trade-offs.
-- [ ] **backup-recovery.md**, **upgrade.md**, **troubleshooting.md**
-      (Fase 7).
+- [x] **Docs completos** (Fase 7): troubleshooting.md, backup-recovery.md,
+      upgrade.md, deploy/vps.md (Caddy + Traefik + HTTPS), modules/voice.md,
+      modules/llm.md. README.md atualizado com indice completo.
 
 ## Observabilidade e testes
 

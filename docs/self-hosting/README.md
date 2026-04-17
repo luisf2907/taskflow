@@ -24,21 +24,20 @@ Comece pelo [quickstart-solo](./quickstart-solo.md) se estiver em dúvida.
   - [quickstart-team.md](./quickstart-team.md)
   - [quickstart-full.md](./quickstart-full.md)
 - [configuration.md](./configuration.md) — referência completa de env vars
-- [TODO.md](./TODO.md) — débito técnico conhecido
+- [backup-recovery.md](./backup-recovery.md) — backup, restore, schedule
+- [upgrade.md](./upgrade.md) — como atualizar entre versões
+- [troubleshooting.md](./troubleshooting.md) — erros comuns e soluções
+- [deploy/vps.md](./deploy/vps.md) — VPS com Caddy/Traefik + HTTPS
+- [TODO.md](./TODO.md) — débito técnico restante
 - **Módulos** — docs por driver
-  - [auth.md](./modules/auth.md)
-  - [storage.md](./modules/storage.md)
-  - [realtime.md](./modules/realtime.md)
-  - [email.md](./modules/email.md)
-  - [vcs.md](./modules/vcs.md)
-  - [observability.md](./modules/observability.md)
-  - llm.md *(em breve — Fase 5)*
-  - email.md *(em breve — Fase 5)*
-  - voice.md *(em breve — Fase 5)*
-  - vcs.md *(em breve — Fase 5)*
-- backup-recovery.md *(em breve — Fase 7)*
-- upgrade.md *(em breve — Fase 7)*
-- troubleshooting.md *(em breve — Fase 7)*
+  - [auth.md](./modules/auth.md) — auth modes + rotação de secrets
+  - [storage.md](./modules/storage.md) — supabase, local-disk, s3-compat
+  - [realtime.md](./modules/realtime.md) — supabase, pg-notify-sse, polling
+  - [email.md](./modules/email.md) — resend, smtp, console, disabled
+  - [vcs.md](./modules/vcs.md) — github, gitea, token modes
+  - [observability.md](./modules/observability.md) — sentry, glitchtip, console
+  - [llm.md](./modules/llm.md) — gemini, ollama, openai-compat, anthropic
+  - [voice.md](./modules/voice.md) — whisper + pyannote, GPU, enrollment
 
 ## Arquitetura (perfil solo)
 
