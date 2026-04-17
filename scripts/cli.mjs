@@ -42,6 +42,7 @@ import {
 } from "./cli/workspace.mjs";
 import { backup } from "./cli/backup.mjs";
 import { restore } from "./cli/restore.mjs";
+import { migrateStorage } from "./cli/migrate-storage.mjs";
 import { tokenRotate } from "./cli/token.mjs";
 import { log } from "./cli/lib.mjs";
 
@@ -58,6 +59,7 @@ const COMMANDS = {
   backup: { fn: backup, desc: "Dump Postgres + tar do volume de storage" },
   restore: { fn: restore, desc: "Restore destrutivo a partir de backup (use --yes)" },
   "token:rotate": { fn: tokenRotate, desc: "Rotaciona JWT_SECRET e/ou ENCRYPTION_KEY (use --yes)" },
+  "migrate:storage": { fn: migrateStorage, desc: "Move arquivos entre drivers de storage (use --yes)" },
 };
 
 function showHelp() {
