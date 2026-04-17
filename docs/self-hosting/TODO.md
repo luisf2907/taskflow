@@ -57,9 +57,12 @@ Débito técnico e limitações conhecidas, em ordem aproximada de prioridade.
 
 ## Infra
 
-- [ ] **Perfis team e full** (Fase 6): docker-compose com Redis,
-      Ollama, MinIO, Supabase Realtime, Voice Worker, Postfix,
-      GlitchTip.
+- [x] **Perfil team** (Fase 6): `docker-compose.team.yml` com Redis
+      container (rate limiting nativo via ioredis), AUTH_MODE=closed,
+      SMTP configuravel, troca de senha obrigatoria no primeiro login
+      (app_metadata + /trocar-senha). `.env.team.example` + quickstart.
+- [ ] **Perfil full** (Fase 6): docker-compose com MinIO, Supabase
+      Realtime, Voice Worker, GlitchTip. Paridade SaaS.
 - [ ] **Dockerfile do voice-worker** (Fase 6): empacotar FastAPI +
       Whisper + pyannote + CUDA.
 - [ ] **storage-api container** para perfil full (quando operador
