@@ -89,15 +89,26 @@ async function createUserWithSession(email, password, name) {
 async function createWorkspace(client, userId, name) {
   if (!userId) throw new Error(`createWorkspace: userId e null/undefined`);
 
-  const { data, error } = await admin.from("workspaces").insert({ nome: name }).select().single();
+  // Usa o CLIENT AUTENTICADO do user (nao admin) pra que auth.uid()
+  // funcione em triggers que auto-inserem em workspace_usuarios.
+  const { data, error } = await client.from("workspaces").insert({ nome: name }).select().single();
   if (error) throw new Error(`Criar workspace: ${error.message}`);
 
-  const { error: memErr } = await admin.from("workspace_usuarios").insert({
-    workspace_id: data.id,
-    user_id: userId,
-    papel: "admin",
-  });
-  if (memErr) throw new Error(`Criar workspace membership: ${memErr.message}`);
+  // Verifica se o trigger ja criou a membership (evita duplicata)
+  const { data: existing } = await admin.from("workspace_usuarios")
+    .select("id")
+    .eq("workspace_id", data.id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!existing) {
+    const { error: memErr } = await admin.from("workspace_usuarios").insert({
+      workspace_id: data.id,
+      user_id: userId,
+      papel: "admin",
+    });
+    if (memErr) throw new Error(`Criar workspace membership: ${memErr.message}`);
+  }
 
   return data;
 }
