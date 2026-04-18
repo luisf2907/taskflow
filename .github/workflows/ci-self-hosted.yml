@@ -95,7 +95,11 @@ jobs:
             RETURN ws_id;
           END;
           $$;
+          -- PostgREST cacheia o schema — notifica pra recarregar
+          NOTIFY pgrst, 'reload schema';
           SQL
+          echo "Waiting for PostgREST schema reload..."
+          sleep 3
 
       - name: Create admin user
         run: |
