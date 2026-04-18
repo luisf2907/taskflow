@@ -51,9 +51,14 @@ async function createUserWithSession(email, password, name) {
   });
   if (error) throw new Error(`Criar user ${email}: ${error.message}`);
 
+  const user = created?.user;
+  if (!user?.id) {
+    throw new Error(`Criar user ${email}: resposta sem user.id — data=${JSON.stringify(created)}`);
+  }
+
   // Create perfil row (workaround trigger)
   await admin.from("perfis").upsert(
-    { id: created.user.id, email, nome: name },
+    { id: user.id, email, nome: name },
     { onConflict: "id", ignoreDuplicates: true },
   );
 
@@ -64,18 +69,21 @@ async function createUserWithSession(email, password, name) {
   const { error: loginErr } = await userClient.auth.signInWithPassword({ email, password });
   if (loginErr) throw new Error(`Login ${email}: ${loginErr.message}`);
 
-  return { user: created.user, client: userClient };
+  return { user, client: userClient };
 }
 
 async function createWorkspace(client, userId, name) {
+  if (!userId) throw new Error(`createWorkspace: userId e null/undefined`);
+
   const { data, error } = await admin.from("workspaces").insert({ nome: name }).select().single();
   if (error) throw new Error(`Criar workspace: ${error.message}`);
 
-  await admin.from("workspace_usuarios").insert({
+  const { error: memErr } = await admin.from("workspace_usuarios").insert({
     workspace_id: data.id,
     user_id: userId,
     papel: "admin",
   });
+  if (memErr) throw new Error(`Criar workspace membership: ${memErr.message}`);
 
   return data;
 }
