@@ -80,6 +80,23 @@ jobs:
       - name: CLI health check
         run: node --env-file=.env.local scripts/cli.mjs health
 
+      - name: Setup test helpers
+        run: |
+          docker exec -i taskflow-postgres psql -U postgres -d taskflow -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE OR REPLACE FUNCTION _test_create_workspace(p_nome text, p_user_id uuid)
+          RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER AS $$
+          DECLARE ws_id uuid;
+          BEGIN
+            SET LOCAL session_replication_role = replica;
+            INSERT INTO workspaces (nome) VALUES (p_nome) RETURNING id INTO ws_id;
+            INSERT INTO workspace_usuarios (workspace_id, user_id, papel)
+              VALUES (ws_id, p_user_id, 'admin');
+            SET LOCAL session_replication_role = DEFAULT;
+            RETURN ws_id;
+          END;
+          $$;
+          SQL
+
       - name: Create admin user
         run: |
           node --env-file=.env.local scripts/cli.mjs bootstrap \

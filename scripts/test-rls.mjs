@@ -89,28 +89,16 @@ async function createUserWithSession(email, password, name) {
 async function createWorkspace(client, userId, name) {
   if (!userId) throw new Error(`createWorkspace: userId e null/undefined`);
 
-  // Usa o CLIENT AUTENTICADO do user (nao admin) pra que auth.uid()
-  // funcione em triggers que auto-inserem em workspace_usuarios.
-  const { data, error } = await client.from("workspaces").insert({ nome: name }).select().single();
+  // Usa a RPC _test_create_workspace que foi criada pelo CI step
+  // "Setup test helpers" (via docker exec psql). Essa funcao desabilita
+  // triggers durante o INSERT (session_replication_role=replica) pra
+  // evitar o trigger que tenta auth.uid() — que e NULL com service role.
+  const { data, error } = await admin.rpc("_test_create_workspace", {
+    p_nome: name,
+    p_user_id: userId,
+  });
   if (error) throw new Error(`Criar workspace: ${error.message}`);
-
-  // Verifica se o trigger ja criou a membership (evita duplicata)
-  const { data: existing } = await admin.from("workspace_usuarios")
-    .select("id")
-    .eq("workspace_id", data.id)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (!existing) {
-    const { error: memErr } = await admin.from("workspace_usuarios").insert({
-      workspace_id: data.id,
-      user_id: userId,
-      papel: "admin",
-    });
-    if (memErr) throw new Error(`Criar workspace membership: ${memErr.message}`);
-  }
-
-  return data;
+  return { id: data };
 }
 
 async function createQuadro(workspaceId, name) {
