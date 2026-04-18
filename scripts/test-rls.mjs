@@ -41,6 +41,10 @@ function assert(condition, label) {
   }
 }
 
+async function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 async function createUserWithSession(email, password, name) {
   // Create user via admin API
   const { data: created, error } = await admin.auth.admin.createUser({
@@ -55,6 +59,10 @@ async function createUserWithSession(email, password, name) {
   if (!user?.id) {
     throw new Error(`Criar user ${email}: resposta sem user.id — data=${JSON.stringify(created)}`);
   }
+  console.log(`  User criado: ${email} (${user.id})`);
+
+  // Delay pra GoTrue propagar user pro Postgres (CI pode ser lento)
+  await sleep(1000);
 
   // Create perfil row (workaround trigger)
   await admin.from("perfis").upsert(
@@ -66,8 +74,14 @@ async function createUserWithSession(email, password, name) {
   const userClient = createClient(supabaseUrl, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { error: loginErr } = await userClient.auth.signInWithPassword({ email, password });
-  if (loginErr) throw new Error(`Login ${email}: ${loginErr.message}`);
+
+  // Retry login (GoTrue pode demorar pra propagar em CI)
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { error: loginErr } = await userClient.auth.signInWithPassword({ email, password });
+    if (!loginErr) break;
+    if (attempt === 2) throw new Error(`Login ${email} falhou apos 3 tentativas: ${loginErr.message}`);
+    await sleep(1000);
+  }
 
   return { user, client: userClient };
 }
