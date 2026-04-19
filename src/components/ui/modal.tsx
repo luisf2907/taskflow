@@ -82,7 +82,7 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
           animate="visible"
           exit="exit"
           variants={fadeOnly}
-          className="fixed inset-0 z-50 flex items-start justify-center py-[5vh] overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-stretch md:items-start justify-center p-0 md:py-[5vh] overflow-y-auto"
           style={{
             background: "rgba(0, 0, 0, 0.6)",
             backdropFilter: "blur(8px)",
@@ -102,16 +102,14 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
             exit="exit"
             variants={scaleIn}
             className={cn(
-              "w-full max-w-lg mx-4 my-auto rounded-[var(--tf-radius-lg)] border",
+              "w-full max-w-lg mx-0 md:mx-4 my-0 md:my-auto rounded-none md:rounded-[var(--tf-radius-lg)] border-0 md:border",
+              "flex flex-col min-h-[100dvh] max-h-[100dvh] md:min-h-0 md:max-h-[90vh]",
               className
             )}
             style={{
               background: "var(--tf-surface)",
               borderColor: "var(--tf-border)",
               boxShadow: "var(--tf-shadow-lg)",
-              maxHeight: "90vh",
-              display: "flex",
-              flexDirection: "column",
             }}
           >
             {titulo && (

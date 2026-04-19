@@ -264,9 +264,9 @@ export function DetalheCartao({
         }}
       />
 
-      <div className="relative min-h-full flex items-center justify-center p-4">
+      <div className="relative min-h-full flex items-stretch md:items-center justify-center p-0 md:p-4">
         <div
-          className="relative rounded-[var(--tf-radius-xl)] w-full max-w-4xl z-10 overflow-hidden"
+          className="relative rounded-none md:rounded-[var(--tf-radius-xl)] w-full max-w-4xl z-10 overflow-hidden min-h-screen md:min-h-0"
           style={{
             background: "var(--tf-surface)",
             border: "1px solid var(--tf-border)",
@@ -275,8 +275,8 @@ export function DetalheCartao({
         >
         {/* ─── TOP BAR ─── */}
         <div
-          className="flex items-center justify-between px-5 h-10"
-          style={{ borderBottom: "1px solid var(--tf-border)" }}
+          className="flex items-center justify-between px-3 md:px-5 h-12 md:h-10 sticky top-0 z-10"
+          style={{ borderBottom: "1px solid var(--tf-border)", background: "var(--tf-surface)" }}
         >
           <div className="flex items-center gap-1.5">
             {etiquetasDoCartao.length > 0 && (
@@ -347,21 +347,21 @@ export function DetalheCartao({
           </div>
           <button
             onClick={handleFechar}
-            className="p-1 transition-colors hover:bg-[var(--tf-surface-hover)]"
+            className="w-10 h-10 md:w-7 md:h-7 -mr-1 md:mr-0 flex items-center justify-center transition-colors hover:bg-[var(--tf-surface-hover)]"
             style={{
               color: "var(--tf-text-tertiary)",
               borderRadius: "var(--tf-radius-xs)",
             }}
             aria-label="Fechar detalhes do cartão"
           >
-            <X size={15} strokeWidth={1.75} />
+            <X size={18} strokeWidth={1.75} />
           </button>
         </div>
 
         <div className="flex flex-col md:flex-row md:min-h-[480px]">
           {/* ═══ LEFT — Main Content ═══ */}
-          <div className="flex-1 overflow-y-auto max-h-[75vh]">
-            <div className="px-4 sm:px-8 pb-8 pt-2 space-y-6">
+          <div className="flex-1 md:overflow-y-auto md:max-h-[75vh]">
+            <div className="px-4 sm:px-8 pb-8 pt-3 md:pt-2 space-y-5 md:space-y-6">
 
               {/* TITLE */}
               <input
@@ -369,7 +369,7 @@ export function DetalheCartao({
                 onChange={(e) => setTitulo(e.target.value)}
                 onBlur={salvar}
                 maxLength={200}
-                className="w-full text-[1.375rem] font-semibold bg-transparent outline-none px-1.5 py-1 -mx-1.5"
+                className="w-full text-[1.125rem] md:text-[1.375rem] font-semibold bg-transparent outline-none px-1.5 py-1 -mx-1.5"
                 style={{
                   color: "var(--tf-text)",
                   border: "1px solid transparent",
@@ -665,7 +665,7 @@ export function DetalheCartao({
 
           {/* ═══ RIGHT — Properties ═══ */}
           <div
-            className="w-full md:w-[240px] shrink-0 border-t md:border-t-0 md:border-l overflow-y-auto max-h-[50vh] md:max-h-[75vh]"
+            className="w-full md:w-[240px] shrink-0 border-t md:border-t-0 md:border-l md:overflow-y-auto md:max-h-[75vh]"
             style={{
               borderColor: "var(--tf-border)",
               background: "var(--tf-bg-secondary)",
