@@ -20,6 +20,7 @@ import { MarkdownPreview } from "@/components/wiki/markdown-preview";
 import { CardEmbedPicker } from "@/components/wiki/card-embed-picker";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Drawer } from "@/components/ui/drawer";
+import { EmptyState } from "@/components/ui/empty-state";
 import { tiptapJsonToMarkdown, markdownToTiptapJson } from "@/lib/wiki-markdown";
 import type { WikiEditMode } from "@/components/wiki/wiki-mode-switcher";
 import type { WikiPagina, WikiPaginaTree } from "@/types";
@@ -379,12 +380,21 @@ export default function WikiPage() {
                   </div>
                 )}
               </div>
+            ) : paginas.length === 0 ? (
+              <EmptyState
+                ilustracao="wiki"
+                overline="Wiki"
+                titulo="Sua wiki está vazia"
+                descricao="Documente processos, decisoes e conhecimento do time numa pagina compartilhada."
+                acaoLabel="Criar primeira página"
+                onAcao={() => handleCriarPagina()}
+              />
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center gap-4">
                 <BookOpen size={48} strokeWidth={1.2} style={{ color: "var(--tf-border)" }} />
                 <div className="text-center">
                   <p className="text-[15px] font-medium mb-1" style={{ color: "var(--tf-text-secondary)" }}>
-                    {paginas.length === 0 ? "Sua wiki está vazia" : "Selecione uma página"}
+                    Selecione uma página
                   </p>
                   <p className="text-[13px]" style={{ color: "var(--tf-text-tertiary)" }}>
                     {paginas.length === 0

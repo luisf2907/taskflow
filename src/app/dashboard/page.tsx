@@ -13,7 +13,6 @@ import {
   Grid3X3,
   Layers,
   Plus,
-  Sparkles,
   Target,
   Flame,
   Activity,
@@ -21,6 +20,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import OnboardingWizard from "@/components/onboarding/onboarding-wizard";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import { QuadroBentoCard } from "./_components/quadro-bento-card";
 import { WorkspaceBentoCard } from "./_components/workspace-bento-card";
@@ -367,70 +367,23 @@ export default function PaginaInicial() {
                 {/* Empty State Geral */}
                 {quadros.length === 0 && workspaces.length === 0 && (
                   <div
-                    className="flex flex-col justify-center items-center text-center py-14 px-6 mx-auto w-full max-w-xl"
+                    className="mx-auto w-full max-w-xl"
                     style={{
                       border: "1px dashed var(--tf-border-strong)",
                       background: "var(--tf-bg-secondary)",
                       borderRadius: "var(--tf-radius-md)",
                     }}
                   >
-                    <div
-                      className="w-12 h-12 flex items-center justify-center mb-4"
-                      style={{
-                        background: "var(--tf-surface)",
-                        border: "1px solid var(--tf-border)",
-                        borderRadius: "var(--tf-radius-sm)",
-                        color: "var(--tf-accent)",
-                      }}
-                    >
-                      <Sparkles size={22} strokeWidth={1.75} />
-                    </div>
-                    <p className="label-mono mb-1" style={{ color: "var(--tf-text-tertiary)" }}>
-                      Começo do zero
-                    </p>
-                    <h2
-                      className="text-[1.375rem] font-semibold mb-2"
-                      style={{ color: "var(--tf-text)", letterSpacing: "-0.015em" }}
-                    >
-                      O palco está vazio
-                    </h2>
-                    <p
-                      className="text-[0.8125rem] mb-6 max-w-md"
-                      style={{
-                        color: "var(--tf-text-secondary)",
-                        letterSpacing: "-0.005em",
-                      }}
-                    >
-                      Comece sua jornada criando seu primeiro grande projeto ou
-                      uma sprint rápida. O que vamos construir hoje?
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-center gap-2">
-                      <button
-                        onClick={() => setModalWorkspace(true)}
-                        className="h-10 px-4 text-[0.8125rem] font-medium text-white transition-colors hover:brightness-110 w-full sm:w-auto"
-                        style={{
-                          background: "var(--tf-accent)",
-                          border: "1px solid var(--tf-accent)",
-                          borderRadius: "var(--tf-radius-xs)",
-                          letterSpacing: "-0.005em",
-                        }}
-                      >
-                        Criar workspace
-                      </button>
-                      <button
-                        onClick={() => abrirModalCriarQuadro()}
-                        className="h-10 px-4 text-[0.8125rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)] w-full sm:w-auto"
-                        style={{
-                          color: "var(--tf-text)",
-                          border: "1px solid var(--tf-border-strong)",
-                          borderRadius: "var(--tf-radius-xs)",
-                          background: "var(--tf-surface)",
-                          letterSpacing: "-0.005em",
-                        }}
-                      >
-                        Quadro avulso
-                      </button>
-                    </div>
+                    <EmptyState
+                      ilustracao="workspace"
+                      overline="Começo do zero"
+                      titulo="O palco está vazio"
+                      descricao="Comece sua jornada criando seu primeiro grande projeto ou uma sprint rápida. O que vamos construir hoje?"
+                      acaoLabel="Criar workspace"
+                      onAcao={() => setModalWorkspace(true)}
+                      acaoSecundariaLabel="Quadro avulso"
+                      onAcaoSecundaria={() => abrirModalCriarQuadro()}
+                    />
                   </div>
                 )}
 
