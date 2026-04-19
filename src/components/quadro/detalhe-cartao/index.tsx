@@ -361,7 +361,7 @@ export function DetalheCartao({
         <div className="flex flex-col md:flex-row md:min-h-[480px]">
           {/* ═══ LEFT — Main Content ═══ */}
           <div className="flex-1 md:overflow-y-auto md:max-h-[75vh]">
-            <div className="px-4 sm:px-8 pb-8 pt-3 md:pt-2 space-y-5 md:space-y-6">
+            <div className="px-4 sm:px-8 pb-10 pt-4 md:pt-5 space-y-6 md:space-y-7">
 
               {/* TITLE */}
               <input
@@ -369,12 +369,12 @@ export function DetalheCartao({
                 onChange={(e) => setTitulo(e.target.value)}
                 onBlur={salvar}
                 maxLength={200}
-                className="w-full text-[1.125rem] md:text-[1.375rem] font-semibold bg-transparent outline-none px-1.5 py-1 -mx-1.5"
+                className="w-full text-[1.375rem] md:text-[1.75rem] font-semibold bg-transparent outline-none px-1.5 py-1 -mx-1.5 leading-tight"
                 style={{
                   color: "var(--tf-text)",
                   border: "1px solid transparent",
                   borderRadius: "var(--tf-radius-xs)",
-                  letterSpacing: "-0.02em",
+                  letterSpacing: "-0.025em",
                   transition: "border-color 0.15s ease, background 0.15s ease",
                 }}
                 onFocus={(e) => {
@@ -483,8 +483,13 @@ export function DetalheCartao({
               )}
 
               {/* ── DESCRIPTION ── */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
+              <div className="pt-4 border-t" style={{ borderColor: "var(--tf-border-subtle)" }}>
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span
+                    aria-hidden
+                    className="w-0.5 h-3.5 rounded-full"
+                    style={{ background: "var(--tf-accent)" }}
+                  />
                   <AlignLeft size={13} strokeWidth={1.75} style={{ color: "var(--tf-text-tertiary)" }} />
                   <h3
                     className="label-mono"
@@ -605,9 +610,14 @@ export function DetalheCartao({
 
               {/* ── SUBTASKS / CHECKLISTS ── */}
               {checklists.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
+                <div className="pt-4 border-t" style={{ borderColor: "var(--tf-border-subtle)" }}>
+                  <div className="flex items-center justify-between mb-2.5">
                     <div className="flex items-center gap-2">
+                      <span
+                        aria-hidden
+                        className="w-0.5 h-3.5 rounded-full"
+                        style={{ background: "var(--tf-accent)" }}
+                      />
                       <CheckSquare size={13} strokeWidth={1.75} style={{ color: "var(--tf-text-tertiary)" }} />
                       <h3
                         className="label-mono"
