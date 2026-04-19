@@ -286,22 +286,30 @@ function SidebarBody({
             <div
               className={cn(
                 "flex items-center mb-1",
-                aberta ? "px-3 justify-between" : "justify-center"
+                aberta ? "justify-between pr-2" : "justify-center"
               )}
             >
               <SectionHeader aberta={aberta}>
                 <span className="flex-1">Sprints</span>
               </SectionHeader>
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   onNavigate?.();
-                  onNovoQuadro();
+                  // Se ja estamos no dashboard, chama direto o handler
+                  // (que abre o modal). Se nao, dispara evento global +
+                  // fallback pra query param em caso de redirect.
+                  if (typeof window !== "undefined" && window.location.pathname === "/dashboard") {
+                    onNovoQuadro();
+                  } else {
+                    window.location.href = "/dashboard?new-sprint=1";
+                  }
                 }}
                 aria-label="Criar novo quadro"
                 title="Novo quadro"
                 className={cn(
                   "rounded-[var(--tf-radius-xs)] sidebar-item transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)] flex items-center justify-center",
-                  aberta ? "w-9 h-9 md:w-7 md:h-7 -mr-1" : "w-9 h-9 md:w-7 md:h-7 mt-2"
+                  aberta ? "w-9 h-9 md:w-7 md:h-7" : "w-9 h-9 md:w-7 md:h-7 mt-2"
                 )}
                 style={{ color: "var(--tf-text-tertiary)" }}
               >

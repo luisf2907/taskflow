@@ -86,17 +86,28 @@ export default function PaginaInicial() {
   const router = useRouter();
   const carregando = carregandoQuadros || carregandoWs;
 
-  // Listener para abrir modal de workspace via evento global (sidebar) ou query param
+  // Listener para abrir modais via evento global (sidebar) ou query param.
+  // Queries: ?new-workspace=1 abre modal de workspace, ?new-sprint=1 abre
+  // modal de sprint (vindo de outras paginas via sidebar).
   useEffect(() => {
     function handleOpenWsModal() { setEditandoWs(null); setModalWorkspace(true); }
+    function handleOpenSprintModal() { abrirModalCriarQuadro(); }
     window.addEventListener("open-workspace-modal", handleOpenWsModal);
-    // Abrir via query param (?new-workspace=1)
+    window.addEventListener("open-sprint-modal", handleOpenSprintModal);
     const params = new URLSearchParams(window.location.search);
     if (params.get("new-workspace")) {
       handleOpenWsModal();
       window.history.replaceState({}, "", "/dashboard");
     }
-    return () => window.removeEventListener("open-workspace-modal", handleOpenWsModal);
+    if (params.get("new-sprint")) {
+      handleOpenSprintModal();
+      window.history.replaceState({}, "", "/dashboard");
+    }
+    return () => {
+      window.removeEventListener("open-workspace-modal", handleOpenWsModal);
+      window.removeEventListener("open-sprint-modal", handleOpenSprintModal);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
