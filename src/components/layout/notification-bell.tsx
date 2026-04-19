@@ -141,14 +141,22 @@ export function NotificationBell() {
           </div>
         ) : (
           notificacoes.map((n) => (
-            <button
+            <div
               key={n.id}
               role="listitem"
-              className="group flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors w-full text-left hover:bg-[var(--tf-surface-hover)]"
+              tabIndex={0}
+              className="group flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors w-full text-left hover:bg-[var(--tf-surface-hover)] outline-none focus-visible:bg-[var(--tf-surface-hover)]"
               style={{ borderBottom: "1px solid var(--tf-border-subtle)" }}
               onClick={() => {
                 marcarComoLida(n.id);
                 if (n.link) window.location.href = n.link;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  marcarComoLida(n.id);
+                  if (n.link) window.location.href = n.link;
+                }
               }}
             >
               {/* Unread indicator — orange bar vertical */}
@@ -201,13 +209,14 @@ export function NotificationBell() {
                   e.stopPropagation();
                   apagar(n.id);
                 }}
-                className="shrink-0 p-1 rounded-[var(--tf-radius-xs)] opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+                className="shrink-0 w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded-[var(--tf-radius-xs)] opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
                 style={{ color: "var(--tf-text-tertiary)" }}
                 title="Apagar notificação"
+                aria-label="Apagar notificação"
               >
-                <X size={11} />
+                <X size={13} />
               </button>
-            </button>
+            </div>
           ))
         )}
       </div>
