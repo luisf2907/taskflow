@@ -23,35 +23,22 @@ function buildPrompt(data: z.infer<typeof schema>) {
   const temEtiquetas = data.etiquetaIdsAtuais.length > 0;
 
   const etiquetasSection = data.etiquetasDisponiveis.length > 0
-    ? `\nETIQUETAS DISPONIVEIS (use o "id" exato):
-${data.etiquetasDisponiveis.map((e) => `- id: "${e.id}" | nome: "${e.nome}"`).join("\n")}
-Etiquetas ja atribuidas: ${temEtiquetas ? data.etiquetaIdsAtuais.map((id) => `"${id}"`).join(", ") : "nenhuma"}`
+    ? `\nETIQUETAS (id exato): ${data.etiquetasDisponiveis.map((e) => `"${e.id}"=${e.nome}`).join(", ")}\nJa atribuidas: ${temEtiquetas ? data.etiquetaIdsAtuais.join(",") : "nenhuma"}`
     : "";
 
-  return `Voce e um assistente de project management. Melhore um card de tarefa existente.
+  return `Melhore este card. Texto plano, sem markdown/emoji.
 
-CARD ATUAL:
-- Titulo: "${data.titulo}"
-- Descricao: ${temDescricao ? `"${data.descricao}"` : "(vazia)"}
-- Story Points: ${data.peso ?? "(nao definido)"}
-- Checklist atual: ${temChecklist ? data.checklistItens.map((i) => `"${i}"`).join(", ") : "(nenhum)"}
-${etiquetasSection}
+CARD:
+titulo: ${data.titulo}
+descricao: ${temDescricao ? data.descricao.slice(0, 400) : "(vazia)"}
+peso: ${data.peso ?? "(nao definido)"}
+checklist: ${temChecklist ? data.checklistItens.slice(0, 8).join(" | ") : "(vazio)"}${etiquetasSection}
 
 REGRAS:
-1. "descricao": ${temDescricao ? "Melhore a descricao existente mantendo o conteudo original. Adicione user story no inicio se nao tiver." : "Crie descricao comecando com user story 'Como [persona], quero [acao] para [beneficio].' seguida de detalhes tecnicos."}
-2. "checklist_novos": array de NOVOS itens de checklist para ADICIONAR (criterios de aceitacao que faltam). SEMPRE gere pelo menos 3 itens. ${temChecklist ? "NAO repita itens que ja existem, adicione apenas novos criterios." : "Gere 3-6 criterios de aceitacao claros e verificaveis."}
-3. "etiqueta_ids": array COMPLETO de IDs de etiquetas que devem estar no card (incluindo as ja atribuidas se fizerem sentido, mais novas se aplicavel). Se nenhuma se encaixar, retorne array vazio.
-4. "peso_sugerido": se nao tem peso definido, sugira em fibonacci (1,2,3,5,8,13). Se ja tem, retorne null.
-5. Retorne APENAS um JSON object valido
-6. FORMATACAO: Use APENAS texto plano. Proibido: markdown (**, ##, -, *, \`, [], ()), emojis, HTML. Use quebras de linha simples (\\n) para separar paragrafos.
-
-EXEMPLO:
-{
-  "descricao": "Como usuario, quero fazer login com Google para acessar rapidamente.\\n\\nIntegrar OAuth 2.0 na tela de login existente com callback e tratamento de erros.",
-  "checklist_novos": ["Testar em mobile", "Tratar timeout de rede"],
-  "etiqueta_ids": ["id1", "id2"],
-  "peso_sugerido": 5
-}`;
+- descricao: ${temDescricao ? "Mantenha conteudo. Adicione user story 'Como X, quero Y para Z.' se faltar." : "Comece com user story 'Como X, quero Y para Z.' + 1 frase tecnica."} Max 400 chars.
+- checklist_novos: 3-5 criterios novos curtos (<80 chars cada), nao repetir existentes.
+- etiqueta_ids: lista COMPLETA de ids aplicaveis (incluindo existentes).
+- peso_sugerido: fibonacci (1,2,3,5,8,13) se peso nao definido, senao null.`;
 }
 
 export async function POST(request: NextRequest) {
@@ -77,7 +64,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash" });
 
     const prompt = buildPrompt(parsed.data);
     const result = await model.generateContent({
@@ -92,6 +79,7 @@ export async function POST(request: NextRequest) {
             descricao: { type: SchemaType.STRING },
             checklist_novos: {
               type: SchemaType.ARRAY,
+              maxItems: 5,
               items: { type: SchemaType.STRING },
             },
             etiqueta_ids: {
@@ -102,6 +90,9 @@ export async function POST(request: NextRequest) {
           },
           required: ["descricao", "checklist_novos", "etiqueta_ids"],
         },
+        // Thinking mode (Gemini 2.5/3.x) consome tokens silenciosamente.
+        // thinkingBudget: 0 garante que o budget de 4k vai todo pro JSON.
+        ...({ thinkingConfig: { thinkingBudget: 0 } } as object),
       },
     });
 

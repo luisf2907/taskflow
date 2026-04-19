@@ -17,37 +17,19 @@ const schema = z.object({
 
 function buildPrompt(etiquetas?: Array<{ id: string; nome: string; cor: string }>) {
   const etiquetasSection = etiquetas && etiquetas.length > 0
-    ? `\n\nETIQUETAS DISPONIVEIS (use o "id" exato para atribuir):
-${etiquetas.map((e) => `- id: "${e.id}" | nome: "${e.nome}"`).join("\n")}
-
-Para cada card, inclua "etiqueta_ids" com array dos IDs das etiquetas que fazem sentido. Se nenhuma se encaixar, deixe array vazio.`
+    ? `\nETIQUETAS (use id exato):\n${etiquetas.map((e) => `"${e.id}"=${e.nome}`).join(", ")}`
     : "";
 
-  return `Voce e um assistente de project management. Quebre requisitos em cards de tarefa.
+  // Prompt enxuto pra evitar verbosidade que estoura tokens.
+  // Regras de tamanho sao explicitas (chars) pra limitar output.
+  return `Voce quebra requisitos em cards de tarefa. Texto plano, sem markdown/emoji.
 
-REGRAS:
-1. Quebre o texto em cards independentes e acionaveis
-2. Cada card DEVE ter:
-   - "titulo": frase curta, clara e imperativa (ex: "Implementar login com Google"). NAO use formato user story no titulo.
-   - "descricao": comece com a user story no formato "Como [persona], quero [acao] para [beneficio]." seguida de 1-2 frases tecnicas explicando a implementacao.
-   - "peso": estimativa em fibonacci (1, 2, 3, 5, 8, 13) baseada na complexidade
-   - "checklist": array de strings com criterios de aceitacao claros e verificaveis (3-6 itens)
-   - "etiqueta_ids": array de IDs de etiquetas que se aplicam (pode ser vazio)
-3. Minimo 1 card, maximo 10 cards
-4. Nao repita cards nem invente funcionalidades nao mencionadas
-5. Retorne APENAS JSON array valido
-6. FORMATACAO: Use APENAS texto plano. Proibido: markdown (**, ##, -, *, \`, [], ()), emojis, HTML. Use quebras de linha simples (\\n) para separar paragrafos.${etiquetasSection}
-
-EXEMPLO:
-[
-  {
-    "titulo": "Implementar login com Google",
-    "descricao": "Como usuario, quero fazer login com minha conta Google para acessar o sistema rapidamente sem criar senha.\n\nIntegrar OAuth 2.0 do Google na tela de login existente.",
-    "peso": 5,
-    "checklist": ["Botao 'Entrar com Google' na tela de login", "Redirect para consent screen do Google", "Callback OAuth salva token e cria sessao", "Tratar erro de autenticacao negada"],
-    "etiqueta_ids": []
-  }
-]`;
+Cards (min 1, max 5):
+- titulo: imperativo curto (<60 chars). Nao use formato user story.
+- descricao: "Como [persona], quero [acao] para [beneficio]." + 1 frase tecnica. Max 250 chars.
+- peso: fibonacci (1,2,3,5,8,13).
+- checklist: 3-5 criterios acionaveis curtos (<80 chars cada).
+- etiqueta_ids: array de ids aplicaveis, ou vazio.${etiquetasSection}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -78,24 +60,23 @@ export async function POST(request: NextRequest) {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    // gemini-flash-latest: alias estavel mantido pela Google. Antes era
-    // "gemini-2.5-flash" que as vezes retornava respostas truncadas.
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash" });
 
     const prompt = buildPrompt(etiquetas);
     const result = await model.generateContent({
       contents: [
-        { role: "user", parts: [{ text: `${prompt}\n\nTexto do usuario:\n${texto}` }] },
+        { role: "user", parts: [{ text: `${prompt}\n\nRequisito:\n${texto}` }] },
       ],
       generationConfig: {
         temperature: 0.3,
         maxOutputTokens: 8000,
         responseMimeType: "application/json",
-        // responseSchema garante estrutura fixa — elimina os casos em que
-        // o modelo retornava markdown, texto extra ou JSON malformado
-        // (que causavam 502 "formato invalido").
+        // responseSchema garante estrutura fixa — elimina casos em que
+        // o modelo retornava markdown/texto extra/JSON malformado.
+        // maxItems: 5 limita o tamanho total do output.
         responseSchema: {
           type: SchemaType.ARRAY,
+          maxItems: 5,
           items: {
             type: SchemaType.OBJECT,
             properties: {
@@ -104,6 +85,7 @@ export async function POST(request: NextRequest) {
               peso: { type: SchemaType.NUMBER },
               checklist: {
                 type: SchemaType.ARRAY,
+                maxItems: 5,
                 items: { type: SchemaType.STRING },
               },
               etiqueta_ids: {
@@ -114,6 +96,11 @@ export async function POST(request: NextRequest) {
             required: ["titulo", "descricao", "peso", "checklist", "etiqueta_ids"],
           },
         },
+        // Thinking mode dos Gemini 2.5/3.x consome tokens de output
+        // silenciosamente antes de responder. Desligar garante que
+        // o budget de 8k vai todo pro JSON visivel.
+        // SDK v0.24 ainda nao tipa thinkingConfig mas a API REST aceita.
+        ...({ thinkingConfig: { thinkingBudget: 0 } } as object),
       },
     });
 
