@@ -241,6 +241,35 @@ body {
 .scroll-clip-lg { clip-path: inset(0 round var(--tf-radius-xl)); }
 .scroll-clip { clip-path: inset(0 round var(--tf-radius-lg)); }
 
+/* ---- SKELETON ---- */
+.tf-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--tf-bg-secondary);
+  border-radius: var(--tf-radius-xs);
+}
+.tf-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0,
+    var(--tf-surface-hover) 50%,
+    transparent 100%
+  );
+  animation: tf-skeleton-shimmer 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes tf-skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tf-skeleton::after { animation: none; }
+}
+
 /* Seleção de texto */
 ::selection {
   background: rgba(255, 90, 31, 0.28);

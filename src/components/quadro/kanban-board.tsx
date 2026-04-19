@@ -25,7 +25,7 @@ import {
   SortableContext,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Loader2 } from "lucide-react";
+import { KanbanSkeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BarraFiltros, Filtros } from "./barra-filtros";
@@ -247,11 +247,7 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
   }
 
   if (carregandoColunas) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 size={24} className="animate-spin" style={{ color: "var(--tf-accent)" }} />
-      </div>
-    );
+    return <KanbanSkeleton colunas={3} />;
   }
 
   return (
