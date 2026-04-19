@@ -14,7 +14,9 @@ import {
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
-  closestCorners,
+  pointerWithin,
+  rectIntersection,
+  type CollisionDetection,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -24,7 +26,7 @@ import {
 } from "@dnd-kit/sortable";
 import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BarraFiltros, Filtros } from "./barra-filtros";
 import { Cartao } from "./cartao";
 import { Coluna } from "./coluna";
@@ -149,19 +151,34 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
-      activationConstraint: { distance: 5 },
+      activationConstraint: { distance: 8 },
     }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 6 },
+      activationConstraint: { delay: 250, tolerance: 8 },
     }),
     useSensor(KeyboardSensor)
   );
+
+  // pointerWithin: so muda de coluna quando o cursor entra DENTRO da
+  // coluna alvo (em vez de pelos cantos mais proximos). Fallback em
+  // rectIntersection pra quando o cursor esta num gap entre colunas.
+  // Menos sensivel que closestCorners — evita pular coluna sem querer.
+  const collisionDetection = useCallback<CollisionDetection>((args) => {
+    const withinPointer = pointerWithin(args);
+    if (withinPointer.length > 0) return withinPointer;
+    return rectIntersection(args);
+  }, []);
+
+  // Guarda contra onDragOver disparar multiplas vezes por frame.
+  // Se o cartao ja foi movido pra essa coluna, nao dispara mover() de novo.
+  const ultimaColunaRef = useRef<string | null>(null);
 
   function handleDragStart(event: DragStartEvent) {
     const { active } = event;
     const data = active.data.current;
     if (data?.type === "cartao") {
       setCartaoArrastando(data.cartao);
+      ultimaColunaRef.current = data.cartao.coluna_id ?? null;
     }
   }
 
@@ -176,45 +193,47 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
 
     const cartaoAtivo = activeData.cartao as CartaoComResumo;
 
+    // Identifica a coluna alvo (seja ela diretamente ou via cartao alvo)
+    let colunaAlvoId: string | null = null;
+    let indiceAlvo: number | null = null;
+
     if (overData?.type === "cartao") {
       const cartaoAlvo = overData.cartao as CartaoComResumo;
-      if (cartaoAtivo.coluna_id !== cartaoAlvo.coluna_id && cartaoAlvo.coluna_id) {
+      if (cartaoAlvo.coluna_id) {
+        colunaAlvoId = cartaoAlvo.coluna_id;
         const cartoesAlvo = cartoesDaColuna(cartaoAlvo.coluna_id);
-        const indiceAlvo = cartoesAlvo.findIndex(
-          (c) => c.id === cartaoAlvo.id
-        );
-        try {
-          const result = await mover(cartaoAtivo.id, cartaoAlvo.coluna_id, indiceAlvo);
-          if (result?.blocked) {
-            setAlertaBloqueio(result.reason || "Ação bloqueada.");
-            setTimeout(() => setAlertaBloqueio(null), 4000);
-          }
-        } catch {
-          toast.error("Erro ao mover cartão. Tente novamente.");
-        }
+        indiceAlvo = cartoesAlvo.findIndex((c) => c.id === cartaoAlvo.id);
       }
+    } else if (overData?.type === "coluna") {
+      colunaAlvoId = overData.coluna.id;
+      indiceAlvo = cartoesDaColuna(overData.coluna.id).length;
     }
 
-    if (overData?.type === "coluna") {
-      const colunaAlvo = overData.coluna;
-      if (cartaoAtivo.coluna_id !== colunaAlvo.id) {
-        const cartoesAlvo = cartoesDaColuna(colunaAlvo.id);
-        try {
-          const result = await mover(cartaoAtivo.id, colunaAlvo.id, cartoesAlvo.length);
-          if (result?.blocked) {
-            setAlertaBloqueio(result.reason || "Ação bloqueada.");
-            setTimeout(() => setAlertaBloqueio(null), 4000);
-          }
-        } catch {
-          toast.error("Erro ao mover cartão. Tente novamente.");
-        }
+    if (!colunaAlvoId) return;
+    // Ja estamos nessa coluna? Pula — evita re-trigger em loop.
+    if (colunaAlvoId === cartaoAtivo.coluna_id) {
+      ultimaColunaRef.current = colunaAlvoId;
+      return;
+    }
+    // Ja movemos pra essa coluna no ultimo over? Pula.
+    if (ultimaColunaRef.current === colunaAlvoId) return;
+    ultimaColunaRef.current = colunaAlvoId;
+
+    try {
+      const result = await mover(cartaoAtivo.id, colunaAlvoId, indiceAlvo ?? 0);
+      if (result?.blocked) {
+        setAlertaBloqueio(result.reason || "Ação bloqueada.");
+        setTimeout(() => setAlertaBloqueio(null), 4000);
       }
+    } catch {
+      toast.error("Erro ao mover cartão. Tente novamente.");
     }
   }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setCartaoArrastando(null);
+    ultimaColunaRef.current = null;
 
     if (!over || active.id === over.id) return;
 
@@ -304,7 +323,7 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
         {view === "kanban" && (
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCorners}
+            collisionDetection={collisionDetection}
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
