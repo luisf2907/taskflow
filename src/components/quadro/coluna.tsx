@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { CartaoComResumo } from "@/hooks/use-cartoes";
 import { Coluna as ColunaType, Etiqueta, Membro } from "@/types";
+import { useDndContext } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
@@ -42,19 +43,29 @@ export const Coluna = memo(function Coluna({
   const [confirmExcluir, setConfirmExcluir] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver, active } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `coluna-${coluna.id}`,
     data: { type: "coluna", coluna },
   });
 
-  // Realca a coluna quando um cartao esta sendo arrastado sobre ela
-  // (ou sobre um cartao dentro dela). `isOver` do useSortable so cobre
-  // o caso do ponteiro estar exatamente sobre o wrapper, entao tambem
-  // verificamos se o active pertence a esta coluna.
+  // `useSortable.isOver` so dispara quando o ponteiro esta DIRETAMENTE
+  // sobre o wrapper da coluna — falha quando ha cards dentro e o user
+  // arrasta pro meio deles (over vira o card). Usamos useDndContext
+  // pra olhar o over atual e deduzir se pertence a esta coluna.
+  const { active, over } = useDndContext();
   const isCardDrag = active?.data.current?.type === "cartao";
-  const arrastandoCartaoDeOutraColuna =
+  const arrastandoDeOutraColuna =
     isCardDrag && active?.data.current?.cartao?.coluna_id !== coluna.id;
-  const estaSendoAlvo = isOver && arrastandoCartaoDeOutraColuna;
+
+  let overColunaId: string | null = null;
+  const overType = over?.data.current?.type;
+  if (overType === "coluna") {
+    overColunaId = over?.data.current?.coluna?.id ?? null;
+  } else if (overType === "cartao") {
+    overColunaId = over?.data.current?.cartao?.coluna_id ?? null;
+  }
+  const estaSendoAlvo =
+    arrastandoDeOutraColuna && overColunaId === coluna.id;
 
   const style = { transform: CSS.Transform.toString(transform), transition };
   const pesoTotal = useMemo(
