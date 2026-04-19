@@ -42,10 +42,19 @@ export const Coluna = memo(function Coluna({
   const [confirmExcluir, setConfirmExcluir] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver, active } = useSortable({
     id: `coluna-${coluna.id}`,
     data: { type: "coluna", coluna },
   });
+
+  // Realca a coluna quando um cartao esta sendo arrastado sobre ela
+  // (ou sobre um cartao dentro dela). `isOver` do useSortable so cobre
+  // o caso do ponteiro estar exatamente sobre o wrapper, entao tambem
+  // verificamos se o active pertence a esta coluna.
+  const isCardDrag = active?.data.current?.type === "cartao";
+  const arrastandoCartaoDeOutraColuna =
+    isCardDrag && active?.data.current?.cartao?.coluna_id !== coluna.id;
+  const estaSendoAlvo = isOver && arrastandoCartaoDeOutraColuna;
 
   const style = { transform: CSS.Transform.toString(transform), transition };
   const pesoTotal = useMemo(
@@ -69,9 +78,11 @@ export const Coluna = memo(function Coluna({
     <div
       ref={setNodeRef}
       style={style}
+      data-dnd-target={estaSendoAlvo ? "true" : undefined}
       className={cn(
         "relative flex flex-col w-[86vw] min-w-[86vw] max-w-[86vw] md:w-[290px] md:min-w-[290px] md:max-w-[290px] shrink-0 max-h-full column-surface snap-start",
-        isDragging && "opacity-50"
+        isDragging && "opacity-50",
+        "tf-dnd-target"
       )}
     >
       {/* Header */}
