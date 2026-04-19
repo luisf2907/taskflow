@@ -543,6 +543,56 @@ select:focus-visible {
     color: var(--tf-text-tertiary);
     font-weight: 500;
   }
+
+  /* ---- TYPOGRAPHY SCALE (semantic) ----
+     Use estas utilities em vez de `text-[0.8125rem]` hardcoded.
+     Casadas com --tf-text-* do design system. */
+  .tf-display {
+    font-size: var(--tf-text-4xl);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+  }
+  .tf-h1 {
+    font-size: var(--tf-text-3xl);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    font-weight: 600;
+  }
+  .tf-h2 {
+    font-size: var(--tf-text-2xl);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+  .tf-h3 {
+    font-size: var(--tf-text-xl);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+  .tf-body-lg {
+    font-size: var(--tf-text-lg);
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+  }
+  .tf-body {
+    font-size: var(--tf-text-base);
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+  }
+  .tf-caption {
+    font-size: var(--tf-text-sm);
+    line-height: 1.4;
+    color: var(--tf-text-secondary);
+  }
+  .tf-caption-mono {
+    font-size: var(--tf-text-xs);
+    line-height: 1.4;
+    font-family: var(--tf-font-mono);
+    letter-spacing: 0.02em;
+    color: var(--tf-text-tertiary);
+  }
 }
 
 /* ---- WIKI EDITOR (TipTap — Notion-like blocks) ---- */
