@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 import { getLocalDiskDriverOrNull, getStorageDriver } from "@/lib/drivers/storage/factory";
 import { createServerClient } from "@/lib/supabase/server";
 import { guardAnexoAccess } from "@/lib/anexos-guard";
+import { applyRateLimitAsync } from "@/lib/api-utils";
 
 /**
  * GET /api/storage/object/<bucket>/<path...>[?token=<t>]
@@ -81,9 +82,13 @@ export async function GET(
  * retorna 204 mesmo se arquivo nao existia.
  */
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ bucket: string; path: string[] }> },
 ) {
+  // Rate limit: 10 deletes/min por IP — previne DoS por delete em massa
+  const limited = await applyRateLimitAsync(request, "storage-delete", { maxRequests: 10 });
+  if (limited) return limited;
+
   const { bucket, path: pathSegments } = await params;
   const filePath = pathSegments.join("/");
 

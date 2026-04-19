@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 
 import { listenOnChannel } from "@/lib/realtime/pg-listen";
 import { createServerClient } from "@/lib/supabase/server";
+import { applyRateLimitAsync } from "@/lib/api-utils";
 
 /**
  * GET /api/realtime/workspace/<workspaceId>
@@ -17,6 +18,10 @@ export async function GET(
   context: { params: Promise<{ workspaceId: string }> },
 ) {
   const { workspaceId } = await context.params;
+
+  // Rate limit: 10 conexoes SSE/min por IP
+  const limited = await applyRateLimitAsync(request, "realtime-workspace", { maxRequests: 10 });
+  if (limited) return limited;
 
   const supabase = await createServerClient();
   const {

@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 import { getLocalDiskDriverOrNull, getStorageDriver } from "@/lib/drivers/storage/factory";
 import { createServerClient } from "@/lib/supabase/server";
 import { guardAnexoAccess } from "@/lib/anexos-guard";
+import { applyRateLimitAsync } from "@/lib/api-utils";
 
 /**
  * POST /api/storage/upload?bucket=<b>&path=<p>[&token=<t>]
@@ -29,6 +30,10 @@ import { guardAnexoAccess } from "@/lib/anexos-guard";
  * pra bucket/path correto.
  */
 export async function POST(request: NextRequest) {
+  // Rate limit: 30 uploads/min por IP — previne DoS por upload massivo
+  const limited = await applyRateLimitAsync(request, "storage-upload", { maxRequests: 30 });
+  if (limited) return limited;
+
   const { searchParams } = request.nextUrl;
   const bucket = searchParams.get("bucket");
   const filePath = searchParams.get("path");

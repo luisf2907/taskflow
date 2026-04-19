@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 
 import { listenOnChannel } from "@/lib/realtime/pg-listen";
 import { createServerClient } from "@/lib/supabase/server";
+import { applyRateLimitAsync } from "@/lib/api-utils";
 
 /**
  * GET /api/realtime/board/<quadroId>
@@ -29,6 +30,10 @@ export async function GET(
   context: { params: Promise<{ quadroId: string }> },
 ) {
   const { quadroId } = await context.params;
+
+  // Rate limit: 10 conexoes SSE/min por IP — multiplas abas legitimas OK
+  const limited = await applyRateLimitAsync(request, "realtime-board", { maxRequests: 10 });
+  if (limited) return limited;
 
   // ───── Auth + autorizacao ─────
   const supabase = await createServerClient();

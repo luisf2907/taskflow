@@ -5,6 +5,8 @@ import type { NextRequest } from "next/server";
 import { getServerEnv } from "@/lib/env";
 import { createServiceClient } from "@/lib/supabase/server";
 import { SUPABASE_STORAGE_KEY } from "@/lib/supabase/storage-key";
+import { applyRateLimitAsync } from "@/lib/api-utils";
+import { logger } from "@/lib/logger";
 
 /**
  * Auto-login handler pro AUTH_MODE=solo.
@@ -22,6 +24,10 @@ import { SUPABASE_STORAGE_KEY } from "@/lib/supabase/storage-key";
  * modos).
  */
 export async function GET(request: NextRequest) {
+  // Rate limit: 5 req/min por IP — bruteforce protection
+  const limited = await applyRateLimitAsync(request, "solo-login", { maxRequests: 5 });
+  if (limited) return limited;
+
   const env = getServerEnv();
 
   if (env.AUTH_MODE !== "solo") {
@@ -84,7 +90,7 @@ export async function GET(request: NextRequest) {
     { onConflict: "id", ignoreDuplicates: true },
   );
   if (perfilErr) {
-    console.error("[solo-login] falha ao garantir perfis row:", perfilErr.message);
+    logger.warn("falha ao garantir perfis row", "solo-login", { error: perfilErr.message });
     // nao abortamos — perfil pode ja existir ou o trigger pode ter criado
   }
 
