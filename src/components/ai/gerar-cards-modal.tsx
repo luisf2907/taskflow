@@ -71,25 +71,26 @@ function TerminalGerando() {
               <span style={{ color: "var(--tf-accent)", width: 14, flexShrink: 0 }}>
                 {concluida ? "✓" : atual ? ">" : " "}
               </span>
-              <span className="flex-1">
-                {etapa}
+              <span className="flex-1 inline-flex items-center">
+                <span>{etapa}</span>
                 {atual && (
                   <>
-                    <span className="inline-block w-2">
-                      <span
-                        style={{
-                          display: "inline-block",
-                          animation: "tf-terminal-dots 1.4s steps(4, end) infinite",
-                        }}
-                      >
-                        ...
-                      </span>
+                    <span
+                      aria-hidden
+                      className="inline-flex ml-0.5"
+                      style={{ letterSpacing: 0 }}
+                    >
+                      <span style={{ animation: "tf-terminal-dot 1.2s infinite 0s" }}>.</span>
+                      <span style={{ animation: "tf-terminal-dot 1.2s infinite 0.2s" }}>.</span>
+                      <span style={{ animation: "tf-terminal-dot 1.2s infinite 0.4s" }}>.</span>
                     </span>
                     <span
-                      className="inline-block w-[6px] h-[10px] ml-0.5 align-middle"
+                      aria-hidden
+                      className="inline-block w-[6px] h-[10px] ml-1"
                       style={{
                         background: "var(--tf-accent)",
                         animation: "tf-terminal-blink 1s steps(2, end) infinite",
+                        verticalAlign: "baseline",
                       }}
                     />
                   </>
@@ -104,11 +105,9 @@ function TerminalGerando() {
           0%, 49% { opacity: 1; }
           50%, 100% { opacity: 0; }
         }
-        @keyframes tf-terminal-dots {
-          0% { clip-path: inset(0 100% 0 0); }
-          25% { clip-path: inset(0 66% 0 0); }
-          50% { clip-path: inset(0 33% 0 0); }
-          75%, 100% { clip-path: inset(0 0 0 0); }
+        @keyframes tf-terminal-dot {
+          0%, 60%, 100% { opacity: 0.2; }
+          30% { opacity: 1; }
         }
       `}</style>
     </div>
