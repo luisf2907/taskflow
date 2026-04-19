@@ -28,14 +28,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { QuadroBentoCard } from "./_components/quadro-bento-card";
 import { WorkspaceBentoCard } from "./_components/workspace-bento-card";
 import { TaskLineItem } from "./_components/task-line-item";
-import type { NovoQuadroDados } from "./_modais/modal-criar-quadro";
 
 // Modais carregam sob demanda (usuario precisa clicar pra abrir).
 // Evita carregar ~40KB de JS no primeiro load do dashboard.
-const ModalCriarQuadro = dynamic(
-  () => import("./_modais/modal-criar-quadro").then((m) => m.ModalCriarQuadro),
-  { ssr: false }
-);
+// Criacao de sprint e global (GlobalSprintModal no layout), disparada
+// via evento "open-sprint-modal" — funciona de qualquer pagina.
 const ModalWorkspace = dynamic(
   () => import("./_modais/modal-workspace").then((m) => m.ModalWorkspace),
   { ssr: false }
@@ -57,7 +54,6 @@ export default function PaginaInicial() {
   const {
     quadros,
     carregando: carregandoQuadros,
-    criar: criarQuadro,
   } = useQuadros();
   const {
     workspaces,
@@ -71,9 +67,6 @@ export default function PaginaInicial() {
   const nomeUsuario =
     perfil?.nome?.split(" ")[0] || user?.email?.split("@")[0] || "Mestre";
 
-  const [modalQuadro, setModalQuadro] = useState(false);
-  const [modalQuadroInitialWs, setModalQuadroInitialWs] = useState<string>("");
-
   const [modalWorkspace, setModalWorkspace] = useState(false);
   const [editandoWs, setEditandoWs] = useState<Workspace | null>(null);
 
@@ -86,28 +79,17 @@ export default function PaginaInicial() {
   const router = useRouter();
   const carregando = carregandoQuadros || carregandoWs;
 
-  // Listener para abrir modais via evento global (sidebar) ou query param.
-  // Queries: ?new-workspace=1 abre modal de workspace, ?new-sprint=1 abre
-  // modal de sprint (vindo de outras paginas via sidebar).
+  // Listener pra modal de workspace via evento global ou query param
+  // (?new-workspace=1). Modal de sprint e global (GlobalSprintModal).
   useEffect(() => {
     function handleOpenWsModal() { setEditandoWs(null); setModalWorkspace(true); }
-    function handleOpenSprintModal() { abrirModalCriarQuadro(); }
     window.addEventListener("open-workspace-modal", handleOpenWsModal);
-    window.addEventListener("open-sprint-modal", handleOpenSprintModal);
     const params = new URLSearchParams(window.location.search);
     if (params.get("new-workspace")) {
       handleOpenWsModal();
       window.history.replaceState({}, "", "/dashboard");
     }
-    if (params.get("new-sprint")) {
-      handleOpenSprintModal();
-      window.history.replaceState({}, "", "/dashboard");
-    }
-    return () => {
-      window.removeEventListener("open-workspace-modal", handleOpenWsModal);
-      window.removeEventListener("open-sprint-modal", handleOpenSprintModal);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => window.removeEventListener("open-workspace-modal", handleOpenWsModal);
   }, []);
 
   useEffect(() => {
@@ -151,37 +133,12 @@ export default function PaginaInicial() {
     [quadros]
   );
 
+  // Dispara o modal global de "Nova sprint" (GlobalSprintModal no layout).
+  // Funciona de qualquer pagina; dashboard so emite o evento.
   function abrirModalCriarQuadro(workspaceId?: string) {
-    setModalQuadroInitialWs(workspaceId || workspaces[0]?.id || "");
-    setModalQuadro(true);
-  }
-
-  async function handleCriarQuadro(dados: NovoQuadroDados) {
-    const quadro = await criarQuadro({
-      nome: dados.nome,
-      cor: dados.cor,
-      workspaceId: dados.workspaceId,
-      dataInicio: dados.dataInicio,
-      dataFim: dados.dataFim,
-      statusSprint: "planejada",
-      meta: dados.meta,
-    });
-
-    if (quadro) {
-      const ws = workspaces.find((w) => w.id === dados.workspaceId);
-      if (ws?.colunas_padrao && ws.colunas_padrao.length > 0) {
-        const { supabase } = await import("@/lib/supabase/client");
-        const colunas = ws.colunas_padrao.map((nome, i) => ({
-          quadro_id: quadro.id,
-          nome,
-          posicao: i,
-        }));
-        await supabase.from("colunas").insert(colunas);
-      }
-
-      setModalQuadro(false);
-      router.push(`/quadro/${quadro.id}`);
-    }
+    window.dispatchEvent(
+      new CustomEvent("open-sprint-modal", { detail: { workspaceId } })
+    );
   }
 
   async function handleCriarWorkspace(
@@ -610,14 +567,6 @@ export default function PaginaInicial() {
       </div>
 
       {/* ── MODALS ── */}
-      <ModalCriarQuadro
-        aberto={modalQuadro}
-        onFechar={() => setModalQuadro(false)}
-        workspaces={workspaces}
-        initialWorkspaceId={modalQuadroInitialWs}
-        onCriar={handleCriarQuadro}
-      />
-
       <ModalWorkspace
         aberto={modalWorkspace}
         editando={editandoWs}

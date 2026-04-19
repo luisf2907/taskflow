@@ -5,6 +5,7 @@ import { HelpModal } from "@/components/help/help-modal";
 import { OfflineBanner } from "@/components/offline-banner";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { RecordingIndicator } from "@/components/layout/recording-indicator";
+import { GlobalSprintModal } from "@/components/global-sprint-modal";
 import { SWRProvider } from "@/components/swr-provider";
 import { ThemeInjector } from "@/components/theme-injector";
 import { ToastContainer } from "@/components/ui/toast";
@@ -99,6 +100,7 @@ export default function RootLayout({
               <OfflineBanner />
               {children}
               <BottomNav />
+              <GlobalSprintModal />
               <RecordingIndicator />
               <ToastContainer />
             </RecordingProvider>

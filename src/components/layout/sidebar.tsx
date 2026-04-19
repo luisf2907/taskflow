@@ -296,14 +296,9 @@ function SidebarBody({
                 onClick={(e) => {
                   e.preventDefault();
                   onNavigate?.();
-                  // Se ja estamos no dashboard, chama direto o handler
-                  // (que abre o modal). Se nao, dispara evento global +
-                  // fallback pra query param em caso de redirect.
-                  if (typeof window !== "undefined" && window.location.pathname === "/dashboard") {
-                    onNovoQuadro();
-                  } else {
-                    window.location.href = "/dashboard?new-sprint=1";
-                  }
+                  // Emite evento global — GlobalSprintModal escuta e abre
+                  // sobre a pagina atual em vez de redirecionar.
+                  window.dispatchEvent(new CustomEvent("open-sprint-modal"));
                 }}
                 aria-label="Criar novo quadro"
                 title="Novo quadro"
