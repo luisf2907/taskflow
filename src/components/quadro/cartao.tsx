@@ -68,14 +68,14 @@ export const Cartao = memo(function Cartao({
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{ ...style, touchAction: "manipulation" }}
       {...attributes}
       {...listeners}
       role="button"
       aria-label={`Card: ${cartao.titulo}`}
       aria-roledescription="cartão arrastável"
       className={cn(
-        "card-surface relative px-3 py-2.5 cursor-pointer group overflow-hidden",
+        "card-surface relative px-3.5 md:px-3 py-3 md:py-2.5 cursor-pointer group overflow-hidden",
         isDragging && "opacity-60 rotate-1"
       )}
       onClick={onClick}
@@ -124,7 +124,7 @@ export const Cartao = memo(function Cartao({
 
         {/* Título */}
         <p
-          className="text-[0.8125rem] leading-snug font-medium"
+          className="text-[0.875rem] md:text-[0.8125rem] leading-snug font-medium"
           style={{
             color: "var(--tf-text)",
             letterSpacing: "-0.005em",

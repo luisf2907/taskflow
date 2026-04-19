@@ -70,13 +70,14 @@ export const Coluna = memo(function Coluna({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "relative flex flex-col w-[290px] min-w-[290px] max-w-[290px] shrink-0 max-h-full column-surface",
+        "relative flex flex-col w-[86vw] min-w-[86vw] max-w-[86vw] md:w-[290px] md:min-w-[290px] md:max-w-[290px] shrink-0 max-h-full column-surface snap-start",
         isDragging && "opacity-50"
       )}
     >
       {/* Header */}
       <div
         className="flex items-center justify-between px-3 pt-3 pb-2 cursor-grab active:cursor-grabbing"
+        style={{ touchAction: "pan-y" }}
         {...attributes}
         {...listeners}
       >
@@ -153,7 +154,7 @@ export const Coluna = memo(function Coluna({
           <Dropdown
             trigger={
               <button
-                className="p-1 rounded-[var(--tf-radius-xs)] transition-colors hover:bg-[var(--tf-surface-hover)]"
+                className="w-9 h-9 md:w-7 md:h-7 flex items-center justify-center rounded-[var(--tf-radius-xs)] transition-colors hover:bg-[var(--tf-surface-hover)]"
                 style={{ color: "var(--tf-text-tertiary)" }}
                 aria-label={`Opções da coluna ${coluna.nome}`}
               >
