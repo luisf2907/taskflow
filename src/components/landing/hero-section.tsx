@@ -164,9 +164,12 @@ export default function HeroSection() {
               </span>
             </div>
 
-            <div className="flex gap-2.5">
+            <div className="flex gap-2.5 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none no-scrollbar -mx-1 px-1 md:mx-0 md:px-0">
               {columns.map((col) => (
-                <div key={col.title} className="flex-1 flex flex-col gap-1.5">
+                <div
+                  key={col.title}
+                  className="w-[68%] sm:w-[42%] md:w-auto md:flex-1 shrink-0 flex flex-col gap-1.5 snap-start"
+                >
                   {/* Column header */}
                   <span
                     className="label-mono px-1 pb-1"
@@ -192,7 +195,7 @@ export default function HeroSection() {
                         style={{ backgroundColor: card.dot }}
                       />
                       <span
-                        className="text-[0.6875rem] font-medium truncate pl-1"
+                        className="text-[0.75rem] md:text-[0.6875rem] font-medium truncate pl-1"
                         style={{
                           color: "var(--tf-text)",
                           letterSpacing: "-0.005em",
