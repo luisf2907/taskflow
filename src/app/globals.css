@@ -2,6 +2,29 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ---- MOBILE / TOUCH POLISH ----
+   - Sem flash azul no tap (iOS/Android)
+   - touch-action: manipulation elimina delay de 300ms no tap em
+     elementos interativos sem quebrar scroll
+   - overflow-anchor: none evita jump de scroll ao abrir teclado virtual */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overflow-anchor: none;
+}
+
+button, a, [role="button"], label[for], summary, input[type="submit"], input[type="button"] {
+  touch-action: manipulation;
+}
+
+/* Spacer para o bottom-nav fixo: adiciona padding em main em <lg
+   pra ultimo item nao ficar escondido atras da nav. */
+@media (max-width: 1023px) {
+  main#main-content {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* Cursor pointer global — maozinha em todos os clicaveis */
 *:where(
   button:not(:disabled),
