@@ -26,7 +26,7 @@ import {
 } from "@dnd-kit/sortable";
 import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BarraFiltros, Filtros } from "./barra-filtros";
 import { Cartao } from "./cartao";
 import { Coluna } from "./coluna";
@@ -169,106 +169,74 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
     return rectIntersection(args);
   }, []);
 
-  // Guarda contra onDragOver disparar multiplas vezes por frame.
-  // Se o cartao ja foi movido pra essa coluna, nao dispara mover() de novo.
-  const ultimaColunaRef = useRef<string | null>(null);
-
   function handleDragStart(event: DragStartEvent) {
     const { active } = event;
     const data = active.data.current;
     if (data?.type === "cartao") {
       setCartaoArrastando(data.cartao);
-      ultimaColunaRef.current = data.cartao.coluna_id ?? null;
     }
   }
 
-  async function handleDragOver(event: DragOverEvent) {
+  // Durante o drag, o DragOverlay renderiza um "fantasma" do cartao
+  // seguindo o cursor — isso ja e feedback suficiente. Nao movemos o
+  // cartao entre colunas aqui: se movessemos, cada cruzada de borda
+  // disparava mover() e o cartao teleportava. Todo o commit acontece
+  // no handleDragEnd.
+  function handleDragOver(_event: DragOverEvent) {
+    // no-op intencional
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
+    setCartaoArrastando(null);
+
     if (!over) return;
 
     const activeData = active.data.current;
     const overData = over.data.current;
 
     if (activeData?.type !== "cartao") return;
-
     const cartaoAtivo = activeData.cartao as CartaoComResumo;
 
-    // Identifica a coluna alvo (seja ela diretamente ou via cartao alvo)
+    // Resolve coluna alvo + indice dentro dela
     let colunaAlvoId: string | null = null;
-    let indiceAlvo: number | null = null;
+    let indiceAlvo: number = 0;
 
     if (overData?.type === "cartao") {
       const cartaoAlvo = overData.cartao as CartaoComResumo;
-      if (cartaoAlvo.coluna_id) {
-        colunaAlvoId = cartaoAlvo.coluna_id;
-        const cartoesAlvo = cartoesDaColuna(cartaoAlvo.coluna_id);
-        indiceAlvo = cartoesAlvo.findIndex((c) => c.id === cartaoAlvo.id);
-      }
+      if (cartaoAlvo.id === cartaoAtivo.id) return;
+      if (!cartaoAlvo.coluna_id) return;
+      colunaAlvoId = cartaoAlvo.coluna_id;
+      const cartoesAlvo = cartoesDaColuna(cartaoAlvo.coluna_id);
+      indiceAlvo = cartoesAlvo.findIndex((c) => c.id === cartaoAlvo.id);
     } else if (overData?.type === "coluna") {
       colunaAlvoId = overData.coluna.id;
       indiceAlvo = cartoesDaColuna(overData.coluna.id).length;
     }
 
     if (!colunaAlvoId) return;
-    // Ja estamos nessa coluna? Pula — evita re-trigger em loop.
-    if (colunaAlvoId === cartaoAtivo.coluna_id) {
-      ultimaColunaRef.current = colunaAlvoId;
-      return;
-    }
-    // Ja movemos pra essa coluna no ultimo over? Pula.
-    if (ultimaColunaRef.current === colunaAlvoId) return;
-    ultimaColunaRef.current = colunaAlvoId;
 
-    try {
-      const result = await mover(cartaoAtivo.id, colunaAlvoId, indiceAlvo ?? 0);
-      if (result?.blocked) {
-        setAlertaBloqueio(result.reason || "Ação bloqueada.");
-        setTimeout(() => setAlertaBloqueio(null), 4000);
-      }
-    } catch {
-      toast.error("Erro ao mover cartão. Tente novamente.");
-    }
-  }
+    const mesmaColuna = colunaAlvoId === cartaoAtivo.coluna_id;
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    setCartaoArrastando(null);
-    ultimaColunaRef.current = null;
-
-    if (!over || active.id === over.id) return;
-
-    const activeData = active.data.current;
-    const overData = over.data.current;
-
-    if (activeData?.type === "cartao" && overData?.type === "cartao") {
-      const cartaoAtivo = activeData.cartao as CartaoComResumo;
-      const cartaoAlvo = overData.cartao as CartaoComResumo;
-
-      if (cartaoAtivo.id === cartaoAlvo.id) return;
-      // Skip if same column and same position
-      if (cartaoAtivo.coluna_id === cartaoAlvo.coluna_id) {
-        const cartoesCol = cartoesDaColuna(cartaoAtivo.coluna_id!);
-        const idxAtivo = cartoesCol.findIndex((c) => c.id === cartaoAtivo.id);
-        const idxAlvo = cartoesCol.findIndex((c) => c.id === cartaoAlvo.id);
-        if (idxAtivo === idxAlvo) return;
-      }
-
-      const colunaId = cartaoAlvo.coluna_id;
-      if (!colunaId) return;
-      const cartoesColuna = cartoesDaColuna(colunaId);
-
-      const indiceAntigo = cartoesColuna.findIndex(
-        (c) => c.id === cartaoAtivo.id
-      );
-      const indiceNovo = cartoesColuna.findIndex(
-        (c) => c.id === cartaoAlvo.id
-      );
-
-      if (indiceAntigo !== -1 && indiceNovo !== -1) {
-        const reordenados = [...cartoesColuna];
-        const [movido] = reordenados.splice(indiceAntigo, 1);
-        reordenados.splice(indiceNovo, 0, movido);
-        reordenarNaColuna(colunaId, reordenados);
+    if (mesmaColuna) {
+      // Reorder dentro da mesma coluna
+      const cartoesCol = cartoesDaColuna(colunaAlvoId);
+      const idxAtivo = cartoesCol.findIndex((c) => c.id === cartaoAtivo.id);
+      if (idxAtivo === -1 || idxAtivo === indiceAlvo) return;
+      const reordenados = [...cartoesCol];
+      const [movido] = reordenados.splice(idxAtivo, 1);
+      reordenados.splice(indiceAlvo, 0, movido);
+      reordenarNaColuna(colunaAlvoId, reordenados);
+    } else {
+      // Move entre colunas
+      try {
+        const result = await mover(cartaoAtivo.id, colunaAlvoId, indiceAlvo);
+        if (result?.blocked) {
+          setAlertaBloqueio(result.reason || "Ação bloqueada.");
+          setTimeout(() => setAlertaBloqueio(null), 4000);
+        }
+      } catch {
+        toast.error("Erro ao mover cartão. Tente novamente.");
       }
     }
   }
