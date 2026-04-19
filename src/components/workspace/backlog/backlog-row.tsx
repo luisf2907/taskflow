@@ -58,7 +58,7 @@ export function BacklogRow({
   return (
     <div
       ref={setDragRef}
-      className={`flex items-center gap-2.5 px-3 py-2 transition-all duration-200 group cursor-pointer ${
+      className={`flex items-start md:items-center gap-2.5 px-3 py-2.5 md:py-2 transition-all duration-200 group cursor-pointer flex-wrap md:flex-nowrap ${
         isDragging ? "opacity-30" : ""
       }`}
       style={{
@@ -78,7 +78,7 @@ export function BacklogRow({
       <button
         {...attributes}
         {...listeners}
-        className="w-8 h-8 md:w-auto md:h-auto md:p-0.5 flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 cursor-grab active:cursor-grabbing shrink-0 -ml-1.5 md:ml-0"
+        className="w-8 h-8 md:w-auto md:h-auto md:p-0.5 flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 cursor-grab active:cursor-grabbing shrink-0 -ml-1.5 md:ml-0 mt-0.5 md:mt-0"
         style={{
           color: "var(--tf-text-tertiary)",
           borderRadius: "var(--tf-radius-xs)",
@@ -91,7 +91,7 @@ export function BacklogRow({
       </button>
 
       {/* Título + etiquetas */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 order-1">
         <span
           className="text-[0.8125rem] truncate block"
           style={{
@@ -121,40 +121,41 @@ export function BacklogRow({
         )}
       </div>
 
-      {/* Status (coluna) */}
-      {tarefa.coluna_nome && (
-        <span
-          className="inline-flex items-center h-[17px] px-1.5 text-[0.625rem] font-medium shrink-0"
-          style={{
-            background: tarefa.concluido ? "var(--tf-success-bg)" : "var(--tf-bg-secondary)",
-            color: tarefa.concluido ? "var(--tf-success)" : "var(--tf-text-tertiary)",
-            border: `1px solid ${tarefa.concluido ? "var(--tf-success)" : "var(--tf-border)"}`,
-            borderRadius: "var(--tf-radius-xs)",
-            fontFamily: "var(--tf-font-mono)",
-            letterSpacing: "0.02em",
-            textTransform: "uppercase",
-          }}
-        >
-          {tarefa.concluido ? "Concluído" : tarefa.coluna_nome}
-        </span>
-      )}
+      {/* Grupo metadata: status + peso — quebra pra linha de baixo em <md */}
+      <div className="flex items-center gap-1.5 shrink-0 order-3 md:order-2 w-full md:w-auto flex-wrap">
+        {tarefa.coluna_nome && (
+          <span
+            className="inline-flex items-center h-[17px] px-1.5 text-[0.625rem] font-medium shrink-0"
+            style={{
+              background: tarefa.concluido ? "var(--tf-success-bg)" : "var(--tf-bg-secondary)",
+              color: tarefa.concluido ? "var(--tf-success)" : "var(--tf-text-tertiary)",
+              border: `1px solid ${tarefa.concluido ? "var(--tf-success)" : "var(--tf-border)"}`,
+              borderRadius: "var(--tf-radius-xs)",
+              fontFamily: "var(--tf-font-mono)",
+              letterSpacing: "0.02em",
+              textTransform: "uppercase",
+            }}
+          >
+            {tarefa.concluido ? "Concluído" : tarefa.coluna_nome}
+          </span>
+        )}
 
-      {/* Peso */}
-      {tarefa.peso && (
-        <span
-          className="inline-flex items-center gap-0.5 h-[17px] px-1.5 text-[0.625rem] font-medium shrink-0"
-          style={{
-            background: "var(--tf-accent-light)",
-            color: "var(--tf-accent-text)",
-            border: "1px solid var(--tf-accent)",
-            borderRadius: "var(--tf-radius-xs)",
-            fontFamily: "var(--tf-font-mono)",
-          }}
-        >
-          <Zap size={9} strokeWidth={2} />
-          {tarefa.peso}
-        </span>
-      )}
+        {tarefa.peso && (
+          <span
+            className="inline-flex items-center gap-0.5 h-[17px] px-1.5 text-[0.625rem] font-medium shrink-0"
+            style={{
+              background: "var(--tf-accent-light)",
+              color: "var(--tf-accent-text)",
+              border: "1px solid var(--tf-accent)",
+              borderRadius: "var(--tf-radius-xs)",
+              fontFamily: "var(--tf-font-mono)",
+            }}
+          >
+            <Zap size={9} strokeWidth={2} />
+            {tarefa.peso}
+          </span>
+        )}
+      </div>
 
       {/* Sprint associada ou seletor */}
       {seletor ? (
@@ -267,14 +268,15 @@ export function BacklogRow({
             e.stopPropagation();
             onEstimar(tarefa.id);
           }}
-          className="p-1 opacity-0 group-hover:opacity-100 transition-colors shrink-0 hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
+          className="w-8 h-8 md:w-auto md:h-auto md:p-1 flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-colors shrink-0 hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)] order-4 md:order-3"
           style={{
             color: "var(--tf-text-tertiary)",
             borderRadius: "var(--tf-radius-xs)",
           }}
           title="Estimar com Planning Poker"
+          aria-label="Estimar com Planning Poker"
         >
-          <Layers size={12} strokeWidth={1.75} />
+          <Layers size={14} strokeWidth={1.75} />
         </button>
       )}
 
@@ -284,14 +286,15 @@ export function BacklogRow({
           e.stopPropagation();
           onExcluir(tarefa.id);
         }}
-        className="p-1 opacity-0 group-hover:opacity-100 transition-colors shrink-0 hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+        className="w-8 h-8 md:w-auto md:h-auto md:p-1 flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-colors shrink-0 hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)] order-5 md:order-4"
         style={{
           color: "var(--tf-text-tertiary)",
           borderRadius: "var(--tf-radius-xs)",
         }}
         title="Excluir tarefa"
+        aria-label="Excluir tarefa"
       >
-        <Trash2 size={12} strokeWidth={1.75} />
+        <Trash2 size={14} strokeWidth={1.75} />
       </button>
     </div>
   );

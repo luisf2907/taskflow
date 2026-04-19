@@ -14,6 +14,7 @@ import {
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
+  closestCorners,
   pointerWithin,
   rectIntersection,
   type CollisionDetection,
@@ -159,14 +160,18 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
     useSensor(KeyboardSensor)
   );
 
-  // pointerWithin: so muda de coluna quando o cursor entra DENTRO da
-  // coluna alvo (em vez de pelos cantos mais proximos). Fallback em
-  // rectIntersection pra quando o cursor esta num gap entre colunas.
-  // Menos sensivel que closestCorners — evita pular coluna sem querer.
+  // Pipeline de collision detection permissiva:
+  //   pointerWithin → rectIntersection → closestCorners
+  // A ultima camada (closestCorners) nunca retorna vazio: mesmo que o
+  // cursor caia num gap entre colunas na hora do drop, resolve pra
+  // coluna mais proxima. Sem isso, o drop silenciosamente nao fazia
+  // nada quando o user soltava um pouco fora.
   const collisionDetection = useCallback<CollisionDetection>((args) => {
     const withinPointer = pointerWithin(args);
     if (withinPointer.length > 0) return withinPointer;
-    return rectIntersection(args);
+    const rectInt = rectIntersection(args);
+    if (rectInt.length > 0) return rectInt;
+    return closestCorners(args);
   }, []);
 
   function handleDragStart(event: DragStartEvent) {
