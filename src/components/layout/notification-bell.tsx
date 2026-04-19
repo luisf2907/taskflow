@@ -62,7 +62,7 @@ export function NotificationBell() {
     <Dropdown
       trigger={trigger}
       closeOnClick={false}
-      className="!w-[340px] !p-0 overflow-hidden !right-auto !left-1/2 !-ml-[170px] !mt-2"
+      className="!w-[340px] !max-w-[calc(100vw-16px)] !p-0 overflow-hidden !mt-2"
     >
       {/* Header */}
       <div

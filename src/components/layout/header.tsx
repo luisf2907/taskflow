@@ -192,7 +192,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
                 </span>
               </div>
             }
-            className="!w-52 !right-auto !left-1/2 !-ml-[104px] !mt-2"
+            className="!w-52 !max-w-[calc(100vw-16px)] !mt-2"
           >
             <div
               className="px-2.5 py-2 mb-1 mx-1"
