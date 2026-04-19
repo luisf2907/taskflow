@@ -19,30 +19,61 @@
  *   3. Atualiza a reunioes.status=done + metadados (duracao, language, timings)
  */
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 import { createServiceClient } from "@/lib/supabase/server";
-import type {
-  ProcessMeetingResponse,
-  TranscriptSegment,
-} from "@/lib/voice/client";
+import { logger } from "@/lib/logger";
+import type { TranscriptSegment } from "@/lib/voice/client";
 import {
   extractBearerToken,
   verifyReuniaoToken,
 } from "@/lib/voice/webhook-token";
 
-interface WebhookSuccessPayload {
-  reuniao_id: string;
-  status: "done";
-  result: ProcessMeetingResponse;
-}
+// ───── Zod schemas pra validar payload do worker ─────
+// HMAC valida origem, mas payload precisa ser validado pra evitar
+// crash/inject por payload malformado (worker buggado, MITM, etc).
 
-interface WebhookErrorPayload {
-  reuniao_id: string;
-  status: "error";
-  error: string;
-}
+const TranscriptSegmentSchema = z.object({
+  start: z.number(),
+  end: z.number(),
+  speaker: z.string(),
+  text: z.string(),
+});
 
-type WebhookPayload = WebhookSuccessPayload | WebhookErrorPayload;
+const SpeakerSchema = z.object({
+  label: z.string(),
+  total_seconds: z.number().optional(),
+  embedding: z.array(z.number()).nullable().optional(),
+  embedding_dim: z.number().optional(),
+  skipped: z.boolean().optional(),
+  skip_reason: z.string().optional(),
+});
+
+const ProcessMeetingResponseSchema = z.object({
+  duration_s: z.number(),
+  language: z.string().optional(),
+  language_probability: z.number().optional(),
+  segments: z.array(TranscriptSegmentSchema),
+  speakers: z.array(SpeakerSchema),
+  embedding_dim: z.number().optional(),
+  embedding_model: z.string().optional(),
+  timings_ms: z.record(z.string(), z.number()).optional(),
+}).passthrough();
+
+const WebhookPayloadSchema = z.discriminatedUnion("status", [
+  z.object({
+    reuniao_id: z.string().uuid(),
+    status: z.literal("done"),
+    result: ProcessMeetingResponseSchema,
+  }),
+  z.object({
+    reuniao_id: z.string().uuid(),
+    status: z.literal("error"),
+    error: z.string(),
+  }),
+]);
+
+type WebhookPayload = z.infer<typeof WebhookPayloadSchema>;
 
 // Threshold local pra decidir se um match e "forte" ou "fraco".
 // Deve bater com o que esta no worker (match_threshold_strong/weak).
@@ -70,10 +101,18 @@ export async function POST(
     return NextResponse.json({ error: "token invalido" }, { status: 401 });
   }
 
-  // 2) Parse payload
+  // 2) Parse + valida payload via Zod (defense-in-depth alem do HMAC)
   let payload: WebhookPayload;
   try {
-    payload = (await request.json()) as WebhookPayload;
+    const raw = await request.json();
+    const parsed = WebhookPayloadSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "payload invalido", details: parsed.error.issues },
+        { status: 400 },
+      );
+    }
+    payload = parsed.data;
   } catch {
     return NextResponse.json({ error: "body invalido" }, { status: 400 });
   }
@@ -255,9 +294,12 @@ export async function POST(
     weak: [...speakerMatches.values()].filter((m) => m.match_tipo === "weak").length,
     none: [...speakerMatches.values()].filter((m) => m.match_tipo === "none").length,
   };
-  console.log(
-    `[voice-webhook] reuniao=${reuniao.id} done: ${result.segments.length} segments, ${result.speakers.length} speakers, matches=${JSON.stringify(matchCounts)}`,
-  );
+  logger.info("voice-webhook done", "voice-webhook", {
+    reuniao_id: reuniao.id,
+    segments: result.segments.length,
+    speakers: result.speakers.length,
+    matches: matchCounts,
+  });
 
   return NextResponse.json({
     ok: true,
