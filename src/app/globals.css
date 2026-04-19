@@ -493,7 +493,12 @@ select:focus-visible {
 
 .wiki-editor-wrapper {
   position: relative;
-  margin-left: 56px;
+  margin-left: 0;
+}
+@media (min-width: 768px) {
+  .wiki-editor-wrapper {
+    margin-left: 56px;
+  }
 }
 
 .wiki-content {

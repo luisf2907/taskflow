@@ -41,7 +41,8 @@ export function BottomNav() {
       href: activeWorkspaceId ? `/workspace/${activeWorkspaceId}` : "/dashboard",
       icon: Kanban,
       label: "Workspace",
-      active: (p) => p.startsWith("/workspace/") || p.startsWith("/quadro/"),
+      active: (p) =>
+        (p.startsWith("/workspace/") || p.startsWith("/quadro/")) && !p.includes("/wiki"),
     },
     {
       href: activeWorkspaceId

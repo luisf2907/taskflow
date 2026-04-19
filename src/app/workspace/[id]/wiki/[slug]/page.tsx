@@ -7,8 +7,8 @@ import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { useSidebar } from "@/hooks/use-sidebar";
+import { useIsTabletOrBelow } from "@/hooks/use-is-mobile";
 import { useQuadros } from "@/hooks/use-quadros";
-import { useWorkspaces } from "@/hooks/use-workspaces";
 import { useWiki } from "@/hooks/use-wiki";
 import { toast } from "@/hooks/use-toast";
 import { PageTree } from "@/components/wiki/page-tree";
@@ -18,11 +18,12 @@ import { MarkdownEditor } from "@/components/wiki/markdown-editor";
 import { MarkdownPreview } from "@/components/wiki/markdown-preview";
 import { CardEmbedPicker } from "@/components/wiki/card-embed-picker";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { Drawer } from "@/components/ui/drawer";
 import { tiptapJsonToMarkdown, markdownToTiptapJson } from "@/lib/wiki-markdown";
 import type { WikiEditMode } from "@/components/wiki/wiki-mode-switcher";
 import type { WikiPagina, WikiPaginaTree } from "@/types";
 import type { Editor } from "@tiptap/react";
-import { BookOpen, Loader2 } from "lucide-react";
+import { BookOpen, Loader2, PanelLeft } from "lucide-react";
 
 export default function WikiSlugPage() {
   const params = useParams<{ id: string; slug: string }>();
@@ -33,6 +34,8 @@ export default function WikiSlugPage() {
   const { perfil, carregando: authLoading } = useAuth();
   const { quadros } = useQuadros();
   const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
+  const isMobile = useIsTabletOrBelow();
+  const [arvoreDrawerAberta, setArvoreDrawerAberta] = useState(false);
 
   const {
     paginas,
@@ -129,6 +132,7 @@ export default function WikiSlugPage() {
       const pagina = paginas.find((p) => p.id === node.id);
       if (pagina) {
         setPaginaSelecionada(pagina);
+        setArvoreDrawerAberta(false);
         router.push(`/workspace/${workspaceId}/wiki/${pagina.slug}`);
       }
     },
@@ -283,35 +287,81 @@ export default function WikiSlugPage() {
         <Header onMenuMobile={toggleSidebar} />
 
         <div
-          className="flex-1 rounded-[var(--tf-radius-xl)] mb-4 overflow-hidden flex scroll-clip-lg"
+          className="flex-1 rounded-none md:rounded-[var(--tf-radius-xl)] mb-4 overflow-hidden flex scroll-clip-lg"
           style={{
             background: "var(--tf-surface)",
             border: "1px solid var(--tf-border)",
           }}
         >
-          {/* Painel esquerdo — Árvore */}
-          <div
-            className="w-[260px] shrink-0 flex flex-col border-r overflow-hidden"
-            style={{ borderColor: "var(--tf-border)" }}
-          >
-            <PageTree
-              arvore={arvore}
-              paginaAtivaId={paginaAtual?.id || null}
-              onSelecionar={handleSelecionar}
-              onCriarPagina={handleCriarPagina}
-              onExcluirPagina={handleExcluirPagina}
-              onRenomearPagina={handleRenomearPagina}
-            />
-          </div>
+          {/* Painel esquerdo — Árvore (desktop) */}
+          {!isMobile && (
+            <div
+              className="w-[260px] shrink-0 flex flex-col border-r overflow-hidden"
+              style={{ borderColor: "var(--tf-border)" }}
+            >
+              <PageTree
+                arvore={arvore}
+                paginaAtivaId={paginaAtual?.id || null}
+                onSelecionar={handleSelecionar}
+                onCriarPagina={handleCriarPagina}
+                onExcluirPagina={handleExcluirPagina}
+                onRenomearPagina={handleRenomearPagina}
+              />
+            </div>
+          )}
+
+          {/* Arvore como drawer em mobile */}
+          {isMobile && (
+            <Drawer
+              aberto={arvoreDrawerAberta}
+              onFechar={() => setArvoreDrawerAberta(false)}
+              lado="left"
+              titulo="Páginas"
+              larguraMax="min(86vw, 320px)"
+            >
+              <PageTree
+                arvore={arvore}
+                paginaAtivaId={paginaAtual?.id || null}
+                onSelecionar={handleSelecionar}
+                onCriarPagina={handleCriarPagina}
+                onExcluirPagina={handleExcluirPagina}
+                onRenomearPagina={handleRenomearPagina}
+              />
+            </Drawer>
+          )}
 
           {/* Painel direito — Editor */}
           <main id="main-content" className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+            {isMobile && (
+              <div
+                className="flex items-center gap-2 px-3 py-2 shrink-0 sticky top-0 z-10"
+                style={{
+                  background: "var(--tf-surface)",
+                  borderBottom: "1px solid var(--tf-border)",
+                }}
+              >
+                <button
+                  onClick={() => setArvoreDrawerAberta(true)}
+                  className="w-10 h-10 flex items-center justify-center rounded-[var(--tf-radius-xs)] transition-colors hover:bg-[var(--tf-surface-hover)]"
+                  style={{ color: "var(--tf-text-secondary)" }}
+                  aria-label="Abrir arvore de paginas"
+                >
+                  <PanelLeft size={18} strokeWidth={1.75} />
+                </button>
+                <span
+                  className="text-[0.8125rem] font-medium truncate"
+                  style={{ color: "var(--tf-text)" }}
+                >
+                  {paginaAtual?.titulo || "Wiki"}
+                </span>
+              </div>
+            )}
             {carregando ? (
               <div className="flex-1 flex items-center justify-center">
                 <Loader2 size={24} className="animate-spin" style={{ color: "var(--tf-accent)" }} />
               </div>
             ) : paginaAtual ? (
-              <div className="max-w-[900px] mx-auto w-full px-8 py-10">
+              <div className="max-w-[900px] mx-auto w-full px-3 md:px-8 py-4 md:py-10">
                 <PageHeader
                   pagina={paginaAtual}
                   todasPaginas={paginas}
