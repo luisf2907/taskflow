@@ -1,5 +1,6 @@
 import { authenticateApiKey } from "@/lib/mcp-auth";
 import { applyRateLimitAsync, applyApiKeyRateLimitAsync } from "@/lib/api-utils";
+import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 
 import { matchRoute, type Route } from "../_lib/router";
@@ -127,7 +128,7 @@ async function handleRequest(
   } catch (err) {
     const route = `${method} /api/v1/${path.join("/")}`;
     const message = err instanceof Error ? err.message : "Erro interno";
-    console.error(`[API v1] ${route}:`, err);
+    logger.error(message, "api-v1", { route, stack: err instanceof Error ? err.stack : undefined });
     return NextResponse.json(
       { error: message, path: route },
       { status: 500 }

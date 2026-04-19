@@ -1,5 +1,6 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { applyRateLimitAsync, validateBody, stripFormatting } from "@/lib/api-utils";
+import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -184,8 +185,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ resumo_ia: resumoIa });
   } catch (err) {
-    console.error("[ai/summarize-reuniao] Erro:", err);
     const message = err instanceof Error ? err.message : "Erro desconhecido";
+    logger.error(message, "ai-summarize-reuniao", { stack: err instanceof Error ? err.stack : undefined });
     if (message.includes("403") || message.includes("401")) {
       return NextResponse.json(
         { error: "Chave da IA invalida ou sem permissao." },
