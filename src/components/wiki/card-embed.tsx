@@ -137,18 +137,26 @@ function CardPopup({
         onClick={onFechar}
       />
 
-      {/* Popup */}
+      {/* Popup — bottom sheet em mobile, modal centralizado em desktop */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label={card?.titulo || "Detalhes do card"}
-        className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[520px] max-h-[80vh] flex flex-col rounded-[var(--tf-radius-lg)] overflow-hidden"
+        className="fixed z-50 inset-x-0 bottom-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:max-w-[520px] max-h-[90dvh] md:max-h-[80vh] flex flex-col rounded-t-[var(--tf-radius-lg)] md:rounded-[var(--tf-radius-lg)] overflow-hidden"
         style={{
           background: "var(--tf-surface)",
           border: "1px solid var(--tf-border)",
           boxShadow: "var(--tf-shadow-lg)",
         }}
       >
+        {/* Drag handle visual (mobile) */}
+        <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
+          <span
+            aria-hidden
+            className="w-10 h-1 rounded-full"
+            style={{ background: "var(--tf-border)" }}
+          />
+        </div>
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2
@@ -161,7 +169,7 @@ function CardPopup({
           <>
             {/* Header */}
             <div
-              className="flex items-start justify-between gap-3 px-6 pt-5 pb-3"
+              className="flex items-start justify-between gap-3 px-4 md:px-6 pt-3 md:pt-5 pb-3"
             >
               <div className="flex items-start gap-3 min-w-0">
                 <div
@@ -207,7 +215,7 @@ function CardPopup({
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto px-6 pb-5">
+            <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-5">
               {/* Descricao */}
               {card.descricao && (
                 <p
@@ -219,7 +227,7 @@ function CardPopup({
               )}
 
               {/* Meta grid */}
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-2 mb-4">
                 {card.peso && (
                   <MetaItem
                     icon={<Weight size={13} />}
@@ -307,12 +315,12 @@ function CardPopup({
 
             {/* Footer */}
             <div
-              className="flex items-center justify-end gap-2 px-6 py-3 border-t"
+              className="flex items-center justify-end gap-2 px-4 md:px-6 py-3 border-t shrink-0"
               style={{ borderColor: "var(--tf-border)" }}
             >
               <a
                 href={`/workspace/${card.workspace_id}`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[12px] font-medium transition-colors hover:bg-[var(--tf-surface-hover)]"
+                className="flex items-center gap-1.5 h-10 md:h-auto px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[13px] md:text-[12px] font-medium transition-colors hover:bg-[var(--tf-surface-hover)]"
                 style={{ color: "var(--tf-text-secondary)" }}
               >
                 <ExternalLink size={12} />

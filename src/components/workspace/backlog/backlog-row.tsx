@@ -78,15 +78,16 @@ export function BacklogRow({
       <button
         {...attributes}
         {...listeners}
-        className="p-0.5 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing shrink-0"
+        className="w-8 h-8 md:w-auto md:h-auto md:p-0.5 flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 cursor-grab active:cursor-grabbing shrink-0 -ml-1.5 md:ml-0"
         style={{
           color: "var(--tf-text-tertiary)",
           borderRadius: "var(--tf-radius-xs)",
+          touchAction: "none",
         }}
         onClick={(e) => e.stopPropagation()}
         aria-label="Arrastar"
       >
-        <GripVertical size={13} strokeWidth={1.75} />
+        <GripVertical size={16} strokeWidth={1.75} />
       </button>
 
       {/* Título + etiquetas */}

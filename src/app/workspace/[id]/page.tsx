@@ -4,11 +4,13 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
   DndContext,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
-  PointerSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -172,7 +174,9 @@ export default function PaginaWorkspace() {
   const [modalIA, setModalIA] = useState(false);
 
   const dndSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }),
+    useSensor(KeyboardSensor)
   );
 
   function handleDragStart(event: DragStartEvent) {
@@ -668,15 +672,15 @@ export default function PaginaWorkspace() {
             {abaAtiva === "backlog" && (
               <DndContext sensors={dndSensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 {/* Header + Criar */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <h2 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>
                     Todas as tarefas do workspace
                   </h2>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {!criandoTarefa && (
                       <button
                         onClick={() => setCriandoTarefa(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold text-white rounded-[var(--tf-radius-xs)] transition-smooth"
+                        className="flex items-center justify-center gap-1.5 h-9 px-3 text-[13px] font-semibold text-white rounded-[var(--tf-radius-xs)] transition-smooth whitespace-nowrap"
                         style={{ background: "var(--tf-accent)" }}
                       >
                         <Plus size={14} /> Nova tarefa
@@ -684,7 +688,7 @@ export default function PaginaWorkspace() {
                     )}
                     <button
                       onClick={() => { setPokerCartaoId(null); setPokerAberto(true); }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-[var(--tf-radius-xs)] transition-smooth border"
+                      className="flex items-center justify-center gap-1.5 h-9 px-3 text-[13px] font-semibold rounded-[var(--tf-radius-xs)] transition-smooth border whitespace-nowrap"
                       style={{ borderColor: "var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-surface)" }}
                       title="Planning Poker"
                     >
@@ -693,7 +697,7 @@ export default function PaginaWorkspace() {
                     {features.ai && (
                       <button
                         onClick={() => setModalIA(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-[var(--tf-radius-xs)] transition-smooth border"
+                        className="flex items-center justify-center gap-1.5 h-9 px-3 text-[13px] font-semibold rounded-[var(--tf-radius-xs)] transition-smooth border whitespace-nowrap"
                         style={{ borderColor: "var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-surface)" }}
                         title="Gerar cards com IA"
                       >

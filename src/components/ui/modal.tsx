@@ -82,7 +82,7 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
           animate="visible"
           exit="exit"
           variants={fadeOnly}
-          className="fixed inset-0 z-50 flex items-stretch md:items-start justify-center p-0 md:py-[5vh] overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-end md:items-start justify-center p-0 md:py-[5vh] overflow-y-auto"
           style={{
             background: "rgba(0, 0, 0, 0.6)",
             backdropFilter: "blur(8px)",
@@ -102,8 +102,10 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
             exit="exit"
             variants={scaleIn}
             className={cn(
-              "w-full max-w-lg mx-0 md:mx-4 my-0 md:my-auto rounded-none md:rounded-[var(--tf-radius-lg)] border-0 md:border",
-              "flex flex-col min-h-[100dvh] max-h-[100dvh] md:min-h-0 md:max-h-[90vh]",
+              "w-full max-w-lg mx-0 md:mx-4 my-0 md:my-auto",
+              "rounded-t-[var(--tf-radius-lg)] md:rounded-[var(--tf-radius-lg)]",
+              "border-t md:border",
+              "flex flex-col max-h-[90dvh] md:max-h-[90vh]",
               className
             )}
             style={{
@@ -112,9 +114,17 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
               boxShadow: "var(--tf-shadow-lg)",
             }}
           >
+            {/* Drag handle visual (mobile bottom sheet) */}
+            <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
+              <span
+                aria-hidden
+                className="w-10 h-1 rounded-full"
+                style={{ background: "var(--tf-border)" }}
+              />
+            </div>
             {titulo && (
               <div
-                className="flex items-center justify-between px-5 py-3.5 border-b shrink-0"
+                className="flex items-center justify-between px-5 py-3 md:py-3.5 border-b shrink-0"
                 style={{ borderColor: "var(--tf-border)" }}
               >
                 <h2
