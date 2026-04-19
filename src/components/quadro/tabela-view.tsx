@@ -61,9 +61,9 @@ export function TabelaView({
   );
 
   return (
-    <div className="flex-1 overflow-auto px-4 lg:px-6 pb-6">
+    <div className="flex-1 overflow-auto px-3 md:px-4 lg:px-6 pb-6">
       <div
-        className="overflow-hidden"
+        className="overflow-x-auto"
         style={{
           background: "var(--tf-surface)",
           border: "1px solid var(--tf-border)",
@@ -71,7 +71,7 @@ export function TabelaView({
         }}
       >
         <table
-          className="w-full text-[0.75rem]"
+          className="w-full min-w-[720px] text-[0.75rem]"
           style={{ borderCollapse: "collapse" }}
         >
           <thead>
@@ -132,7 +132,7 @@ export function TabelaView({
                   }
                 >
                   {/* Titulo */}
-                  <td className="px-3 h-9">
+                  <td className="px-3 h-11 md:h-9">
                     <span
                       className="font-medium truncate block"
                       style={{

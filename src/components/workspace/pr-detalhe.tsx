@@ -375,7 +375,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
       />
 
       {/* ─── Tab Content ─── */}
-      <div className="flex gap-4 items-start">
+      <div className="flex flex-col lg:flex-row gap-4 items-start">
         {/* Main content */}
         <div className="flex-1 min-w-0">
           {tab === "arquivos" && (
@@ -427,7 +427,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
 
         {/* ─── Action Panel (sidebar) ─── */}
         {repoId && (
-          <div className="w-[280px] shrink-0 sticky top-4">
+          <div className="w-full lg:w-[280px] shrink-0 lg:sticky lg:top-4">
             <div className="p-4 rounded-[var(--tf-radius-xs)]" style={{ border: "1px solid var(--tf-border)", background: "var(--tf-surface)" }}>
               {ehAberto && !rejeitando ? (
                 <div className="flex flex-col gap-3">
