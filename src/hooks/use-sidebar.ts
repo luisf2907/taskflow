@@ -3,28 +3,33 @@
 import { useCallback, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "tf_sidebar_aberta";
+const MOBILE_QUERY = "(max-width: 1023px)";
 
-// Leitura sincrona do localStorage — sem flash
+// Estado em memória para mobile (não persiste entre page loads)
+let mobileDrawerAberta = false;
+
+function isMobile(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia(MOBILE_QUERY).matches;
+}
+
 function getSnapshot(): boolean {
   if (typeof window === "undefined") return true;
+  if (isMobile()) return mobileDrawerAberta;
   const salva = localStorage.getItem(STORAGE_KEY);
   return salva === null ? true : salva === "true";
 }
 
 function getServerSnapshot(): boolean {
-  return true; // SSR default: sidebar aberta
+  return true;
 }
 
 function subscribe(callback: () => void) {
-  // Escutar mudancas no localStorage (outras tabs)
   const handler = (e: StorageEvent) => {
     if (e.key === STORAGE_KEY) callback();
   };
   window.addEventListener("storage", handler);
-
-  // Escutar mudancas locais via evento custom
   window.addEventListener("tf-sidebar-change", callback);
-
   return () => {
     window.removeEventListener("storage", handler);
     window.removeEventListener("tf-sidebar-change", callback);
@@ -35,11 +40,15 @@ export function useSidebar() {
   const aberta = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const toggleSidebar = useCallback(() => {
-    const next = !getSnapshot();
-    localStorage.setItem(STORAGE_KEY, String(next));
+    if (isMobile()) {
+      mobileDrawerAberta = !mobileDrawerAberta;
+    } else {
+      const atual = localStorage.getItem(STORAGE_KEY);
+      const proximo = !(atual === null ? true : atual === "true");
+      localStorage.setItem(STORAGE_KEY, String(proximo));
+    }
     window.dispatchEvent(new Event("tf-sidebar-change"));
   }, []);
 
-  // Sempre iniciado — sem flash
   return { sidebarAberta: aberta, toggleSidebar, iniciado: true };
 }

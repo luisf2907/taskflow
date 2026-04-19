@@ -3,6 +3,7 @@ import { CommandPalette } from "@/components/command-palette";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { HelpModal } from "@/components/help/help-modal";
 import { OfflineBanner } from "@/components/offline-banner";
+import { BottomNav } from "@/components/layout/bottom-nav";
 import { RecordingIndicator } from "@/components/layout/recording-indicator";
 import { SWRProvider } from "@/components/swr-provider";
 import { ThemeInjector } from "@/components/theme-injector";
@@ -97,6 +98,7 @@ export default function RootLayout({
               <HelpModal />
               <OfflineBanner />
               {children}
+              <BottomNav />
               <RecordingIndicator />
               <ToastContainer />
             </RecordingProvider>

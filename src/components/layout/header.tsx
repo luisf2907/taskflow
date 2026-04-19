@@ -14,16 +14,18 @@ function HeaderIconButton({
   onClick,
   children,
   ariaLabel,
+  className,
 }: {
   onClick?: () => void;
   children: React.ReactNode;
   ariaLabel: string;
+  className?: string;
 }) {
   return (
     <button
       onClick={onClick}
       aria-label={ariaLabel}
-      className="w-8 h-8 flex items-center justify-center transition-colors outline-none"
+      className={`w-10 h-10 md:w-8 md:h-8 flex items-center justify-center transition-colors outline-none ${className ?? ""}`}
       style={{
         borderRadius: "var(--tf-radius-sm)",
         color: "var(--tf-text-secondary)",
@@ -62,7 +64,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
 
   return (
     <header
-      className="h-11 mt-3.5 px-3 md:px-4 flex items-center justify-between shrink-0 mb-3 z-30 relative"
+      className="h-12 md:h-11 mt-3.5 px-2 md:px-4 gap-2 md:gap-0 flex items-center justify-between shrink-0 mb-3 z-30 relative"
       style={{
         background: "var(--tf-surface)",
         border: "1px solid var(--tf-border)",
@@ -73,20 +75,20 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
       {onMenuMobile && (
         <button
           onClick={onMenuMobile}
-          className="lg:hidden p-1.5 mr-1 transition-colors hover:bg-[var(--tf-surface-hover)]"
+          className="lg:hidden w-10 h-10 mr-1 flex items-center justify-center transition-colors hover:bg-[var(--tf-surface-hover)]"
           style={{
             color: "var(--tf-text-tertiary)",
             borderRadius: "var(--tf-radius-xs)",
           }}
           aria-label="Abrir menu"
         >
-          <Menu size={16} />
+          <Menu size={18} />
         </button>
       )}
 
       {/* Search trigger (Cmd+K) */}
       <button
-        className="flex items-center gap-2 h-7 px-2.5 pr-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] outline-none flex-1 max-w-[320px]"
+        className="flex items-center gap-2 h-9 md:h-7 px-2.5 pr-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] outline-none flex-1 max-w-[320px]"
         style={{
           background: "var(--tf-bg-secondary)",
           border: "1px solid var(--tf-border)",
@@ -126,6 +128,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
           <HeaderIconButton
             onClick={() => window.dispatchEvent(new Event("open-help-modal"))}
             ariaLabel="Central de Ajuda"
+            className="hidden sm:flex"
           >
             <HelpCircle size={15} strokeWidth={1.75} />
           </HeaderIconButton>
