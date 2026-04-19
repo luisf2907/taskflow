@@ -100,6 +100,7 @@ export function RepoFileViewer({ owner, nome, path, branch, onVoltar }: RepoFile
         <button
           onClick={onVoltar}
           title="Voltar"
+          aria-label="Voltar"
           className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[var(--tf-radius-xs)] cursor-pointer shrink-0"
           style={{
             border: "1px solid var(--tf-border)",

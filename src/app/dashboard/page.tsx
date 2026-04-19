@@ -19,18 +19,29 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import OnboardingWizard from "@/components/onboarding/onboarding-wizard";
 import { EmptyState } from "@/components/ui/empty-state";
 
 import { QuadroBentoCard } from "./_components/quadro-bento-card";
 import { WorkspaceBentoCard } from "./_components/workspace-bento-card";
 import { TaskLineItem } from "./_components/task-line-item";
-import {
-  ModalCriarQuadro,
-  type NovoQuadroDados,
-} from "./_modais/modal-criar-quadro";
-import { ModalWorkspace } from "./_modais/modal-workspace";
-import { ModalConfirmExcluirWs } from "./_modais/modal-confirm-excluir-ws";
+import type { NovoQuadroDados } from "./_modais/modal-criar-quadro";
+
+// Modais carregam sob demanda (usuario precisa clicar pra abrir).
+// Evita carregar ~40KB de JS no primeiro load do dashboard.
+const ModalCriarQuadro = dynamic(
+  () => import("./_modais/modal-criar-quadro").then((m) => m.ModalCriarQuadro),
+  { ssr: false }
+);
+const ModalWorkspace = dynamic(
+  () => import("./_modais/modal-workspace").then((m) => m.ModalWorkspace),
+  { ssr: false }
+);
+const ModalConfirmExcluirWs = dynamic(
+  () => import("./_modais/modal-confirm-excluir-ws").then((m) => m.ModalConfirmExcluirWs),
+  { ssr: false }
+);
 
 function saudacao(): string {
   const h = new Date().getHours();
