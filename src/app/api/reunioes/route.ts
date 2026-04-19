@@ -17,8 +17,9 @@
 import { randomUUID } from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
-import { applyRateLimitAsync } from "@/lib/api-utils";
+import { applyRateLimitAsync, validateBody } from "@/lib/api-utils";
 import { getStorageDriver } from "@/lib/drivers/storage/factory";
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 
@@ -26,6 +27,13 @@ const BUCKET = "reunioes-audio";
 const UPLOAD_TTL_SECONDS = 10 * 60; // 10 min
 
 const ALLOWED_MIME_PREFIXES = ["audio/", "video/"];
+
+const createReuniaoSchema = z.object({
+  workspace_id: z.string().uuid("workspace_id deve ser UUID"),
+  titulo: z.string().min(1, "titulo obrigatorio").max(200, "titulo maior que 200 chars"),
+  descricao: z.string().max(5000).optional(),
+  mime_type: z.string().max(100).optional(),
+});
 
 export async function POST(request: NextRequest) {
   const limited = await applyRateLimitAsync(request, "reunioes-create", {
@@ -42,33 +50,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
   }
 
-  let body: {
-    workspace_id?: string;
-    titulo?: string;
-    descricao?: string;
-    mime_type?: string;
-  };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Body JSON invalido" }, { status: 400 });
-  }
+  const parsed = await validateBody(request, createReuniaoSchema);
+  if ("error" in parsed) return parsed.error;
+  const body = parsed.data;
 
-  if (!body.workspace_id) {
-    return NextResponse.json(
-      { error: "workspace_id obrigatorio" },
-      { status: 400 },
-    );
-  }
-  if (!body.titulo || typeof body.titulo !== "string") {
-    return NextResponse.json({ error: "titulo obrigatorio" }, { status: 400 });
-  }
-  if (body.titulo.length > 200) {
-    return NextResponse.json(
-      { error: "titulo maior que 200 caracteres" },
-      { status: 400 },
-    );
-  }
   const mime = body.mime_type ?? "audio/webm";
   if (!ALLOWED_MIME_PREFIXES.some((p) => mime.startsWith(p))) {
     return NextResponse.json(
