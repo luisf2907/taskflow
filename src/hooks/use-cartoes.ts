@@ -179,7 +179,7 @@ export function useCartoes(quadroId: string) {
     registrarAtividade({ quadroId, cartaoId: id, acao: "excluir", entidade: "cartao", detalhes: { titulo } });
   }
 
-  async function mover(cartaoId: string, novaColunaId: string, novaPosicao: number): Promise<{ blocked?: boolean; reason?: string }> {
+  async function mover(cartaoId: string, novaColunaId: string, novaPosicao: number): Promise<{ blocked?: boolean; reason?: string; done?: boolean; titulo?: string }> {
     const cartao = cartoes.find((c) => c.id === cartaoId);
     const oldColunaId = cartao?.coluna_id;
 
@@ -255,7 +255,7 @@ export function useCartoes(quadroId: string) {
         }
       }
     }
-    return {};
+    return { done: !!result?.is_done, titulo: cartao?.titulo };
   }
 
   async function reordenarNaColuna(colunaId: string, cartoesOrdenados: CartaoComResumo[]) {

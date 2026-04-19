@@ -239,6 +239,9 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
         if (result?.blocked) {
           setAlertaBloqueio(result.reason || "Ação bloqueada.");
           setTimeout(() => setAlertaBloqueio(null), 4000);
+        } else if (result?.done) {
+          const titulo = result.titulo || cartaoAtivo.titulo;
+          toast.done(`Tarefa concluída: ${titulo}`);
         }
       } catch {
         toast.error("Erro ao mover cartão. Tente novamente.");

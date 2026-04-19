@@ -1,8 +1,8 @@
 "use client";
 
-import { useSyncExternalStore, useCallback } from "react";
+import { useSyncExternalStore } from "react";
 
-export type ToastType = "success" | "error" | "info";
+export type ToastType = "success" | "error" | "info" | "done";
 
 export interface Toast {
   id: string;
@@ -39,8 +39,7 @@ function addToast(type: ToastType, message: string) {
   if (toasts.length > 3) toasts = toasts.slice(-3);
   emit();
 
-  // Erros ficam mais tempo visíveis
-  const duration = type === "error" ? 6000 : 4000;
+  const duration = type === "error" ? 6000 : type === "done" ? 3500 : 4000;
   setTimeout(() => {
     removeToast(id);
   }, duration);
@@ -56,6 +55,8 @@ export const toast = {
   success: (message: string) => addToast("success", message),
   error: (message: string) => addToast("error", message),
   info: (message: string) => addToast("info", message),
+  /** Usado em momentos de celebracao (card movido pra Concluido, sprint fechada). */
+  done: (message: string) => addToast("done", message),
 };
 
 // Hook
