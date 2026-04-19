@@ -6,7 +6,114 @@ import { toast } from "@/hooks/use-toast";
 import { Etiqueta } from "@/types";
 import { getContrastTextColor } from "@/lib/colors";
 import { Sparkles, Zap, Trash2, Plus, Loader2, CheckSquare, Tag } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+
+/**
+ * Loading "terminal-like" pra fase de geracao — feedback vivo em vez
+ * de spinner estatico. Cicla mensagens sugerindo o que a IA esta
+ * fazendo, com cursor piscante.
+ */
+function TerminalGerando() {
+  const etapas = [
+    "Analisando contexto",
+    "Identificando tarefas",
+    "Gerando criterios de aceitacao",
+    "Sugerindo etiquetas",
+    "Estimando pontos",
+  ];
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setIdx((i) => (i + 1) % etapas.length);
+    }, 1400);
+    return () => clearInterval(t);
+  }, [etapas.length]);
+
+  return (
+    <div
+      className="rounded-[var(--tf-radius-sm)] p-4 space-y-1.5"
+      style={{
+        background: "var(--tf-bg-secondary)",
+        border: "1px solid var(--tf-border)",
+        fontFamily: "var(--tf-font-mono)",
+      }}
+    >
+      <div
+        className="flex items-center gap-1.5 text-[0.6875rem]"
+        style={{ color: "var(--tf-text-tertiary)", letterSpacing: "0.02em" }}
+      >
+        <span
+          className="w-1.5 h-1.5 rounded-full animate-pulse"
+          style={{ background: "var(--tf-accent)" }}
+        />
+        <span>taskflow:ai ~ gerando</span>
+      </div>
+      <div className="space-y-0.5 text-[0.75rem]">
+        {etapas.map((etapa, i) => {
+          const concluida = i < idx;
+          const atual = i === idx;
+          const pendente = i > idx;
+          return (
+            <div
+              key={etapa}
+              className="flex items-start gap-2"
+              style={{
+                color: concluida
+                  ? "var(--tf-text-secondary)"
+                  : atual
+                    ? "var(--tf-accent)"
+                    : "var(--tf-text-tertiary)",
+                opacity: pendente ? 0.5 : 1,
+                transition: "opacity 0.3s, color 0.3s",
+              }}
+            >
+              <span style={{ color: "var(--tf-accent)", width: 14, flexShrink: 0 }}>
+                {concluida ? "✓" : atual ? ">" : " "}
+              </span>
+              <span className="flex-1">
+                {etapa}
+                {atual && (
+                  <>
+                    <span className="inline-block w-2">
+                      <span
+                        style={{
+                          display: "inline-block",
+                          animation: "tf-terminal-dots 1.4s steps(4, end) infinite",
+                        }}
+                      >
+                        ...
+                      </span>
+                    </span>
+                    <span
+                      className="inline-block w-[6px] h-[10px] ml-0.5 align-middle"
+                      style={{
+                        background: "var(--tf-accent)",
+                        animation: "tf-terminal-blink 1s steps(2, end) infinite",
+                      }}
+                    />
+                  </>
+                )}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <style jsx>{`
+        @keyframes tf-terminal-blink {
+          0%, 49% { opacity: 1; }
+          50%, 100% { opacity: 0; }
+        }
+        @keyframes tf-terminal-dots {
+          0% { clip-path: inset(0 100% 0 0); }
+          25% { clip-path: inset(0 66% 0 0); }
+          50% { clip-path: inset(0 33% 0 0); }
+          75%, 100% { clip-path: inset(0 0 0 0); }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 interface CardGerado {
   titulo: string;
@@ -129,9 +236,20 @@ export function GerarCardsModal({ aberto, onFechar, workspaceId, etiquetas = [],
       {cardsGerados.length === 0 ? (
         /* FASE 1: Input de texto */
         <div className="space-y-4">
-          <p className="text-xs" style={{ color: "var(--tf-text-secondary)" }}>
-            Descreva o que precisa ser feito e a IA vai gerar user stories com checklist de criterios e etiquetas automaticas.
-          </p>
+          <div
+            className="flex items-center gap-1.5 text-[0.6875rem]"
+            style={{
+              color: "var(--tf-text-tertiary)",
+              fontFamily: "var(--tf-font-mono)",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+            }}
+          >
+            <span style={{ color: "var(--tf-accent)" }}>$</span>
+            <span>prompt</span>
+            <span style={{ opacity: 0.5 }}>·</span>
+            <span>descreva o que precisa ser feito</span>
+          </div>
 
           <textarea
             value={texto}
@@ -150,6 +268,8 @@ export function GerarCardsModal({ aberto, onFechar, workspaceId, etiquetas = [],
             disabled={gerando}
             autoFocus
           />
+
+          {gerando && <TerminalGerando />}
 
           {/* Etiquetas disponiveis */}
           {etiquetas.length > 0 && (
