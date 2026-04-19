@@ -20,6 +20,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { motion } from "motion/react";
+import { fadeUp, staggerContainer } from "@/lib/motion/presets";
 import OnboardingWizard from "@/components/onboarding/onboarding-wizard";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -276,9 +278,13 @@ export default function PaginaInicial() {
                 </div>
               </div>
             ) : (
-              <>
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={staggerContainer}
+              >
                 {/* ── HERO SECTION & INSIGHTS ── */}
-                <div className="flex flex-col mb-8 md:mb-10">
+                <motion.div variants={fadeUp} className="flex flex-col mb-8 md:mb-10">
                   <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-5">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <div
@@ -351,9 +357,13 @@ export default function PaginaInicial() {
 
                   {/* Context and Titles */}
                   <div>
-                    <p className="label-mono mb-2" style={{ color: "var(--tf-text-tertiary)" }}>
+                    <motion.p
+                      variants={fadeUp}
+                      className="label-mono mb-2"
+                      style={{ color: "var(--tf-text-tertiary)" }}
+                    >
                       {saudacao()}
-                    </p>
+                    </motion.p>
                     <h1
                       className="text-[2.25rem] lg:text-[2.75rem] leading-tight font-semibold"
                       style={{
@@ -373,11 +383,12 @@ export default function PaginaInicial() {
                       Seu espaço de trabalho está focado e produtivo.
                     </p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Empty State Geral */}
                 {quadros.length === 0 && workspaces.length === 0 && (
-                  <div
+                  <motion.div
+                    variants={fadeUp}
                     className="mx-auto w-full max-w-xl"
                     style={{
                       border: "1px dashed var(--tf-border-strong)",
@@ -395,12 +406,12 @@ export default function PaginaInicial() {
                       acaoSecundariaLabel="Quadro avulso"
                       onAcaoSecundaria={() => abrirModalCriarQuadro()}
                     />
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* ── RECENTES (Scroll Horizontal) ── */}
                 {recentes.length > 0 && (
-                  <section className="mb-8">
+                  <motion.section variants={fadeUp} className="mb-8">
                     <h2
                       className="label-mono mb-4 flex items-center gap-2"
                       style={{ color: "var(--tf-text-secondary)" }}
@@ -417,12 +428,12 @@ export default function PaginaInicial() {
                         <QuadroBentoCard key={q.id} quadro={q} />
                       ))}
                     </div>
-                  </section>
+                  </motion.section>
                 )}
 
                 {/* ── WORKSPACES (GRID BENTO) ── */}
                 {workspaces.length > 0 && (
-                  <section className="mb-8">
+                  <motion.section variants={fadeUp} className="mb-8">
                     <h2
                       className="label-mono mb-4"
                       style={{ color: "var(--tf-text-secondary)" }}
@@ -441,12 +452,12 @@ export default function PaginaInicial() {
                         />
                       ))}
                     </div>
-                  </section>
+                  </motion.section>
                 )}
 
                 {/* ── QUADROS AVULSOS ── */}
                 {quadrosAvulsos.length > 0 && (
-                  <section>
+                  <motion.section variants={fadeUp}>
                     <h2
                       className="label-mono mb-3 flex items-center gap-2"
                       style={{ color: "var(--tf-text-secondary)" }}
@@ -500,12 +511,12 @@ export default function PaginaInicial() {
                         </span>
                       </button>
                     </div>
-                  </section>
+                  </motion.section>
                 )}
 
                 {/* Bloco invisível para garantir respiro no fim do scroll (corrige bug do webkit) */}
                 <div className="h-16 md:h-24 w-full shrink-0" />
-              </>
+              </motion.div>
             )}
           </div>
 
