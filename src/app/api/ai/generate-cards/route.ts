@@ -2,7 +2,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { applyRateLimitAsync, validateBody, stripFormatting } from "@/lib/api-utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { parseAIResponse } from "@/lib/ai-json-repair";
 
 const schema = z.object({
@@ -78,7 +78,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    // gemini-flash-latest: alias estavel mantido pela Google. Antes era
+    // "gemini-2.5-flash" que as vezes retornava respostas truncadas.
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const prompt = buildPrompt(etiquetas);
     const result = await model.generateContent({
@@ -87,8 +89,31 @@ export async function POST(request: NextRequest) {
       ],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 2000,
+        maxOutputTokens: 8000,
         responseMimeType: "application/json",
+        // responseSchema garante estrutura fixa — elimina os casos em que
+        // o modelo retornava markdown, texto extra ou JSON malformado
+        // (que causavam 502 "formato invalido").
+        responseSchema: {
+          type: SchemaType.ARRAY,
+          items: {
+            type: SchemaType.OBJECT,
+            properties: {
+              titulo: { type: SchemaType.STRING },
+              descricao: { type: SchemaType.STRING },
+              peso: { type: SchemaType.NUMBER },
+              checklist: {
+                type: SchemaType.ARRAY,
+                items: { type: SchemaType.STRING },
+              },
+              etiqueta_ids: {
+                type: SchemaType.ARRAY,
+                items: { type: SchemaType.STRING },
+              },
+            },
+            required: ["titulo", "descricao", "peso", "checklist", "etiqueta_ids"],
+          },
+        },
       },
     });
 
@@ -98,10 +123,20 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cards = await parseAIResponse<Array<Record<string, any>>>(responseText, "array", apiKey);
     if (!cards) {
-      return NextResponse.json(
-        { error: "A IA retornou um formato invalido. Tente novamente." },
-        { status: 502 }
-      );
+      const finishReason = result.response.candidates?.[0]?.finishReason;
+      const safetyRatings = result.response.candidates?.[0]?.safetyRatings;
+      console.error("[generate-cards] IA retornou formato invalido", {
+        finishReason,
+        safetyRatings,
+        snippet: responseText.slice(0, 500),
+      });
+      const motivo =
+        finishReason === "MAX_TOKENS"
+          ? "A resposta foi muito longa. Tente descrever em menos detalhes."
+          : finishReason === "SAFETY"
+            ? "A IA recusou processar esse conteudo. Tente reformular."
+            : "A IA retornou um formato invalido. Tente novamente.";
+      return NextResponse.json({ error: motivo }, { status: 502 });
     }
 
     // Validate structure

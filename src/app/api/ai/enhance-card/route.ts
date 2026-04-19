@@ -2,7 +2,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { applyRateLimitAsync, validateBody, stripFormatting } from "@/lib/api-utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { parseAIResponse } from "@/lib/ai-json-repair";
 
 const schema = z.object({
@@ -77,15 +77,31 @@ export async function POST(request: NextRequest) {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const prompt = buildPrompt(parsed.data);
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 1500,
+        maxOutputTokens: 4000,
         responseMimeType: "application/json",
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            descricao: { type: SchemaType.STRING },
+            checklist_novos: {
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
+            },
+            etiqueta_ids: {
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
+            },
+            peso_sugerido: { type: SchemaType.NUMBER, nullable: true },
+          },
+          required: ["descricao", "checklist_novos", "etiqueta_ids"],
+        },
       },
     });
 
@@ -95,7 +111,18 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = await parseAIResponse<Record<string, any>>(responseText, "object", apiKey);
     if (!data) {
-      return NextResponse.json({ error: "A IA retornou formato invalido. Tente novamente." }, { status: 502 });
+      const finishReason = result.response.candidates?.[0]?.finishReason;
+      console.error("[enhance-card] IA retornou formato invalido", {
+        finishReason,
+        snippet: responseText.slice(0, 500),
+      });
+      const motivo =
+        finishReason === "MAX_TOKENS"
+          ? "A resposta foi muito longa. Tente de novo."
+          : finishReason === "SAFETY"
+            ? "A IA recusou processar esse conteudo."
+            : "A IA retornou formato invalido. Tente novamente.";
+      return NextResponse.json({ error: motivo }, { status: 502 });
     }
 
     // Validar etiqueta_ids
