@@ -38,7 +38,6 @@ export default function OGImage() {
             alignItems: "center",
             justifyContent: "space-between",
             position: "relative",
-            zIndex: 10,
           }}
         >
           {/* Brand */}
@@ -93,7 +92,6 @@ export default function OGImage() {
             flexDirection: "column",
             gap: "16px",
             position: "relative",
-            zIndex: 10,
           }}
         >
           <span
@@ -130,7 +128,6 @@ export default function OGImage() {
             alignItems: "center",
             justifyContent: "space-between",
             position: "relative",
-            zIndex: 10,
           }}
         >
           <div style={{ display: "flex", gap: "10px" }}>

@@ -47,6 +47,10 @@ next-env.d.ts
 .claude/skills/
 .claude/plans/
 
+# editor configs (local preferences)
+.vscode/
+.idea/
+
 # dumps do Supabase (schema/storage) — processados localmente, nunca commitar
 /dump-*.sql
 /schema_latest.sql

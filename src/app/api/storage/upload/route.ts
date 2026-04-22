@@ -46,6 +46,33 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Whitelist de buckets — rejeita qualquer bucket nao reconhecido pra
+  // prevenir escrita em buckets internos do Supabase ou criacao de novos
+  // buckets ao vivo via path arbitrario.
+  const ALLOWED_BUCKETS = new Set(["anexos", "wiki", "reunioes-audio"]);
+  if (!ALLOWED_BUCKETS.has(bucket)) {
+    return NextResponse.json(
+      { error: "Bucket nao permitido" },
+      { status: 400 },
+    );
+  }
+
+  // Validacao de path: limite de tamanho, sem traversal, sem null bytes.
+  // Previne writes em caminhos absolutos do disco (local-disk driver)
+  // ou nomes suspeitos em storage providers.
+  if (
+    filePath.length > 512 ||
+    filePath.includes("..") ||
+    filePath.includes("\0") ||
+    filePath.startsWith("/") ||
+    filePath.startsWith("\\")
+  ) {
+    return NextResponse.json(
+      { error: "Path invalido" },
+      { status: 400 },
+    );
+  }
+
   // ───── Auth ─────
   let userId: string | null = null;
   if (token) {

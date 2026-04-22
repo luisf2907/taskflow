@@ -19,6 +19,13 @@ import { applyRateLimitAsync } from "@/lib/api-utils";
 
 // Buckets publicos — servem qualquer path sem auth
 const PUBLIC_BUCKETS = new Set(["wiki", "anexos"]);
+const ALLOWED_BUCKETS = new Set(["anexos", "wiki", "reunioes-audio"]);
+
+function isPathSafe(filePath: string): boolean {
+  if (filePath.length === 0 || filePath.length > 512) return false;
+  if (filePath.includes("\0") || filePath.includes("..")) return false;
+  return true;
+}
 
 export async function GET(
   request: NextRequest,
@@ -27,6 +34,13 @@ export async function GET(
   const { bucket, path: pathSegments } = await params;
   const filePath = pathSegments.join("/");
   const token = request.nextUrl.searchParams.get("token");
+
+  if (!ALLOWED_BUCKETS.has(bucket)) {
+    return NextResponse.json({ error: "Bucket nao permitido" }, { status: 400 });
+  }
+  if (!isPathSafe(filePath)) {
+    return NextResponse.json({ error: "Path invalido" }, { status: 400 });
+  }
 
   // ───── Auth ─────
   if (!PUBLIC_BUCKETS.has(bucket)) {
@@ -91,6 +105,13 @@ export async function DELETE(
 
   const { bucket, path: pathSegments } = await params;
   const filePath = pathSegments.join("/");
+
+  if (!ALLOWED_BUCKETS.has(bucket)) {
+    return NextResponse.json({ error: "Bucket nao permitido" }, { status: 400 });
+  }
+  if (!isPathSafe(filePath)) {
+    return NextResponse.json({ error: "Path invalido" }, { status: 400 });
+  }
 
   // Auth — so user logado pode deletar
   const supabase = await createServerClient();

@@ -53,11 +53,41 @@ export const metadata: Metadata = {
     default: "Taskflow",
     template: "%s | Taskflow",
   },
-  description: "Gerencie seus projetos com quadros kanban, sprints e integração com GitHub.",
+  description:
+    "Gerencie seus projetos com quadros kanban, sprints e integração com GitHub.",
+  applicationName: "Taskflow",
+  keywords: ["kanban", "sprints", "gestão de tarefas", "github", "scrum", "agile"],
+  authors: [{ name: "Taskflow" }],
+  creator: "Taskflow",
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: siteUrl,
+    siteName: "Taskflow",
+    title: "Taskflow — Gestão de tarefas para times que entregam",
+    description:
+      "Quadros kanban, sprints, planning poker, wiki e integração com GitHub. Para times de dev.",
+    // og image auto-discovered via src/app/opengraph-image.tsx
+  },
   twitter: {
     card: "summary_large_image",
     title: "Taskflow",
     description: "Gestão de tarefas para times que entregam.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
   },
   // icons auto-discovered via src/app/icon.tsx e apple-icon.tsx
 };
