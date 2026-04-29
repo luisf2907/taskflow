@@ -34,6 +34,12 @@ git checkout feat/self-hosted
 
 ### 2. Gere `.env.local`
 
+**Com `make`:**
+```bash
+make PROFILE=full setup
+```
+
+**Sem `make`:**
 ```bash
 node scripts/setup-env.mjs full
 ```
@@ -52,23 +58,36 @@ SMTP_FROM=seu-email@gmail.com
 
 ### 4. Suba o stack
 
-```bash
-docker compose -f docker/docker-compose.full.yml --env-file .env.local up -d
-```
-
-Ou com `make`:
+**Com `make`:**
 ```bash
 make PROFILE=full up
 ```
 
+**Sem `make`:**
+```bash
+docker compose -f docker/docker-compose.full.yml --env-file .env.local up -d
+```
+
 ### 5. Valide
 
+**Com `make`:**
+```bash
+make PROFILE=full health
+```
+
+**Sem `make`:**
 ```bash
 node --env-file=.env.local scripts/cli.mjs health
 ```
 
 ### 6. Crie admin
 
+**Com `make`:**
+```bash
+make PROFILE=full bootstrap EMAIL=admin@company.com PASSWORD=changeme NAME="Admin" WORKSPACE="Company"
+```
+
+**Sem `make`:**
 ```bash
 node --env-file=.env.local scripts/cli.mjs bootstrap \
   --admin-email admin@company.com \
@@ -87,6 +106,13 @@ node --env-file=.env.local scripts/cli.mjs bootstrap \
    NEXT_PUBLIC_SENTRY_DSN=http://key@localhost:8800/1
    ```
 5. Rebuild o app:
+
+   **Com `make`:**
+   ```bash
+   make PROFILE=full rebuild
+   ```
+
+   **Sem `make`:**
    ```bash
    docker compose -f docker/docker-compose.full.yml --env-file .env.local build app
    docker compose -f docker/docker-compose.full.yml --env-file .env.local up -d app
@@ -113,6 +139,13 @@ Requer GPU NVIDIA com nvidia-container-toolkit instalado.
    HF_TOKEN=hf_xxx  # token do Hugging Face (pyannote requer)
    ```
 4. Build e suba:
+
+   **Com `make`:**
+   ```bash
+   make PROFILE=full up
+   ```
+
+   **Sem `make`:**
    ```bash
    docker compose -f docker/docker-compose.full.yml --env-file .env.local build voice-worker
    docker compose -f docker/docker-compose.full.yml --env-file .env.local up -d voice-worker
@@ -124,6 +157,14 @@ Primeiro start demora ~5 min (baixa modelos Whisper + pyannote).
 
 Pra desenvolver o app com hot reload, use o compose dev (só infra):
 
+**Com `make`:**
+```bash
+make PROFILE=dev up
+npm run dev
+# App em http://localhost:3000, Postgres exposto em localhost:5432
+```
+
+**Sem `make`:**
 ```bash
 docker compose -f docker/docker-compose.dev.yml --env-file .env.local up -d
 npm run dev

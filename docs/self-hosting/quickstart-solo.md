@@ -44,15 +44,26 @@ os placeholders por secrets seguros (JWT, senhas, chave de criptografia).
 
 ### 3. Suba o stack
 
+**Com `make`:**
 ```bash
 make up
 ```
 
-Isso faz `docker compose -f docker/docker-compose.solo.yml up -d`. Na
-primeira vez o build do app leva ~2 minutos. Acompanhe:
+**Sem `make`:**
+```bash
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local up -d
+```
 
+Na primeira vez o build do app leva ~2 minutos. Acompanhe:
+
+**Com `make`:**
 ```bash
 make logs
+```
+
+**Sem `make`:**
+```bash
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local logs -f
 ```
 
 ### 4. Aguarde o bootstrap terminar
@@ -60,8 +71,14 @@ make logs
 O container `taskflow-bootstrap` aplica o schema e sai com sucesso. Os
 outros serviços dependem dele. Veja com:
 
+**Com `make`:**
 ```bash
 make ps
+```
+
+**Sem `make`:**
+```bash
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local ps
 ```
 
 Espere todos ficarem `healthy` ou `running`. O container `bootstrap`
@@ -72,9 +89,13 @@ deve ficar em `Exited (0)` — isso é o comportamento correto.
 A CLI tem um comando de health que faz uma varredura completa (gateway,
 GoTrue, PostgREST, tabelas, RPCs):
 
+**Com `make`:**
 ```bash
 make health
-# ou direto:
+```
+
+**Sem `make`:**
+```bash
 node --env-file=.env.local scripts/cli.mjs health
 ```
 
@@ -95,8 +116,18 @@ Pula direto pro passo 7.
 Se você **desligou o solo mode** no `.env.local` (`AUTH_MODE=closed`
 ou `standard`), precisa criar o admin via CLI:
 
+**Com `make`:**
 ```bash
 make bootstrap EMAIL=you@example.com PASSWORD=changeme NAME="Felipe" WORKSPACE="Home"
+```
+
+**Sem `make`:**
+```bash
+node --env-file=.env.local scripts/cli.mjs bootstrap \
+  --admin-email you@example.com \
+  --admin-password changeme \
+  --admin-name "Felipe" \
+  --workspace-name "Home"
 ```
 
 Isso cria:
@@ -106,6 +137,7 @@ Isso cria:
 
 Outros comandos úteis da CLI:
 
+**Com `make`:**
 ```bash
 make user-create EMAIL=bruno@home.lab PASSWORD=s3cret NAME="Bruno"
 make user-list
@@ -118,10 +150,27 @@ make workspace-invite WORKSPACE="Outro" EMAIL=bruno@home.lab
 #   → gera link copiável, sem mandar email
 ```
 
-Ou sem `make`:
+**Sem `make`:**
 ```bash
-node --env-file=.env.local scripts/cli.mjs <comando> [flags]
-node --env-file=.env.local scripts/cli.mjs help  # lista tudo
+node --env-file=.env.local scripts/cli.mjs user:create \
+  --email bruno@home.lab \
+  --password s3cret \
+  --name "Bruno"
+node --env-file=.env.local scripts/cli.mjs user:list
+node --env-file=.env.local scripts/cli.mjs user:reset-password \
+  --email bruno@home.lab \
+  --password nova
+node --env-file=.env.local scripts/cli.mjs user:delete \
+  --email bruno@home.lab \
+  --yes
+
+node --env-file=.env.local scripts/cli.mjs workspace:create \
+  --name "Outro" \
+  --owner you@example.com
+node --env-file=.env.local scripts/cli.mjs workspace:list
+node --env-file=.env.local scripts/cli.mjs workspace:invite \
+  --workspace "Outro" \
+  --email bruno@home.lab
 ```
 
 ### 8. Abra o app
@@ -132,6 +181,7 @@ http://localhost:3000
 
 ## Comandos úteis
 
+**Com `make`:**
 ```bash
 make logs              # segue logs de todos
 make logs SERVICE=app  # logs de um serviço específico
@@ -143,6 +193,19 @@ make backup            # dump Postgres + tar storage em ./backups/
 make shell SERVICE=app # entra no container
 ```
 
+**Sem `make`:**
+```bash
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local logs -f
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local logs -f app
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local ps
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local down
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local down -v
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local build app
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local up -d app
+node --env-file=.env.local scripts/cli.mjs backup --compose-file docker/docker-compose.solo.yml
+docker compose -f docker/docker-compose.solo.yml --env-file .env.local exec app /bin/sh
+```
+
 ## Backup e restore
 
 O CLI gera um diretório com dump do Postgres, snapshot do volume de
@@ -150,9 +213,13 @@ storage e um `manifest.json` com SHA-256 de cada componente.
 
 ### Gerar backup
 
+**Com `make`:**
 ```bash
 make backup
-# ou direto:
+```
+
+**Sem `make`:**
+```bash
 node --env-file=.env.local scripts/cli.mjs backup
 ```
 
@@ -163,19 +230,34 @@ Gera `./backups/taskflow-YYYYMMDD-HHMMSS/` com:
 
 Flags úteis:
 
+**Com `make`:**
 ```bash
 make backup OUT=./backups/pre-upgrade   # destino custom
 make backup DB_ONLY=1                   # só o banco
 make backup STORAGE_ONLY=1              # só storage
 ```
 
+**Sem `make`:**
+```bash
+node --env-file=.env.local scripts/cli.mjs backup \
+  --compose-file docker/docker-compose.solo.yml \
+  --out ./backups/pre-upgrade
+node --env-file=.env.local scripts/cli.mjs backup \
+  --compose-file docker/docker-compose.solo.yml \
+  --db-only
+node --env-file=.env.local scripts/cli.mjs backup \
+  --compose-file docker/docker-compose.solo.yml \
+  --storage-only
+```
+
 ### Restaurar
 
-**Operação destrutiva** — sobrescreve o DB e o volume de storage
-inteiro. Precisa de `--yes` explícito (mesmo padrão do `user:delete`).
+**Operacao destrutiva** - sobrescreve o DB e o volume de storage
+inteiro. Precisa de `--yes` explicito (mesmo padrao do `user:delete`).
 
+**Com `make`:**
 ```bash
-# 1. Dry-run — valida manifest, hashes e mostra o que será sobrescrito
+# 1. Dry-run - valida manifest, hashes e mostra o que sera sobrescrito
 make restore FROM=./backups/taskflow-20260416-120000
 
 # 2. Aplica pra valer
@@ -185,11 +267,21 @@ make restore FROM=./backups/taskflow-20260416-120000 YES=1
 docker restart taskflow-app
 ```
 
-Sem `make`, direto:
-
+**Sem `make`:**
 ```bash
+# 1. Dry-run
 node --env-file=.env.local scripts/cli.mjs restore \
-  --from ./backups/taskflow-20260416-120000 --yes
+  --from ./backups/taskflow-20260416-120000 \
+  --compose-file docker/docker-compose.solo.yml
+
+# 2. Aplica pra valer
+node --env-file=.env.local scripts/cli.mjs restore \
+  --from ./backups/taskflow-20260416-120000 \
+  --compose-file docker/docker-compose.solo.yml \
+  --yes
+
+# 3. Reinicia o app pra invalidar caches in-memory
+docker restart taskflow-app
 ```
 
 Se algum arquivo do backup estiver corrompido (hash diferente do manifest),
@@ -289,7 +381,7 @@ Detalhes completos em [modules/auth.md](./modules/auth.md#rotação-de-secrets).
 |---|---|
 | `make up` falha com "port 3000 in use" | Outro processo usando a porta — mude `ports` no compose |
 | Container `bootstrap` em `Exited (1)` | Veja `make logs SERVICE=bootstrap` — provavelmente postgres não subiu |
-| Login não funciona em `AUTH_MODE=solo` | Ainda não há `/api/health` nem auto-login implementado. Aguardando Fase 2 |
+| Login não funciona em `AUTH_MODE=solo` | Verifique `AUTH_MODE=solo`, `SOLO_USER_EMAIL` e o health de GoTrue em `make health` |
 | App mostra "Connection refused" | nginx ainda não está healthy — espere mais uns segundos |
 
 Mais em `troubleshooting.md` (em breve).

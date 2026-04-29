@@ -70,7 +70,7 @@ export default function PaginaInicial() {
   const [modalWorkspace, setModalWorkspace] = useState(false);
   const [editandoWs, setEditandoWs] = useState<Workspace | null>(null);
 
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   const [confirmExcluirWsId, setConfirmExcluirWsId] = useState<string | null>(
     null
   );
@@ -92,20 +92,28 @@ export default function PaginaInicial() {
     return () => window.removeEventListener("open-workspace-modal", handleOpenWsModal);
   }, []);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const showOnboarding = useMemo(() => {
+    if (typeof window === "undefined" || carregando || onboardingDismissed) {
+      return false;
+    }
+
     // Onboarding persistente: usa perfil.onboarding_done (banco) com fallback para localStorage
     const doneNoBanco = perfil?.onboarding_done === true;
     const doneNoLocal = localStorage.getItem("tf_onboarding_done") === "true";
-    if (
+
+    return (
       !doneNoBanco &&
       !doneNoLocal &&
       workspaces.length === 0 &&
       quadros.length === 0
-    ) {
-      setShowOnboarding(true);
-    }
-  }, [workspaces, quadros, perfil?.onboarding_done]);
+    );
+  }, [
+    carregando,
+    onboardingDismissed,
+    perfil?.onboarding_done,
+    workspaces.length,
+    quadros.length,
+  ]);
 
   // Quadros agrupados por workspace
   const quadrosPorWorkspace = useMemo(() => {
@@ -176,11 +184,11 @@ export default function PaginaInicial() {
               : 1
           }
           onComplete={(wsId) => {
-            setShowOnboarding(false);
+            setOnboardingDismissed(true);
             router.push(`/workspace/${wsId}`);
           }}
           onSkip={() => {
-            setShowOnboarding(false);
+            setOnboardingDismissed(true);
           }}
         />
       )}

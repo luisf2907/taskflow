@@ -2,9 +2,10 @@
 
 Rode o Taskflow na sua infraestrutura, sem dependência de SaaS externos.
 
-> **Status:** em desenvolvimento (branch `feat/self-hosted`). Perfil solo
-> tem chassi funcional — falta CLI admin (Fase 2) e drivers de storage
-> e realtime (Fases 3–4) pra ficar completo. Veja [TODO.md](./TODO.md).
+> **Status:** self-hosted consolidado na `main`. Os perfis `solo`, `team`
+> e `full` ja possuem Docker Compose, env examples, CLI admin, storage
+> plugavel, realtime plugavel, backup/restore e health checks. Veja
+> [TODO.md](./TODO.md) para limitacoes restantes.
 
 ## Qual perfil é pra mim?
 

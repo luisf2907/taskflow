@@ -34,6 +34,12 @@ git checkout feat/self-hosted
 
 ### 2. Gere `.env.local` com secrets
 
+**Com `make`:**
+```bash
+make PROFILE=team setup
+```
+
+**Sem `make`:**
 ```bash
 node scripts/setup-env.mjs team
 ```
@@ -55,21 +61,28 @@ por email).
 
 ### 4. Suba o stack
 
-```bash
-docker compose -f docker/docker-compose.team.yml --env-file .env.local up -d
-```
-
-Ou com `make`:
+**Com `make`:**
 ```bash
 make PROFILE=team up
+```
+
+**Sem `make`:**
+```bash
+docker compose -f docker/docker-compose.team.yml --env-file .env.local up -d
 ```
 
 Na primeira vez o build do app leva ~3 minutos.
 
 ### 5. Aguarde bootstrap terminar
 
+**Com `make`:**
 ```bash
-docker ps
+make PROFILE=team ps
+```
+
+**Sem `make`:**
+```bash
+docker compose -f docker/docker-compose.team.yml --env-file .env.local ps
 ```
 
 Espere todos ficarem `healthy` ou `running`. O container `bootstrap`
@@ -77,12 +90,24 @@ deve ficar em `Exited (0)`.
 
 ### 6. Valide o stack
 
+**Com `make`:**
+```bash
+make PROFILE=team health
+```
+
+**Sem `make`:**
 ```bash
 node --env-file=.env.local scripts/cli.mjs health
 ```
 
 ### 7. Crie o admin
 
+**Com `make`:**
+```bash
+make PROFILE=team bootstrap EMAIL=admin@team.local PASSWORD=changeme NAME="Admin" WORKSPACE="Meu Time"
+```
+
+**Sem `make`:**
 ```bash
 node --env-file=.env.local scripts/cli.mjs bootstrap \
   --admin-email admin@team.local \
@@ -93,6 +118,12 @@ node --env-file=.env.local scripts/cli.mjs bootstrap \
 
 ### 8. Crie users do time
 
+**Com `make`:**
+```bash
+make PROFILE=team user-create EMAIL=bruno@team.local PASSWORD=temp123 NAME="Bruno"
+```
+
+**Sem `make`:**
 ```bash
 node --env-file=.env.local scripts/cli.mjs user:create \
   --email bruno@team.local \
@@ -100,10 +131,17 @@ node --env-file=.env.local scripts/cli.mjs user:create \
   --name "Bruno"
 ```
 
-O user vai receber uma senha temporária. No primeiro login, será
+O user vai receber uma senha temporaria. No primeiro login, sera
 redirecionado para definir uma nova senha.
 
-Se não quiser forçar troca de senha:
+Se nao quiser forcar troca de senha:
+
+**Com `make`:**
+```bash
+make PROFILE=team user-create EMAIL=maria@team.local PASSWORD=definitiva123 NAME="Maria"
+```
+
+**Sem `make`:**
 ```bash
 node --env-file=.env.local scripts/cli.mjs user:create \
   --email maria@team.local \
@@ -114,6 +152,12 @@ node --env-file=.env.local scripts/cli.mjs user:create \
 
 ### 9. Convide users pro workspace
 
+**Com `make`:**
+```bash
+make PROFILE=team workspace-invite WORKSPACE="Meu Time" EMAIL=bruno@team.local
+```
+
+**Sem `make`:**
 ```bash
 node --env-file=.env.local scripts/cli.mjs workspace:invite \
   --workspace "Meu Time" \
@@ -135,12 +179,24 @@ rebuild a imagem app e suba novamente.
 
 Mesmo procedimento do perfil solo:
 
+**Com `make`:**
+```bash
+make PROFILE=team backup
+make PROFILE=team restore FROM=./backups/taskflow-<ts> YES=1
+docker restart taskflow-app
+```
+
+**Sem `make`:**
 ```bash
 # Backup
-node --env-file=.env.local scripts/cli.mjs backup
+node --env-file=.env.local scripts/cli.mjs backup \
+  --compose-file docker/docker-compose.team.yml
 
 # Restore (DESTRUTIVO)
-node --env-file=.env.local scripts/cli.mjs restore --from ./backups/taskflow-<ts> --yes
+node --env-file=.env.local scripts/cli.mjs restore \
+  --from ./backups/taskflow-<ts> \
+  --compose-file docker/docker-compose.team.yml \
+  --yes
 docker restart taskflow-app
 ```
 
