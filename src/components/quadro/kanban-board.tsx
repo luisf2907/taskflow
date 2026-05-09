@@ -301,7 +301,7 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
             onDragEnd={handleDragEnd}
           >
             <div className="flex-1 flex flex-col overflow-hidden px-3 md:px-4 lg:px-6">
-              <div className="flex-1 overflow-x-auto overflow-y-hidden pb-6 no-scrollbar snap-x snap-mandatory md:snap-none">
+              <div className="flex-1 overflow-x-auto overflow-y-hidden pb-6 snap-x snap-mandatory md:snap-none">
                 <div className="flex gap-3 md:gap-4 items-start h-full pt-1">
                   <SortableContext
                     items={colunaIds}
