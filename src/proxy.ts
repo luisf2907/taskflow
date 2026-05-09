@@ -32,6 +32,26 @@ function buildRedirectUrl(request: NextRequest, pathAndQuery: string): URL {
 }
 
 export async function proxy(request: NextRequest) {
+  // Early-return no edge para /api/mcp sem token valido — bloqueia bots
+  // e clientes mal configurados antes de subir a function (que custa
+  // CPU/memoria por invocacao). Edge middleware e ordens de magnitude
+  // mais barato que function. Token real e validado dentro do handler.
+  if (request.nextUrl.pathname.startsWith("/api/mcp")) {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer tf_sk_")) {
+      return new NextResponse(
+        JSON.stringify({ error: "API key obrigatoria" }),
+        {
+          status: 401,
+          headers: {
+            "content-type": "application/json",
+            "cache-control": "no-store",
+          },
+        }
+      );
+    }
+  }
+
   const response = NextResponse.next({
     request: { headers: request.headers },
   });
