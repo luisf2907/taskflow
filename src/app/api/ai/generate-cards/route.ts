@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase/server";
 import { applyRateLimitAsync, validateBody, stripFormatting } from "@/lib/api-utils";
+import { trackEvent } from "@/lib/umami";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
@@ -48,6 +49,13 @@ export async function POST(request: NextRequest) {
   const parsed = await validateBody(request, schema);
   if ("error" in parsed) return parsed.error;
   const { texto, etiquetas } = parsed.data;
+
+  // Analytics: registra uso de IA (gera cards)
+  void trackEvent("ai_generate_cards", {
+    user_id: user.id,
+    texto_len: texto.length,
+    num_etiquetas: etiquetas?.length ?? 0,
+  });
 
   // Check API key
   const apiKey = process.env.GEMINI_API_KEY;

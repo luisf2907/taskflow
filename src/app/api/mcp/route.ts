@@ -1,5 +1,6 @@
 import { authenticateApiKey } from "@/lib/mcp-auth";
 import { applyRateLimitAsync, applyApiKeyRateLimitAsync } from "@/lib/api-utils";
+import { trackEvent } from "@/lib/umami";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -74,6 +75,20 @@ export async function POST(request: NextRequest) {
   }
 
   const { id, method, params } = parsed.data;
+
+  // Analytics: registra cada chamada MCP autenticada com sucesso.
+  // Fire-and-forget — nao bloqueia a request.
+  const toolName =
+    method === "tools/call"
+      ? ((params as Record<string, unknown> | undefined)?.name as
+          | string
+          | undefined)
+      : undefined;
+  void trackEvent("mcp_request", {
+    method,
+    tool: toolName,
+    key_id: authResult.keyId,
+  });
 
   // ─── MCP Protocol Methods ───
 

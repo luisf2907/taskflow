@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase/client";
 import { registrarAtividade } from "@/lib/atividades";
 import { executarAutomacoes } from "@/lib/automacoes-executor";
 import { criarNotificacao } from "@/lib/notificacoes";
+import { trackClientEvent } from "@/lib/umami";
 import { Cartao } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useCallback } from "react";
@@ -114,6 +115,10 @@ export function useCartoes(quadroId: string) {
       };
       globalMutate(key, [...cartoes, enriquecido], false);
       registrarAtividade({ quadroId, cartaoId: data.id, acao: "criar", entidade: "cartao", detalhes: { titulo: data.titulo } });
+      trackClientEvent("card_created", {
+        workspace_id: quadro?.workspace_id,
+        has_peso: peso != null,
+      });
 
       // Execute automations for card_created
       if (quadro?.workspace_id) {

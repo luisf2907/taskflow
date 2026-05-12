@@ -1,4 +1,5 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
+import { trackEvent } from "@/lib/umami";
 import { NextRequest, NextResponse } from "next/server";
 
 function sanitizeRedirectPath(next: string | null): string {
@@ -65,6 +66,12 @@ export async function GET(request: NextRequest) {
       : "Falha na autenticacao. Tente novamente.";
     return NextResponse.redirect(buildUrl(request, `/login?error=${encodeURIComponent(msg)}`));
   }
+
+  // Analytics: registra login bem-sucedido
+  void trackEvent("user_login", {
+    user_id: data.session.user.id,
+    provider: data.session.provider_token ? "github" : "email",
+  });
 
   // Se o login foi via GitHub, salvar o provider_token
   if (data.session.provider_token) {

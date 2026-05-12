@@ -1,5 +1,6 @@
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { applyRateLimitAsync, validateBody, stripFormatting } from "@/lib/api-utils";
+import { trackEvent } from "@/lib/umami";
 import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -50,6 +51,12 @@ export async function POST(request: NextRequest) {
   const parsed = await validateBody(request, schema);
   if ("error" in parsed) return parsed.error;
   const { reuniao_id } = parsed.data;
+
+  // Analytics: registra uso de IA (resumo de reuniao)
+  void trackEvent("ai_summarize_reuniao", {
+    user_id: user.id,
+    reuniao_id,
+  });
 
   // Check API key
   const apiKey = process.env.GEMINI_API_KEY;

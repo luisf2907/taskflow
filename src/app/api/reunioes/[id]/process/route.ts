@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { applyRateLimitAsync } from "@/lib/api-utils";
+import { trackEvent } from "@/lib/umami";
 import { getPublicEnv } from "@/lib/env";
 import { getStorageDriver } from "@/lib/drivers/storage/factory";
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
@@ -55,6 +56,12 @@ export async function POST(
   if (!user) {
     return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
   }
+
+  // Analytics: registra processamento de audio iniciado
+  void trackEvent("reuniao_process_start", {
+    user_id: user.id,
+    reuniao_id: reuniaoId,
+  });
 
   // RLS garante que so vemos reunioes de workspaces que participamos
   const { data: reuniao, error: fetchErr } = await supabase

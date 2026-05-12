@@ -3,6 +3,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { Workspace } from "@/types";
 import { getRandomProjectColor } from "@/lib/colors";
+import { trackClientEvent } from "@/lib/umami";
 import useSWR, { mutate as globalMutate } from "swr";
 
 const CHAVE = "workspaces";
@@ -51,6 +52,9 @@ export function useWorkspaces() {
     if (data) {
       const novo = [...workspaces, data].sort((a, b) => a.nome.localeCompare(b.nome));
       globalMutate(CHAVE, novo, false);
+      trackClientEvent("workspace_created", {
+        is_first: workspaces.length === 0,
+      });
     }
     return data;
   }

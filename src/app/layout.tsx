@@ -109,6 +109,16 @@ export default function RootLayout({
         {/* theme-init inline — roda antes da hidratação pra aplicar dark mode
             e palette customizada (evita FOUC). */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* Umami analytics — so carrega se as envs estiverem setadas (prod).
+            Em dev (sem as envs), nao traqueia nada. */}
+        {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID &&
+          process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL && (
+            <script
+              defer
+              src={process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL}
+              data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+            />
+          )}
       </head>
       <body className="h-full antialiased" suppressHydrationWarning>
 

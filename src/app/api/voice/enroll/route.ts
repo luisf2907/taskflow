@@ -15,6 +15,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { applyRateLimitAsync } from "@/lib/api-utils";
+import { trackEvent } from "@/lib/umami";
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import {
   voiceEnroll,
@@ -56,6 +57,9 @@ export async function POST(request: NextRequest) {
       { status: 401 },
     );
   }
+
+  // Analytics: registra tentativa de enroll de voz
+  void trackEvent("voice_enroll_start", { user_id: user.id });
 
   // 2) Parse multipart
   let formData: FormData;
