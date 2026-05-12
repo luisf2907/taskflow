@@ -20,6 +20,25 @@ const supabaseImgSrc = isSupabaseCloud
   ? "https://*.supabase.co"
   : `${supabaseUrl}`;
 
+// Extrair origin (scheme://host) de uma env var de URL pra CSP. Vazio se
+// nao definido — permite que self-hosters omitam telemetria sem quebrar CSP.
+function extractOrigin(url: string | undefined): string {
+  if (!url) return "";
+  try {
+    return new URL(url).origin;
+  } catch {
+    return "";
+  }
+}
+
+// Analytics (Umami) e error tracking (Sentry/GlitchTip) — opcionais.
+// Se setados, sao adicionados ao CSP. Caso contrario, sao omitidos.
+const umamiOrigin = extractOrigin(process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL);
+const sentryOrigin = extractOrigin(process.env.NEXT_PUBLIC_SENTRY_DSN);
+
+const scriptSrcExtra = [umamiOrigin].filter(Boolean).join(" ");
+const connectSrcExtra = [umamiOrigin, sentryOrigin].filter(Boolean).join(" ");
+
 const nextConfig: NextConfig = {
   // Build standalone — empacota tudo que o server precisa em .next/standalone,
   // usado pelo Dockerfile.app do self-hosted. No cloud (Vercel) o build continua
@@ -62,11 +81,11 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+              `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${scriptSrcExtra ? ` ${scriptSrcExtra}` : ""}`,
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               `img-src 'self' data: blob: ${supabaseImgSrc} https://avatars.githubusercontent.com https://github.com`,
               "font-src 'self' https://fonts.gstatic.com data:",
-              `connect-src 'self' ${supabaseConnectSrc} https://api.github.com https://*.ingest.sentry.io${isDev ? " ws://localhost:*" : ""}`,
+              `connect-src 'self' ${supabaseConnectSrc} https://api.github.com https://*.ingest.sentry.io${connectSrcExtra ? ` ${connectSrcExtra}` : ""}${isDev ? " ws://localhost:*" : ""}`,
               // media-src: permite blob: pro preview do MediaRecorder (enrollment
               // de voz) e o host do Supabase Storage pro player de reunioes
               // (carrega audio via signed URL em /storage/v1/object/sign/...).
