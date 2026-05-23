@@ -53,7 +53,13 @@ export async function POST(request: NextRequest) {
   if (keyLimited) return keyLimited;
 
   const apiKey = authHeader.slice(7).trim();
-  const baseUrl = new URL(request.url).origin;
+  // Em producao atras de reverse proxy (Traefik/Coolify), fetch interno
+  // pro proprio dominio publico causa loop/bloqueio. Usa loopback HTTP
+  // dentro do container — funciona em qualquer setup (Vercel, self-host
+  // com Coolify, Docker compose). Pode ser sobrescrito via env se a
+  // arquitetura precisar (ex: chamar outro container pelo nome do servico).
+  const baseUrl =
+    process.env.MCP_INTERNAL_BASE_URL ?? `http://127.0.0.1:${process.env.PORT ?? "3000"}`;
 
   // Parse JSON-RPC
   let body: unknown;
