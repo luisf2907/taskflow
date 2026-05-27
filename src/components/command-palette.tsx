@@ -1,15 +1,25 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { buscarGlobal, buscaHref } from "@/hooks/use-busca-global";
 import { cn } from "@/lib/utils";
-import { Calendar, Folder, Kanban, Search, ArrowRight, FileText } from "lucide-react";
+import {
+  Calendar,
+  Folder,
+  Kanban,
+  Search,
+  ArrowRight,
+  FileText,
+  BookOpen,
+  MessageSquare,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fadeOnly, scaleIn } from "@/lib/motion/presets";
 
-type TipoResultado = "workspace" | "quadro" | "cartao";
-type FiltroTab = "todos" | "cartao" | "quadro" | "workspace";
+type TipoResultado = "workspace" | "quadro" | "cartao" | "wiki" | "comentario";
+type FiltroTab = "todos" | "cartao" | "quadro" | "workspace" | "wiki" | "comentario";
 
 interface Resultado {
   id: string;
@@ -24,6 +34,8 @@ interface Resultado {
 const TABS: { id: FiltroTab; label: string }[] = [
   { id: "todos", label: "Tudo" },
   { id: "cartao", label: "Cards" },
+  { id: "wiki", label: "Wiki" },
+  { id: "comentario", label: "Comentários" },
   { id: "quadro", label: "Sprints" },
   { id: "workspace", label: "Workspaces" },
 ];
@@ -106,29 +118,27 @@ export function CommandPalette() {
 
     timerRef.current = setTimeout(async () => {
       setCarregando(true);
-      const termo = `%${busca.trim()}%`;
 
-      const [resWorkspaces, resQuadros, resCartoesTitulo, resCartoesDesc] = await Promise.all([
-        supabase.from("workspaces").select("id, nome, cor").ilike("nome", termo).limit(5),
+      // Full-text search via RPC buscar_global (migration 048):
+      // cobre cartoes (titulo+descricao), wiki (titulo+conteudo TipTap) e
+      // comentários (texto). Workspaces e Sprints continuam com ilike — sem
+      // tsvector ainda (volumes baixos, ilike é OK).
+      const termoLower = busca.trim();
+      const termoLike = `%${termoLower}%`;
+
+      const [resGlobal, resWorkspaces, resQuadros] = await Promise.all([
+        buscarGlobal(termoLower, 25),
+        supabase.from("workspaces").select("id, nome, cor").ilike("nome", termoLike).limit(5),
         supabase
           .from("quadros")
           .select("id, nome, cor, workspace_id, status_sprint")
-          .ilike("nome", termo)
+          .ilike("nome", termoLike)
           .limit(6),
-        supabase
-          .from("cartoes")
-          .select("id, titulo, descricao, coluna_id, workspace_id, data_conclusao")
-          .ilike("titulo", termo)
-          .limit(10),
-        supabase
-          .from("cartoes")
-          .select("id, titulo, descricao, coluna_id, workspace_id, data_conclusao")
-          .ilike("descricao", termo)
-          .limit(5),
       ]);
 
       const items: Resultado[] = [];
 
+      // Workspaces
       for (const ws of resWorkspaces.data || []) {
         items.push({
           id: ws.id,
@@ -140,6 +150,7 @@ export function CommandPalette() {
         });
       }
 
+      // Sprints (quadros)
       for (const q of resQuadros.data || []) {
         const statusLabel =
           q.status_sprint === "ativa"
@@ -157,48 +168,35 @@ export function CommandPalette() {
         });
       }
 
-      const allCards = [...(resCartoesTitulo.data || []), ...(resCartoesDesc.data || [])];
-      const seenCardIds = new Set<string>();
-      const uniqueCards = allCards.filter((c) => {
-        if (seenCardIds.has(c.id)) return false;
-        seenCardIds.add(c.id);
-        return true;
-      });
-
-      if (uniqueCards.length > 0) {
-        const colunaIds = uniqueCards.filter((c) => c.coluna_id).map((c) => c.coluna_id as string);
-        const colunaMap: Record<string, { quadro_id: string; nome: string }> = {};
-        if (colunaIds.length > 0) {
-          const { data: colunas } = await supabase
-            .from("colunas")
-            .select("id, quadro_id, nome")
-            .in("id", [...new Set(colunaIds)]);
-          if (colunas) {
-            for (const col of colunas)
-              colunaMap[col.id] = { quadro_id: col.quadro_id, nome: col.nome };
-          }
-        }
-
-        for (const c of uniqueCards) {
-          const colInfo = c.coluna_id ? colunaMap[c.coluna_id] : null;
-          const quadroId = colInfo?.quadro_id;
-          if (!quadroId && !c.workspace_id) continue;
-
-          const status = c.data_conclusao ? "Concluido" : colInfo?.nome || "Backlog";
-          const descPreview = c.descricao
-            ? c.descricao.slice(0, 80) + (c.descricao.length > 80 ? "..." : "")
-            : undefined;
-
+      // Cartões + Wiki + Comentários (ranqueados pela RPC)
+      // O snippet vem com tags <b> destacando o match (ts_headline).
+      for (const r of resGlobal) {
+        if (r.tipo === "cartao") {
           items.push({
-            id: c.id,
+            id: r.id,
             tipo: "cartao",
-            titulo: c.titulo,
-            subtitulo: `Card · ${status}`,
-            descricaoPreview: descPreview,
-            // Inclui ?card={id} para o KanbanBoard abrir o detalhe ao montar.
-            href: quadroId
-              ? `/quadro/${quadroId}?card=${c.id}`
-              : `/workspace/${c.workspace_id}`,
+            titulo: r.titulo,
+            subtitulo: "Card",
+            descricaoPreview: r.snippet || undefined,
+            href: buscaHref(r),
+          });
+        } else if (r.tipo === "wiki") {
+          items.push({
+            id: r.id,
+            tipo: "wiki",
+            titulo: r.titulo,
+            subtitulo: "Wiki",
+            descricaoPreview: r.snippet || undefined,
+            href: buscaHref(r),
+          });
+        } else if (r.tipo === "comentario") {
+          items.push({
+            id: r.id,
+            tipo: "comentario",
+            titulo: r.titulo || "Comentário",
+            subtitulo: "Comentário",
+            descricaoPreview: r.snippet || undefined,
+            href: buscaHref(r),
           });
         }
       }
@@ -206,7 +204,7 @@ export function CommandPalette() {
       setResultados(items);
       setIndiceAtivo(0);
       setCarregando(false);
-    }, 250);
+    }, 200);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -262,6 +260,10 @@ export function CommandPalette() {
         return <Calendar size={13} strokeWidth={1.75} />;
       case "cartao":
         return <Kanban size={13} strokeWidth={1.75} />;
+      case "wiki":
+        return <BookOpen size={13} strokeWidth={1.75} />;
+      case "comentario":
+        return <MessageSquare size={13} strokeWidth={1.75} />;
     }
   };
 
@@ -273,6 +275,10 @@ export function CommandPalette() {
         return "SP";
       case "cartao":
         return "CARD";
+      case "wiki":
+        return "WIKI";
+      case "comentario":
+        return "COM";
     }
   };
 
