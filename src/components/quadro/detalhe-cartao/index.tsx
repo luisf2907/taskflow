@@ -149,6 +149,37 @@ export function DetalheCartao({
 
   function handleFechar() { salvar(); onRefresh(); onFechar(); }
 
+  // ESC fecha o detalhe. Hierarquia: se há confirmação de excluir aberta,
+  // cancela ela primeiro; se há painel lateral aberto (etiquetas/membros/etc),
+  // fecha o painel; senão fecha o detalhe inteiro. handleFecharRef evita
+  // stale closure já que handleFechar é recriada a cada render.
+  const handleFecharRef = useRef(handleFechar);
+  useEffect(() => {
+    handleFecharRef.current = handleFechar;
+  });
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      if (confirmExcluirCard) {
+        e.preventDefault();
+        e.stopPropagation();
+        setConfirmExcluirCard(false);
+        return;
+      }
+      if (painelAberto) {
+        e.preventDefault();
+        e.stopPropagation();
+        setPainelAberto(null);
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      handleFecharRef.current();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [confirmExcluirCard, painelAberto]);
+
   async function melhorarComIA() {
     if (!cartao || melhorandoIA) return;
     setMelhorandoIA(true);
