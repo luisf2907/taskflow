@@ -236,7 +236,17 @@ export function GlobalKeyboardShortcuts() {
     {
       id: "help-shortcuts",
       key: "?",
-      handler: () => setCheatSheetAberto((v) => !v),
+      handler: () => {
+        // Se cheat sheet já está aberto, fecha (toggle).
+        // Senão, abre — mas só se NÃO houver outro dialog ativo
+        // (ex: HelpModal, detalhe do card, planning poker, etc).
+        if (cheatSheetAberto) {
+          setCheatSheetAberto(false);
+          return;
+        }
+        if (modalAberto()) return;
+        setCheatSheetAberto(true);
+      },
     },
     {
       id: "toggle-theme",

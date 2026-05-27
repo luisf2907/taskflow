@@ -78,16 +78,11 @@ export function HelpModal() {
   }, []);
 
   useEffect(() => {
+    // ESC fecha o modal. O atalho "?" agora pertence exclusivamente ao
+    // CheatSheet de atalhos (src/components/keyboard-shortcuts.tsx) —
+    // antes ambos abriam ao mesmo tempo e o cheat sheet ficava em background.
     function handleKeyDown(e: KeyboardEvent) {
-      const target = e.target as HTMLElement;
-      const isTyping =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
-      if (e.key === "?" && !isTyping && !aberto) {
-        e.preventDefault();
-        abrir();
-      } else if (e.key === "Escape" && aberto) {
+      if (e.key === "Escape" && aberto) {
         fechar();
       }
     }
@@ -113,6 +108,9 @@ export function HelpModal() {
           animate="visible"
           exit="exit"
           variants={fadeOnly}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Central de Ajuda"
           className="fixed inset-0 z-[150] flex justify-center pt-[12vh] px-4"
           style={{
             background: "rgba(0,0,0,0.55)",
