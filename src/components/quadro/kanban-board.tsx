@@ -27,6 +27,7 @@ import {
 } from "@dnd-kit/sortable";
 import { KanbanSkeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BarraFiltros, Filtros } from "./barra-filtros";
 import { Cartao } from "./cartao";
@@ -56,6 +57,7 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
   } = useColunas(quadroId);
 
   const {
+    cartoes,
     cartoesDaColuna,
     criar: criarCartao,
     atualizar: atualizarCartao,
@@ -145,10 +147,36 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
     [excluirColuna]
   );
 
-  const handleFecharDetalhe = useCallback(
-    () => setCartaoSelecionado(null),
-    []
-  );
+  // Permite abrir um card via URL (?card=ID). Usado pelo Command Palette
+  // e por links compartilhados. Quando os cartoes terminam de carregar e
+  // a URL tem ?card=ID, abre o detalhe automaticamente.
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const cardIdFromUrl = searchParams.get("card");
+
+  useEffect(() => {
+    if (!cardIdFromUrl) return;
+    // Evita reabrir se já está aberto (ex: ao fechar manualmente o usuário
+    // pode estar limpando o param e este effect dispara de novo).
+    if (cartaoSelecionado?.id === cardIdFromUrl) return;
+    const alvo = cartoes.find((c) => c.id === cardIdFromUrl);
+    if (alvo) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCartaoSelecionado(alvo);
+    }
+  }, [cardIdFromUrl, cartoes, cartaoSelecionado?.id]);
+
+  const handleFecharDetalhe = useCallback(() => {
+    setCartaoSelecionado(null);
+    // Remove ?card=… da URL pra não reabrir ao recarregar a página.
+    if (searchParams.get("card")) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("card");
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    }
+  }, [searchParams, router, pathname]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {

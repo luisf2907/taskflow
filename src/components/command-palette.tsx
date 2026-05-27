@@ -56,6 +56,7 @@ export function CommandPalette() {
   const [tab, setTab] = useState<FiltroTab>("todos");
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const router = useRouter();
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -194,7 +195,10 @@ export function CommandPalette() {
             titulo: c.titulo,
             subtitulo: `Card · ${status}`,
             descricaoPreview: descPreview,
-            href: quadroId ? `/quadro/${quadroId}` : `/workspace/${c.workspace_id}`,
+            // Inclui ?card={id} para o KanbanBoard abrir o detalhe ao montar.
+            href: quadroId
+              ? `/quadro/${quadroId}?card=${c.id}`
+              : `/workspace/${c.workspace_id}`,
           });
         }
       }
@@ -211,6 +215,18 @@ export function CommandPalette() {
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const filtrados = tab === "todos" ? resultados : resultados.filter((r) => r.tipo === tab);
+
+  // Mantém o item ativo visível ao navegar com setas. Usa `block: "nearest"`
+  // pra não rolar quando já está visível (evita jitter no hover do mouse).
+  // Também trunca refs ao tamanho atual da lista — refs de itens que saíram
+  // por troca de tab/busca ficariam pendurados e poderiam fazer scroll errado.
+  useEffect(() => {
+    itemRefs.current.length = filtrados.length;
+    const el = itemRefs.current[indiceAtivo];
+    if (el) {
+      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [indiceAtivo, filtrados.length]);
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") {
@@ -452,6 +468,9 @@ export function CommandPalette() {
                     return (
                       <button
                         key={`${item.tipo}-${item.id}`}
+                        ref={(el) => {
+                          itemRefs.current[i] = el;
+                        }}
                         onClick={() => navegar(item)}
                         onMouseEnter={() => setIndiceAtivo(i)}
                         className={cn(
