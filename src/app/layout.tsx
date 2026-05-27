@@ -1,6 +1,7 @@
 import { AuthListener } from "@/components/auth-listener";
 import { CommandPalette } from "@/components/command-palette";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { GlobalKeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { HelpModal } from "@/components/help/help-modal";
 import { OfflineBanner } from "@/components/offline-banner";
 import { BottomNav } from "@/components/layout/bottom-nav";
@@ -136,6 +137,7 @@ export default function RootLayout({
               <ThemeInjector />
               <UserVariantInjector />
               <CommandPalette />
+              <GlobalKeyboardShortcuts />
               <HelpModal />
               <OfflineBanner />
               {children}

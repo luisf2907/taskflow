@@ -167,6 +167,18 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
     }
   }, [cardIdFromUrl, cartoes, cartaoSelecionado?.id]);
 
+  // Atalho global `C`: dispara `open-novo-card`. Encaminhamos para o
+  // NovoCartao da PRIMEIRA coluna via evento específico por coluna_id.
+  useEffect(() => {
+    function handleOpenNovoCard() {
+      const primeira = colunas[0];
+      if (!primeira) return;
+      window.dispatchEvent(new Event(`open-novo-card-${primeira.id}`));
+    }
+    window.addEventListener("open-novo-card", handleOpenNovoCard);
+    return () => window.removeEventListener("open-novo-card", handleOpenNovoCard);
+  }, [colunas]);
+
   const handleFecharDetalhe = useCallback(() => {
     setCartaoSelecionado(null);
     // Remove ?card=… da URL pra não reabrir ao recarregar a página.

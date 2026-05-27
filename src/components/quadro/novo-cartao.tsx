@@ -6,9 +6,12 @@ import { SeletorPeso } from "./seletor-peso";
 
 interface NovoCartaoProps {
   onCriar: (titulo: string, peso?: number | null) => void;
+  /** Quando informado, esta instância pode ser ativada externamente via
+   *  evento `open-novo-card-{colunaId}`. Usado pelo atalho global `C`. */
+  colunaId?: string;
 }
 
-export const NovoCartao = memo(function NovoCartao({ onCriar }: NovoCartaoProps) {
+export const NovoCartao = memo(function NovoCartao({ onCriar, colunaId }: NovoCartaoProps) {
   const [ativo, setAtivo] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [peso, setPeso] = useState<number | null>(null);
@@ -19,6 +22,17 @@ export const NovoCartao = memo(function NovoCartao({ onCriar }: NovoCartaoProps)
   useEffect(() => {
     if (ativo && inputRef.current) inputRef.current.focus();
   }, [ativo]);
+
+  // Ativação externa via atalho `C` (KanbanBoard dispatches o evento da 1ª coluna).
+  useEffect(() => {
+    if (!colunaId) return;
+    const eventName = `open-novo-card-${colunaId}`;
+    function handleOpen() {
+      setAtivo(true);
+    }
+    window.addEventListener(eventName, handleOpen);
+    return () => window.removeEventListener(eventName, handleOpen);
+  }, [colunaId]);
 
   async function handleSubmit() {
     const t = titulo.trim();

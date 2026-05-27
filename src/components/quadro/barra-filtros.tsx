@@ -2,7 +2,7 @@
 
 import { Etiqueta, Membro } from "@/types";
 import { Filter, Search, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar } from "./avatar";
 
 export interface Filtros {
@@ -25,6 +25,18 @@ export function BarraFiltros({
   membros,
 }: BarraFiltrosProps) {
   const [expandido, setExpandido] = useState(false);
+  const buscaRef = useRef<HTMLInputElement>(null);
+
+  // Atalho `/` no document foca este input. Listener em window via evento custom
+  // pra não acoplar com o hook de shortcuts.
+  useEffect(() => {
+    function focar() {
+      buscaRef.current?.focus();
+      buscaRef.current?.select();
+    }
+    window.addEventListener("focus-filter", focar);
+    return () => window.removeEventListener("focus-filter", focar);
+  }, []);
 
   const totalAtivos =
     (filtros.texto ? 1 : 0) +
@@ -60,6 +72,7 @@ export function BarraFiltros({
           style={{ color: "var(--tf-text-tertiary)" }}
         />
         <input
+          ref={buscaRef}
           value={filtros.texto}
           onChange={(e) => onChange({ ...filtros, texto: e.target.value })}
           placeholder="Buscar…"

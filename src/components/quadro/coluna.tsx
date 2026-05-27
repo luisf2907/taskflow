@@ -218,7 +218,7 @@ export const Coluna = memo(function Coluna({
       </div>
 
       <div className="px-2 pb-2 mt-1">
-        <NovoCartao onCriar={handleCriarCartao} />
+        <NovoCartao onCriar={handleCriarCartao} colunaId={coluna.id} />
       </div>
 
       {/* Confirmação de exclusão */}

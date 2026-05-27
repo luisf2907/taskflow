@@ -69,6 +69,7 @@ export function DetalheCartao({
   const [confirmExcluirCard, setConfirmExcluirCard] = useState(false);
   const [melhorandoIA, setMelhorandoIA] = useState(false);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const tituloInputRef = useRef<HTMLInputElement>(null);
 
   // Store previously focused element on mount
   useEffect(() => {
@@ -159,22 +160,55 @@ export function DetalheCartao({
   });
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key !== "Escape") return;
-      if (confirmExcluirCard) {
+      // ESC: hierárquico (fecha confirm → painel → detalhe).
+      if (e.key === "Escape") {
+        if (confirmExcluirCard) {
+          e.preventDefault();
+          e.stopPropagation();
+          setConfirmExcluirCard(false);
+          return;
+        }
+        if (painelAberto) {
+          e.preventDefault();
+          e.stopPropagation();
+          setPainelAberto(null);
+          return;
+        }
         e.preventDefault();
         e.stopPropagation();
-        setConfirmExcluirCard(false);
+        handleFecharRef.current();
         return;
       }
-      if (painelAberto) {
+
+      // Shortcuts de letra single-key — só se não estiver digitando em input.
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      const editavel =
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        !!target?.isContentEditable;
+      if (editavel) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const k = e.key.toLowerCase();
+      if (k === "e") {
         e.preventDefault();
-        e.stopPropagation();
-        setPainelAberto(null);
-        return;
+        tituloInputRef.current?.focus();
+        tituloInputRef.current?.select();
+      } else if (k === "m") {
+        e.preventDefault();
+        setPainelAberto((p) => (p === "membros" ? null : "membros"));
+      } else if (k === "l") {
+        e.preventDefault();
+        setPainelAberto((p) => (p === "etiquetas" ? null : "etiquetas"));
+      } else if (k === "d") {
+        e.preventDefault();
+        setPainelAberto((p) => (p === "data" ? null : "data"));
+      } else if (k === "p") {
+        e.preventDefault();
+        setPainelAberto((p) => (p === "peso" ? null : "peso"));
       }
-      e.preventDefault();
-      e.stopPropagation();
-      handleFecharRef.current();
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -284,7 +318,12 @@ export function DetalheCartao({
   if (!cartao) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Detalhe do card: ${cartao.titulo}`}
+    >
       <div
         className="fixed inset-0"
         onClick={handleFechar}
@@ -396,6 +435,7 @@ export function DetalheCartao({
 
               {/* TITLE */}
               <input
+                ref={tituloInputRef}
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
                 onBlur={salvar}
