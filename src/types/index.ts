@@ -88,6 +88,27 @@ export interface CartaoEtiqueta {
 }
 
 // =============================================
+// VIEWS SALVAS — combinações de filtros nomeadas
+// =============================================
+export interface FiltrosSalvos {
+  texto?: string;
+  etiquetaIds?: string[];
+  membroIds?: string[];
+}
+
+export interface ViewSalva {
+  id: string;
+  workspace_id: string;
+  quadro_id: string | null;
+  usuario_id: string;
+  nome: string;
+  filtros: FiltrosSalvos;
+  compartilhada: boolean;
+  criado_em: string;
+  atualizado_em: string;
+}
+
+// =============================================
 // MEMBROS
 // =============================================
 export interface Membro {

@@ -4,6 +4,7 @@ import { Etiqueta, Membro } from "@/types";
 import { Filter, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "./avatar";
+import { ViewsDropdown } from "./views-dropdown";
 
 export interface Filtros {
   texto: string;
@@ -16,6 +17,10 @@ interface BarraFiltrosProps {
   onChange: (filtros: Filtros) => void;
   etiquetas: Etiqueta[];
   membros: Membro[];
+  /** Necessários pra renderizar o dropdown de views salvas. Quando ausentes,
+   *  o dropdown não aparece (ex: contextos sem workspace/quadro). */
+  workspaceId?: string;
+  quadroId?: string;
 }
 
 export function BarraFiltros({
@@ -23,6 +28,8 @@ export function BarraFiltros({
   onChange,
   etiquetas,
   membros,
+  workspaceId,
+  quadroId,
 }: BarraFiltrosProps) {
   const [expandido, setExpandido] = useState(false);
   const buscaRef = useRef<HTMLInputElement>(null);
@@ -63,6 +70,16 @@ export function BarraFiltros({
 
   return (
     <div className="relative flex items-center gap-1.5">
+      {/* Views salvas — só quando temos workspace + quadro */}
+      {workspaceId && quadroId && (
+        <ViewsDropdown
+          workspaceId={workspaceId}
+          quadroId={quadroId}
+          filtros={filtros}
+          onAplicar={onChange}
+        />
+      )}
+
       {/* Busca */}
       <div className="relative">
         <Search

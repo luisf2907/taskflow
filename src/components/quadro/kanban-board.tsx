@@ -327,7 +327,14 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
         <div className="pt-4 pb-3 shrink-0 px-4 lg:px-6 flex items-center gap-3 flex-wrap">
           <ViewSwitcher view={view} onChange={handleViewChange} />
           <div className="flex-1 min-w-0">
-            <BarraFiltros filtros={filtros} onChange={setFiltros} etiquetas={etiquetas} membros={membros} />
+            <BarraFiltros
+              filtros={filtros}
+              onChange={setFiltros}
+              etiquetas={etiquetas}
+              membros={membros}
+              workspaceId={workspaceId || undefined}
+              quadroId={quadroId}
+            />
           </div>
         </div>
 
