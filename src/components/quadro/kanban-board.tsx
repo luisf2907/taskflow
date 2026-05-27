@@ -36,6 +36,7 @@ import { NovaColuna } from "./nova-coluna";
 import { ViewSwitcher, type ViewMode } from "./view-switcher";
 import { ListaView } from "./lista-view";
 import { TabelaView } from "./tabela-view";
+import { CalendarioView } from "./calendario-view";
 
 const DetalheCartao = dynamic(
   () => import("./detalhe-cartao").then((m) => m.DetalheCartao),
@@ -91,7 +92,12 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const saved = localStorage.getItem(`tf_view_${quadroId}`);
-    if (saved === "kanban" || saved === "lista" || saved === "tabela") {
+    if (
+      saved === "kanban" ||
+      saved === "lista" ||
+      saved === "tabela" ||
+      saved === "calendario"
+    ) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setView(saved);
     }
@@ -408,6 +414,18 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
             etiquetas={etiquetas}
             membros={membros}
             onCartaoClick={setCartaoSelecionado}
+          />
+        )}
+
+        {/* View: Calendário */}
+        {view === "calendario" && (
+          <CalendarioView
+            colunas={colunas}
+            cartoesFiltradosPorColuna={cartoesFiltradosPorColuna}
+            etiquetas={etiquetas}
+            membros={membros}
+            onCartaoClick={setCartaoSelecionado}
+            onAtualizar={atualizarCartao}
           />
         )}
       </div>

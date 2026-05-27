@@ -1,10 +1,10 @@
 "use client";
 
-import { Kanban, List, Table } from "lucide-react";
+import { CalendarDays, Kanban, List, Table } from "lucide-react";
 
 import { SegmentedControl } from "@/components/ui/segmented-control";
 
-export type ViewMode = "kanban" | "lista" | "tabela";
+export type ViewMode = "kanban" | "lista" | "tabela" | "calendario";
 
 interface ViewSwitcherProps {
   view: ViewMode;
@@ -15,6 +15,7 @@ const VIEWS = [
   { id: "kanban" as const, icon: Kanban, label: "Kanban" },
   { id: "lista" as const, icon: List, label: "Lista" },
   { id: "tabela" as const, icon: Table, label: "Tabela" },
+  { id: "calendario" as const, icon: CalendarDays, label: "Calendário" },
 ];
 
 export function ViewSwitcher({ view, onChange }: ViewSwitcherProps) {
