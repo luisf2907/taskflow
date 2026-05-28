@@ -227,7 +227,10 @@ export function SeletorEpico({
             background: modo === "vincular" ? "var(--tf-accent-light)" : "transparent",
             color:
               modo === "vincular" ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
-            border: `1px solid ${modo === "vincular" ? "var(--tf-accent)" : "var(--tf-border)"}`,
+            borderWidth: "1px",
+            borderStyle: "solid",
+            borderColor:
+              modo === "vincular" ? "var(--tf-accent)" : "var(--tf-border)",
             borderRadius: "var(--tf-radius-xs) 0 0 var(--tf-radius-xs)",
             fontFamily: "var(--tf-font-mono)",
             letterSpacing: "0.04em",
@@ -242,8 +245,12 @@ export function SeletorEpico({
           style={{
             background: modo === "novo" ? "var(--tf-accent-light)" : "transparent",
             color: modo === "novo" ? "var(--tf-accent-text)" : "var(--tf-text-secondary)",
-            border: `1px solid ${modo === "novo" ? "var(--tf-accent)" : "var(--tf-border)"}`,
-            borderLeft: "none",
+            borderTopWidth: "1px",
+            borderRightWidth: "1px",
+            borderBottomWidth: "1px",
+            borderLeftWidth: "0",
+            borderStyle: "solid",
+            borderColor: modo === "novo" ? "var(--tf-accent)" : "var(--tf-border)",
             borderRadius: "0 var(--tf-radius-xs) var(--tf-radius-xs) 0",
             fontFamily: "var(--tf-font-mono)",
             letterSpacing: "0.04em",
