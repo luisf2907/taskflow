@@ -34,7 +34,7 @@ import { Anexos } from "../anexos";
 import { Avatar } from "../avatar";
 import { ChecklistComponent } from "../checklist";
 import { Comentarios } from "../comentarios";
-import { SubtarefasDeps } from "../subtarefas-deps";
+import { SecaoDependencias } from "../subtarefas-deps";
 import { CamposCustomizados } from "../campos-customizados";
 import { SeletorData, formatarData, statusData } from "../seletor-data";
 import { SeletorEtiquetas } from "../seletor-etiquetas";
@@ -764,12 +764,13 @@ export function DetalheCartao({
                 />
               </div>
 
-              {/* ── SUBTAREFAS + DEPENDÊNCIAS ── */}
-              <SubtarefasDeps
+              {/* ── DEPENDÊNCIAS ──
+                  Subtarefa removida — conceito de "card filho" agora vive
+                  exclusivamente em Épico (PropertyRow ⌖ no sidebar). */}
+              <SecaoDependencias
                 cartaoId={cartao.id}
                 workspaceId={cartao.workspace_id}
                 onAbrirCartao={(id) => {
-                  // Navega pro card clicado via ?card= (KanbanBoard reage).
                   if (typeof window === "undefined") return;
                   const url = new URL(window.location.href);
                   url.searchParams.set("card", id);

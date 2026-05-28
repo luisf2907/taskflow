@@ -37,6 +37,7 @@ import { ViewSwitcher, type ViewMode } from "./view-switcher";
 import { ListaView } from "./lista-view";
 import { TabelaView } from "./tabela-view";
 import { CalendarioView } from "./calendario-view";
+import { EpicosView } from "./epicos-view";
 
 const DetalheCartao = dynamic(
   () => import("./detalhe-cartao").then((m) => m.DetalheCartao),
@@ -97,7 +98,8 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
       saved === "kanban" ||
       saved === "lista" ||
       saved === "tabela" ||
-      saved === "calendario"
+      saved === "calendario" ||
+      saved === "epicos"
     ) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setView(saved);
@@ -443,6 +445,11 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
             onCartaoClick={setCartaoSelecionado}
             onAtualizar={atualizarCartao}
           />
+        )}
+
+        {/* View: Épicos — workspace-wide, cruza sprints */}
+        {view === "epicos" && (
+          <EpicosView workspaceId={workspaceId} membros={membros} />
         )}
       </div>
 
