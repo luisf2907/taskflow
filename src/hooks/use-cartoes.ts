@@ -188,17 +188,36 @@ export function useCartoes(quadroId: string) {
     const cartao = cartoes.find((c) => c.id === cartaoId);
     const oldColunaId = cartao?.coluna_id;
 
-    // Block moving to last column (done) if card has an open PR
-    if (cartao?.pr_numero && cartao.pr_status === "open") {
+    // Descobre se está movendo para a ÚLTIMA coluna (Concluído).
+    // Reusado em duas validações abaixo (PR aberto + deps pendentes).
+    let movendoParaConcluido: boolean | null = null;
+    async function isMovendoParaConcluido() {
+      if (movendoParaConcluido !== null) return movendoParaConcluido;
       const { data: colunas } = await supabase
         .from("colunas")
         .select("id, posicao")
         .eq("quadro_id", quadroId)
         .order("posicao", { ascending: false })
         .limit(1);
-      const ultimaColunaId = colunas?.[0]?.id;
-      if (novaColunaId === ultimaColunaId) {
+      movendoParaConcluido = colunas?.[0]?.id === novaColunaId;
+      return movendoParaConcluido;
+    }
+
+    // Block: PR aberto
+    if (cartao?.pr_numero && cartao.pr_status === "open") {
+      if (await isMovendoParaConcluido()) {
         return { blocked: true, reason: "Faça merge ou feche o PR antes de concluir este card." };
+      }
+    }
+
+    // Block: dependências abertas
+    if (await isMovendoParaConcluido()) {
+      const { data: bloqueado } = await supabase.rpc("card_bloqueado", { card_id: cartaoId });
+      if (bloqueado === true) {
+        return {
+          blocked: true,
+          reason: "Este card depende de outros que ainda não foram concluídos.",
+        };
       }
     }
 

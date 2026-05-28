@@ -33,6 +33,7 @@ import { Anexos } from "../anexos";
 import { Avatar } from "../avatar";
 import { ChecklistComponent } from "../checklist";
 import { Comentarios } from "../comentarios";
+import { SubtarefasDeps } from "../subtarefas-deps";
 import { SeletorData, formatarData, statusData } from "../seletor-data";
 import { SeletorEtiquetas } from "../seletor-etiquetas";
 import { SeletorMembros } from "../seletor-membros";
@@ -734,6 +735,20 @@ export function DetalheCartao({
                   </div>
                 </div>
               )}
+
+              {/* ── SUBTAREFAS + DEPENDÊNCIAS ── */}
+              <SubtarefasDeps
+                cartaoId={cartao.id}
+                workspaceId={cartao.workspace_id}
+                onAbrirCartao={(id) => {
+                  // Navega pro card clicado via ?card= (KanbanBoard reage).
+                  if (typeof window === "undefined") return;
+                  const url = new URL(window.location.href);
+                  url.searchParams.set("card", id);
+                  window.history.pushState({}, "", url.toString());
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                }}
+              />
 
               {/* ── ATTACHMENTS ── */}
               <Anexos anexos={anexos} enviando={enviando} onUpload={uploadAnexo} onExcluir={excluirAnexo} />

@@ -61,8 +61,20 @@ export interface Cartao {
   branch: string | null;
   branch_repo_id: string | null;
   data_conclusao: string | null;
+  cartao_pai_id: string | null;
   criado_em: string;
   atualizado_em: string;
+}
+
+// =============================================
+// DEPENDÊNCIAS — "cartao_id está bloqueado até depende_de_cartao_id concluir"
+// =============================================
+export interface CartaoDependencia {
+  id: string;
+  cartao_id: string;
+  depende_de_cartao_id: string;
+  criado_em: string;
+  criado_por: string | null;
 }
 
 export interface ColunaComCartoes extends Coluna {
