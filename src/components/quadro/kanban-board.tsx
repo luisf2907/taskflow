@@ -55,6 +55,7 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
     criar: criarColuna,
     atualizar: atualizarColuna,
     excluir: excluirColuna,
+    reordenar: reordenarColunas,
   } = useColunas(quadroId);
 
   const {
@@ -245,6 +246,21 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
 
     const activeData = active.data.current;
     const overData = over.data.current;
+
+    // === Reorder de COLUNA ===
+    if (activeData?.type === "coluna" && overData?.type === "coluna") {
+      const ativaId = activeData.coluna.id as string;
+      const alvoId = overData.coluna.id as string;
+      if (ativaId === alvoId) return;
+      const idxAtual = colunas.findIndex((c) => c.id === ativaId);
+      const idxAlvo = colunas.findIndex((c) => c.id === alvoId);
+      if (idxAtual === -1 || idxAlvo === -1) return;
+      const novas = [...colunas];
+      const [movida] = novas.splice(idxAtual, 1);
+      novas.splice(idxAlvo, 0, movida);
+      reordenarColunas(novas);
+      return;
+    }
 
     if (activeData?.type !== "cartao") return;
     const cartaoAtivo = activeData.cartao as CartaoComResumo;

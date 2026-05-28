@@ -174,6 +174,7 @@ export const Coluna = memo(function Coluna({
           onPointerDown={(e) => e.stopPropagation()}
         >
           <Dropdown
+            portal
             trigger={
               <button
                 className="w-9 h-9 md:w-7 md:h-7 flex items-center justify-center rounded-[var(--tf-radius-xs)] transition-colors hover:bg-[var(--tf-surface-hover)]"
@@ -224,43 +225,56 @@ export const Coluna = memo(function Coluna({
       {/* Confirmação de exclusão */}
       {confirmExcluir && (
         <div
-          className="absolute inset-0 z-20 flex items-center justify-center rounded-[var(--tf-radius-lg)]"
+          className="absolute inset-0 z-20 flex items-center justify-center px-3"
           style={{
-            background: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(6px)",
+            background: "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmExcluir(false);
           }}
         >
           <div
-            className="p-3.5 mx-4 space-y-3"
+            className="w-full p-4 flex flex-col gap-3"
             style={{
-              background: "var(--tf-surface-raised)",
+              background: "var(--tf-surface)",
               border: "1px solid var(--tf-border)",
               borderRadius: "var(--tf-radius-md)",
               boxShadow: "var(--tf-shadow-lg)",
             }}
           >
-            <div>
-              <p
-                className="label-mono mb-1"
-                style={{ color: "var(--tf-danger)" }}
+            <div className="flex items-start gap-2.5">
+              <span
+                aria-hidden
+                className="flex items-center justify-center shrink-0 mt-0.5"
+                style={{
+                  width: 24,
+                  height: 24,
+                  background: "var(--tf-danger-bg)",
+                  color: "var(--tf-danger)",
+                  borderRadius: "var(--tf-radius-xs)",
+                }}
               >
-                Excluir coluna
-              </p>
-              <p
-                className="text-[0.8125rem] font-medium"
-                style={{ color: "var(--tf-text)", letterSpacing: "-0.005em" }}
-              >
-                &quot;{coluna.nome}&quot;
-              </p>
+                <Trash2 size={13} strokeWidth={2} />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p
+                  className="text-[0.8125rem] font-semibold leading-tight"
+                  style={{ color: "var(--tf-text)", letterSpacing: "-0.005em" }}
+                >
+                  Excluir “{coluna.nome}”?
+                </p>
+                <p
+                  className="text-[0.75rem] mt-1"
+                  style={{ color: "var(--tf-text-secondary)" }}
+                >
+                  {cartoes.length > 0
+                    ? `${cartoes.length} card${cartoes.length > 1 ? "s" : ""} também ${cartoes.length > 1 ? "serão excluídos" : "será excluído"}.`
+                    : "Esta coluna está vazia."}
+                </p>
+              </div>
             </div>
-            <p
-              className="text-[0.75rem]"
-              style={{ color: "var(--tf-text-secondary)" }}
-            >
-              {cartoes.length > 0
-                ? `${cartoes.length} card${cartoes.length > 1 ? "s" : ""} também ${cartoes.length > 1 ? "serão excluídos" : "será excluído"}.`
-                : "Esta coluna está vazia."}
-            </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmExcluir(false)}
