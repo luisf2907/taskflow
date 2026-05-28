@@ -62,6 +62,8 @@ export interface Cartao {
   branch_repo_id: string | null;
   data_conclusao: string | null;
   cartao_pai_id: string | null;
+  eh_epico: boolean;
+  cor_epico: string | null;
   criado_em: string;
   atualizado_em: string;
 }

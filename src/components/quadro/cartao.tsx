@@ -21,6 +21,7 @@ import { formatarData, statusData } from "./seletor-data";
 import { GrupoAvatar } from "./avatar";
 import { getContrastTextColor } from "@/lib/colors";
 import { fadeUp, staggerContainer } from "@/lib/motion/presets";
+import { EpicoMarker } from "./epico-marker";
 
 interface CartaoProps {
   cartao: CartaoComResumo;
@@ -91,6 +92,20 @@ export const Cartao = memo(function Cartao({
               title={e.nome}
             />
           ))}
+        </div>
+      )}
+
+      {/* Marcador do épico — bolinha no canto superior direito.
+          Cor vem de epico_cor (próprio se eh_epico, senão herdado do pai).
+          Anel mais forte quando ele MESMO é o épico (eh_epico=true). */}
+      {cartao.epico_cor && (
+        <div className="absolute top-1.5 right-1.5 pointer-events-auto">
+          <EpicoMarker
+            cor={cartao.epico_cor}
+            titulo={cartao.epico_titulo}
+            enfase={cartao.eh_epico}
+            tamanho={10}
+          />
         </div>
       )}
 

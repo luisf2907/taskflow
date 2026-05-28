@@ -15,6 +15,7 @@ import {
   AlignLeft,
   Calendar,
   CheckSquare,
+  Crosshair,
   GitBranch,
   GitPullRequest,
   Loader2,
@@ -43,6 +44,8 @@ import { SeletorPeso } from "../seletor-peso";
 import { PropertyRow } from "./property-row";
 import { PainelPR } from "./painel-pr";
 import { PainelBranch } from "./painel-branch";
+import { SeletorEpico } from "../seletor-epico";
+import { EpicoMarker } from "../epico-marker";
 
 interface DetalheCartaoProps {
   cartao: CartaoComResumo | null;
@@ -58,7 +61,7 @@ interface DetalheCartaoProps {
   onRefresh: () => void;
 }
 
-type Painel = "etiquetas" | "membros" | "data" | "peso" | "pr" | "branch" | null;
+type Painel = "etiquetas" | "membros" | "data" | "peso" | "pr" | "branch" | "epico" | null;
 
 export function DetalheCartao({
   cartao, etiquetas, membros, quadroId, onFechar, onAtualizar, onExcluir,
@@ -555,6 +558,22 @@ export function DetalheCartao({
                 />
               )}
 
+              {painelAberto === "epico" && (
+                <div ref={painelRef}>
+                  <SeletorEpico
+                    cartaoId={cartao.id}
+                    workspaceId={cartao.workspace_id}
+                    ehEpico={cartao.eh_epico}
+                    corEpico={cartao.cor_epico}
+                    cartaoPaiId={cartao.cartao_pai_id}
+                    onChange={async (campos) => {
+                      await onAtualizar(cartao.id, campos);
+                      onRefresh();
+                    }}
+                  />
+                </div>
+              )}
+
               {/* ── DESCRIPTION ── */}
               <div className="pt-4 border-t" style={{ borderColor: "var(--tf-border-subtle)" }}>
                 <div className="flex items-center gap-2 mb-2.5">
@@ -870,6 +889,41 @@ export function DetalheCartao({
                           title={e.nome}
                         />
                       ))}
+                    </div>
+                  ) : null}
+                </PropertyRow>
+
+                <PropertyRow
+                  icon={<Crosshair size={13} strokeWidth={1.75} />}
+                  label="Épico"
+                  onClick={() =>
+                    setPainelAberto(painelAberto === "epico" ? null : "epico")
+                  }
+                  active={painelAberto === "epico"}
+                >
+                  {cartao.eh_epico ? (
+                    <div className="flex items-center gap-1.5">
+                      <EpicoMarker cor={cartao.cor_epico} titulo={cartao.titulo} enfase tamanho={10} />
+                      <span
+                        className="text-[0.625rem]"
+                        style={{
+                          color: "var(--tf-text-secondary)",
+                          fontFamily: "var(--tf-font-mono)",
+                          letterSpacing: "0.02em",
+                        }}
+                      >
+                        ÉPICO
+                      </span>
+                    </div>
+                  ) : cartao.epico_cor ? (
+                    <div className="flex items-center gap-1">
+                      <EpicoMarker cor={cartao.epico_cor} titulo={cartao.epico_titulo} tamanho={10} />
+                      <span
+                        className="text-[0.625rem] truncate max-w-[100px]"
+                        style={{ color: "var(--tf-text-tertiary)" }}
+                      >
+                        {cartao.epico_titulo}
+                      </span>
                     </div>
                   ) : null}
                 </PropertyRow>

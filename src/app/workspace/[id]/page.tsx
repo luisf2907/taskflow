@@ -225,6 +225,8 @@ export default function PaginaWorkspace() {
       total_checklist_itens: 0,
       total_checklist_concluidos: 0,
       total_anexos: 0,
+      epico_cor: null,
+      epico_titulo: null,
     };
     setCartaoSelecionado(como);
   }

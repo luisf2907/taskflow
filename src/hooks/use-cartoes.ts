@@ -15,6 +15,10 @@ export interface CartaoComResumo extends Cartao {
   total_checklist_itens: number;
   total_checklist_concluidos: number;
   total_anexos: number;
+  /** Cor do épico ao qual este card pertence (próprio se eh_epico, senão herdada do pai). */
+  epico_cor: string | null;
+  /** Nome (título) do épico, pra tooltip. */
+  epico_titulo: string | null;
 }
 
 function chave(quadroId: string) {
@@ -49,6 +53,27 @@ async function fetchCartoes(quadroId: string): Promise<CartaoComResumo[]> {
     batchIn<{ cartao_id: string }>("anexos", "cartao_id", cartaoIds),
   ]);
 
+  // Resolve cor herdada do épico pai. Pega todos os pais únicos referenciados.
+  const paiIds = [
+    ...new Set(
+      data
+        .filter((c) => c.cartao_pai_id && c.cartao_pai_id !== c.id)
+        .map((c) => c.cartao_pai_id as string)
+    ),
+  ];
+  const paiEpicoMap: Record<string, { cor: string | null; titulo: string }> = {};
+  if (paiIds.length > 0) {
+    const { data: pais } = await supabase
+      .from("cartoes")
+      .select("id, eh_epico, cor_epico, titulo")
+      .in("id", paiIds);
+    for (const p of pais || []) {
+      if (p.eh_epico) {
+        paiEpicoMap[p.id] = { cor: p.cor_epico, titulo: p.titulo };
+      }
+    }
+  }
+
   const checklistResumo: Record<string, { total: number; concluidos: number }> = {};
   for (const cl of checklistsData) {
     const itens = (cl.checklist_itens || []) as { concluido: boolean }[];
@@ -62,14 +87,29 @@ async function fetchCartoes(quadroId: string): Promise<CartaoComResumo[]> {
     anexoContagem[a.cartao_id] = (anexoContagem[a.cartao_id] || 0) + 1;
   }
 
-  return data.map(({ colunas: _, cartao_etiquetas, cartao_membros, ...cartao }) => ({
-    ...(cartao as Cartao),
-    etiqueta_ids: (cartao_etiquetas || []).map((ce: { etiqueta_id: string }) => ce.etiqueta_id),
-    membro_ids: [...new Set((cartao_membros || []).map((cm: { membro_id: string }) => cm.membro_id))] as string[],
-    total_checklist_itens: checklistResumo[cartao.id]?.total || 0,
-    total_checklist_concluidos: checklistResumo[cartao.id]?.concluidos || 0,
-    total_anexos: anexoContagem[cartao.id] || 0,
-  }));
+  return data.map(({ colunas: _, cartao_etiquetas, cartao_membros, ...cartao }) => {
+    const c = cartao as Cartao;
+    // Cor do épico: próprio se eh_epico, senão herdado do pai (se pai for épico).
+    let epico_cor: string | null = null;
+    let epico_titulo: string | null = null;
+    if (c.eh_epico && c.cor_epico) {
+      epico_cor = c.cor_epico;
+      epico_titulo = c.titulo;
+    } else if (c.cartao_pai_id && paiEpicoMap[c.cartao_pai_id]) {
+      epico_cor = paiEpicoMap[c.cartao_pai_id].cor;
+      epico_titulo = paiEpicoMap[c.cartao_pai_id].titulo;
+    }
+    return {
+      ...c,
+      etiqueta_ids: (cartao_etiquetas || []).map((ce: { etiqueta_id: string }) => ce.etiqueta_id),
+      membro_ids: [...new Set((cartao_membros || []).map((cm: { membro_id: string }) => cm.membro_id))] as string[],
+      total_checklist_itens: checklistResumo[cartao.id]?.total || 0,
+      total_checklist_concluidos: checklistResumo[cartao.id]?.concluidos || 0,
+      total_anexos: anexoContagem[cartao.id] || 0,
+      epico_cor,
+      epico_titulo,
+    };
+  });
 }
 
 export function useCartoes(quadroId: string) {
