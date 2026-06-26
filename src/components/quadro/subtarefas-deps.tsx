@@ -3,8 +3,9 @@
 import { useDependencias } from "@/hooks/use-dependencias";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
-import { CheckCircle2, Circle, GitBranch, Link2, Lock, Plus, Search, X } from "lucide-react";
+import { CheckCircle2, Circle, GitBranch, Link2, Lock, Network, Plus, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { GrafoDependenciasOverlay } from "./grafo-dependencias";
 
 interface CartaoLite {
   id: string;
@@ -15,6 +16,7 @@ interface CartaoLite {
 interface Props {
   cartaoId: string;
   workspaceId: string | null;
+  cartaoTitulo?: string;
   onAbrirCartao?: (id: string) => void;
 }
 
@@ -22,11 +24,12 @@ interface Props {
 // DEPENDÊNCIAS — relação cronológica entre cards
 // (este card só pode concluir depois que aquele concluir)
 // =============================================
-export function SecaoDependencias({ cartaoId, workspaceId, onAbrirCartao }: Props) {
+export function SecaoDependencias({ cartaoId, workspaceId, cartaoTitulo, onAbrirCartao }: Props) {
   const { bloqueando, bloqueadoPor, estaBloqueado, adicionar, remover } = useDependencias(cartaoId);
   const [picker, setPicker] = useState(false);
   const [pickerBusca, setPickerBusca] = useState("");
   const [pickerResultados, setPickerResultados] = useState<CartaoLite[]>([]);
+  const [grafoAberto, setGrafoAberto] = useState(false);
   const pickerInputRef = useRef<HTMLInputElement>(null);
   const pickerContainerRef = useRef<HTMLDivElement>(null);
 
@@ -151,6 +154,26 @@ export function SecaoDependencias({ cartaoId, workspaceId, onAbrirCartao }: Prop
             Bloqueado
           </span>
         )}
+        {/* Botão: ver árvore de dependências em grafo */}
+        <button
+          onClick={() => setGrafoAberto(true)}
+          title="Ver árvore de dependências"
+          className="ml-auto inline-flex items-center gap-1 h-6 px-2 text-[0.625rem] font-medium transition-colors"
+          style={{
+            color: "var(--tf-accent-text)",
+            background: "var(--tf-accent-light)",
+            borderWidth: "1px",
+            borderStyle: "solid",
+            borderColor: "var(--tf-accent)",
+            borderRadius: "var(--tf-radius-xs)",
+            fontFamily: "var(--tf-font-mono)",
+            letterSpacing: "0.02em",
+            textTransform: "uppercase",
+          }}
+        >
+          <Network size={10} strokeWidth={2} />
+          Ver árvore
+        </button>
       </div>
 
       {/* Bloqueando: este card depende destes outros */}
@@ -341,6 +364,18 @@ export function SecaoDependencias({ cartaoId, workspaceId, onAbrirCartao }: Prop
           <Plus size={12} strokeWidth={1.75} />
           Adicionar dependência
         </button>
+      )}
+
+      {grafoAberto && (
+        <GrafoDependenciasOverlay
+          cartaoId={cartaoId}
+          cartaoTitulo={cartaoTitulo || ""}
+          onClose={() => setGrafoAberto(false)}
+          onAbrirCartao={(id) => {
+            setGrafoAberto(false);
+            onAbrirCartao?.(id);
+          }}
+        />
       )}
     </div>
   );

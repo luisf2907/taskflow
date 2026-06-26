@@ -770,6 +770,7 @@ export function DetalheCartao({
               <SecaoDependencias
                 cartaoId={cartao.id}
                 workspaceId={cartao.workspace_id}
+                cartaoTitulo={cartao.titulo}
                 onAbrirCartao={(id) => {
                   if (typeof window === "undefined") return;
                   const url = new URL(window.location.href);
