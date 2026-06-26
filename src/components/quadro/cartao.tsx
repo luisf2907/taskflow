@@ -137,12 +137,13 @@ export const Cartao = memo(function Cartao({
           </motion.div>
         )}
 
-        {/* Título */}
+        {/* Título — reserva espaço à direita p/ a bolinha do épico não sobrepor */}
         <p
           className="text-[0.875rem] md:text-[0.8125rem] leading-snug font-medium"
           style={{
             color: "var(--tf-text)",
             letterSpacing: "-0.005em",
+            paddingRight: cartao.epico_cor ? "16px" : undefined,
           }}
         >
           {cartao.titulo}
