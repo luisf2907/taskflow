@@ -34,6 +34,7 @@ import { Avatar } from "../avatar";
 import { ChecklistComponent } from "../checklist";
 import { Comentarios } from "../comentarios";
 import { SubtarefasDeps } from "../subtarefas-deps";
+import { CamposCustomizados } from "../campos-customizados";
 import { SeletorData, formatarData, statusData } from "../seletor-data";
 import { SeletorEtiquetas } from "../seletor-etiquetas";
 import { SeletorMembros } from "../seletor-membros";
@@ -735,6 +736,14 @@ export function DetalheCartao({
                   </div>
                 </div>
               )}
+
+              {/* ── CAMPOS CUSTOMIZADOS DO WORKSPACE ── */}
+              <div className="pt-4 border-t" style={{ borderColor: "var(--tf-border-subtle)" }}>
+                <CamposCustomizados
+                  cartaoId={cartao.id}
+                  workspaceId={cartao.workspace_id}
+                />
+              </div>
 
               {/* ── SUBTAREFAS + DEPENDÊNCIAS ── */}
               <SubtarefasDeps

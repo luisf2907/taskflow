@@ -93,6 +93,10 @@ const TimelineView = dynamic(
   () => import("@/components/workspace/timeline").then((m) => m.TimelineView),
   { ssr: false }
 );
+const CamposCustomizadosConfig = dynamic(
+  () => import("@/components/workspace/campos-customizados-config").then((m) => m.CamposCustomizadosConfig),
+);
+
 const AutomacoesConfig = dynamic(
   () => import("@/components/workspace/automacoes-config").then((m) => m.AutomacoesConfig),
   { ssr: false }
@@ -1218,6 +1222,9 @@ export default function PaginaWorkspace() {
                     )}
                   </div>
                 </div>
+
+                {/* Campos personalizados */}
+                <CamposCustomizadosConfig workspaceId={workspaceId} />
 
                 {/* Automações */}
                 <div className="p-4" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", borderRadius: "var(--tf-radius-md)" }}>

@@ -100,6 +100,32 @@ export interface CartaoEtiqueta {
 }
 
 // =============================================
+// CAMPOS CUSTOMIZADOS — definidos por workspace
+// =============================================
+export type CampoTipo = "texto" | "numero" | "data" | "select" | "checkbox";
+
+export interface CampoCustomizado {
+  id: string;
+  workspace_id: string;
+  nome: string;
+  tipo: CampoTipo;
+  /** Apenas pra tipo "select" — array de strings */
+  opcoes: string[] | null;
+  posicao: number;
+  criado_em: string;
+  atualizado_em: string;
+}
+
+export interface CartaoCampoValor {
+  id: string;
+  cartao_id: string;
+  campo_id: string;
+  /** Texto: string. Número: number. Data: string ISO. Select: string. Checkbox: boolean. */
+  valor: string | number | boolean | null;
+  atualizado_em: string;
+}
+
+// =============================================
 // VIEWS SALVAS — combinações de filtros nomeadas
 // =============================================
 export interface FiltrosSalvos {
