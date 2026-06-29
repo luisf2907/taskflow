@@ -13,6 +13,9 @@ export interface GrafoNo {
   eh_epico: boolean;
   cor_epico: string | null;
   profundidade: number;
+  /** Só preenchido na view workspace: épico resolvido (próprio ou herdado). */
+  epico_id?: string | null;
+  epico_titulo?: string | null;
 }
 
 export interface GrafoAresta {
@@ -70,6 +73,68 @@ export function useGrafoDependencias(cartaoId: string | null) {
           eh_epico: !!l.no_eh_epico,
           cor_epico: l.no_cor_epico,
           profundidade: l.no_profundidade ?? 0,
+        });
+      } else if (l.tipo_linha === "aresta" && l.aresta_origem && l.aresta_destino) {
+        arestas.push({ origem: l.aresta_origem, destino: l.aresta_destino });
+      }
+    }
+
+    return { nos, arestas };
+  });
+
+  return {
+    nos: data?.nos || [],
+    arestas: data?.arestas || [],
+    carregando,
+    erro: error as Error | undefined,
+  };
+}
+
+interface RawLinhaWs {
+  tipo_linha: "no" | "aresta";
+  no_id: string | null;
+  no_titulo: string | null;
+  no_data_conclusao: string | null;
+  no_coluna_nome: string | null;
+  no_quadro_id: string | null;
+  no_quadro_nome: string | null;
+  no_epico_id: string | null;
+  no_epico_cor: string | null;
+  no_epico_titulo: string | null;
+  aresta_origem: string | null;
+  aresta_destino: string | null;
+}
+
+/** Grafo de TODAS as dependências do workspace (cards que participam de
+ *  alguma dep). Usado pela view dedicada de dependências. */
+export function useGrafoWorkspace(workspaceId: string | null) {
+  const key = workspaceId ? `grafo-ws-${workspaceId}` : null;
+
+  const { data, isLoading: carregando, error } = useSWR(key, async () => {
+    if (!workspaceId) return { nos: [] as GrafoNo[], arestas: [] as GrafoAresta[] };
+
+    const { data: linhas, error } = await supabase.rpc("grafo_dependencias_workspace", {
+      ws_id: workspaceId,
+    });
+    if (error) throw error;
+
+    const nos: GrafoNo[] = [];
+    const arestas: GrafoAresta[] = [];
+
+    for (const l of (linhas || []) as RawLinhaWs[]) {
+      if (l.tipo_linha === "no" && l.no_id) {
+        nos.push({
+          id: l.no_id,
+          titulo: l.no_titulo || "(sem título)",
+          data_conclusao: l.no_data_conclusao,
+          coluna_nome: l.no_coluna_nome,
+          quadro_id: l.no_quadro_id,
+          quadro_nome: l.no_quadro_nome,
+          eh_epico: false, // irrelevante na view; usamos epico resolvido
+          cor_epico: l.no_epico_cor, // cor do épico resolvido (pra bolinha)
+          profundidade: 0,
+          epico_id: l.no_epico_id,
+          epico_titulo: l.no_epico_titulo,
         });
       } else if (l.tipo_linha === "aresta" && l.aresta_origem && l.aresta_destino) {
         arestas.push({ origem: l.aresta_origem, destino: l.aresta_destino });

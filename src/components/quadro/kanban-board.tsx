@@ -38,6 +38,7 @@ import { ListaView } from "./lista-view";
 import { TabelaView } from "./tabela-view";
 import { CalendarioView } from "./calendario-view";
 import { EpicosView } from "./epicos-view";
+import { GrafoDepsView } from "./grafo-deps-view";
 
 const DetalheCartao = dynamic(
   () => import("./detalhe-cartao").then((m) => m.DetalheCartao),
@@ -99,7 +100,8 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
       saved === "lista" ||
       saved === "tabela" ||
       saved === "calendario" ||
-      saved === "epicos"
+      saved === "epicos" ||
+      saved === "deps"
     ) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setView(saved);
@@ -451,6 +453,9 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
         {view === "epicos" && (
           <EpicosView workspaceId={workspaceId} membros={membros} />
         )}
+
+        {/* View: Deps — grafo global de dependências do workspace */}
+        {view === "deps" && <GrafoDepsView workspaceId={workspaceId} />}
       </div>
 
       <DetalheCartao

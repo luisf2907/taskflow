@@ -136,7 +136,127 @@ function CardNode({ data }: NodeProps<Node<NoData>>) {
 const nodeTypes = { card: CardNode };
 
 // =============================================
-// Overlay principal
+// GrafoCanvas — ReactFlow + layout + legenda, reutilizável
+// (usado pelo overlay foco-no-card e pela view global de deps)
+// =============================================
+interface GrafoCanvasProps {
+  nos: GrafoNo[];
+  arestas: { origem: string; destino: string }[];
+  carregando: boolean;
+  onAbrirNo: (id: string) => void;
+  /** id do card em destaque (borda accent); null na view global */
+  focoId?: string | null;
+  emptyMsg?: string;
+}
+
+export function GrafoCanvas({
+  nos,
+  arestas,
+  carregando,
+  onAbrirNo,
+  focoId = null,
+  emptyMsg = "Nenhuma dependência pra mostrar",
+}: GrafoCanvasProps) {
+  const { rfNodes, rfEdges } = useMemo(() => {
+    const pos = layout(nos, arestas);
+    const rfNodes: Node<NoData>[] = nos.map((no) => ({
+      id: no.id,
+      type: "card",
+      position: pos[no.id] || { x: 0, y: 0 },
+      data: { no, isFocus: no.id === focoId, onAbrir: onAbrirNo },
+    }));
+    const rfEdges: Edge[] = arestas.map((a, i) => ({
+      id: `e-${i}`,
+      source: a.destino, // pré-requisito → dependente
+      target: a.origem,
+      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+      style: { stroke: "var(--tf-border-strong)", strokeWidth: 1.5 },
+      animated: false,
+    }));
+    return { rfNodes, rfEdges };
+  }, [nos, arestas, focoId, onAbrirNo]);
+
+  const isVazio = !carregando && nos.length === 0;
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 relative min-h-0">
+        {carregando ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span
+              className="text-[0.75rem]"
+              style={{
+                color: "var(--tf-text-tertiary)",
+                fontFamily: "var(--tf-font-mono)",
+              }}
+            >
+              Montando o grafo…
+            </span>
+          </div>
+        ) : isVazio ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
+            <Lock size={24} strokeWidth={1.5} style={{ color: "var(--tf-border-strong)" }} />
+            <p
+              className="text-[0.8125rem] font-medium text-center"
+              style={{ color: "var(--tf-text-secondary)" }}
+            >
+              {emptyMsg}
+            </p>
+          </div>
+        ) : (
+          <ReactFlow
+            nodes={rfNodes}
+            edges={rfEdges}
+            nodeTypes={nodeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.2, maxZoom: 1.2 }}
+            minZoom={0.15}
+            maxZoom={2}
+            proOptions={{ hideAttribution: true }}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable
+          >
+            <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
+            <Controls showInteractive={false} />
+          </ReactFlow>
+        )}
+      </div>
+
+      {/* Legenda */}
+      <div
+        className="flex items-center gap-4 px-4 h-9 shrink-0 text-[0.625rem]"
+        style={{
+          borderTop: "1px solid var(--tf-border)",
+          color: "var(--tf-text-tertiary)",
+          fontFamily: "var(--tf-font-mono)",
+        }}
+      >
+        <span className="flex items-center gap-1.5">
+          <span
+            style={{
+              width: 14,
+              height: 0,
+              borderTop: "1.5px solid var(--tf-border-strong)",
+              display: "inline-block",
+            }}
+          />
+          desbloqueia →
+        </span>
+        <span className="flex items-center gap-1">
+          <CheckCircle2 size={11} style={{ color: "var(--tf-success)" }} /> concluído
+        </span>
+        <span className="flex items-center gap-1">
+          <Lock size={10} style={{ color: "var(--tf-text-tertiary)" }} /> pendente
+        </span>
+        <span className="ml-auto">{nos.length} cards · clique num nó pra abrir</span>
+      </div>
+    </div>
+  );
+}
+
+// =============================================
+// Overlay principal — foco em um card
 // =============================================
 interface Props {
   cartaoId: string;
@@ -165,36 +285,13 @@ export function GrafoDependenciasOverlay({
     return () => window.removeEventListener("keydown", onKey, true);
   }, [onClose]);
 
-  // Clicar no nó-foco não faz nada (já está aberto atrás do overlay);
-  // outros nós navegam pro detalhe.
+  // Clicar no nó-foco não faz nada (já está aberto atrás do overlay).
   const handleAbrir = useCallback(
     (id: string) => {
       if (id !== cartaoId) onAbrirCartao(id);
     },
     [cartaoId, onAbrirCartao]
   );
-
-  const { rfNodes, rfEdges } = useMemo(() => {
-    const pos = layout(nos, arestas);
-    const rfNodes: Node<NoData>[] = nos.map((no) => ({
-      id: no.id,
-      type: "card",
-      position: pos[no.id] || { x: 0, y: 0 },
-      data: { no, isFocus: no.id === cartaoId, onAbrir: handleAbrir },
-    }));
-    const rfEdges: Edge[] = arestas.map((a, i) => ({
-      id: `e-${i}`,
-      // destino (pré-requisito) → origem (dependente)
-      source: a.destino,
-      target: a.origem,
-      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-      style: { stroke: "var(--tf-border-strong)", strokeWidth: 1.5 },
-      animated: false,
-    }));
-    return { rfNodes, rfEdges };
-  }, [nos, arestas, cartaoId, handleAbrir]);
-
-  const isVazio = !carregando && arestas.length === 0;
 
   return (
     <div
@@ -254,87 +351,15 @@ export function GrafoDependenciasOverlay({
           </button>
         </div>
 
-        {/* Canvas */}
-        <div className="flex-1 relative">
-          {carregando ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span
-                className="text-[0.75rem]"
-                style={{
-                  color: "var(--tf-text-tertiary)",
-                  fontFamily: "var(--tf-font-mono)",
-                }}
-              >
-                Montando o grafo…
-              </span>
-            </div>
-          ) : isVazio ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
-              <Lock size={24} strokeWidth={1.5} style={{ color: "var(--tf-border-strong)" }} />
-              <p
-                className="text-[0.8125rem] font-medium text-center"
-                style={{ color: "var(--tf-text-secondary)" }}
-              >
-                Este card não tem dependências
-              </p>
-              <p
-                className="text-[0.6875rem] text-center"
-                style={{
-                  color: "var(--tf-text-tertiary)",
-                  fontFamily: "var(--tf-font-mono)",
-                }}
-              >
-                Adicione dependências na seção do detalhe pra ver a árvore aqui
-              </p>
-            </div>
-          ) : (
-            <ReactFlow
-              nodes={rfNodes}
-              edges={rfEdges}
-              nodeTypes={nodeTypes}
-              fitView
-              fitViewOptions={{ padding: 0.2, maxZoom: 1.2 }}
-              minZoom={0.2}
-              maxZoom={2}
-              proOptions={{ hideAttribution: true }}
-              nodesDraggable={false}
-              nodesConnectable={false}
-              elementsSelectable
-            >
-              <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
-              <Controls showInteractive={false} />
-            </ReactFlow>
-          )}
-        </div>
-
-        {/* Legenda */}
-        <div
-          className="flex items-center gap-4 px-4 h-9 shrink-0 text-[0.625rem]"
-          style={{
-            borderTop: "1px solid var(--tf-border)",
-            color: "var(--tf-text-tertiary)",
-            fontFamily: "var(--tf-font-mono)",
-          }}
-        >
-          <span className="flex items-center gap-1.5">
-            <span
-              style={{
-                width: 14,
-                height: 0,
-                borderTop: "1.5px solid var(--tf-border-strong)",
-                display: "inline-block",
-              }}
-            />
-            desbloqueia →
-          </span>
-          <span className="flex items-center gap-1">
-            <CheckCircle2 size={11} style={{ color: "var(--tf-success)" }} /> concluído
-          </span>
-          <span className="flex items-center gap-1">
-            <Lock size={10} style={{ color: "var(--tf-text-tertiary)" }} /> pendente
-          </span>
-          <span className="ml-auto">{nos.length} cards · clique num nó pra abrir</span>
-        </div>
+        {/* Canvas reutilizável */}
+        <GrafoCanvas
+          nos={nos}
+          arestas={arestas}
+          carregando={carregando}
+          onAbrirNo={handleAbrir}
+          focoId={cartaoId}
+          emptyMsg="Este card não tem dependências"
+        />
       </div>
     </div>
   );
