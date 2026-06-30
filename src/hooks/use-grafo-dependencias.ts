@@ -90,6 +90,34 @@ export function useGrafoDependencias(cartaoId: string | null) {
   };
 }
 
+export interface CardSemDep {
+  id: string;
+  titulo: string;
+  data_conclusao: string | null;
+  coluna_nome: string | null;
+  quadro_id: string | null;
+  quadro_nome: string | null;
+  epico_id: string | null;
+  epico_cor: string | null;
+  epico_titulo: string | null;
+}
+
+/** Cards do workspace que NÃO participam de nenhuma dependência (bandeja). */
+export function useCardsSemDep(workspaceId: string | null) {
+  const key = workspaceId ? `cards-sem-dep-${workspaceId}` : null;
+
+  const { data, isLoading: carregando } = useSWR(key, async () => {
+    if (!workspaceId) return [] as CardSemDep[];
+    const { data, error } = await supabase.rpc("cards_sem_dependencia_workspace", {
+      ws_id: workspaceId,
+    });
+    if (error) throw error;
+    return (data || []) as CardSemDep[];
+  });
+
+  return { cards: data || [], carregando };
+}
+
 interface RawLinhaWs {
   tipo_linha: "no" | "aresta";
   no_id: string | null;

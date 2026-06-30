@@ -1,7 +1,7 @@
 "use client";
 
-import { useGrafoWorkspace } from "@/hooks/use-grafo-dependencias";
-import { Filter, Network } from "lucide-react";
+import { useCardsSemDep, useGrafoWorkspace } from "@/hooks/use-grafo-dependencias";
+import { CheckCircle2, ChevronRight, Circle, Filter, Inbox, Network } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { EpicoMarker } from "./epico-marker";
@@ -15,9 +15,11 @@ const BACKLOG_KEY = "__backlog__";
 
 export function GrafoDepsView({ workspaceId }: Props) {
   const { nos, arestas, carregando } = useGrafoWorkspace(workspaceId);
+  const { cards: cardsSemDep } = useCardsSemDep(workspaceId);
   const router = useRouter();
   const [sprintsSel, setSprintsSel] = useState<Set<string>>(new Set());
   const [epicosSel, setEpicosSel] = useState<Set<string>>(new Set());
+  const [bandejaAberta, setBandejaAberta] = useState(false);
 
   // Opções de filtro derivadas dos nós
   const { sprints, epicos } = useMemo(() => {
@@ -74,6 +76,31 @@ export function GrafoDepsView({ workspaceId }: Props) {
     },
     [quadroDeId, router, workspaceId]
   );
+
+  function abrirCard(quadroId: string | null, id: string) {
+    if (quadroId) router.push(`/quadro/${quadroId}?card=${id}`);
+    else if (workspaceId) router.push(`/workspace/${workspaceId}?card=${id}`);
+  }
+
+  // Cards sem dep: aplica os MESMOS filtros e agrupa por sprint.
+  const semDepAgrupados = useMemo(() => {
+    const filtrados = cardsSemDep.filter((c) => {
+      const sKey = c.quadro_id || BACKLOG_KEY;
+      const sprintOk = sprintsSel.size === 0 || sprintsSel.has(sKey);
+      const epicoOk =
+        epicosSel.size === 0 || (!!c.epico_id && epicosSel.has(c.epico_id));
+      return sprintOk && epicoOk;
+    });
+    const grupos = new Map<string, { label: string; cards: typeof filtrados }>();
+    for (const c of filtrados) {
+      const sKey = c.quadro_id || BACKLOG_KEY;
+      if (!grupos.has(sKey)) {
+        grupos.set(sKey, { label: c.quadro_nome || "Backlog", cards: [] });
+      }
+      grupos.get(sKey)!.cards.push(c);
+    }
+    return { total: filtrados.length, grupos: [...grupos.values()] };
+  }, [cardsSemDep, sprintsSel, epicosSel]);
 
   function toggle(set: Set<string>, key: string): Set<string> {
     const novo = new Set(set);
@@ -211,6 +238,137 @@ export function GrafoDepsView({ workspaceId }: Props) {
           emptyMsg="Nenhuma dependência bate com os filtros"
         />
       </div>
+
+      {/* Bandeja: tarefas sem dependência (colapsável) */}
+      {semDepAgrupados.total > 0 && (
+        <div
+          className="mt-2 shrink-0 overflow-hidden"
+          style={{
+            background: "var(--tf-surface)",
+            borderWidth: "1px",
+            borderStyle: "solid",
+            borderColor: "var(--tf-border)",
+            borderRadius: "var(--tf-radius-md)",
+          }}
+        >
+          <button
+            onClick={() => setBandejaAberta((v) => !v)}
+            className="w-full flex items-center gap-2 px-3 h-9 transition-colors"
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--tf-surface-hover)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            <span
+              aria-hidden
+              style={{
+                color: "var(--tf-text-tertiary)",
+                transition: "transform 0.15s ease",
+                transform: bandejaAberta ? "rotate(90deg)" : "rotate(0deg)",
+              }}
+            >
+              <ChevronRight size={13} strokeWidth={2} />
+            </span>
+            <Inbox size={13} strokeWidth={1.75} style={{ color: "var(--tf-text-tertiary)" }} />
+            <span className="text-[0.75rem] font-medium" style={{ color: "var(--tf-text-secondary)" }}>
+              Tarefas sem dependência
+            </span>
+            <span
+              className="text-[0.625rem] font-medium px-1.5 h-[16px] inline-flex items-center"
+              style={{
+                color: "var(--tf-text-tertiary)",
+                background: "var(--tf-bg-secondary)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--tf-border)",
+                borderRadius: "var(--tf-radius-xs)",
+                fontFamily: "var(--tf-font-mono)",
+              }}
+            >
+              {semDepAgrupados.total}
+            </span>
+            <span
+              className="ml-auto text-[0.625rem]"
+              style={{ color: "var(--tf-text-tertiary)", fontFamily: "var(--tf-font-mono)" }}
+            >
+              {bandejaAberta ? "ocultar" : "trabalho independente, sem bloqueios"}
+            </span>
+          </button>
+
+          {bandejaAberta && (
+            <div
+              className="px-3 pb-3 pt-1 max-h-[28vh] overflow-y-auto flex flex-col gap-3"
+              style={{ borderTop: "1px solid var(--tf-border-subtle)" }}
+            >
+              {semDepAgrupados.grupos.map((g) => (
+                <div key={g.label}>
+                  <p
+                    className="text-[0.6rem] font-medium mb-1.5"
+                    style={{
+                      color: "var(--tf-text-tertiary)",
+                      fontFamily: "var(--tf-font-mono)",
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {g.label} · {g.cards.length}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {g.cards.map((c) => {
+                      const concluido = !!c.data_conclusao;
+                      return (
+                        <button
+                          key={c.id}
+                          onClick={() => abrirCard(c.quadro_id, c.id)}
+                          className="flex items-center gap-1.5 h-7 pl-1.5 pr-2 max-w-[220px] transition-colors"
+                          style={{
+                            background: "var(--tf-bg-secondary)",
+                            borderWidth: "1px",
+                            borderStyle: "solid",
+                            borderColor: "var(--tf-border)",
+                            borderRadius: "var(--tf-radius-xs)",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.borderColor = "var(--tf-border-strong)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.borderColor = "var(--tf-border)")
+                          }
+                          title={c.titulo}
+                        >
+                          {concluido ? (
+                            <CheckCircle2
+                              size={11}
+                              strokeWidth={2}
+                              style={{ color: "var(--tf-success)", flexShrink: 0 }}
+                            />
+                          ) : (
+                            <Circle
+                              size={11}
+                              strokeWidth={1.75}
+                              style={{ color: "var(--tf-text-tertiary)", flexShrink: 0 }}
+                            />
+                          )}
+                          {c.epico_cor && (
+                            <EpicoMarker cor={c.epico_cor} titulo={c.epico_titulo} tamanho={7} />
+                          )}
+                          <span
+                            className="text-[0.75rem] truncate"
+                            style={{
+                              color: concluido ? "var(--tf-text-tertiary)" : "var(--tf-text)",
+                              textDecoration: concluido ? "line-through" : "none",
+                            }}
+                          >
+                            {c.titulo}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
