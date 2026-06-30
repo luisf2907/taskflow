@@ -227,6 +227,21 @@ export function useCartoes(quadroId: string) {
   async function mover(cartaoId: string, novaColunaId: string, novaPosicao: number): Promise<{ blocked?: boolean; reason?: string; done?: boolean; titulo?: string }> {
     const cartao = cartoes.find((c) => c.id === cartaoId);
     const oldColunaId = cartao?.coluna_id;
+    const estadoAnterior = cartoes;
+
+    // Optimistic update IMEDIATO — move o card na hora, ANTES de qualquer
+    // validação async. Sem isso, o card "piscava" na coluna antiga durante
+    // os ~100-300ms das queries de validação (o overlay do drag já sumiu).
+    // Se uma validação abaixo bloquear, fazemos rollback.
+    globalMutate(
+      key,
+      (atual: Cartao[] | undefined) => (atual || []).map((c) => c.id === cartaoId ? { ...c, coluna_id: novaColunaId, posicao: novaPosicao } : c),
+      { revalidate: false }
+    );
+
+    function rollback() {
+      globalMutate(key, estadoAnterior, { revalidate: false });
+    }
 
     // Descobre se está movendo para a ÚLTIMA coluna (Concluído).
     // Reusado em duas validações abaixo (PR aberto + deps pendentes).
@@ -246,6 +261,7 @@ export function useCartoes(quadroId: string) {
     // Block: PR aberto
     if (cartao?.pr_numero && cartao.pr_status === "open") {
       if (await isMovendoParaConcluido()) {
+        rollback();
         return { blocked: true, reason: "Faça merge ou feche o PR antes de concluir este card." };
       }
     }
@@ -254,20 +270,13 @@ export function useCartoes(quadroId: string) {
     if (await isMovendoParaConcluido()) {
       const { data: bloqueado } = await supabase.rpc("card_bloqueado", { card_id: cartaoId });
       if (bloqueado === true) {
+        rollback();
         return {
           blocked: true,
           reason: "Este card depende de outros que ainda não foram concluídos.",
         };
       }
     }
-
-    // Optimistic update com rollback em caso de erro
-    const estadoAnterior = cartoes;
-    globalMutate(
-      key,
-      (atual: Cartao[] | undefined) => (atual || []).map((c) => c.id === cartaoId ? { ...c, coluna_id: novaColunaId, posicao: novaPosicao } : c),
-      { revalidate: false }
-    );
 
     // Single RPC: move + set data_conclusao + return member IDs
     const { data: result, error: moveErr } = await supabase.rpc("move_card_complete", {
