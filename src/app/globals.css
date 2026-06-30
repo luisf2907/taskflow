@@ -817,3 +817,38 @@ select:focus-visible {
 .ProseMirror-dropcursor {
   border-color: var(--tf-accent) !important;
 }
+
+/* =============================================
+   React Flow (grafo de dependências) — tema
+   A lib traz controles com fundo branco fixo; sobrescrevemos com as
+   variáveis do tema pra funcionar no modo escuro.
+   ============================================= */
+.react-flow__controls {
+  box-shadow: var(--tf-shadow-md) !important;
+  border: 1px solid var(--tf-border);
+  border-radius: var(--tf-radius-xs);
+  overflow: hidden;
+}
+.react-flow__controls-button {
+  background: var(--tf-surface) !important;
+  border-bottom: 1px solid var(--tf-border) !important;
+  color: var(--tf-text-secondary) !important;
+  width: 26px;
+  height: 26px;
+}
+.react-flow__controls-button:hover {
+  background: var(--tf-surface-hover) !important;
+}
+.react-flow__controls-button svg {
+  fill: currentColor !important;
+  max-width: 13px;
+  max-height: 13px;
+}
+/* Cor dos pontos do fundo respeitando o tema */
+.react-flow__background {
+  background: transparent;
+}
+.react-flow__background-pattern circle,
+.react-flow__background-pattern path {
+  color: var(--tf-border);
+}
