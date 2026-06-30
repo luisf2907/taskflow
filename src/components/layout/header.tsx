@@ -2,12 +2,13 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { useTema } from "@/hooks/use-tema";
-import { HelpCircle, LogOut, Menu, Moon, Sun, User, Search } from "lucide-react";
+import { HelpCircle, LogOut, Menu, Moon, Sun, User, Search, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
+import { features } from "@/lib/features";
 
 // Botão icônico quadrado do header — altura 32px, densidade Linear-style.
 function HeaderIconButton({
@@ -122,6 +123,17 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
 
       {/* Right side: Tools & Profile */}
       <div className="flex items-center gap-1 sm:gap-1.5">
+        {features.ai && (
+          <Tooltip content="Perguntar à IA" position="bottom">
+            <HeaderIconButton
+              onClick={() => window.dispatchEvent(new Event("open-ask-ai"))}
+              ariaLabel="Perguntar à IA"
+            >
+              <Sparkles size={15} strokeWidth={1.75} />
+            </HeaderIconButton>
+          </Tooltip>
+        )}
+
         <NotificationBell />
 
         <Tooltip content="Central de Ajuda" position="bottom">

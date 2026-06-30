@@ -1,4 +1,5 @@
 import { AuthListener } from "@/components/auth-listener";
+import { AskAi } from "@/components/ai/ask-ai";
 import { CommandPalette } from "@/components/command-palette";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { GlobalKeyboardShortcuts } from "@/components/keyboard-shortcuts";
@@ -137,6 +138,7 @@ export default function RootLayout({
               <ThemeInjector />
               <UserVariantInjector />
               <CommandPalette />
+              <AskAi />
               <GlobalKeyboardShortcuts />
               <HelpModal />
               <OfflineBanner />
