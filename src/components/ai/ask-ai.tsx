@@ -52,6 +52,17 @@ export function AskAi() {
   // Pra navegação de fallback (quando a fonte não tem quadro_id).
   const workspaceId = contexto?.workspaceId;
 
+  // Limpa o chat quando o contexto da rota muda (trocou de workspace/board):
+  // a conversa era sobre o contexto anterior e não faz sentido manter.
+  const contextoKey = contexto?.workspaceId || contexto?.quadroId || null;
+  const contextoKeyRef = useRef(contextoKey);
+  useEffect(() => {
+    if (contextoKeyRef.current !== contextoKey) {
+      contextoKeyRef.current = contextoKey;
+      setMensagens([]);
+    }
+  }, [contextoKey]);
+
   const abrir = useCallback(() => {
     setAberto(true);
     setTimeout(() => inputRef.current?.focus(), 60);
