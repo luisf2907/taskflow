@@ -2,7 +2,7 @@
 
 import { features } from "@/lib/features";
 import { AnimatePresence, motion } from "motion/react";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fadeOnly, scaleIn } from "@/lib/motion/presets";
 import { Kanban, Send, Sparkles, X } from "lucide-react";
@@ -37,16 +37,20 @@ export function AskAi() {
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const params = useParams();
   const pathname = usePathname();
 
-  // Workspace ativo derivado da rota.
-  const workspaceId = useMemo(() => {
-    const fromParams = (params?.id as string | undefined) || undefined;
-    if (fromParams && /^[0-9a-f-]{36}$/i.test(fromParams)) return fromParams;
-    const match = pathname?.match(/\/(?:workspace|quadro)\/([0-9a-f-]{36})/i);
-    return match?.[1];
-  }, [params, pathname]);
+  // Contexto da rota: em /workspace/[id] o id é o workspace; em /quadro/[id]
+  // o id é o quadro/sprint (o backend resolve o workspace a partir dele).
+  const contexto = useMemo<{ workspaceId?: string; quadroId?: string } | null>(() => {
+    const m = pathname?.match(/\/(workspace|quadro)\/([0-9a-f-]{36})/i);
+    if (!m) return null;
+    return m[1].toLowerCase() === "workspace"
+      ? { workspaceId: m[2] }
+      : { quadroId: m[2] };
+  }, [pathname]);
+  const temContexto = !!contexto;
+  // Pra navegação de fallback (quando a fonte não tem quadro_id).
+  const workspaceId = contexto?.workspaceId;
 
   const abrir = useCallback(() => {
     setAberto(true);
@@ -101,7 +105,7 @@ export function AskAi() {
 
   async function enviar(texto: string) {
     const q = texto.trim();
-    if (!q || carregando || !workspaceId) return;
+    if (!q || carregando || !contexto) return;
 
     const novoHist: Mensagem[] = [...mensagens, { papel: "user", texto: q }];
     setMensagens(novoHist);
@@ -113,7 +117,7 @@ export function AskAi() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          workspaceId,
+          ...contexto,
           pergunta: q,
           historico: mensagens.slice(-8).map((m) => ({ papel: m.papel, texto: m.texto })),
         }),
@@ -230,7 +234,7 @@ export function AskAi() {
                       A IA consulta os cards e sprints reais pra responder.
                     </p>
                   </div>
-                  {!workspaceId && (
+                  {!temContexto && (
                     <p
                       className="text-[0.6875rem]"
                       style={{ color: "var(--tf-warning)", fontFamily: "var(--tf-font-mono)" }}
@@ -238,7 +242,7 @@ export function AskAi() {
                       Abra um workspace ou board primeiro.
                     </p>
                   )}
-                  {workspaceId && (
+                  {temContexto && (
                     <div className="flex flex-col gap-1.5 w-full max-w-[320px]">
                       {SUGESTOES.map((s) => (
                         <button
@@ -297,8 +301,8 @@ export function AskAi() {
                 ref={inputRef}
                 value={pergunta}
                 onChange={(e) => setPergunta(e.target.value)}
-                placeholder={workspaceId ? "Pergunte algo…" : "Abra um workspace primeiro"}
-                disabled={!workspaceId || carregando}
+                placeholder={temContexto ? "Pergunte algo…" : "Abra um workspace primeiro"}
+                disabled={!temContexto || carregando}
                 className="flex-1 h-9 px-3 text-[0.8125rem] outline-none disabled:opacity-50"
                 style={{
                   background: "var(--tf-surface)",
@@ -309,7 +313,7 @@ export function AskAi() {
               />
               <button
                 type="submit"
-                disabled={!pergunta.trim() || carregando || !workspaceId}
+                disabled={!pergunta.trim() || carregando || !temContexto}
                 className="w-9 h-9 flex items-center justify-center transition-colors disabled:opacity-40"
                 style={{
                   background: "var(--tf-accent)",

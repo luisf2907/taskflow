@@ -10,16 +10,24 @@ import {
   type Part,
 } from "@google/generative-ai";
 
-const schema = z.object({
-  workspaceId: z.string().uuid(),
-  pergunta: z.string().min(1).max(500),
-  // Histórico opcional pra perguntas de follow-up (turnos anteriores)
-  historico: z
-    .array(z.object({ papel: z.enum(["user", "model"]), texto: z.string().max(4000) }))
-    .max(10)
-    .optional()
-    .default([]),
-});
+const schema = z
+  .object({
+    // Aceita workspaceId direto (rota /workspace/[id]) OU quadroId
+    // (rota /quadro/[id], onde [id] é o quadro/sprint — o workspace é
+    // resolvido a partir dele).
+    workspaceId: z.string().uuid().optional(),
+    quadroId: z.string().uuid().optional(),
+    pergunta: z.string().min(1).max(500),
+    // Histórico opcional pra perguntas de follow-up (turnos anteriores)
+    historico: z
+      .array(z.object({ papel: z.enum(["user", "model"]), texto: z.string().max(4000) }))
+      .max(10)
+      .optional()
+      .default([]),
+  })
+  .refine((d) => d.workspaceId || d.quadroId, {
+    message: "Informe workspaceId ou quadroId",
+  });
 
 // Card "fonte" que a IA consultou — devolvido pra UI mostrar como citação.
 interface CardFonte {
@@ -208,7 +216,21 @@ export async function POST(request: NextRequest) {
 
   const parsed = await validateBody(request, schema);
   if ("error" in parsed) return parsed.error;
-  const { workspaceId, pergunta, historico } = parsed.data;
+  const { pergunta, historico } = parsed.data;
+
+  // Resolve o workspace: direto ou via quadro (rota /quadro/[id]).
+  let workspaceId = parsed.data.workspaceId;
+  if (!workspaceId && parsed.data.quadroId) {
+    const { data: quadro } = await supabase
+      .from("quadros")
+      .select("workspace_id")
+      .eq("id", parsed.data.quadroId)
+      .single();
+    workspaceId = quadro?.workspace_id ?? undefined;
+  }
+  if (!workspaceId) {
+    return NextResponse.json({ error: "Workspace nao encontrado" }, { status: 404 });
+  }
 
   // Garante que o usuário é membro do workspace (RLS-friendly: a query só
   // retorna se ele tiver acesso).
