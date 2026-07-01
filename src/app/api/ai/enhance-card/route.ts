@@ -16,9 +16,18 @@ const schema = z.object({
     nome: z.string(),
   })).optional().default([]),
   peso: z.number().nullable().optional(),
+  // Se informado, o endpoint busca membros + histórico do workspace pra
+  // sugerir também o RESPONSÁVEL mais provável (baseado em cards parecidos).
+  workspaceId: z.string().uuid().optional(),
+  temResponsavel: z.boolean().optional().default(false),
 });
 
-function buildPrompt(data: z.infer<typeof schema>) {
+interface ContextoResponsavel {
+  membros: { id: string; nome: string }[];
+  historico: string; // "titulo" [tags] → responsavel
+}
+
+function buildPrompt(data: z.infer<typeof schema>, ctx: ContextoResponsavel | null) {
   const temDescricao = data.descricao.trim().length > 0;
   const temChecklist = data.checklistItens.length > 0;
   const temEtiquetas = data.etiquetaIdsAtuais.length > 0;
@@ -27,19 +36,32 @@ function buildPrompt(data: z.infer<typeof schema>) {
     ? `\nETIQUETAS (id exato): ${data.etiquetasDisponiveis.map((e) => `"${e.id}"=${e.nome}`).join(", ")}\nJa atribuidas: ${temEtiquetas ? data.etiquetaIdsAtuais.join(",") : "nenhuma"}`
     : "";
 
+  const responsavelSection =
+    ctx && ctx.membros.length > 0
+      ? `\nMEMBROS (id exato): ${ctx.membros.map((m) => `"${m.id}"=${m.nome}`).join(", ")}
+HISTORICO (cards concluidos → quem fez, pra inferir responsavel):
+${ctx.historico || "(sem historico)"}`
+      : "";
+
+  const regraResponsavel =
+    ctx && ctx.membros.length > 0
+      ? `\n- responsavel_id: ${data.temResponsavel ? "null (ja tem responsavel)." : "id do membro que mais provavelmente deve pegar este card, inferido do historico. null se nao houver base clara."}
+- responsavel_motivo: 1 frase curta (max 100 chars) justificando o responsavel. "" se responsavel_id for null.`
+      : "";
+
   return `Melhore este card. Texto plano, sem markdown/emoji.
 
 CARD:
 titulo: ${data.titulo}
 descricao: ${temDescricao ? data.descricao.slice(0, 400) : "(vazia)"}
 peso: ${data.peso ?? "(nao definido)"}
-checklist: ${temChecklist ? data.checklistItens.slice(0, 8).join(" | ") : "(vazio)"}${etiquetasSection}
+checklist: ${temChecklist ? data.checklistItens.slice(0, 8).join(" | ") : "(vazio)"}${etiquetasSection}${responsavelSection}
 
 REGRAS:
 - descricao: ${temDescricao ? "Mantenha conteudo. Adicione user story 'Como X, quero Y para Z.' se faltar." : "Comece com user story 'Como X, quero Y para Z.' + 1 frase tecnica."} Max 400 chars.
 - checklist_novos: 3-5 criterios novos curtos (<80 chars cada), nao repetir existentes.
 - etiqueta_ids: lista COMPLETA de ids aplicaveis (incluindo existentes).
-- peso_sugerido: fibonacci (1,2,3,5,8,13) se peso nao definido, senao null.`;
+- peso_sugerido: fibonacci (1,2,3,5,8,13) se peso nao definido, senao null.${regraResponsavel}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -70,11 +92,47 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Contexto pra sugerir responsável (só se o workspaceId veio). RLS garante
+  // que o usuário só lê membros/cards do próprio workspace.
+  let ctxResp: ContextoResponsavel | null = null;
+  if (parsed.data.workspaceId) {
+    const wsId = parsed.data.workspaceId;
+    const [membrosRes, histRes] = await Promise.all([
+      supabase.from("membros").select("id, nome").eq("workspace_id", wsId),
+      supabase
+        .from("cartoes")
+        .select(
+          `titulo, cartao_etiquetas ( etiquetas ( nome ) ), cartao_membros ( membros ( nome ) )`
+        )
+        .eq("workspace_id", wsId)
+        .not("data_conclusao", "is", null)
+        .order("data_conclusao", { ascending: false })
+        .limit(40),
+    ]);
+    type RawHist = {
+      titulo: string;
+      cartao_etiquetas: { etiquetas: { nome: string } | null }[] | null;
+      cartao_membros: { membros: { nome: string } | null }[] | null;
+    };
+    const historico = ((histRes.data || []) as unknown as RawHist[])
+      .map((c) => {
+        const tags = (c.cartao_etiquetas || []).map((e) => e.etiquetas?.nome).filter(Boolean).join(",");
+        const resp = (c.cartao_membros || []).map((m) => m.membros?.nome).filter(Boolean).join(",");
+        return `"${c.titulo}" [${tags || "sem etiqueta"}] → ${resp || "sem responsavel"}`;
+      })
+      .join("\n");
+    ctxResp = {
+      membros: (membrosRes.data || []) as { id: string; nome: string }[],
+      historico,
+    };
+  }
+
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-    const prompt = buildPrompt(parsed.data);
+    const querResponsavel = !!ctxResp && ctxResp.membros.length > 0;
+    const prompt = buildPrompt(parsed.data, ctxResp);
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
@@ -95,6 +153,12 @@ export async function POST(request: NextRequest) {
               items: { type: SchemaType.STRING },
             },
             peso_sugerido: { type: SchemaType.NUMBER, nullable: true },
+            ...(querResponsavel
+              ? {
+                  responsavel_id: { type: SchemaType.STRING, nullable: true },
+                  responsavel_motivo: { type: SchemaType.STRING },
+                }
+              : {}),
           },
           required: ["descricao", "checklist_novos", "etiqueta_ids"],
         },
@@ -128,6 +192,13 @@ export async function POST(request: NextRequest) {
     const idsValidos = new Set(parsed.data.etiquetasDisponiveis.map((e) => e.id));
     const FIBONACCI = [1, 2, 3, 5, 8, 13];
 
+    // Responsável: só ids de membros reais do workspace.
+    const idsMembro = new Set((ctxResp?.membros || []).map((m) => m.id));
+    const responsavel_id =
+      querResponsavel && typeof data.responsavel_id === "string" && idsMembro.has(data.responsavel_id)
+        ? data.responsavel_id
+        : null;
+
     const sanitized = {
       descricao: stripFormatting(String(data.descricao || "")).slice(0, 5000),
       checklist_novos: Array.isArray(data.checklist_novos)
@@ -139,6 +210,11 @@ export async function POST(request: NextRequest) {
       peso_sugerido: typeof data.peso_sugerido === "number" && FIBONACCI.includes(data.peso_sugerido)
         ? data.peso_sugerido
         : null,
+      responsavel_id,
+      responsavel_motivo:
+        responsavel_id && typeof data.responsavel_motivo === "string"
+          ? data.responsavel_motivo.slice(0, 140)
+          : "",
     };
 
     return NextResponse.json(sanitized);

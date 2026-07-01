@@ -234,16 +234,23 @@ export function DetalheCartao({
           etiquetaIdsAtuais: etiquetaIds,
           etiquetasDisponiveis: etiquetas.map((e) => ({ id: e.id, nome: e.nome })),
           peso: pesoLocal,
+          // Contexto pra sugerir responsável (membros + histórico do workspace)
+          workspaceId: cartao.workspace_id,
+          temResponsavel: membroIds.length > 0,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) { toast.error(data.error || "Erro ao melhorar card"); return; }
 
+      // Resumo do que a IA aplicou (feedback claro pro usuário)
+      const aplicados: string[] = [];
+
       // Atualizar descricao
       if (data.descricao) {
         setDescricao(data.descricao);
         onAtualizar(cartao.id, { descricao: data.descricao });
+        aplicados.push("descrição");
       }
 
       // Adicionar novos itens de checklist (bulk insert)
@@ -285,23 +292,43 @@ export function DetalheCartao({
           }
         }
         buscarChecklists();
+        aplicados.push(`${data.checklist_novos.length} critério${data.checklist_novos.length > 1 ? "s" : ""}`);
       }
 
       // Atualizar etiquetas (adicionar novas, nao remover existentes)
       if (data.etiqueta_ids && data.etiqueta_ids.length > 0) {
+        let novas = 0;
         for (const id of data.etiqueta_ids) {
           if (!etiquetaIds.includes(id)) {
             await toggleEtiqueta(id);
+            novas++;
           }
         }
+        if (novas > 0) aplicados.push(`${novas} etiqueta${novas > 1 ? "s" : ""}`);
       }
 
       // Sugerir peso se nao tem
       if (data.peso_sugerido && !pesoLocal) {
         handleMudarPeso(data.peso_sugerido);
+        aplicados.push(`peso ${data.peso_sugerido}`);
       }
 
-      toast.success("Card melhorado com IA!");
+      // Responsável sugerido (adiciona se ainda não está atribuído)
+      if (data.responsavel_id && !membroIds.includes(data.responsavel_id)) {
+        await toggleMembro(data.responsavel_id);
+        const nome = membros.find((m) => m.id === data.responsavel_id)?.nome;
+        aplicados.push(`responsável${nome ? `: ${nome.split(" ")[0]}` : ""}`);
+      }
+
+      // Feedback rico: mostra o que foi aplicado + o porquê do responsável
+      if (aplicados.length === 0) {
+        toast.info("O card já está completo — nada novo a sugerir.");
+      } else {
+        const resumo = aplicados.join(" · ");
+        toast.success(
+          data.responsavel_motivo ? `${resumo}\n${data.responsavel_motivo}` : resumo
+        );
+      }
       onRefresh();
     } catch {
       toast.error("Erro de conexao com IA.");
@@ -1045,7 +1072,9 @@ export function DetalheCartao({
                 </PropertyRow>
               </div>
 
-              {/* Melhorar com IA — so mostra se LLM driver ligado */}
+              {/* Melhorar com IA — so mostra se LLM driver ligado.
+                  Enriquece conteúdo (descrição + checklist) E tria os
+                  metadados (etiquetas + peso + responsável sugerido). */}
               {features.ai && (
                 <button
                   onClick={melhorarComIA}
