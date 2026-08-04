@@ -56,6 +56,63 @@ export async function proxy(request: NextRequest) {
     request: { headers: request.headers },
   });
 
+  const { pathname } = request.nextUrl;
+  const authMode = process.env.AUTH_MODE ?? "standard";
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Rotas que NAO precisam saber quem e o usuario — resolvidas antes de
+  // qualquer chamada ao servidor de auth.
+  //
+  // Isso importa porque `supabase.auth.getUser()` abaixo e um round-trip
+  // de rede (GET /auth/v1/user), e o matcher deste proxy pega quase tudo:
+  // toda navegacao (inclusive as RSC de client-side navigation) e todo
+  // /api/* pagavam esse custo antes de a resposta comecar. A landing e a
+  // pagina de precos, por exemplo, nao dependem de sessao nenhuma.
+  // ─────────────────────────────────────────────────────────────────────
+
+  // Paginas publicas (exatas)
+  const publicPaths = ["/", "/pricing", "/termos", "/privacidade", "/reset-password", "/trocar-senha", "/help"];
+  if (publicPaths.some((p) => pathname === p)) {
+    return response;
+  }
+
+  // Convite e artigos de help sao publicos (com prefixo)
+  if (pathname.startsWith("/convite/") || pathname.startsWith("/help/")) {
+    return response;
+  }
+
+  // /api/health e publico — HEALTHCHECK do Docker e monitoring externo
+  if (pathname === "/api/health" || pathname.startsWith("/api/health/")) {
+    return response;
+  }
+
+  // /api/auth/solo-login e publico — faz auto-login em AUTH_MODE=solo
+  if (pathname.startsWith("/api/auth/solo-login")) {
+    return response;
+  }
+
+  // Endpoints com auth propria (API key / HMAC): o handler valida, o proxy
+  // nao tem o que decidir. Antes chegavam ate aqui so pra serem excluidos
+  // do redirect de login la embaixo — pagando um getUser() a toa.
+  //   /api/v1, /api/mcp       -> API keys
+  //   /api/api-keys           -> gerencia as API keys (usa cookie)
+  //   /api/reunioes/*/webhook -> HMAC do worker de voz (stateless, sem cookie)
+  //   /auth/*                 -> callback do OAuth, ainda sem sessao
+  const isVoiceWebhook = /^\/api\/reunioes\/[^/]+\/webhook\/?$/.test(pathname);
+  if (
+    pathname.startsWith("/api/v1") ||
+    pathname.startsWith("/api/mcp") ||
+    pathname.startsWith("/api/api-keys") ||
+    pathname.startsWith("/auth") ||
+    isVoiceWebhook
+  ) {
+    return response;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Daqui pra baixo a decisao depende da sessao.
+  // ─────────────────────────────────────────────────────────────────────
+
   const supabase = createServerClient(
     supabaseUrl,
     supabaseAnonKey,
@@ -79,22 +136,6 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
-  const authMode = process.env.AUTH_MODE ?? "standard";
-
-  // Public pages (no auth required)
-  const publicPaths = ["/", "/pricing", "/termos", "/privacidade", "/reset-password", "/trocar-senha", "/help"];
-  // Convite e help articles sao publicos (com prefixo)
-  if (pathname.startsWith("/convite/") || pathname.startsWith("/help/")) return response;
-  if (publicPaths.some((p) => pathname === p)) {
-    return response;
-  }
-
-  // /api/health e publico — HEALTHCHECK do Docker e monitoring externo
-  if (pathname === "/api/health" || pathname.startsWith("/api/health/")) {
-    return response;
-  }
-
   // /api/realtime/* exige sessao — o handler valida, nao o proxy
   // (proxy nao pode ler request body nem redirect em SSE). Bloqueamos
   // aqui apenas se claramente sem auth.
@@ -105,11 +146,6 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  // /api/auth/solo-login e publico — faz auto-login em AUTH_MODE=solo
-  if (pathname.startsWith("/api/auth/solo-login")) {
-    return response;
-  }
-
   // Logged-in users visiting /login go to dashboard
   if (user && pathname.startsWith("/login")) {
     return NextResponse.redirect(buildRedirectUrl(request, "/dashboard"));
@@ -117,12 +153,11 @@ export async function proxy(request: NextRequest) {
 
   // Forcar troca de senha no primeiro login — GoTrue app_metadata set
   // pelo CLI user:create. Leitura direto do JWT (zero query ao DB).
+  // (/trocar-senha e /auth/* ja retornaram antes de chegar aqui.)
   if (
     user &&
     (user as { app_metadata?: Record<string, unknown> }).app_metadata?.must_change_password === true &&
-    !pathname.startsWith("/trocar-senha") &&
-    !pathname.startsWith("/api/") &&
-    !pathname.startsWith("/auth/")
+    !pathname.startsWith("/api/")
   ) {
     return NextResponse.redirect(buildRedirectUrl(request, "/trocar-senha"));
   }
@@ -135,21 +170,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Protected routes: redirect to login if not authenticated
-  // Endpoints com auth propria (API keys, HMAC, etc) precisam bypass do redirect:
-  //   /api/v1, /api/mcp         -> API keys
-  //   /api/api-keys             -> gerencia as API keys (usa cookie)
-  //   /api/reunioes/*/webhook   -> HMAC do worker de voz (stateless, sem cookie)
-  const isVoiceWebhook = /^\/api\/reunioes\/[^/]+\/webhook\/?$/.test(pathname);
-  if (
-    !user &&
-    !pathname.startsWith("/login") &&
-    !pathname.startsWith("/auth") &&
-    !pathname.startsWith("/api/v1") &&
-    !pathname.startsWith("/api/mcp") &&
-    !pathname.startsWith("/api/api-keys") &&
-    !isVoiceWebhook
-  ) {
+  // Protected routes: redirect to login if not authenticated.
+  // Os endpoints com auth propria (/api/v1, /api/mcp, /api/api-keys,
+  // webhook de voz, /auth/*) ja retornaram no bloco sem-sessao la em cima.
+  if (!user && !pathname.startsWith("/login")) {
     return NextResponse.redirect(buildRedirectUrl(request, "/login"));
   }
 
