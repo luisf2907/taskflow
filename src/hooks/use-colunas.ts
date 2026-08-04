@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { carregarBoard } from "@/lib/board-loader";
 import { registrarAtividade } from "@/lib/atividades";
 import { Coluna } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
@@ -12,14 +13,12 @@ function chave(quadroId: string) {
 export function useColunas(quadroId: string) {
   const key = chave(quadroId);
 
-  const { data: colunas = [], isLoading: carregando } = useSWR(key, async () => {
-    const { data } = await supabase
-      .from("colunas")
-      .select("*")
-      .eq("quadro_id", quadroId)
-      .order("posicao");
-    return (data || []) as Coluna[];
-  });
+  // Le do carregamento compartilhado do board (mesma requisicao que
+  // useQuadro e useCartoes). Chave e mutacoes seguem proprias.
+  const { data: colunas = [], isLoading: carregando } = useSWR(
+    key,
+    async () => (await carregarBoard(quadroId)).colunas,
+  );
 
   async function criar(nome: string) {
     // Check duplicata

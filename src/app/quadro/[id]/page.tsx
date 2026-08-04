@@ -6,7 +6,7 @@ import { useSidebar } from "@/hooks/use-sidebar";
 import { KanbanBoard } from "@/components/quadro/kanban-board";
 import { Modal } from "@/components/ui/modal";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
-import { useQuadros } from "@/hooks/use-quadros";
+import { useQuadro, useQuadros } from "@/hooks/use-quadros";
 import { useWorkspaces } from "@/hooks/use-workspaces";
 import { StatusSprint } from "@/types";
 import {
@@ -65,9 +65,14 @@ export default function PaginaQuadro() {
   const params = useParams();
   const router = useRouter();
   const quadroId = params.id as string;
+  // `quadros` alimenta a Sidebar e a checagem de "outra sprint ativa"; nao
+  // e o caminho critico do board. O quadro em si vem do useQuadro, que
+  // chega junto com colunas e cartoes (1 round-trip) — sem isso o
+  // workspace_id do board so aparecia depois da lista inteira carregar,
+  // atrasando etiquetas, membros e views salvas.
   const { quadros, atualizar, excluir } = useQuadros();
+  const { quadro } = useQuadro(quadroId);
   const { workspaces } = useWorkspaces();
-  const quadro = quadros.find((q) => q.id === quadroId);
   useRealtimeBoard(quadroId);
   const workspace = quadro?.workspace_id
     ? workspaces.find((w) => w.id === quadro.workspace_id)

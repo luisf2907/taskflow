@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { usuarioAtual } from "@/lib/supabase/usuario";
+import { carregarBoard } from "@/lib/board-loader";
 import { registrarAtividade } from "@/lib/atividades";
 import { executarAutomacoes } from "@/lib/automacoes-executor";
 import { criarNotificacao } from "@/lib/notificacoes";
@@ -26,97 +27,15 @@ function chave(quadroId: string) {
   return `cartoes-${quadroId}`;
 }
 
-async function fetchCartoes(quadroId: string): Promise<CartaoComResumo[]> {
-  const { data } = await supabase
-    .from("cartoes")
-    .select("*, colunas!inner(quadro_id), cartao_etiquetas(etiqueta_id), cartao_membros(membro_id)")
-    .eq("colunas.quadro_id", quadroId)
-    .order("posicao")
-    .limit(500);
-
-  if (!data) return [];
-
-  const cartaoIds = data.map((c) => c.id);
-
-  // Batch IN queries in chunks of 100 to avoid Supabase URL length limits
-  async function batchIn<T>(table: string, select: string, ids: string[]): Promise<T[]> {
-    if (ids.length === 0) return [];
-    const chunks: string[][] = [];
-    for (let i = 0; i < ids.length; i += 100) chunks.push(ids.slice(i, i + 100));
-    const results = await Promise.all(
-      chunks.map((chunk) => supabase.from(table).select(select).in("cartao_id", chunk))
-    );
-    return results.flatMap((r) => (r.data || []) as T[]);
-  }
-
-  const [checklistsData, anexosData] = await Promise.all([
-    batchIn<{ cartao_id: string; checklist_itens: { concluido: boolean }[] }>("checklists", "cartao_id, checklist_itens(concluido)", cartaoIds),
-    batchIn<{ cartao_id: string }>("anexos", "cartao_id", cartaoIds),
-  ]);
-
-  // Resolve cor herdada do épico pai. Pega todos os pais únicos referenciados.
-  const paiIds = [
-    ...new Set(
-      data
-        .filter((c) => c.cartao_pai_id && c.cartao_pai_id !== c.id)
-        .map((c) => c.cartao_pai_id as string)
-    ),
-  ];
-  const paiEpicoMap: Record<string, { cor: string | null; titulo: string }> = {};
-  if (paiIds.length > 0) {
-    const { data: pais } = await supabase
-      .from("cartoes")
-      .select("id, eh_epico, cor_epico, titulo")
-      .in("id", paiIds);
-    for (const p of pais || []) {
-      if (p.eh_epico) {
-        paiEpicoMap[p.id] = { cor: p.cor_epico, titulo: p.titulo };
-      }
-    }
-  }
-
-  const checklistResumo: Record<string, { total: number; concluidos: number }> = {};
-  for (const cl of checklistsData) {
-    const itens = (cl.checklist_itens || []) as { concluido: boolean }[];
-    if (!checklistResumo[cl.cartao_id]) checklistResumo[cl.cartao_id] = { total: 0, concluidos: 0 };
-    checklistResumo[cl.cartao_id].total += itens.length;
-    checklistResumo[cl.cartao_id].concluidos += itens.filter((i) => i.concluido).length;
-  }
-
-  const anexoContagem: Record<string, number> = {};
-  for (const a of anexosData) {
-    anexoContagem[a.cartao_id] = (anexoContagem[a.cartao_id] || 0) + 1;
-  }
-
-  return data.map(({ colunas: _, cartao_etiquetas, cartao_membros, ...cartao }) => {
-    const c = cartao as Cartao;
-    // Cor do épico: próprio se eh_epico, senão herdado do pai (se pai for épico).
-    let epico_cor: string | null = null;
-    let epico_titulo: string | null = null;
-    if (c.eh_epico && c.cor_epico) {
-      epico_cor = c.cor_epico;
-      epico_titulo = c.titulo;
-    } else if (c.cartao_pai_id && paiEpicoMap[c.cartao_pai_id]) {
-      epico_cor = paiEpicoMap[c.cartao_pai_id].cor;
-      epico_titulo = paiEpicoMap[c.cartao_pai_id].titulo;
-    }
-    return {
-      ...c,
-      etiqueta_ids: (cartao_etiquetas || []).map((ce: { etiqueta_id: string }) => ce.etiqueta_id),
-      membro_ids: [...new Set((cartao_membros || []).map((cm: { membro_id: string }) => cm.membro_id))] as string[],
-      total_checklist_itens: checklistResumo[cartao.id]?.total || 0,
-      total_checklist_concluidos: checklistResumo[cartao.id]?.concluidos || 0,
-      total_anexos: anexoContagem[cartao.id] || 0,
-      epico_cor,
-      epico_titulo,
-    };
-  });
-}
-
 export function useCartoes(quadroId: string) {
   const key = chave(quadroId);
 
-  const { data: cartoes = [], isLoading: carregando } = useSWR(key, () => fetchCartoes(quadroId));
+  // Le do carregamento compartilhado do board — mesma requisicao que
+  // useQuadro e useColunas usam (ver src/lib/board-loader.ts).
+  const { data: cartoes = [], isLoading: carregando } = useSWR(
+    key,
+    async () => (await carregarBoard(quadroId)).cartoes,
+  );
 
   function cartoesDaColuna(colunaId: string) {
     return cartoes

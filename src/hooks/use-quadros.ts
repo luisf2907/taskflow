@@ -2,11 +2,17 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { usuarioAtual } from "@/lib/supabase/usuario";
+import { carregarBoard } from "@/lib/board-loader";
 import { registrarAtividade } from "@/lib/atividades";
 import { Quadro, StatusSprint } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 
 const CHAVE = "quadros";
+
+/** Chave do quadro isolado — ver useQuadro. */
+function chaveQuadro(id: string) {
+  return `quadro-${id}`;
+}
 
 async function fetcher() {
   // Buscar apenas quadros dos workspaces onde o usuario e membro
@@ -27,6 +33,24 @@ async function fetcher() {
     .in("workspace_id", wsIds)
     .order("criado_em", { ascending: false });
   return (data || []) as Quadro[];
+}
+
+/**
+ * Um quadro so, pelo id — sem esperar a lista inteira.
+ *
+ * A pagina do board precisa do `workspace_id` do quadro pra carregar
+ * etiquetas, membros e views salvas. Tirar isso de `useQuadros()` custava
+ * 2 round-trips (workspace_usuarios -> quadros) antes de qualquer um
+ * desses comecar. Aqui o quadro vem junto do carregamento do board, que
+ * a pagina ja vai fazer de qualquer jeito — entao e de graca.
+ */
+export function useQuadro(quadroId: string | null) {
+  const { data: quadro = null, isLoading: carregando } = useSWR(
+    quadroId ? chaveQuadro(quadroId) : null,
+    async () => (await carregarBoard(quadroId!)).quadro,
+  );
+
+  return { quadro, carregando };
 }
 
 export function useQuadros() {
@@ -67,17 +91,27 @@ export function useQuadros() {
   }
 
   async function atualizar(id: string, campos: Partial<Quadro>) {
-    // Optimistic update — usa função pra pegar o estado mais recente do cache
+    const ts = new Date().toISOString();
+
+    // Optimistic update — usa função pra pegar o estado mais recente do cache.
+    // Espelhamos na chave do quadro isolado (useQuadro) pra que o header do
+    // board reflita a mudanca na hora, sem esperar revalidacao.
     globalMutate(CHAVE, (atual: Quadro[] | undefined) =>
       (atual || []).map((q) =>
-        q.id === id ? { ...q, ...campos, atualizado_em: new Date().toISOString() } : q
+        q.id === id ? { ...q, ...campos, atualizado_em: ts } : q
       ),
+      { revalidate: false }
+    );
+    globalMutate(
+      chaveQuadro(id),
+      (atual: Quadro | null | undefined) =>
+        atual ? { ...atual, ...campos, atualizado_em: ts } : atual,
       { revalidate: false }
     );
 
     const { data } = await supabase
       .from("quadros")
-      .update({ ...campos, atualizado_em: new Date().toISOString() })
+      .update({ ...campos, atualizado_em: ts })
       .eq("id", id)
       .select()
       .single();
@@ -86,6 +120,7 @@ export function useQuadros() {
         (atual || []).map((q) => (q.id === id ? data : q)),
         { revalidate: false }
       );
+      globalMutate(chaveQuadro(id), data, { revalidate: false });
       if (campos.status_sprint) {
         registrarAtividade({ quadroId: id, acao: "sprint_status", entidade: "sprint", detalhes: { status: campos.status_sprint } });
       }
@@ -95,6 +130,7 @@ export function useQuadros() {
 
   async function excluir(id: string) {
     globalMutate(CHAVE, quadros.filter((q) => q.id !== id), false);
+    globalMutate(chaveQuadro(id), null, { revalidate: false });
     await supabase.from("quadros").delete().eq("id", id);
   }
 
