@@ -1,9 +1,7 @@
 import { AuthListener } from "@/components/auth-listener";
-import { AskAi } from "@/components/ai/ask-ai";
-import { CommandPalette } from "@/components/command-palette";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { GlobalKeyboardShortcuts } from "@/components/keyboard-shortcuts";
-import { HelpModal } from "@/components/help/help-modal";
+import { GlobalOverlays } from "@/components/global-overlays";
 import { OfflineBanner } from "@/components/offline-banner";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { RecordingIndicator } from "@/components/layout/recording-indicator";
@@ -137,10 +135,8 @@ export default function RootLayout({
               <AuthListener />
               <ThemeInjector />
               <UserVariantInjector />
-              <CommandPalette />
-              <AskAi />
+              <GlobalOverlays />
               <GlobalKeyboardShortcuts />
-              <HelpModal />
               <OfflineBanner />
               {children}
               <BottomNav />

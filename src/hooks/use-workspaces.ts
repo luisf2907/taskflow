@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { usuarioAtual } from "@/lib/supabase/usuario";
 import { Workspace } from "@/types";
 import { getRandomProjectColor } from "@/lib/colors";
 import { trackClientEvent } from "@/lib/umami";
@@ -10,7 +11,7 @@ const CHAVE = "workspaces";
 
 async function fetcher() {
   // Buscar apenas workspaces onde o usuario e membro
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await usuarioAtual();
   if (!user) return [] as Workspace[];
 
   const { data: memberships } = await supabase
@@ -39,7 +40,7 @@ export function useWorkspaces() {
     icone: string = "folder"
   ) {
     if (!nome.trim()) return null;
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await usuarioAtual();
 
     // Nota: o trigger `trg_auto_add_workspace_creator` (migration 032) adiciona
     // automaticamente o criador como admin em workspace_usuarios AFTER INSERT.

@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { usuarioAtual } from "@/lib/supabase/usuario";
 import { registrarAtividade } from "@/lib/atividades";
 import { executarAutomacoes } from "@/lib/automacoes-executor";
 import { criarNotificacao } from "@/lib/notificacoes";
@@ -292,7 +293,7 @@ export function useCartoes(quadroId: string) {
 
     // Notify card members if moved to Done
     if (result?.is_done && cartao) {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await usuarioAtual();
       if (user) {
         const memberIds: string[] = result.member_ids || [];
         const notifyIds = new Set(memberIds);

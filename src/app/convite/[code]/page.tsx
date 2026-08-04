@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Kanban, Loader2, Check, AlertCircle, Users } from "lucide-react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase/client";
+import { usuarioAtual } from "@/lib/supabase/usuario";
 
 interface WorkspaceInfo {
   id: string;
@@ -24,12 +24,14 @@ export default function ConvitePage() {
 
   useEffect(() => {
     async function init() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      // Sessao (leitura local) e o convite em paralelo — a sessao nao e
+      // pre-requisito pra buscar o workspace do link.
+      const [user, res] = await Promise.all([
+        usuarioAtual(),
+        fetch(`/api/invites/${code}`),
+      ]);
       setLogado(!!user);
 
-      const res = await fetch(`/api/invites/${code}`);
       if (!res.ok) {
         const data = await res.json();
         setErro(data.error || "Link inválido");

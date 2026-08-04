@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { usuarioAtual } from "@/lib/supabase/usuario";
 import useSWR from "swr";
 
 export type RecentTask = {
@@ -12,7 +13,7 @@ export type RecentTask = {
 };
 
 async function fetchMetrics(): Promise<{ recentTasks: RecentTask[]; tasksDoneToday: number }> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await usuarioAtual();
   if (!user) return { recentTasks: [], tasksDoneToday: 0 };
 
   // Single RPC call replaces 3 sequential queries

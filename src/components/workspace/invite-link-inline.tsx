@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link2, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { usuarioAtualId } from "@/lib/supabase/usuario";
 
 interface InviteLinkInlineProps {
   workspaceId: string;
@@ -20,10 +21,8 @@ export function InviteLinkInline({ workspaceId }: InviteLinkInlineProps) {
     for (let i = 0; i < 12; i++)
       code += chars[Math.floor(Math.random() * chars.length)];
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    const userId = await usuarioAtualId();
+    if (!userId) {
       setGerando(false);
       return;
     }
@@ -31,7 +30,7 @@ export function InviteLinkInline({ workspaceId }: InviteLinkInlineProps) {
     const { error } = await supabase.from("invite_links").insert({
       code,
       workspace_id: workspaceId,
-      criado_por: user.id,
+      criado_por: userId,
     });
 
     if (!error) setLink(`${window.location.origin}/convite/${code}`);

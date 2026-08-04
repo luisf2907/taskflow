@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { usuarioAtual } from "@/lib/supabase/usuario";
 import { Perfil } from "@/types";
 import useSWR, { useSWRConfig } from "swr";
 
@@ -11,12 +12,7 @@ export function useAuth() {
     data: user,
     isLoading: carregando,
     mutate,
-  } = useSWR("auth-user", async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    return user;
-  });
+  } = useSWR("auth-user", usuarioAtual);
 
   // Perfil e temGithub dependem de user, mas rodam em PARALELO entre si
   const { data: perfilEGithub } = useSWR(
@@ -35,7 +31,11 @@ export function useAuth() {
           .single()
           .then(({ data }) => data as Perfil | null),
 
-        // Check GitHub connection
+        // Check GitHub connection.
+        // `identities` vem do user da sessao (getSession). Se por algum
+        // motivo vier vazio/desatualizado, o caminho abaixo cai no
+        // /api/github-token, que da a resposta autoritativa — entao o
+        // pior caso e uma request a mais, nunca um resultado errado.
         (async () => {
           const identities = user?.identities ?? [];
           const hasOAuth = identities.some((i) => i.provider === "github");

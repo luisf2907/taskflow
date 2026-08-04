@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { usuarioAtualId } from "@/lib/supabase/usuario";
 import { Kanban, CheckCircle2 } from "lucide-react";
 import { logger } from "@/lib/logger";
 
@@ -15,9 +16,9 @@ const CORES = ["#00857A", "#D84D4D", "#FBD051", "#6366F1", "#EC4899", "#F59E0B"]
 
 async function salvarStep(step: number) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    await supabase.from("perfis").update({ onboarding_step: step }).eq("id", user.id);
+    const userId = await usuarioAtualId();
+    if (!userId) return;
+    await supabase.from("perfis").update({ onboarding_step: step }).eq("id", userId);
   } catch {
     // Silent fail - nao bloquear UI
   }
@@ -25,12 +26,12 @@ async function salvarStep(step: number) {
 
 async function marcarCompleto() {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const userId = await usuarioAtualId();
+    if (!userId) return;
     await supabase
       .from("perfis")
       .update({ onboarding_done: true, onboarding_step: 4 })
-      .eq("id", user.id);
+      .eq("id", userId);
     // Legacy fallback
     localStorage.setItem("tf_onboarding_done", "true");
   } catch {

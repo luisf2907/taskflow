@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { usuarioAtualId } from "@/lib/supabase/usuario";
 
 interface ConvidarMembroProps {
   workspaceId: string;
@@ -283,15 +284,15 @@ function InviteLinkSection({ workspaceId }: { workspaceId: string }) {
     setGerando(true);
     const code = generateCode();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setGerando(false); return; }
+    const userId = await usuarioAtualId();
+    if (!userId) { setGerando(false); return; }
 
     const { error } = await supabase
       .from("invite_links")
       .insert({
         code,
         workspace_id: workspaceId,
-        criado_por: user.id,
+        criado_por: userId,
       });
 
     if (!error) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { usuarioAtualId } from "@/lib/supabase/usuario";
 import { FiltrosSalvos, ViewSalva } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 
@@ -33,8 +34,7 @@ export function useViewsSalvas(workspaceId: string | null, quadroId: string | nu
     compartilhada: boolean;
   }) {
     if (!workspaceId) return null;
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
+    const userId = await usuarioAtualId();
     if (!userId) return null;
 
     const { data, error } = await supabase

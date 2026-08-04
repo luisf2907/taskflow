@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { usuarioAtual, usuarioAtualId } from "@/lib/supabase/usuario";
 import { registrarAtividade } from "@/lib/atividades";
 import { buildTree, gerarSlugUnico, slugify } from "@/lib/wiki-utils";
 import type { WikiPagina, WikiPaginaTree } from "@/types";
@@ -51,9 +52,7 @@ export function useWiki(workspaceId: string | null) {
       const posicao = siblings.length;
 
       // Pega user id
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await usuarioAtual();
       if (!user) return null;
 
       const { data, error } = await supabase
@@ -111,10 +110,8 @@ export function useWiki(workspaceId: string | null) {
       }
 
       // Pega user id para atualizado_por
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) updateData.atualizado_por = user.id;
+      const userId = await usuarioAtualId();
+      if (userId) updateData.atualizado_por = userId;
 
       // Optimistic
       globalMutate(
@@ -191,14 +188,12 @@ export function useWiki(workspaceId: string | null) {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(async () => {
         try {
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
+          const userId = await usuarioAtualId();
           const { error } = await supabase
             .from("wiki_paginas")
             .update({
               conteudo,
-              atualizado_por: user?.id || null,
+              atualizado_por: userId,
               atualizado_em: new Date().toISOString(),
             })
             .eq("id", id);

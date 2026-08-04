@@ -25,7 +25,7 @@ import {
   SortableContext,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { KanbanSkeleton } from "@/components/ui/skeleton";
+import { KanbanSkeleton, ListRowSkeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -34,16 +34,47 @@ import { Cartao } from "./cartao";
 import { Coluna } from "./coluna";
 import { NovaColuna } from "./nova-coluna";
 import { ViewSwitcher, type ViewMode } from "./view-switcher";
-import { ListaView } from "./lista-view";
-import { TabelaView } from "./tabela-view";
-import { CalendarioView } from "./calendario-view";
-import { EpicosView } from "./epicos-view";
-import { GrafoDepsView } from "./grafo-deps-view";
 
 const DetalheCartao = dynamic(
   () => import("./detalhe-cartao").then((m) => m.DetalheCartao),
   { ssr: false }
 );
+
+// Views alternativas: so a "kanban" e o default, e cada uma so e renderizada
+// quando selecionada — entao nao ha motivo pra entrarem no bundle base do
+// board. A GrafoDepsView em especial arrastava @xyflow/react + dagre (~4MB
+// no node_modules) pra dentro do primeiro load de /quadro/[id].
+const ListaView = dynamic(
+  () => import("./lista-view").then((m) => m.ListaView),
+  { ssr: false, loading: () => <ViewLoading /> }
+);
+const TabelaView = dynamic(
+  () => import("./tabela-view").then((m) => m.TabelaView),
+  { ssr: false, loading: () => <ViewLoading /> }
+);
+const CalendarioView = dynamic(
+  () => import("./calendario-view").then((m) => m.CalendarioView),
+  { ssr: false, loading: () => <ViewLoading /> }
+);
+const EpicosView = dynamic(
+  () => import("./epicos-view").then((m) => m.EpicosView),
+  { ssr: false, loading: () => <ViewLoading /> }
+);
+const GrafoDepsView = dynamic(
+  () => import("./grafo-deps-view").then((m) => m.GrafoDepsView),
+  { ssr: false, loading: () => <ViewLoading /> }
+);
+
+function ViewLoading() {
+  return (
+    <div className="flex-1 px-4 lg:px-6 pb-6">
+      <ListRowSkeleton />
+      <ListRowSkeleton />
+      <ListRowSkeleton />
+      <ListRowSkeleton />
+    </div>
+  );
+}
 
 interface KanbanBoardProps {
   quadroId: string;

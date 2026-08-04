@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase/client";
+import { usuarioAtual } from "@/lib/supabase/usuario";
 import { registrarAtividade } from "@/lib/atividades";
 import { Quadro, StatusSprint } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
@@ -9,7 +10,7 @@ const CHAVE = "quadros";
 
 async function fetcher() {
   // Buscar apenas quadros dos workspaces onde o usuario e membro
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await usuarioAtual();
   if (!user) return [] as Quadro[];
 
   const { data: memberships } = await supabase
