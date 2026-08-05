@@ -3,12 +3,7 @@ import { applyRateLimitAsync, validateBody } from "@/lib/api-utils";
 import { trackEvent } from "@/lib/umami";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import {
-  GoogleGenerativeAI,
-  SchemaType,
-  type FunctionDeclaration,
-  type Part,
-} from "@google/generative-ai";
+import { obterLlm, type FerramentaLlm } from "@/lib/drivers/llm";
 
 const schema = z
   .object({
@@ -38,45 +33,46 @@ interface CardFonte {
 }
 
 // =============================================
-// Tools expostas ao Gemini (function calling)
+// Tools expostas ao modelo (function calling)
 // =============================================
-const functionDeclarations: FunctionDeclaration[] = [
+// JSON Schema puro — o driver traduz para o formato do provedor.
+const ferramentas: FerramentaLlm[] = [
   {
-    name: "consultar_cards",
-    description:
+    nome: "consultar_cards",
+    descricao:
       "Busca cards (tarefas) do workspace com filtros. Use pra responder sobre o que está pendente, atrasado, quem está em quê, carga de trabalho, etc.",
-    parameters: {
-      type: SchemaType.OBJECT,
+    parametros: {
+      type: "object",
       properties: {
         sprint: {
-          type: SchemaType.STRING,
+          type: "string",
           description:
             "Nome da sprint pra filtrar, ou 'ativa' pra a sprint em andamento, ou 'todas'. Default 'todas'.",
         },
         apenas_pendentes: {
-          type: SchemaType.BOOLEAN,
+          type: "boolean",
           description: "Se true, só cards não concluídos.",
         },
         apenas_atrasados: {
-          type: SchemaType.BOOLEAN,
+          type: "boolean",
           description: "Se true, só cards com prazo vencido e não concluídos.",
         },
         responsavel: {
-          type: SchemaType.STRING,
+          type: "string",
           description: "Nome (ou parte) do responsável pra filtrar.",
         },
         texto: {
-          type: SchemaType.STRING,
+          type: "string",
           description: "Texto pra buscar no título do card.",
         },
       },
     },
   },
   {
-    name: "consultar_sprints",
-    description:
+    nome: "consultar_sprints",
+    descricao:
       "Lista as sprints do workspace com status (planejada/ativa/concluída) e datas. Use pra responder sobre prazos e andamento de sprints.",
-    parameters: { type: SchemaType.OBJECT, properties: {} },
+    parametros: { type: "object", properties: {} },
   },
 ];
 
@@ -243,12 +239,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Workspace nao encontrado" }, { status: 404 });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "IA nao configurada. Adicione GEMINI_API_KEY." },
-      { status: 503 }
-    );
+  const llm = obterLlm();
+  if (!llm.ok) {
+    return NextResponse.json({ error: llm.motivo }, { status: 503 });
   }
 
   void trackEvent("ai_ask", { user_id: user.id });
@@ -263,59 +256,41 @@ Se não houver dados pra responder, diga isso honestamente.`;
   const fontes = new Map<string, CardFonte>();
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-flash-latest",
+    // O laco de function calling vive no driver — Gemini e OpenAI-compat
+    // expressam isso de formas incompativeis. Aqui so entregamos como
+    // executar cada ferramenta.
+    const resposta = await llm.driver.conversarComFerramentas({
       systemInstruction,
-      tools: [{ functionDeclarations }],
-    });
-
-    const chat = model.startChat({
-      history: historico.map((h) => ({
-        role: h.papel,
-        parts: [{ text: h.texto }],
+      historico: historico.map((h) => ({
+        // O Gemini chama de "model" o que o padrao OpenAI chama de
+        // "assistant". O contrato da rota (visivel pro client) segue o
+        // nome do Gemini; a traducao acontece aqui.
+        papel: h.papel === "model" ? ("assistant" as const) : ("user" as const),
+        texto: h.texto,
       })),
-    });
-
-    let result = await chat.sendMessage(pergunta);
-    let rodadas = 0;
-
-    // Loop de function calling (máx 5 rodadas pra evitar loop infinito)
-    while (rodadas < 5) {
-      const calls = result.response.functionCalls();
-      if (!calls || calls.length === 0) break;
-      rodadas++;
-
-      const respostasFn: Part[] = [];
-      for (const call of calls) {
-        let out: unknown;
-        if (call.name === "consultar_cards") {
-          out = await execConsultarCards(
-            supabase,
-            workspaceId,
-            (call.args || {}) as Record<string, unknown>,
-            fontes
-          );
-        } else if (call.name === "consultar_sprints") {
-          out = await execConsultarSprints(supabase, workspaceId);
-        } else {
-          out = { erro: "ferramenta desconhecida" };
+      pergunta,
+      ferramentas,
+      executar: async (nome, argumentos) => {
+        if (nome === "consultar_cards") {
+          return execConsultarCards(supabase, workspaceId, argumentos, fontes);
         }
-        respostasFn.push({
-          functionResponse: { name: call.name, response: out as object },
-        });
-      }
-      result = await chat.sendMessage(respostasFn);
-    }
-
-    const resposta = result.response.text().trim();
+        if (nome === "consultar_sprints") {
+          return execConsultarSprints(supabase, workspaceId);
+        }
+        return { erro: "ferramenta desconhecida" };
+      },
+    });
 
     return NextResponse.json({
       resposta: resposta || "Não consegui gerar uma resposta. Tente reformular.",
       fontes: [...fontes.values()].slice(0, 12),
     });
   } catch (err) {
-    console.error("[ai/ask] erro", err);
+    console.error("[ai/ask] erro", {
+      driver: llm.driver.nome,
+      modelo: llm.driver.modelo,
+      err,
+    });
     return NextResponse.json(
       { error: "Erro ao consultar a IA. Tente novamente." },
       { status: 502 }

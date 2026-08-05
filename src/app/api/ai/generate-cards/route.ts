@@ -3,7 +3,7 @@ import { applyRateLimitAsync, validateBody, stripFormatting } from "@/lib/api-ut
 import { trackEvent } from "@/lib/umami";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { obterLlm } from "@/lib/drivers/llm";
 import { parseAIResponse } from "@/lib/ai-json-repair";
 
 const schema = z.object({
@@ -57,78 +57,61 @@ export async function POST(request: NextRequest) {
     num_etiquetas: etiquetas?.length ?? 0,
   });
 
-  // Check API key
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "IA nao configurada. Adicione GEMINI_API_KEY nas variaveis de ambiente." },
-      { status: 503 }
-    );
+  const llm = obterLlm();
+  if (!llm.ok) {
+    return NextResponse.json({ error: llm.motivo }, { status: 503 });
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-
     const prompt = buildPrompt(etiquetas);
-    const result = await model.generateContent({
-      contents: [
-        { role: "user", parts: [{ text: `${prompt}\n\nRequisito:\n${texto}` }] },
-      ],
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 8000,
-        responseMimeType: "application/json",
-        // responseSchema garante estrutura fixa — elimina casos em que
-        // o modelo retornava markdown/texto extra/JSON malformado.
-        // maxItems: 5 limita o tamanho total do output.
-        responseSchema: {
-          type: SchemaType.ARRAY,
-          maxItems: 5,
-          items: {
-            type: SchemaType.OBJECT,
-            properties: {
-              titulo: { type: SchemaType.STRING },
-              descricao: { type: SchemaType.STRING },
-              peso: { type: SchemaType.NUMBER },
-              checklist: {
-                type: SchemaType.ARRAY,
-                maxItems: 5,
-                items: { type: SchemaType.STRING },
-              },
-              etiqueta_ids: {
-                type: SchemaType.ARRAY,
-                items: { type: SchemaType.STRING },
-              },
+    const resposta = await llm.driver.gerarJson({
+      prompt: `${prompt}\n\nRequisito:\n${texto}`,
+      temperatura: 0.3,
+      maxTokens: 8000,
+      // O esquema garante estrutura fixa — elimina os casos em que o
+      // modelo devolvia markdown, texto extra ou JSON malformado.
+      // maxItems: 5 limita o tamanho total do output.
+      esquema: {
+        type: "array",
+        maxItems: 5,
+        items: {
+          type: "object",
+          properties: {
+            titulo: { type: "string" },
+            descricao: { type: "string" },
+            peso: { type: "number" },
+            checklist: {
+              type: "array",
+              maxItems: 5,
+              items: { type: "string" },
             },
-            required: ["titulo", "descricao", "peso", "checklist", "etiqueta_ids"],
+            etiqueta_ids: {
+              type: "array",
+              items: { type: "string" },
+            },
           },
+          required: ["titulo", "descricao", "peso", "checklist", "etiqueta_ids"],
         },
-        // Thinking mode dos Gemini 2.5/3.x consome tokens de output
-        // silenciosamente antes de responder. Desligar garante que
-        // o budget de 8k vai todo pro JSON visivel.
-        // SDK v0.24 ainda nao tipa thinkingConfig mas a API REST aceita.
-        ...({ thinkingConfig: { thinkingBudget: 0 } } as object),
       },
     });
 
-    const responseText = result.response.text();
-
-    // Parse JSON (com fallback via Gemini Flash Lite)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cards = await parseAIResponse<Array<Record<string, any>>>(responseText, "array", apiKey);
+    const cards = await parseAIResponse<Array<Record<string, any>>>(
+      resposta.texto,
+      "array",
+      llm.driver,
+    );
     if (!cards) {
-      const finishReason = result.response.candidates?.[0]?.finishReason;
-      const safetyRatings = result.response.candidates?.[0]?.safetyRatings;
       console.error("[generate-cards] IA retornou formato invalido", {
-        finishReason,
-        safetyRatings,
-        snippet: responseText.slice(0, 500),
+        driver: llm.driver.nome,
+        modelo: llm.driver.modelo,
+        motivoParada: resposta.motivoParada,
+        snippet: resposta.texto.slice(0, 500),
       });
       const motivo =
-        finishReason === "MAX_TOKENS"
+        resposta.motivoParada === "limite_tokens"
           ? "A resposta foi muito longa. Tente descrever em menos detalhes."
-          : finishReason === "SAFETY"
+          : resposta.motivoParada === "bloqueado"
             ? "A IA recusou processar esse conteudo. Tente reformular."
             : "A IA retornou um formato invalido. Tente novamente.";
       return NextResponse.json({ error: motivo }, { status: 502 });

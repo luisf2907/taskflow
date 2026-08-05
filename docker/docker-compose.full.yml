@@ -272,6 +272,13 @@ services:
         NEXT_PUBLIC_AI_ENABLED: ${NEXT_PUBLIC_AI_ENABLED:-false}
     container_name: taskflow-app
     restart: unless-stopped
+    # Permite alcancar servicos que rodam no HOST, fora do Docker — o caso
+    # tipico e o Ollama instalado direto na maquina. Sem isso,
+    # LLM_BASE_URL=http://localhost:11434 apontaria para o proprio
+    # container. No Linux o host.docker.internal nao existe por padrao;
+    # host-gateway e o que o cria.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       bootstrap:
         condition: service_completed_successfully

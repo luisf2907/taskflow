@@ -3,7 +3,7 @@ import { applyRateLimitAsync, validateBody, stripFormatting } from "@/lib/api-ut
 import { trackEvent } from "@/lib/umami";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { obterLlm } from "@/lib/drivers/llm";
 import { parseAIResponse } from "@/lib/ai-json-repair";
 
 const schema = z.object({
@@ -84,12 +84,9 @@ export async function POST(request: NextRequest) {
     num_checklist: parsed.data.checklistItens.length,
   });
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "IA nao configurada. Adicione GEMINI_API_KEY nas variaveis de ambiente." },
-      { status: 503 }
-    );
+  const llm = obterLlm();
+  if (!llm.ok) {
+    return NextResponse.json({ error: llm.motivo }, { status: 503 });
   }
 
   // Contexto pra sugerir responsável (só se o workspaceId veio). RLS garante
@@ -128,61 +125,54 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-
     const querResponsavel = !!ctxResp && ctxResp.membros.length > 0;
     const prompt = buildPrompt(parsed.data, ctxResp);
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 4000,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: SchemaType.OBJECT,
-          properties: {
-            descricao: { type: SchemaType.STRING },
-            checklist_novos: {
-              type: SchemaType.ARRAY,
-              maxItems: 5,
-              items: { type: SchemaType.STRING },
-            },
-            etiqueta_ids: {
-              type: SchemaType.ARRAY,
-              items: { type: SchemaType.STRING },
-            },
-            peso_sugerido: { type: SchemaType.NUMBER, nullable: true },
-            ...(querResponsavel
-              ? {
-                  responsavel_id: { type: SchemaType.STRING, nullable: true },
-                  responsavel_motivo: { type: SchemaType.STRING },
-                }
-              : {}),
+    const resposta = await llm.driver.gerarJson({
+      prompt,
+      temperatura: 0.3,
+      maxTokens: 4000,
+      esquema: {
+        type: "object",
+        properties: {
+          descricao: { type: "string" },
+          checklist_novos: {
+            type: "array",
+            maxItems: 5,
+            items: { type: "string" },
           },
-          required: ["descricao", "checklist_novos", "etiqueta_ids"],
+          etiqueta_ids: {
+            type: "array",
+            items: { type: "string" },
+          },
+          peso_sugerido: { type: "number", nullable: true },
+          ...(querResponsavel
+            ? {
+                responsavel_id: { type: "string", nullable: true },
+                responsavel_motivo: { type: "string" },
+              }
+            : {}),
         },
-        // Thinking mode (Gemini 2.5/3.x) consome tokens silenciosamente.
-        // thinkingBudget: 0 garante que o budget de 4k vai todo pro JSON.
-        ...({ thinkingConfig: { thinkingBudget: 0 } } as object),
+        required: ["descricao", "checklist_novos", "etiqueta_ids"],
       },
     });
 
-    const responseText = result.response.text();
-
-    // Parse JSON (com fallback via Gemini Flash Lite)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = await parseAIResponse<Record<string, any>>(responseText, "object", apiKey);
+    const data = await parseAIResponse<Record<string, any>>(
+      resposta.texto,
+      "object",
+      llm.driver,
+    );
     if (!data) {
-      const finishReason = result.response.candidates?.[0]?.finishReason;
       console.error("[enhance-card] IA retornou formato invalido", {
-        finishReason,
-        snippet: responseText.slice(0, 500),
+        driver: llm.driver.nome,
+        modelo: llm.driver.modelo,
+        motivoParada: resposta.motivoParada,
+        snippet: resposta.texto.slice(0, 500),
       });
       const motivo =
-        finishReason === "MAX_TOKENS"
+        resposta.motivoParada === "limite_tokens"
           ? "A resposta foi muito longa. Tente de novo."
-          : finishReason === "SAFETY"
+          : resposta.motivoParada === "bloqueado"
             ? "A IA recusou processar esse conteudo."
             : "A IA retornou formato invalido. Tente novamente.";
       return NextResponse.json({ error: motivo }, { status: 502 });

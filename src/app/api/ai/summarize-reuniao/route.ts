@@ -4,7 +4,7 @@ import { trackEvent } from "@/lib/umami";
 import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { obterLlm } from "@/lib/drivers/llm";
 import { parseAIResponse } from "@/lib/ai-json-repair";
 import type { ReuniaoFala } from "@/types";
 
@@ -59,15 +59,9 @@ export async function POST(request: NextRequest) {
   });
 
   // Check API key
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      {
-        error:
-          "IA nao configurada. Adicione GEMINI_API_KEY nas variaveis de ambiente.",
-      },
-      { status: 503 }
-    );
+  const llm = obterLlm();
+  if (!llm.ok) {
+    return NextResponse.json({ error: llm.motivo }, { status: 503 });
   }
 
   // Buscar reuniao + falas
@@ -124,46 +118,52 @@ export async function POST(request: NextRequest) {
 
   // Chamar Gemini
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `${PROMPT}\n\nTITULO DA REUNIAO: ${reuniao.titulo}\nDURACAO: ${
-                typeof reuniao.duracao_seg === "number" &&
-                Number.isFinite(reuniao.duracao_seg) &&
-                reuniao.duracao_seg > 0
-                  ? Math.round(reuniao.duracao_seg / 60) + " minutos"
-                  : "desconhecida"
-              }\n\nTRANSCRICAO:\n${transcricao}`,
-            },
-          ],
+    const resposta = await llm.driver.gerarJson({
+      temperatura: 0.3,
+      maxTokens: 2000,
+      prompt: `${PROMPT}\n\nTITULO DA REUNIAO: ${reuniao.titulo}\nDURACAO: ${
+        typeof reuniao.duracao_seg === "number" &&
+        Number.isFinite(reuniao.duracao_seg) &&
+        reuniao.duracao_seg > 0
+          ? Math.round(reuniao.duracao_seg / 60) + " minutos"
+          : "desconhecida"
+      }\n\nTRANSCRICAO:\n${transcricao}`,
+      // O formato ja vinha descrito so no PROMPT, o que bastava pro Gemini.
+      // Modelos locais menores erram muito mais a estrutura, entao aqui o
+      // esquema e declarado explicitamente. Nada muda pro Gemini — e o
+      // mesmo formato que o prompt ja pedia.
+      esquema: {
+        type: "object",
+        properties: {
+          resumo: { type: "string" },
+          pontos_chave: { type: "array", items: { type: "string" } },
+          tarefas: { type: "array", items: { type: "string" } },
         },
-      ],
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 2000,
-        responseMimeType: "application/json",
+        required: ["resumo"],
       },
     });
-
-    const responseText = result.response.text();
 
     const data = await parseAIResponse<{
       resumo?: string;
       pontos_chave?: string[];
       tarefas?: string[];
-    }>(responseText, "object", apiKey);
+    }>(resposta.texto, "object", llm.driver);
 
     if (!data || !data.resumo) {
-      return NextResponse.json(
-        { error: "A IA retornou um formato invalido. Tente novamente." },
-        { status: 502 }
+      logger.error(
+        "IA retornou formato invalido",
+        "summarize-reuniao",
+        {
+          driver: llm.driver.nome,
+          modelo: llm.driver.modelo,
+          motivoParada: resposta.motivoParada,
+        },
       );
+      const motivo =
+        resposta.motivoParada === "limite_tokens"
+          ? "A transcricao e longa demais para o modelo. Tente um modelo maior."
+          : "A IA retornou um formato invalido. Tente novamente.";
+      return NextResponse.json({ error: motivo }, { status: 502 });
     }
 
     // Sanitizar

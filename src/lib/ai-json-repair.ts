@@ -1,66 +1,63 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { LlmDriver } from "@/lib/drivers/llm";
 
 /**
- * Tenta parsear JSON. Se falhar, usa Gemini Flash Lite para corrigir o formato.
- * Retorna o objeto/array parseado ou null se nao conseguir.
+ * Tenta parsear JSON. Se falhar, pede ao proprio driver de LLM que
+ * corrija o formato.
+ *
+ * O terceiro parametro era a `apiKey` do Gemini, usada para chamar o
+ * Flash Lite no reparo. Passou a ser o driver: com Ollama nao existe
+ * chave do Gemini, e o reparo tem que acontecer no mesmo provedor que
+ * gerou o texto quebrado.
+ *
+ * Nunca lanca — devolve null quando nao consegue.
  */
 export async function parseAIResponse<T = unknown>(
   responseText: string,
   expectedFormat: "object" | "array",
-  apiKey: string
+  driver: LlmDriver,
 ): Promise<T | null> {
-  // Tentativa 1: parse direto
-  try {
-    const parsed = JSON.parse(responseText);
-    if (expectedFormat === "array" && Array.isArray(parsed)) return parsed as T;
-    if (expectedFormat === "object" && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as T;
-  } catch {
-    // continua
-  }
+  const direto = tentarParsear<T>(responseText, expectedFormat);
+  if (direto !== null) return direto;
 
-  // Tentativa 2: extrair JSON do texto (markdown code blocks, texto extra)
+  // Tentativa 2: extrair JSON do texto (bloco markdown, texto em volta).
+  // Modelos locais sem saida estruturada caem muito neste caso.
   try {
     const pattern = expectedFormat === "array" ? /\[[\s\S]*\]/ : /\{[\s\S]*\}/;
     const match = responseText.match(pattern);
     if (match) {
-      const parsed = JSON.parse(match[0]);
-      if (expectedFormat === "array" && Array.isArray(parsed)) return parsed as T;
-      if (expectedFormat === "object" && typeof parsed === "object") return parsed as T;
+      const extraido = tentarParsear<T>(match[0], expectedFormat);
+      if (extraido !== null) return extraido;
     }
   } catch {
     // continua
   }
 
-  // Tentativa 3: usar Gemini Flash Lite para corrigir
+  // Tentativa 3: pedir ao modelo que conserte.
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const repairModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
-
-    const repairResult = await repairModel.generateContent({
-      contents: [{
-        role: "user",
-        parts: [{
-          text: `O texto abaixo deveria ser um JSON ${expectedFormat === "array" ? "array" : "object"} valido, mas esta com formato quebrado. Corrija e retorne APENAS o JSON valido, sem nenhum texto extra.
-
-Texto:
-${responseText.slice(0, 4000)}`
-        }],
-      }],
-      generationConfig: {
-        temperature: 0,
-        maxOutputTokens: 2000,
-        responseMimeType: "application/json",
-      },
-    });
-
-    const repairedText = repairResult.response.text();
-    const repaired = JSON.parse(repairedText);
-
-    if (expectedFormat === "array" && Array.isArray(repaired)) return repaired as T;
-    if (expectedFormat === "object" && typeof repaired === "object" && !Array.isArray(repaired)) return repaired as T;
+    const corrigido = await driver.repararJson(responseText, expectedFormat);
+    if (corrigido) {
+      const reparado = tentarParsear<T>(corrigido, expectedFormat);
+      if (reparado !== null) return reparado;
+    }
   } catch {
     // fallback falhou
   }
 
+  return null;
+}
+
+function tentarParsear<T>(
+  texto: string,
+  formato: "object" | "array",
+): T | null {
+  try {
+    const parsed = JSON.parse(texto);
+    if (formato === "array" && Array.isArray(parsed)) return parsed as T;
+    if (formato === "object" && typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+      return parsed as T;
+    }
+  } catch {
+    // nao e JSON valido
+  }
   return null;
 }
