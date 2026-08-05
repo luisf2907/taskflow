@@ -1,8 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { SUPABASE_STORAGE_KEY } from "@/lib/supabase/storage-key";
+import { jwksSupabase } from "@/lib/supabase/jwks";
 
 const supabaseUrl =
   process.env.SUPABASE_INTERNAL_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -29,6 +31,55 @@ function buildRedirectUrl(request: NextRequest, pathAndQuery: string): URL {
     request.headers.get("x-forwarded-proto") ??
     request.nextUrl.protocol.replace(":", "");
   return new URL(pathAndQuery, `${proto}://${host}`);
+}
+
+/** O minimo que o proxy precisa saber sobre quem esta pedindo. */
+interface Sessao {
+  sub: string;
+  app_metadata?: Record<string, unknown>;
+}
+
+/**
+ * Le a sessao SEM ir a rede, quando da.
+ *
+ * `getUser()` e `GET /auth/v1/user` contra o GoTrue — medimos ~160 ms de RTT
+ * do VPS ate o Supabase, pagos em toda request autenticada. Como o projeto
+ * usa chaves assimetricas (ES256), `getClaims()` verifica a assinatura
+ * localmente via WebCrypto e nao sai da maquina.
+ *
+ * O JWKS vem do cache de modulo — ver src/lib/supabase/jwks.ts pra entender
+ * por que isso e obrigatorio e nao uma otimizacao extra.
+ *
+ * TRADE-OFF ACEITO: validacao local confere assinatura e expiracao, mas nao
+ * consulta o servidor de auth. Um token revogado (logout em outro device,
+ * senha trocada, usuario deletado) continua passando aqui ate expirar. Isso
+ * e aceitavel porque o proxy e um gate de ROTEAMENTO, nao a autoridade de
+ * acesso: o RLS no Postgres decide linha a linha e valida contra o banco.
+ * Token revogado abre a pagina e nao le dado nenhum.
+ *
+ * A renovacao de sessao e preservada: `getClaims()` chama `getSession()`
+ * internamente, que refaz o refresh quando o token expirou.
+ */
+async function lerSessao(
+  supabase: SupabaseClient,
+  baseUrl: string,
+): Promise<Sessao | null> {
+  const jwks = await jwksSupabase(baseUrl);
+
+  if (jwks) {
+    const { data } = await supabase.auth.getClaims(undefined, { jwks });
+    const claims = data?.claims;
+    return claims
+      ? { sub: claims.sub, app_metadata: claims.app_metadata }
+      : null;
+  }
+
+  // Sem JWKS utilizavel (projeto em HS256, endpoint fora do ar): degrada pro
+  // round-trip de sempre. Nunca deixa passar sem validar.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user ? { sub: user.id, app_metadata: user.app_metadata } : null;
 }
 
 export async function proxy(request: NextRequest) {
@@ -132,22 +183,20 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const sessao = await lerSessao(supabase, supabaseUrl);
 
   // /api/realtime/* exige sessao — o handler valida, nao o proxy
   // (proxy nao pode ler request body nem redirect em SSE). Bloqueamos
   // aqui apenas se claramente sem auth.
   if (pathname.startsWith("/api/realtime/")) {
-    if (!user) {
+    if (!sessao) {
       return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
     }
     return response;
   }
 
   // Logged-in users visiting /login go to dashboard
-  if (user && pathname.startsWith("/login")) {
+  if (sessao && pathname.startsWith("/login")) {
     return NextResponse.redirect(buildRedirectUrl(request, "/dashboard"));
   }
 
@@ -155,8 +204,7 @@ export async function proxy(request: NextRequest) {
   // pelo CLI user:create. Leitura direto do JWT (zero query ao DB).
   // (/trocar-senha e /auth/* ja retornaram antes de chegar aqui.)
   if (
-    user &&
-    (user as { app_metadata?: Record<string, unknown> }).app_metadata?.must_change_password === true &&
+    sessao?.app_metadata?.must_change_password === true &&
     !pathname.startsWith("/api/")
   ) {
     return NextResponse.redirect(buildRedirectUrl(request, "/trocar-senha"));
@@ -164,7 +212,7 @@ export async function proxy(request: NextRequest) {
 
   // AUTH_MODE=solo: auto-login silencioso se o usuario nao tem sessao.
   // Redireciona pro handler que cria/recupera sessao do SOLO_USER_EMAIL.
-  if (authMode === "solo" && !user && !pathname.startsWith("/login")) {
+  if (authMode === "solo" && !sessao && !pathname.startsWith("/login")) {
     const redirectUrl = buildRedirectUrl(request, "/api/auth/solo-login");
     redirectUrl.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(redirectUrl);
@@ -173,7 +221,7 @@ export async function proxy(request: NextRequest) {
   // Protected routes: redirect to login if not authenticated.
   // Os endpoints com auth propria (/api/v1, /api/mcp, /api/api-keys,
   // webhook de voz, /auth/*) ja retornaram no bloco sem-sessao la em cima.
-  if (!user && !pathname.startsWith("/login")) {
+  if (!sessao && !pathname.startsWith("/login")) {
     return NextResponse.redirect(buildRedirectUrl(request, "/login"));
   }
 
