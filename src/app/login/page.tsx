@@ -77,6 +77,17 @@ function LoginContent() {
           return;
         }
 
+        // Quando o GoTrue confirma automaticamente (GOTRUE_MAILER_AUTOCONFIRM,
+        // caminho comum em self-hosted sem SMTP), o signUp ja devolve sessao
+        // ativa e nenhum e-mail e enviado. Mandar o usuario "verificar o
+        // e-mail" nesse caso o prende numa tela esperando uma mensagem que
+        // nunca vai chegar, com a conta ja funcionando.
+        if (data.session) {
+          router.push("/dashboard");
+          router.refresh();
+          return;
+        }
+
         setEmailConfirmacao(email);
         setModo("email-enviado");
         setCarregando(false);
