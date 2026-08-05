@@ -1,4 +1,5 @@
 "use client";
+import { chaveCartoes } from "@/lib/board-keys";
 
 import { supabase } from "@/lib/supabase/client";
 import { Cartao } from "@/types";
@@ -156,7 +157,7 @@ export function useBacklog(workspaceId: string) {
     await supabase.from("cartoes").update({ coluna_id: colunas[0].id, posicao: count || 0 }).eq("id", cartaoId);
 
     globalMutate(key);
-    globalMutate(`cartoes-${quadroId}`);
+    globalMutate(chaveCartoes(quadroId));
   }
 
   // Desassociar de sprint (optimistic → persist)
@@ -170,7 +171,7 @@ export function useBacklog(workspaceId: string) {
     await supabase.from("cartoes").update({ coluna_id: null, workspace_id: workspaceId, posicao: 0 }).eq("id", cartaoId);
 
     globalMutate(key);
-    globalMutate(`cartoes-${quadroIdOriginal}`);
+    globalMutate(chaveCartoes(quadroIdOriginal));
   }
 
   // Mover entre sprints (optimistic → persist)
@@ -189,8 +190,8 @@ export function useBacklog(workspaceId: string) {
     await supabase.from("cartoes").update({ coluna_id: colunas[0].id, posicao: count || 0 }).eq("id", cartaoId);
 
     globalMutate(key);
-    globalMutate(`cartoes-${quadroIdOriginal}`);
-    globalMutate(`cartoes-${quadroIdNovo}`);
+    globalMutate(chaveCartoes(quadroIdOriginal));
+    globalMutate(chaveCartoes(quadroIdNovo));
   }
 
   // Excluir tarefa

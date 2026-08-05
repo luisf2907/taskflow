@@ -1,4 +1,5 @@
 "use client";
+import { chaveCartoes, chaveColunas } from "@/lib/board-keys";
 
 import { useEffect, useRef } from "react";
 import { mutate as globalMutate } from "swr";
@@ -45,8 +46,8 @@ export function useRealtimeBoard(quadroId: string | null) {
       const es = new EventSource(`/api/realtime/board/${quadroId}`);
       esRef.current = es;
 
-      es.addEventListener("cartoes", () => debouncedMutate(`cartoes-${quadroId}`));
-      es.addEventListener("colunas", () => debouncedMutate(`colunas-${quadroId}`));
+      es.addEventListener("cartoes", () => debouncedMutate(chaveCartoes(quadroId)));
+      es.addEventListener("colunas", () => debouncedMutate(chaveColunas(quadroId)));
       es.addEventListener("comentarios", (ev) => {
         try {
           const { cartao_id } = JSON.parse((ev as MessageEvent).data);
@@ -75,12 +76,12 @@ export function useRealtimeBoard(quadroId: string | null) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "colunas", filter: `quadro_id=eq.${quadroId}` },
-        () => debouncedMutate(`colunas-${quadroId}`),
+        () => debouncedMutate(chaveColunas(quadroId)),
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "cartoes" },
-        () => debouncedMutate(`cartoes-${quadroId}`),
+        () => debouncedMutate(chaveCartoes(quadroId)),
       )
       .on(
         "postgres_changes",

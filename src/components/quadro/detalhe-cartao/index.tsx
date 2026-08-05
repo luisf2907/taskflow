@@ -1,4 +1,5 @@
 "use client";
+import { chaveCartoes } from "@/lib/board-keys";
 
 import { supabase } from "@/lib/supabase/client";
 import { features } from "@/lib/features";
@@ -100,7 +101,7 @@ export function DetalheCartao({
 
   function atualizarCartaoNoCache(updates: Partial<CartaoComResumo>) {
     if (!cartao || !quadroId) return;
-    const cacheKey = `cartoes-${quadroId}`;
+    const cacheKey = chaveCartoes(quadroId);
     globalMutate(cacheKey, (current: CartaoComResumo[] | undefined) => {
       if (!current) return current;
       return current.map(c => c.id === cartao.id ? { ...c, ...updates } : c);

@@ -2,16 +2,13 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { carregarBoard } from "@/lib/board-loader";
+import { chaveColunas } from "@/lib/board-keys";
 import { registrarAtividade } from "@/lib/atividades";
 import { Coluna } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 
-function chave(quadroId: string) {
-  return `colunas-${quadroId}`;
-}
-
 export function useColunas(quadroId: string) {
-  const key = chave(quadroId);
+  const key = chaveColunas(quadroId);
 
   // Le do carregamento compartilhado do board (mesma requisicao que
   // useQuadro e useCartoes). Chave e mutacoes seguem proprias.

@@ -3,6 +3,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { usuarioAtual } from "@/lib/supabase/usuario";
 import { carregarBoard } from "@/lib/board-loader";
+import { chaveCartoes } from "@/lib/board-keys";
 import { registrarAtividade } from "@/lib/atividades";
 import { executarAutomacoes } from "@/lib/automacoes-executor";
 import { criarNotificacao } from "@/lib/notificacoes";
@@ -23,12 +24,8 @@ export interface CartaoComResumo extends Cartao {
   epico_titulo: string | null;
 }
 
-function chave(quadroId: string) {
-  return `cartoes-${quadroId}`;
-}
-
 export function useCartoes(quadroId: string) {
-  const key = chave(quadroId);
+  const key = chaveCartoes(quadroId);
 
   // Le do carregamento compartilhado do board — mesma requisicao que
   // useQuadro e useColunas usam (ver src/lib/board-loader.ts).

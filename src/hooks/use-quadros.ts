@@ -3,16 +3,12 @@
 import { supabase } from "@/lib/supabase/client";
 import { usuarioAtual } from "@/lib/supabase/usuario";
 import { carregarBoard } from "@/lib/board-loader";
+import { chaveQuadro } from "@/lib/board-keys";
 import { registrarAtividade } from "@/lib/atividades";
 import { Quadro, StatusSprint } from "@/types";
 import useSWR, { mutate as globalMutate } from "swr";
 
 const CHAVE = "quadros";
-
-/** Chave do quadro isolado — ver useQuadro. */
-function chaveQuadro(id: string) {
-  return `quadro-${id}`;
-}
 
 async function fetcher() {
   // So quadros dos workspaces onde o usuario e membro — mas quem filtra e
