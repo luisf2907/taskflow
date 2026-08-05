@@ -45,6 +45,37 @@ log() {
 #
 # Formato de cada linha:  arquivo|condicao_sql_verdadeira_se_ja_aplicada
 aplicar_pendentes() {
+    # ───── Pre-requisito: publicacao supabase_realtime ─────
+    # As migrations 049 e 051 terminam com
+    #     ALTER PUBLICATION supabase_realtime ADD TABLE ...;
+    # A publicacao e criada automaticamente pelo Supabase cloud. No
+    # self-hosted ela nao existe, o ALTER falha com
+    #     ERROR: publication "supabase_realtime" does not exist
+    # e como o psql roda com ON_ERROR_STOP=1, isso aborta o bootstrap
+    # inteiro (exit 3) — derrubando tambem as migrations seguintes.
+    #
+    # O bootstrap.sql nao tem esse problema porque e um dump curado, sem
+    # nenhuma linha de PUBLICATION. As migrations cruas tem.
+    #
+    # Criar a publicacao vazia resolve sem efeito colateral: sem subscriber
+    # de replicacao logica consumindo, uma publicacao apenas marca tabelas e
+    # nao gera trabalho. O realtime do self-hosted usa os gatilhos de
+    # pg_notify do realtime-triggers.sql, nao esta publicacao.
+    #
+    # Fica aqui, e nao no postgres-init/, para valer tambem em volume que ja
+    # existe — scripts de init so rodam em data directory vazio.
+    psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \
+         -v ON_ERROR_STOP=1 > /dev/null <<'SQL_PUBLICACAO'
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    CREATE PUBLICATION supabase_realtime;
+  END IF;
+END
+$$;
+SQL_PUBLICACAO
+    log "  ✓ Publicacao supabase_realtime garantida."
+
     log "Verificando migrations pos-bootstrap (047+)..."
     while IFS='|' read -r mig teste; do
         if [ -z "$mig" ]; then continue; fi
