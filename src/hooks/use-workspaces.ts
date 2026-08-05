@@ -10,22 +10,17 @@ import useSWR, { mutate as globalMutate } from "swr";
 const CHAVE = "workspaces";
 
 async function fetcher() {
-  // Buscar apenas workspaces onde o usuario e membro
+  // Mesmo raciocinio de use-quadros: o RLS ja restringe aos workspaces do
+  // usuario, com o mesmo predicado que montavamos aqui.
+  //
+  //   CREATE POLICY "workspaces_select" ON workspaces
+  //     FOR SELECT USING (id IN (SELECT my_workspace_ids()));
   const user = await usuarioAtual();
   if (!user) return [] as Workspace[];
 
-  const { data: memberships } = await supabase
-    .from("workspace_usuarios")
-    .select("workspace_id")
-    .eq("user_id", user.id);
-
-  if (!memberships || memberships.length === 0) return [] as Workspace[];
-
-  const wsIds = memberships.map((m) => m.workspace_id);
   const { data } = await supabase
     .from("workspaces")
     .select("*")
-    .in("id", wsIds)
     .order("nome");
   return (data || []) as Workspace[];
 }

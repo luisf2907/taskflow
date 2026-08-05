@@ -14,46 +14,21 @@ export function useAuth() {
     mutate,
   } = useSWR("auth-user", usuarioAtual);
 
-  // Perfil e temGithub dependem de user, mas rodam em PARALELO entre si
-  const { data: perfilEGithub } = useSWR(
-    user ? `auth-extras-${user.id}` : null,
+  // Perfil — NAO inclui voice_embedding (dado biometrico, fica
+  // server-side). Lista explicita evita shippar 2KB de embedding pro
+  // browser em cada reload.
+  const { data: perfil = null } = useSWR(
+    user ? `perfil-${user.id}` : null,
     async () => {
-      const [perfilRes, githubRes] = await Promise.all([
-        // Fetch perfil — NAO inclui voice_embedding (dado biometrico,
-        // fica server-side). Lista explicita evita shippar 2KB de
-        // embedding pro browser em cada reload.
-        supabase
-          .from("perfis")
-          .select(
-            "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at, theme_preferences",
-          )
-          .eq("id", user!.id)
-          .single()
-          .then(({ data }) => data as Perfil | null),
-
-        // Check GitHub connection.
-        // `identities` vem do user da sessao (getSession). Se por algum
-        // motivo vier vazio/desatualizado, o caminho abaixo cai no
-        // /api/github-token, que da a resposta autoritativa — entao o
-        // pior caso e uma request a mais, nunca um resultado errado.
-        (async () => {
-          const identities = user?.identities ?? [];
-          const hasOAuth = identities.some((i) => i.provider === "github");
-          if (hasOAuth) return true;
-
-          try {
-            const res = await fetch("/api/github-token");
-            if (!res.ok) return false;
-            const data = await res.json();
-            return data.connected === true;
-          } catch {
-            return false;
-          }
-        })(),
-      ]);
-
-      return { perfil: perfilRes, temGithub: githubRes };
-    }
+      const { data } = await supabase
+        .from("perfis")
+        .select(
+          "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at, theme_preferences",
+        )
+        .eq("id", user!.id)
+        .single();
+      return data as Perfil | null;
+    },
   );
 
   async function logout() {
@@ -65,7 +40,7 @@ export function useAuth() {
   const refresh = () => {
     mutate();
     globalMutate(
-      (key) => typeof key === "string" && key.startsWith("auth-extras-"),
+      (key) => typeof key === "string" && key.startsWith("perfil-"),
       undefined,
       { revalidate: true },
     );
@@ -73,11 +48,47 @@ export function useAuth() {
 
   return {
     user,
-    perfil: perfilEGithub?.perfil ?? null,
+    perfil,
     carregando,
-    temGithub: perfilEGithub?.temGithub ?? false,
     logout,
     refresh,
-    refreshGithub: refresh,
   };
+}
+
+/**
+ * Se a conta tem GitHub conectado.
+ *
+ * Hook separado de proposito: isso vivia dentro do `useAuth`, que roda em
+ * toda pagina (o Header usa), entao `/api/github-token` era chamado a cada
+ * page load. Essa rota custa 4 hops de servidor — proxy `getUser()`,
+ * rate-limit, `getUser()` de novo no handler e query no banco — e mediu
+ * 739 ms num build de producao, a request mais lenta da pagina.
+ *
+ * O dado so e consumido em /settings. Aqui ele e buscado por quem pede.
+ */
+export function useTemGithub() {
+  const { user } = useAuth();
+
+  const { data: temGithub = false, mutate } = useSWR(
+    user ? `github-conectado-${user.id}` : null,
+    async () => {
+      // `identities` vem do user da sessao (getSession). Se por algum
+      // motivo vier vazio/desatualizado, o caminho abaixo cai no
+      // /api/github-token, que da a resposta autoritativa — entao o
+      // pior caso e uma request a mais, nunca um resultado errado.
+      const identities = user?.identities ?? [];
+      if (identities.some((i) => i.provider === "github")) return true;
+
+      try {
+        const res = await fetch("/api/github-token");
+        if (!res.ok) return false;
+        const data = await res.json();
+        return data.connected === true;
+      } catch {
+        return false;
+      }
+    },
+  );
+
+  return { temGithub, refreshGithub: () => mutate() };
 }

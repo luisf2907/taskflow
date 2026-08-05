@@ -15,22 +15,24 @@ function chaveQuadro(id: string) {
 }
 
 async function fetcher() {
-  // Buscar apenas quadros dos workspaces onde o usuario e membro
+  // So quadros dos workspaces onde o usuario e membro — mas quem filtra e
+  // o RLS, nao o client:
+  //
+  //   CREATE POLICY "quadros_select" ON quadros
+  //     FOR SELECT USING (workspace_id IN (SELECT my_workspace_ids()));
+  //
+  // A policy e literalmente o mesmo predicado que montavamos aqui a mao.
+  // Buscar workspace_usuarios antes era um round-trip redundante — e ele
+  // rodava duas vezes por page load, porque useWorkspaces fazia igual.
+  //
+  // O guard de sessao fica: `usuarioAtual()` e leitura local (sem rede) e
+  // evita disparar uma request que voltaria 401 quando nao ha sessao.
   const user = await usuarioAtual();
   if (!user) return [] as Quadro[];
 
-  const { data: memberships } = await supabase
-    .from("workspace_usuarios")
-    .select("workspace_id")
-    .eq("user_id", user.id);
-
-  if (!memberships || memberships.length === 0) return [] as Quadro[];
-
-  const wsIds = memberships.map((m) => m.workspace_id);
   const { data } = await supabase
     .from("quadros")
     .select("*")
-    .in("workspace_id", wsIds)
     .order("criado_em", { ascending: false });
   return (data || []) as Quadro[];
 }

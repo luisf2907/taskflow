@@ -3,7 +3,7 @@
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { useSidebar } from "@/hooks/use-sidebar";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth, useTemGithub } from "@/hooks/use-auth";
 import { useQuadros } from "@/hooks/use-quadros";
 import { useWorkspaces } from "@/hooks/use-workspaces";
 import { Loader2 } from "lucide-react";
@@ -18,15 +18,10 @@ import { ApiKeysSection } from "./_sections/api-keys";
 import { VoiceSection } from "./_sections/voz";
 
 export default function SettingsPage() {
-  const {
-    user,
-    perfil,
-    temGithub,
-    logout,
-    carregando,
-    refresh,
-    refreshGithub,
-  } = useAuth();
+  const { user, perfil, logout, carregando, refresh } = useAuth();
+  // Unica tela que precisa saber da conexao com GitHub — por isso o hook
+  // e separado do useAuth (ver comentario em use-auth.ts).
+  const { temGithub, refreshGithub } = useTemGithub();
   const { quadros } = useQuadros();
   const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
   const { workspaces } = useWorkspaces();
