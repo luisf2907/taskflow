@@ -27,6 +27,55 @@ log() {
   echo "[bootstrap] $1"
 }
 
+# ───── Migrations pos-bootstrap ─────
+# O bootstrap.sql e um dump consolidado que PARA NA MIGRATION 046. As de
+# 047 em diante nunca entraram nele, entao toda instalacao self-hosted
+# subia sem: views salvas (047), busca global (048), subtarefas e
+# dependencias (049), epicos (050), campos customizados (051), grafo de
+# dependencias (052-054) e o RPC get_board_data do board (055).
+#
+# Nao da pra so re-rodar todas em todo boot: 047, 049 e 051 tem CREATE
+# POLICY sem DROP POLICY antes, e o segundo boot morreria com "policy
+# already exists". Por isso cada linha carrega um marcador — uma condicao
+# SQL verdadeira quando aquela migration ja esta aplicada.
+#
+# Com o marcador, o mesmo codigo cobre os dois casos: instalacao nova
+# (nada existe, aplica tudo em ordem) e instalacao antiga (aplica so o que
+# falta, sem tocar no que ja esta la).
+#
+# Formato de cada linha:  arquivo|condicao_sql_verdadeira_se_ja_aplicada
+aplicar_pendentes() {
+    log "Verificando migrations pos-bootstrap (047+)..."
+    while IFS='|' read -r mig teste; do
+        if [ -z "$mig" ]; then continue; fi
+        if [ ! -f "/migrations/$mig" ]; then
+            log "  ! $mig ausente no volume /migrations — pulando."
+            continue
+        fi
+        ja=$(psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -tAc \
+             "SELECT CASE WHEN ($teste) THEN 1 ELSE 0 END;" 2>/dev/null || echo 0)
+        if [ "$ja" = "1" ]; then
+            log "  = $mig ja aplicada."
+        else
+            psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \
+                 -v ON_ERROR_STOP=1 \
+                 -f "/migrations/$mig" \
+                 > /dev/null
+            log "  ✓ $mig aplicada."
+        fi
+    done <<'MIGRATIONS_PENDENTES'
+047_views_salvas.sql|to_regclass('public.views_salvas') IS NOT NULL
+048_busca_global.sql|EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'public' AND p.proname = 'buscar_global')
+049_subtarefas_dependencias.sql|to_regclass('public.cartao_dependencias') IS NOT NULL
+050_epicos.sql|EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'cartoes' AND column_name = 'eh_epico')
+051_campos_customizados.sql|to_regclass('public.campos_customizados') IS NOT NULL
+052_grafo_dependencias.sql|EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'public' AND p.proname = 'grafo_dependencias')
+053_grafo_workspace.sql|EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'public' AND p.proname = 'grafo_dependencias_workspace')
+054_cards_sem_dep.sql|EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'public' AND p.proname = 'cards_sem_dependencia_workspace')
+055_board_rpc.sql|EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'public' AND p.proname = 'get_board_data')
+MIGRATIONS_PENDENTES
+}
+
 log "Aguardando Postgres em ${PGHOST}:${PGPORT}..."
 until pg_isready -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -q; do
   sleep 1
@@ -86,7 +135,7 @@ if [ "$ALREADY" = "1" ]; then
     # Lista explicita de migrations seguras pra re-aplicar em upgrade.
     # Criterio: arquivo usa DROP IF EXISTS / CREATE OR REPLACE em tudo.
     # Adicione aqui quando uma migration nova couber nesse padrao.
-    UPGRADE_MIGRATIONS="045_anexos_storage_policies.sql 046_perfis_must_change_password.sql 055_board_rpc.sql"
+    UPGRADE_MIGRATIONS="045_anexos_storage_policies.sql 046_perfis_must_change_password.sql"
     for mig in $UPGRADE_MIGRATIONS; do
         if [ -f "/migrations/$mig" ]; then
             psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \
@@ -97,6 +146,11 @@ if [ "$ALREADY" = "1" ]; then
         fi
     done
 
+    # As 047+ nao estao no bootstrap.sql. Numa instalacao que subiu antes
+    # desta correcao, elas nunca foram aplicadas — o marcador de cada uma
+    # detecta isso e recupera o atraso sem tocar no que ja existe.
+    aplicar_pendentes
+
     log "  Pra re-aplicar schema completo: docker compose down -v (DESTROY)"
     exit 0
 fi
@@ -105,6 +159,11 @@ log "Aplicando bootstrap.sql..."
 psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \
      -v ON_ERROR_STOP=1 \
      -f /bootstrap.sql
+
+# O bootstrap.sql para na 046. Sem isto a instalacao nova nascia sem views
+# salvas, busca global, subtarefas, epicos, campos customizados, grafo e o
+# RPC do board.
+aplicar_pendentes
 
 log "✓ Schema aplicado com sucesso."
 log "Proximo passo: criar usuario admin com"
