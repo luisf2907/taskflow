@@ -31,21 +31,47 @@ interface RespostaRpc {
   cartoes: CartaoComResumo[] | null;
 }
 
-/** Caminho rapido. Retorna null se o RPC nao estiver disponivel. */
-async function viaRpc(quadroId: string): Promise<DadosBoard | null> {
+// Codigos que significam "a funcao nao existe neste banco":
+//   PGRST202 — ausente do schema cache do PostgREST
+//   42883    — undefined_function do proprio Postgres
+const CODIGOS_RPC_AUSENTE = new Set(["PGRST202", "42883"]);
+
+// Instalacao sem a migration 055 e propriedade do DEPLOY, nao da request.
+// Uma vez detectada, nao adianta tentar o RPC de novo nesta sessao.
+let rpcAusente = false;
+
+/**
+ * Caminho rapido.
+ *
+ * So degrada pro `viaQueries` quando a funcao realmente NAO EXISTE. Qualquer
+ * outro erro (timeout de statement, banco congestionado, PostgREST recarregando
+ * schema) e propagado.
+ *
+ * Isso importa sob carga: `viaQueries` dispara ~10 queries no lugar de 1.
+ * Cair nele por timeout significa que, exatamente quando o banco esta afogado,
+ * cada cliente decuplica o proprio pedido — uma estampida que agrava a causa
+ * do erro. Propagando, o SWR aplica `errorRetryCount` com backoff.
+ */
+async function viaRpc(quadroId: string): Promise<DadosBoard> {
   const { data, error } = await supabase.rpc("get_board_data", {
     p_quadro_id: quadroId,
   });
 
-  if (error || !data) {
-    // Instalacao sem a migration 055 aplicada cai aqui. Degradamos pro
-    // caminho antigo em vez de mostrar um board vazio.
-    console.warn(
-      "[board] get_board_data indisponivel, usando queries separadas:",
-      error?.message,
-    );
-    return null;
+  if (error) {
+    if (CODIGOS_RPC_AUSENTE.has(error.code ?? "")) {
+      rpcAusente = true;
+      console.warn(
+        "[board] get_board_data ausente (migration 055?), usando queries separadas:",
+        error.message,
+      );
+      return viaQueries(quadroId);
+    }
+    throw error;
   }
+
+  // jsonb_build_object nunca devolve null; se acontecer, o banco respondeu
+  // algo inesperado e o caminho antigo confirma.
+  if (!data) return viaQueries(quadroId);
 
   const d = data as RespostaRpc;
   return {
@@ -178,8 +204,7 @@ export function carregarBoard(quadroId: string): Promise<DadosBoard> {
   const existente = emVoo.get(quadroId);
   if (existente) return existente;
 
-  const promessa = (async () =>
-    (await viaRpc(quadroId)) ?? (await viaQueries(quadroId)))();
+  const promessa = rpcAusente ? viaQueries(quadroId) : viaRpc(quadroId);
 
   emVoo.set(quadroId, promessa);
   void promessa
