@@ -1,5 +1,7 @@
 "use client";
 
+import { avatarDimensionado } from "@/lib/avatar-url";
+
 import {
   ArrowLeft, GitPullRequest, GitMerge, GitBranch, ArrowRight,
   ChevronDown, ChevronRight, FileText, FilePlus, FileX, FilePen,
@@ -138,7 +140,7 @@ function FileDiffItem({ file }: { file: GitHubPRFile }) {
 function CommentItem({ comment }: { comment: GitHubComment }) {
   return (
     <div className="flex gap-2.5 py-3" style={{ borderBottom: "1px solid var(--tf-border)" }}>
-      <img src={comment.user.avatar_url} alt="" className="w-7 h-7 rounded-full shrink-0" />
+      <img src={avatarDimensionado(comment.user.avatar_url, 28)} alt="" className="w-7 h-7 rounded-full shrink-0" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-semibold" style={{ color: "var(--tf-text)" }}>{comment.user.login}</span>
@@ -158,7 +160,7 @@ function CommitItem({ commit }: { commit: GitHubCommit }) {
     <div className="flex items-center gap-2.5 py-2.5" style={{ borderBottom: "1px solid var(--tf-border)" }}>
       <GitCommit size={16} className="shrink-0" style={{ color: "var(--tf-text-tertiary)" }} />
       {commit.author && (
-        <img src={commit.author.avatar_url} alt="" className="w-[22px] h-[22px] rounded-full shrink-0" />
+        <img src={avatarDimensionado(commit.author.avatar_url, 22)} alt="" className="w-[22px] h-[22px] rounded-full shrink-0" />
       )}
       <div className="flex-1 min-w-0">
         <p className="text-[13px] font-medium overflow-hidden text-ellipsis whitespace-nowrap" style={{ color: "var(--tf-text)" }}>
@@ -326,7 +328,7 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
               )}
               {/* Author */}
               <div className="flex items-center gap-[5px]">
-                <img src={pr.user.avatar_url} alt="" className="w-5 h-5 rounded-full" />
+                <img src={avatarDimensionado(pr.user.avatar_url, 20)} alt="" className="w-5 h-5 rounded-full" />
                 <span className="text-xs" style={{ color: "var(--tf-text-secondary)" }}>{pr.user.login}</span>
               </div>
               <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>{tempoAtras(pr.created_at)}</span>

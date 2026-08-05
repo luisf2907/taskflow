@@ -1,5 +1,7 @@
 "use client";
 
+import { avatarDimensionado } from "@/lib/avatar-url";
+
 import { useWorkspaceUsuarios } from "@/hooks/use-workspace-usuarios";
 import {
   Check,
@@ -158,7 +160,7 @@ export function ConvidarMembro({
             >
               {u.perfis?.avatar_url ? (
                 <img
-                  src={u.perfis.avatar_url}
+                  src={avatarDimensionado(u.perfis.avatar_url, 28)}
                   alt=""
                   className="w-7 h-7 rounded-full shrink-0"
                 />

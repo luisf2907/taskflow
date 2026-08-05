@@ -1,5 +1,7 @@
 "use client";
 
+import { avatarDimensionado } from "@/lib/avatar-url";
+
 import { Modal } from "@/components/ui/modal";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { GitPullRequest, Loader2, ChevronDown, ExternalLink, Check, LinkIcon, Users, X } from "lucide-react";
@@ -401,7 +403,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
                         style={{ background: "var(--tf-accent-light)", color: "var(--tf-accent-text)" }}
                       >
                         {m.avatar_url ? (
-                          <img src={m.avatar_url} alt="" className="w-4 h-4 rounded-full" />
+                          <img src={avatarDimensionado(m.avatar_url, 16)} alt="" className="w-4 h-4 rounded-full" />
                         ) : null}
                         {m.nome}
                         <button
@@ -435,7 +437,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
                       onClick={() => setReviewersSelecionados((prev) => [...prev, m.user_id!])}
                     >
                       {m.avatar_url ? (
-                        <img src={m.avatar_url} alt="" className="w-6 h-6 rounded-full shrink-0" />
+                        <img src={avatarDimensionado(m.avatar_url, 24)} alt="" className="w-6 h-6 rounded-full shrink-0" />
                       ) : (
                         <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: m.cor_avatar }}>
                           {m.nome.charAt(0).toUpperCase()}

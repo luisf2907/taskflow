@@ -1,5 +1,7 @@
 "use client";
 
+import { avatarDimensionado } from "@/lib/avatar-url";
+
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -1156,7 +1158,7 @@ export default function PaginaWorkspace() {
                           {/* Avatar */}
                           {u.perfis?.avatar_url ? (
                             <img
-                              src={u.perfis.avatar_url}
+                              src={avatarDimensionado(u.perfis.avatar_url, 32)}
                               alt={u.perfis.nome || ""}
                               className="w-8 h-8 rounded-full shrink-0"
                             />
@@ -1452,7 +1454,7 @@ export default function PaginaWorkspace() {
                   {wsUsuarios.slice(0, 4).map((u) => (
                     <div key={u.id} className="flex items-center gap-2.5 min-w-0">
                       {u.perfis?.avatar_url ? (
-                        <img src={u.perfis.avatar_url} alt={u.perfis.nome || ""} className="w-8 h-8 rounded-full shrink-0" />
+                        <img src={avatarDimensionado(u.perfis.avatar_url, 32)} alt={u.perfis.nome || ""} className="w-8 h-8 rounded-full shrink-0" />
                       ) : (
                         <div className="w-8 h-8 rounded-[var(--tf-radius-md)] flex items-center justify-center text-[11px] font-black shrink-0" style={{ background: "var(--tf-accent)", color: "white" }}>
                           {(u.perfis?.nome || u.perfis?.email || "?").charAt(0).toUpperCase()}

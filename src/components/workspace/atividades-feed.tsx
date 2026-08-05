@@ -1,5 +1,7 @@
 "use client";
 
+import { avatarDimensionado } from "@/lib/avatar-url";
+
 import { useAtividadesWorkspace } from "@/hooks/use-atividades";
 import { useColunas } from "@/hooks/use-colunas";
 import { useQuadros } from "@/hooks/use-quadros";
@@ -118,7 +120,7 @@ function AvatarAtividade({ nome, avatarUrl }: { nome: string | null; avatarUrl: 
     >
       {showImg ? (
         <img
-          src={avatarUrl}
+          src={avatarDimensionado(avatarUrl, 28)}
           alt=""
           className="w-full h-full object-cover"
           onError={() => setImgErro(true)}

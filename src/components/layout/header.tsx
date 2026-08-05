@@ -1,5 +1,7 @@
 "use client";
 
+import { avatarDimensionado } from "@/lib/avatar-url";
+
 import { useAuth } from "@/hooks/use-auth";
 import { useTema } from "@/hooks/use-tema";
 import { HelpCircle, LogOut, Menu, Moon, Sun, User, Search, Sparkles } from "lucide-react";
@@ -54,7 +56,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
     []
   );
 
-  const avatar = perfil?.avatar_url;
+  const avatar = avatarDimensionado(perfil?.avatar_url, 24);
   const nome = perfil?.nome ?? user?.email?.split("@")[0] ?? "";
   const iniciais = nome
     .split(" ")

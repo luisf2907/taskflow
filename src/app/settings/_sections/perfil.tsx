@@ -1,5 +1,7 @@
 "use client";
 
+import { avatarDimensionado } from "@/lib/avatar-url";
+
 import { useEffect, useState } from "react";
 import { User } from "lucide-react";
 import type { Perfil } from "@/types";
@@ -52,7 +54,7 @@ export function ProfileSection({ perfil, userEmail, onUpdate }: ProfileSectionPr
           {perfil?.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={perfil.avatar_url}
+              src={avatarDimensionado(perfil.avatar_url, 56)}
               alt=""
               className="w-14 h-14 shrink-0"
               style={{ borderRadius: "var(--tf-radius-sm)" }}

@@ -1,5 +1,7 @@
 "use client";
 
+import { avatarDimensionado } from "@/lib/avatar-url";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -596,7 +598,7 @@ function SpeakerBlock({
         {perfil?.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={perfil.avatar_url}
+            src={avatarDimensionado(perfil.avatar_url, 36)}
             alt=""
             className="w-9 h-9 rounded-full"
           />
