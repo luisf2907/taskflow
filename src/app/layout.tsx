@@ -45,6 +45,27 @@ function getSiteUrl() {
   if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
   return `https://${raw}`;
 }
+
+/**
+ * Origem do Supabase pra `preconnect`.
+ *
+ * O Lighthouse em producao foi literal: "nenhuma origem foi pre-conectada".
+ * Hoje o browser so inicia DNS + TCP + TLS ate o Supabase DEPOIS de baixar e
+ * hidratar o JS, e sao ~8 requests pra la (etiquetas, membros, perfis,
+ * notificacoes, views salvas, quadros, workspaces...). O preconnect sobrepoe
+ * esse handshake ao download do JS.
+ *
+ * Deriva da env em vez de hardcoded: em self-hosted o host e outro.
+ */
+function getSupabaseOrigin(): string | null {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").origin;
+  } catch {
+    return null;
+  }
+}
+
+const supabaseOrigin = getSupabaseOrigin();
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
@@ -106,6 +127,14 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {/* Handshake com o Supabase começa junto com o download do JS, em vez
+            de só depois da hidratação. Ver getSupabaseOrigin acima. */}
+        {supabaseOrigin && (
+          <>
+            <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={supabaseOrigin} />
+          </>
+        )}
         {/* theme-init inline — roda antes da hidratação pra aplicar dark mode
             e palette customizada (evita FOUC). */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
