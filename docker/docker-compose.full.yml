@@ -266,6 +266,10 @@ services:
         NEXT_PUBLIC_GITHUB_OAUTH: ${NEXT_PUBLIC_GITHUB_OAUTH:-false}
         NEXT_PUBLIC_OBS_DRIVER: ${OBS_DRIVER:-glitchtip}
         NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+        # features.ts:42 le process.env.NEXT_PUBLIC_AI_ENABLED no client, e o
+        # Next inlina isso no bundle em tempo de build. Sem passar como arg,
+        # a flag ficava sempre falsa no navegador e a UI de IA nunca aparecia.
+        NEXT_PUBLIC_AI_ENABLED: ${NEXT_PUBLIC_AI_ENABLED:-false}
     container_name: taskflow-app
     restart: unless-stopped
     depends_on:
@@ -309,6 +313,11 @@ services:
       LLM_BASE_URL: ${LLM_BASE_URL:-}
       LLM_MODEL: ${LLM_MODEL:-}
       LLM_API_KEY: ${LLM_API_KEY:-}
+      # As rotas de IA leem GEMINI_API_KEY direto (src/app/api/ai/*/route.ts).
+      # Sem esta linha a chave nunca chegava ao container e toda chamada de IA
+      # respondia "IA nao configurada", independente do LLM_DRIVER.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      NEXT_PUBLIC_AI_ENABLED: ${NEXT_PUBLIC_AI_ENABLED:-false}
       EMAIL_DRIVER: ${EMAIL_DRIVER:-smtp}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SMTP_HOST: ${SMTP_HOST:-}
