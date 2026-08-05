@@ -187,6 +187,29 @@ services:
   # GlitchTip — Error tracking (Sentry-compat, open source)
   # Dashboard: http://localhost:8800
   # ─────────────────────────────────────────────────────────────────────
+  # One-shot: cria o schema do GlitchTip antes de web e worker subirem.
+  #
+  # A imagem do GlitchTip NAO migra sozinha — o comando padrao apenas serve,
+  # e o run-celery-with-beat.sh apenas consome a fila. O compose oficial do
+  # projeto tem um servico separado pra isso, e ele faltava aqui.
+  #
+  # Sem ele, o worker dispara as tarefas agendadas (dispatch_checks,
+  # cleanup_old_issues, ...) contra um database vazio e entra em loop de
+  #   ProgrammingError: relation "uptime_monitor" does not exist
+  # varias vezes por segundo, indefinidamente — enchendo o log e mascarando
+  # erros reais dos outros containers.
+  glitchtip-migrate:
+    image: glitchtip/glitchtip:latest
+    container_name: taskflow-glitchtip-migrate
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/glitchtip
+      SECRET_KEY: ${GLITCHTIP_SECRET_KEY:-changeme-glitchtip-secret}
+    command: ./bin/run-migrate.sh
+
   glitchtip:
     image: glitchtip/glitchtip:latest
     container_name: taskflow-glitchtip
@@ -196,6 +219,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      glitchtip-migrate:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/glitchtip
       SECRET_KEY: ${GLITCHTIP_SECRET_KEY:-changeme-glitchtip-secret}
@@ -218,6 +243,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      glitchtip-migrate:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/glitchtip
       SECRET_KEY: ${GLITCHTIP_SECRET_KEY:-changeme-glitchtip-secret}
