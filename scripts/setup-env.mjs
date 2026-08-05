@@ -33,7 +33,7 @@ const targetPath = resolve(repoRoot, ".env.local");
 // ───── Validacoes ─────
 if (!existsSync(templatePath)) {
   console.error(`ERRO: template ${templatePath} nao existe.`);
-  console.error(`Perfis disponiveis: solo (team/full em breve)`);
+  console.error(`Perfis disponiveis: solo, team, full`);
   process.exit(1);
 }
 
@@ -106,6 +106,25 @@ writeFileSync(targetPath, header + output, "utf8");
 console.log(`OK  Criado ${targetPath}`);
 console.log(`    Perfil: ${profile}`);
 console.log(`    Revise valores de AUTH_MODE, STORAGE_DRIVER, etc antes de subir o stack.`);
+
+// O POSTGRES_PASSWORD so e aplicado quando o Postgres inicializa um data
+// directory VAZIO. Um volume que ja existe mantem a senha antiga, e todo
+// servico que conecta por URL (gotrue, postgrest, glitchtip) passa a falhar
+// com "password authentication failed for user postgres" — erro que nao
+// aponta para a causa. Com --force isso e quase certo, porque significa que
+// havia um .env.local antes.
+if (force) {
+  console.log(``);
+  console.log(`    ATENCAO: os secrets foram REGENERADOS.`);
+  console.log(`    Um volume de Postgres existente ainda guarda a senha ANTIGA —`);
+  console.log(`    POSTGRES_PASSWORD so vale na primeira inicializacao do volume.`);
+  console.log(`    Sem apagar o volume voce vera:`);
+  console.log(`      FATAL: password authentication failed for user "postgres"`);
+  console.log(``);
+  console.log(`    Apague antes de subir (DESTROI os dados locais):`);
+  console.log(`      docker compose -f docker/docker-compose.${profile}.yml --env-file .env.local down -v`);
+}
+
 console.log(``);
 console.log(`    Proximo passo:`);
 console.log(`      docker compose -f docker/docker-compose.${profile}.yml --env-file .env.local up -d`);
