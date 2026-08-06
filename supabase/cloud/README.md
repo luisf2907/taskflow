@@ -19,6 +19,8 @@ supabase/cloud/
 ├── 04-storage-policies.sql                  # RLS em storage.objects (todos os buckets)
 ├── 05-migration-045-anexos-policies.sql     # Fix segurança bucket anexos
 ├── 06-migration-046-must-change-password.sql # Coluna must_change_password em perfis
+├── 07-trigger-auth-perfis.sql               # Trigger que cria perfis a partir de auth.users
+├── 08-migrations-047-055.sql                # Views salvas, busca, epicos, campos, grafo, RPC do board
 └── README.md                                # Este guia
 ```
 
@@ -32,7 +34,15 @@ supabase/cloud/
 | 4 | `04-storage-policies.sql` | SQL Editor |
 | 5 | `05-migration-045-*.sql` | SQL Editor |
 | 6 | `06-migration-046-*.sql` | SQL Editor |
-| 7 | Habilitar Realtime | Dashboard → Database → Replication |
+| 7 | `07-trigger-auth-perfis.sql` | SQL Editor |
+| 8 | **`08-migrations-047-055.sql`** | SQL Editor |
+| 9 | Habilitar Realtime | Dashboard → Database → Replication |
+
+> **O passo 8 não é opcional.** O `02-schema.sql` foi extraído do
+> `bootstrap.sql`, que é um dump parado na migration **046**. Sem o
+> `08`, o app sobe sem views salvas, busca global, subtarefas, épicos,
+> campos customizados e grafo de dependências — e o board cai no caminho
+> lento de ~10 queries em vez de uma.
 
 ---
 
