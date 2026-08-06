@@ -7,7 +7,7 @@ Guia para subir o TaskFlow em produção. Target recomendado: **Vercel** (zero-c
 - Conta Vercel com o repositório conectado.
 - Projeto Supabase de produção criado e com as migrations aplicadas (`supabase/migrations/`).
 - Conta Upstash com Redis REST criado (plano free serve para começar).
-- App GitHub OAuth criada com callback `https://<dominio-prod>/auth/callback`.
+- App GitHub OAuth criada com callback `https://<supabase>/auth/v1/callback` (o do SUPABASE, nao o do app).
 - Conta Sentry com projeto Next.js criado (opcional mas recomendado).
 - Conta Resend com domínio verificado (se for usar email).
 - Chave da API Gemini (se for usar features de IA).
@@ -54,7 +54,11 @@ Todas são configuradas no Vercel em **Settings → Environment Variables** (esc
 ## Configuração do GitHub OAuth
 
 1. GitHub → Settings → Developer settings → OAuth Apps → New OAuth App.
-2. **Authorization callback URL**: `https://<dominio-prod>/auth/callback`.
+2. **Authorization callback URL**: `https://<supabase>/auth/v1/callback` — o dominio do SUPABASE, nao o do app.
+   Quem faz o handshake com o GitHub e o GoTrue; so depois ele redireciona
+   para o `/auth/callback` do app, que ja vai no `redirectTo` da chamada em
+   `login/page.tsx`. Registrar o dominio do app aqui faz o GitHub devolver
+   o code para quem nao sabe troca-lo por sessao.
 3. Copiar Client ID e Secret para as env vars no Supabase em **Authentication → Providers → GitHub** (não no Vercel — o Supabase que faz o handshake).
 4. Scopes mínimos: `repo`, `read:user`.
 
