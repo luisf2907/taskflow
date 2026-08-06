@@ -39,6 +39,12 @@ import {
 
 const DEFAULTS = {
   composeFile: "docker/docker-compose.solo.yml",
+  // Usuario e banco eram fixos aqui. Ficaram configuraveis para o comando
+  // servir tambem instalacoes do Supabase oficial, onde o banco chama
+  // "postgres" e o superusuario e "supabase_admin" — o "postgres" de la
+  // NAO e superusuario e nao consegue dumpar tudo.
+  dbUser: "postgres",
+  dbName: "taskflow",
   postgresContainer: "taskflow-postgres",
   storageVolume: "taskflow-storage-data",
   alpineImage: "alpine:3.19",
@@ -55,6 +61,8 @@ export async function backup(argv) {
   const composeFile = args["compose-file"] ?? DEFAULTS.composeFile;
   const postgresContainer = args["postgres-container"] ?? DEFAULTS.postgresContainer;
   const storageVolume = args["storage-volume"] ?? DEFAULTS.storageVolume;
+  const dbUser = args["db-user"] ?? DEFAULTS.dbUser;
+  const dbName = args["db-name"] ?? DEFAULTS.dbName;
 
   const dbOnly = args["db-only"] === true;
   const storageOnly = args["storage-only"] === true;
@@ -125,6 +133,8 @@ export async function backup(argv) {
     const dbFile = path.join(outdir, "database.sql.gz");
     await dumpDatabase({
       postgresContainer,
+      dbUser,
+      dbName,
       outFile: dbFile,
       password: process.env.POSTGRES_PASSWORD,
     });
@@ -175,14 +185,14 @@ export async function backup(argv) {
 // Dump o DB via `docker exec -i <container> pg_dump`, comprime em
 // stream pro arquivo final. --clean --if-exists garante que o SQL ja
 // traz `DROP ... IF EXISTS` pra cada objeto, simplificando o restore.
-async function dumpDatabase({ postgresContainer, outFile, password }) {
+async function dumpDatabase({ postgresContainer, dbUser, dbName, outFile, password }) {
   const env = {};
   if (password) env.PGPASSWORD = password;
 
   const proc = dockerExec(postgresContainer, [
     "pg_dump",
-    "-U", "postgres",
-    "-d", "taskflow",
+    "-U", dbUser,
+    "-d", dbName,
     "--clean",
     "--if-exists",
     "--no-owner",
@@ -261,6 +271,8 @@ function showHelp() {
   console.log("    --storage-only              Pula DB");
   console.log("    --compose-file <path>       default: docker/docker-compose.solo.yml");
   console.log("    --postgres-container <name> default: taskflow-postgres");
+  console.log("    --db-user <user>            default: postgres (supabase_admin no Supabase oficial)");
+  console.log("    --db-name <db>              default: taskflow (postgres no Supabase oficial)");
   console.log("    --storage-volume <name>     default: taskflow-storage-data");
   console.log();
   console.log("  Saida: <outdir>/{database.sql.gz, storage.tar.gz, manifest.json}");
