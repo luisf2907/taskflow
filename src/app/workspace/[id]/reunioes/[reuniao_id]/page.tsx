@@ -28,6 +28,7 @@ import { useWorkspaces } from "@/hooks/use-workspaces";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
 import type { Perfil, Reuniao, ReuniaoFala, ReuniaoStatus } from "@/types";
+import { propsBarraDeAudio } from "@/lib/a11y";
 
 const POLL_INTERVAL_MS = 3_000;
 const AUDIO_SIGNED_TTL_SECONDS = 60 * 60; // 1 hora
@@ -458,9 +459,29 @@ export default function ReuniaoDetailPage() {
                   </span>
 
                   {/* Seek bar */}
+                  {/*
+                    role="slider", tabIndex, aria-value* e onKeyDown vem do spread de
+                    propsBarraDeAudio. O ESLint nao enxerga atraves de {...spread}, entao
+                    marca como se nao houvesse teclado — a mesma cegueira do {...listeners}
+                    do dnd-kit em quadro/cartao.tsx.
+                  
+                    A barra E operavel: setas movem 5s, PageUp/Down 30s, Home e End vao
+                    para as pontas, e o aria-valuetext anuncia "1 minuto e 30 segundos de
+                    4 minutos" em vez de um numero solto.
+                  */}
+                  {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                   <div
                     ref={seekBarRef}
                     onClick={handleSeek}
+                    {...propsBarraDeAudio({
+                      rotulo: "Progresso da gravação",
+                      atualMs: currentMs,
+                      totalMs: duration,
+                      irPara: (ms) => {
+                        const audio = audioRef.current;
+                        if (audio) audio.currentTime = ms / 1000;
+                      },
+                    })}
                     className="flex-1 h-1.5 rounded-full cursor-pointer relative group"
                     style={{ background: "var(--tf-border)" }}
                   >

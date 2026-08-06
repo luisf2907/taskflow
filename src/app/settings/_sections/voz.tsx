@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { Perfil } from "@/types";
+import { propsBarraDeAudio } from "@/lib/a11y";
 
 interface VoiceSectionProps {
   perfil: Perfil | null;
@@ -698,9 +699,29 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                       >
                         {fmtTime(previewCurrentMs)}
                       </span>
+                      {/*
+                        role="slider", tabIndex, aria-value* e onKeyDown vem do spread de
+                        propsBarraDeAudio. O ESLint nao enxerga atraves de {...spread}, entao
+                        marca como se nao houvesse teclado — a mesma cegueira do {...listeners}
+                        do dnd-kit em quadro/cartao.tsx.
+                      
+                        A barra E operavel: setas movem 5s, PageUp/Down 30s, Home e End vao
+                        para as pontas, e o aria-valuetext anuncia "1 minuto e 30 segundos de
+                        4 minutos" em vez de um numero solto.
+                      */}
+                      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                       <div
                         ref={previewSeekRef}
                         onClick={handlePreviewSeek}
+                        {...propsBarraDeAudio({
+                          rotulo: "Progresso da amostra de voz",
+                          atualMs: previewCurrentMs,
+                          totalMs: previewDuration,
+                          irPara: (ms) => {
+                            const audio = previewAudioRef.current;
+                            if (audio) audio.currentTime = ms / 1000;
+                          },
+                        })}
                         className="flex-1 h-1.5 rounded-full cursor-pointer relative group"
                         style={{ background: "var(--tf-border)" }}
                       >

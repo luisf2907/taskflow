@@ -2,6 +2,7 @@
 
 import { Pause, Play, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { propsBarraDeAudio } from "@/lib/a11y";
 
 interface AudioPlayerProps {
   src: string;
@@ -138,9 +139,29 @@ export function AudioPlayer({ src, label, accentColor = "var(--tf-accent)" }: Au
         </span>
 
         {/* Seek bar */}
+        {/*
+          role="slider", tabIndex, aria-value* e onKeyDown vem do spread de
+          propsBarraDeAudio. O ESLint nao enxerga atraves de {...spread}, entao
+          marca como se nao houvesse teclado — a mesma cegueira do {...listeners}
+          do dnd-kit em quadro/cartao.tsx.
+        
+          A barra E operavel: setas movem 5s, PageUp/Down 30s, Home e End vao
+          para as pontas, e o aria-valuetext anuncia "1 minuto e 30 segundos de
+          4 minutos" em vez de um numero solto.
+        */}
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div
           ref={seekRef}
           onClick={seek}
+          {...propsBarraDeAudio({
+            rotulo: "Progresso do áudio",
+            atualMs: currentMs,
+            totalMs: durationMs,
+            irPara: (ms) => {
+              const audio = audioRef.current;
+              if (audio) audio.currentTime = ms / 1000;
+            },
+          })}
           className="flex-1 h-[3px] cursor-pointer relative group"
           style={{
             background: "var(--tf-border)",
