@@ -437,9 +437,10 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
 
                   {/* Merge strategy */}
                   <div>
-                    <label className="text-[11px] font-medium block mb-1" style={{ color: "var(--tf-text-tertiary)" }}>Tipo de merge</label>
+                    <label htmlFor="tipo-de-merge" className="text-[11px] font-medium block mb-1" style={{ color: "var(--tf-text-tertiary)" }}>Tipo de merge</label>
                     <div className="relative">
                       <select
+                        id="tipo-de-merge"
                         value={mergeMethod}
                         onChange={(e) => setMergeMethod(e.target.value as "merge" | "squash" | "rebase")}
                         className="w-full appearance-none text-xs px-2.5 py-1.5 pr-7 rounded-[var(--tf-radius-xs)] cursor-pointer"
@@ -456,8 +457,9 @@ export function PRDetalhe({ owner, nome, prNumber, repoId, onVoltar }: PRDetalhe
                   {/* Commit message */}
                   {mergeMethod !== "rebase" && (
                     <div>
-                      <label className="text-[11px] font-medium block mb-1" style={{ color: "var(--tf-text-tertiary)" }}>Mensagem do commit (opcional)</label>
+                      <label htmlFor="mensagem-do-commit-opcional" className="text-[11px] font-medium block mb-1" style={{ color: "var(--tf-text-tertiary)" }}>Mensagem do commit (opcional)</label>
                       <input
+                        id="mensagem-do-commit-opcional"
                         value={commitMsg}
                         onChange={(e) => setCommitMsg(e.target.value)}
                         placeholder={`${mergeLabels[mergeMethod]}: PR #${prNumber}`}

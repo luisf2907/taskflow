@@ -79,6 +79,7 @@ import {
   BacklogPuroDropZone,
   SprintDropZone,
 } from "@/components/workspace/backlog/drop-zones";
+import { nomeDaCor } from "@/lib/cores";
 
 // Lazy load: detalhe do cartao
 const DetalheCartao = dynamic(
@@ -959,12 +960,12 @@ export default function PaginaWorkspace() {
                   {editandoConfig ? (
                     <div className="space-y-3">
                       <div>
-                        <label className="text-[12px] font-semibold mb-1 block" style={{ color: "var(--tf-text-secondary)" }}>Nome</label>
-                        <input value={wsNome} onChange={(e) => setWsNome(e.target.value)} className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none" style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-accent)", color: "var(--tf-text)" }} />
+                        <label htmlFor="nome" className="text-[12px] font-semibold mb-1 block" style={{ color: "var(--tf-text-secondary)" }}>Nome</label>
+                        <input id="nome" value={wsNome} onChange={(e) => setWsNome(e.target.value)} className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none" style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-accent)", color: "var(--tf-text)" }} />
                       </div>
                       <div>
-                        <label className="text-[12px] font-semibold mb-1 block" style={{ color: "var(--tf-text-secondary)" }}>Descrição</label>
-                        <input value={wsDescricao} onChange={(e) => setWsDescricao(e.target.value)} placeholder="Descrição do workspace" className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none" style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} />
+                        <label htmlFor="descricao" className="text-[12px] font-semibold mb-1 block" style={{ color: "var(--tf-text-secondary)" }}>Descrição</label>
+                        <input id="descricao" value={wsDescricao} onChange={(e) => setWsDescricao(e.target.value)} placeholder="Descrição do workspace" className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none" style={{ background: "var(--tf-bg-secondary)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} />
                       </div>
                       <div className="flex gap-2">
                         <button onClick={salvarConfig} className="px-4 py-1.5 text-sm font-semibold text-white rounded-[var(--tf-radius-xs)]" style={{ background: "var(--tf-accent)" }}>Salvar</button>
@@ -1576,31 +1577,31 @@ export default function PaginaWorkspace() {
           </div>
 
           <div>
-            <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Nome da sprint</label>
-            <input value={sprintNome} onChange={(e) => setSprintNome(e.target.value)} placeholder="Ex: Sprint 14" className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")} onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")} autoFocus />
+            <label htmlFor="nome-da-sprint" className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Nome da sprint</label>
+            <input id="nome-da-sprint" value={sprintNome} onChange={(e) => setSprintNome(e.target.value)} placeholder="Ex: Sprint 14" className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")} onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")} autoFocus />
           </div>
 
           <div>
-            <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Meta / Objetivo (opcional)</label>
-            <input value={sprintMeta} onChange={(e) => setSprintMeta(e.target.value)} placeholder="O que queremos alcançar nessa sprint?" className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")} onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")} />
+            <label htmlFor="meta-objetivo-opcional" className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Meta / Objetivo (opcional)</label>
+            <input id="meta-objetivo-opcional" value={sprintMeta} onChange={(e) => setSprintMeta(e.target.value)} placeholder="O que queremos alcançar nessa sprint?" className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} onFocus={(e) => (e.currentTarget.style.borderColor = "var(--tf-accent)")} onBlur={(e) => (e.currentTarget.style.borderColor = "var(--tf-border)")} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Início</label>
-              <input type="date" value={sprintInicio} onChange={(e) => setSprintInicio(e.target.value)} className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} />
+              <label htmlFor="inicio" className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Início</label>
+              <input id="inicio" type="date" value={sprintInicio} onChange={(e) => setSprintInicio(e.target.value)} className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} />
             </div>
             <div>
-              <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Fim</label>
-              <input type="date" value={sprintFim} onChange={(e) => setSprintFim(e.target.value)} className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} />
+              <label htmlFor="fim" className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Fim</label>
+              <input id="fim" type="date" value={sprintFim} onChange={(e) => setSprintFim(e.target.value)} className="w-full px-3 py-2 text-sm rounded-[var(--tf-radius-xs)] outline-none transition-smooth" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", color: "var(--tf-text)" }} />
             </div>
           </div>
 
           <div>
-            <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Cor</label>
-            <div className="flex flex-wrap gap-2">
+            <span id="lbl-cor-sprint" className="text-[12px] font-semibold mb-1.5 block" style={{ color: "var(--tf-text-secondary)" }}>Cor</span>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="lbl-cor-sprint">
               {CORES_QUADRO.map((cor) => (
-                <button key={cor} onClick={() => setSprintCor(cor)} className={`w-9 h-7 rounded-[var(--tf-radius-xs)] transition-smooth ${sprintCor === cor ? "ring-2 ring-offset-2 scale-110" : "hover:scale-105"}`} style={{ backgroundColor: cor }} />
+                <button key={cor} type="button" role="radio" aria-checked={sprintCor === cor} aria-label={nomeDaCor(cor)} onClick={() => setSprintCor(cor)} className={`w-9 h-7 rounded-[var(--tf-radius-xs)] transition-smooth ${sprintCor === cor ? "ring-2 ring-offset-2 scale-110" : "hover:scale-105"}`} style={{ backgroundColor: cor }} />
               ))}
             </div>
           </div>

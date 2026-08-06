@@ -212,6 +212,7 @@ export default function TrocarSenhaPage() {
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
                 <label
+                  htmlFor="nova-senha"
                   className="label-mono mb-1.5 block"
                   style={{ color: "var(--tf-text-tertiary)" }}
                 >
@@ -219,6 +220,7 @@ export default function TrocarSenhaPage() {
                 </label>
                 <div className="relative">
                   <input
+                    id="nova-senha"
                     type={mostrarSenha ? "text" : "password"}
                     value={senha}
                     onChange={(e) => setSenha(e.target.value)}
@@ -249,12 +251,14 @@ export default function TrocarSenhaPage() {
 
               <div>
                 <label
+                  htmlFor="confirmar-senha"
                   className="label-mono mb-1.5 block"
                   style={{ color: "var(--tf-text-tertiary)" }}
                 >
                   Confirmar senha
                 </label>
                 <input
+                  id="confirmar-senha"
                   type={mostrarSenha ? "text" : "password"}
                   value={confirmar}
                   onChange={(e) => setConfirmar(e.target.value)}

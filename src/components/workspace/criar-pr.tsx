@@ -253,7 +253,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
 
           {/* Branch de origem (head) */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>
+            <label htmlFor="branch-de-origem" className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>
               Branch de origem
             </label>
             {carregandoBranches ? (
@@ -263,6 +263,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
             ) : (
               <div className="relative">
                 <select
+                  id="branch-de-origem"
                   value={head}
                   onChange={(e) => setHead(e.target.value)}
                   className="w-full appearance-none text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border pr-8"
@@ -284,11 +285,12 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
 
           {/* Branch destino (base) */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>
+            <label htmlFor="branch-destino" className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>
               Branch destino
             </label>
             <div className="relative">
               <select
+                id="branch-destino"
                 value={base}
                 onChange={(e) => setBase(e.target.value)}
                 className="w-full appearance-none text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border pr-8"
@@ -304,10 +306,11 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
 
           {/* Título */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>
+            <label htmlFor="titulo-do-pr" className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>
               Título do PR
             </label>
             <input
+              id="titulo-do-pr"
               type="text"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
@@ -319,10 +322,11 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
 
           {/* Descrição */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>
+            <label htmlFor="descricao-opcional" className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>
               Descrição <span style={{ color: "var(--tf-text-tertiary)" }}>(opcional)</span>
             </label>
             <textarea
+              id="descricao-opcional"
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
               placeholder="Descreva as mudanças..."
@@ -333,11 +337,11 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
           </div>
 
           {/* ─── Card vinculado (opcional) ─── */}
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>
+          <div role="group" aria-labelledby="lbl-vincular-card">
+            <span id="lbl-vincular-card" className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>
               <LinkIcon size={12} className="inline mr-1" />
               Vincular a um card <span style={{ color: "var(--tf-text-tertiary)" }}>(opcional — será movido para Review)</span>
-            </label>
+            </span>
             {cardEscolhido ? (
               <div className="flex items-center gap-2 px-3 py-2 rounded-[var(--tf-radius-xs)] border" style={{ background: "var(--tf-bg)", borderColor: "var(--tf-accent)" }}>
                 <div className="flex-1 min-w-0">
@@ -384,11 +388,11 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
 
           {/* ─── Reviewers (opcional) ─── */}
           {membrosComGithub.length > 0 && (
-            <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>
+            <div role="group" aria-labelledby="lbl-reviewers">
+              <span id="lbl-reviewers" className="block text-xs font-medium mb-1.5" style={{ color: "var(--tf-text-secondary)" }}>
                 <Users size={12} className="inline mr-1" />
                 Reviewers <span style={{ color: "var(--tf-text-tertiary)" }}>(opcional)</span>
-              </label>
+              </span>
 
               {/* Selected reviewers */}
               {reviewersSelecionados.length > 0 && (

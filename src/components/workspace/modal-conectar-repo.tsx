@@ -248,12 +248,14 @@ export function ModalConectarRepo({
           <>
             <div>
               <label
+                htmlFor="url-ou-owner-repo"
                 className="text-[12px] font-semibold mb-1.5 block"
                 style={{ color: "var(--tf-text-secondary)" }}
               >
                 URL ou owner/repo
               </label>
               <input
+                id="url-ou-owner-repo"
                 value={repoInput}
                 onChange={(e) => setRepoInput(e.target.value)}
                 placeholder="https://github.com/owner/repo ou owner/repo"

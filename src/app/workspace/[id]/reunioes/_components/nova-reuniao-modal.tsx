@@ -304,12 +304,14 @@ export function NovaReuniaoModal({
         {/* Título */}
         <div>
           <label
+            htmlFor="titulo"
             className="label-mono mb-1.5 block"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
             Título *
           </label>
           <input
+            id="titulo"
             value={titulo}
             onChange={(e) => recording.setTitulo(e.target.value)}
             placeholder="Ex: Daily 2026-04-09"
@@ -326,12 +328,14 @@ export function NovaReuniaoModal({
         {/* Descrição */}
         <div>
           <label
+            htmlFor="descricao-opcional"
             className="label-mono mb-1.5 block"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
             Descrição (opcional)
           </label>
           <input
+            id="descricao-opcional"
             value={descricao}
             onChange={(e) => recording.setDescricao(e.target.value)}
             placeholder="Sprint planning, review, etc"

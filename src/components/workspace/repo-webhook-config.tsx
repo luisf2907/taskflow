@@ -153,6 +153,7 @@ export function RepoWebhookConfig({
       {/* Webhook URL */}
       <div>
         <label
+          htmlFor="payload-url-cole-no-github"
           className="text-[11px] font-medium mb-1 flex items-center gap-1.5"
           style={{ color: "var(--tf-text-secondary)" }}
         >
@@ -161,6 +162,7 @@ export function RepoWebhookConfig({
         </label>
         <div className="flex gap-1.5">
           <input
+            id="payload-url-cole-no-github"
             type="text"
             value={webhookUrl}
             readOnly
@@ -188,6 +190,7 @@ export function RepoWebhookConfig({
       {/* Secret */}
       <div>
         <label
+          htmlFor="secret"
           className="text-[11px] font-medium mb-1 flex items-center gap-1.5"
           style={{ color: "var(--tf-text-secondary)" }}
         >
@@ -196,6 +199,7 @@ export function RepoWebhookConfig({
         </label>
         <div className="flex gap-1.5">
           <input
+            id="secret"
             type="text"
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
@@ -238,10 +242,11 @@ export function RepoWebhookConfig({
       {/* Column mapping */}
       <div className="grid grid-cols-3 gap-2">
         <div>
-          <label className="text-[11px] font-medium mb-1 block" style={{ color: "var(--tf-text-secondary)" }}>
+          <label htmlFor="coluna-review" className="text-[11px] font-medium mb-1 block" style={{ color: "var(--tf-text-secondary)" }}>
             Coluna Review
           </label>
           <select
+            id="coluna-review"
             value={reviewId}
             onChange={(e) => setReviewId(e.target.value)}
             className="w-full px-2.5 py-2 rounded-[var(--tf-radius-xs)] text-xs"
@@ -258,10 +263,11 @@ export function RepoWebhookConfig({
           </select>
         </div>
         <div>
-          <label className="text-[11px] font-medium mb-1 block" style={{ color: "var(--tf-text-secondary)" }}>
+          <label htmlFor="coluna-done" className="text-[11px] font-medium mb-1 block" style={{ color: "var(--tf-text-secondary)" }}>
             Coluna Done
           </label>
           <select
+            id="coluna-done"
             value={doneId}
             onChange={(e) => setDoneId(e.target.value)}
             className="w-full px-2.5 py-2 rounded-[var(--tf-radius-xs)] text-xs"
@@ -278,10 +284,11 @@ export function RepoWebhookConfig({
           </select>
         </div>
         <div>
-          <label className="text-[11px] font-medium mb-1 block" style={{ color: "var(--tf-text-secondary)" }}>
+          <label htmlFor="coluna-doing" className="text-[11px] font-medium mb-1 block" style={{ color: "var(--tf-text-secondary)" }}>
             Coluna Doing
           </label>
           <select
+            id="coluna-doing"
             value={doingId}
             onChange={(e) => setDoingId(e.target.value)}
             className="w-full px-2.5 py-2 rounded-[var(--tf-radius-xs)] text-xs"

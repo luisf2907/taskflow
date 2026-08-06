@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ChevronDown, Folder } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import type { Workspace } from "@/types";
+import { nomeDaCor } from "@/lib/cores";
 
 const CORES_QUADRO = [
   "#C4841D",
@@ -109,12 +110,14 @@ export function ModalCriarQuadro({
 
         <div>
           <label
+            htmlFor="titulo"
             className="text-[13px] font-bold mb-2 block"
             style={{ color: "var(--tf-text-secondary)" }}
           >
             Título
           </label>
           <input
+            id="titulo"
             value={novoNome}
             onChange={(e) => setNovoNome(e.target.value)}
             onKeyDown={(e) => {
@@ -135,14 +138,15 @@ export function ModalCriarQuadro({
         </div>
 
         <div>
-          <label
+          <span
+            id="lbl-workspace"
             className="block text-xs font-medium mb-1.5"
             style={{ color: "var(--tf-text-secondary)" }}
           >
             Workspace
-          </label>
+          </span>
           {workspaces.length > 0 ? (
-            <div className="relative">
+            <div className="relative" role="group" aria-labelledby="lbl-workspace">
               <button
                 onClick={() => setMostrarWorkspaces(!mostrarWorkspaces)}
                 className="w-full text-left text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border flex items-center gap-2"
@@ -229,12 +233,14 @@ export function ModalCriarQuadro({
           <>
             <div>
               <label
+                htmlFor="meta-objetivo"
                 className="text-[13px] font-bold mb-2 block"
                 style={{ color: "var(--tf-text-secondary)" }}
               >
                 Meta / Objetivo
               </label>
               <input
+                id="meta-objetivo"
                 value={novoMeta}
                 onChange={(e) => setNovoMeta(e.target.value)}
                 placeholder="O que queremos alcançar nessa sprint?"
@@ -256,12 +262,14 @@ export function ModalCriarQuadro({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label
+                  htmlFor="inicio"
                   className="text-[13px] font-bold mb-2 block"
                   style={{ color: "var(--tf-text-secondary)" }}
                 >
                   Início
                 </label>
                 <input
+                  id="inicio"
                   type="date"
                   value={novoDataInicio}
                   onChange={(e) => setNovoDataInicio(e.target.value)}
@@ -281,12 +289,14 @@ export function ModalCriarQuadro({
               </div>
               <div>
                 <label
+                  htmlFor="fim"
                   className="text-[13px] font-bold mb-2 block"
                   style={{ color: "var(--tf-text-secondary)" }}
                 >
                   Fim
                 </label>
                 <input
+                  id="fim"
                   type="date"
                   value={novoDataFim}
                   onChange={(e) => setNovoDataFim(e.target.value)}
@@ -309,16 +319,25 @@ export function ModalCriarQuadro({
         )}
 
         <div>
-          <label
+          <span
+            id="lbl-cor-quadro"
             className="text-[13px] font-bold mb-2 block"
             style={{ color: "var(--tf-text-secondary)" }}
           >
             Cor
-          </label>
-          <div className="flex flex-wrap gap-2.5">
+          </span>
+          <div
+            className="flex flex-wrap gap-2.5"
+            role="radiogroup"
+            aria-labelledby="lbl-cor-quadro"
+          >
             {CORES_QUADRO.map((cor) => (
               <button
                 key={cor}
+                type="button"
+                role="radio"
+                aria-checked={novaCor === cor}
+                aria-label={nomeDaCor(cor)}
                 onClick={() => setNovaCor(cor)}
                 className={`w-10 h-10 rounded-[var(--tf-radius-md)] transition-all ${
                   novaCor === cor ? "ring-2 ring-offset-2 scale-110" : "hover:scale-110"

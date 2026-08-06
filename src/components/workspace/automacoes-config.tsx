@@ -222,8 +222,9 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
 
           {/* Nome */}
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--tf-text-tertiary)" }}>Nome</label>
+            <label htmlFor="nome" className="text-[11px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--tf-text-tertiary)" }}>Nome</label>
             <input
+              id="nome"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Ex: Auto-assign QA"
@@ -237,8 +238,9 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
 
           {/* Trigger */}
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--tf-text-tertiary)" }}>Quando</label>
+            <label htmlFor="quando" className="text-[11px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--tf-text-tertiary)" }}>Quando</label>
             <select
+              id="quando"
               value={triggerTipo}
               onChange={(e) => setTriggerTipo(e.target.value as TriggerTipo)}
               className="w-full px-3 py-2.5 text-[13px] rounded-[var(--tf-radius-xs)] outline-none cursor-pointer"
@@ -266,8 +268,9 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
 
           {/* Ação */}
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--tf-text-tertiary)" }}>Então</label>
+            <label htmlFor="entao" className="text-[11px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "var(--tf-text-tertiary)" }}>Então</label>
             <select
+              id="entao"
               value={acaoTipo}
               onChange={(e) => setAcaoTipo(e.target.value as AcaoTipo)}
               className="w-full px-3 py-2.5 text-[13px] rounded-[var(--tf-radius-xs)] outline-none cursor-pointer"

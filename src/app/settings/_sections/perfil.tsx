@@ -79,12 +79,14 @@ export function ProfileSection({ perfil, userEmail, onUpdate }: ProfileSectionPr
               <>
                 <div>
                   <label
+                    htmlFor="nome"
                     className="label-mono mb-1 block"
                     style={{ color: "var(--tf-text-tertiary)" }}
                   >
                     Nome
                   </label>
                   <input
+                    id="nome"
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
                     className="settings-input w-full h-9 px-3 text-[0.8125rem] outline-none"
@@ -97,13 +99,15 @@ export function ProfileSection({ perfil, userEmail, onUpdate }: ProfileSectionPr
                   />
                 </div>
                 <div>
-                  <label
+                  <span
+                    id="lbl-email"
                     className="label-mono mb-1 block"
                     style={{ color: "var(--tf-text-tertiary)" }}
                   >
                     Email
-                  </label>
+                  </span>
                   <p
+                    aria-labelledby="lbl-email"
                     className="text-[0.75rem] px-3 h-9 inline-flex items-center w-full"
                     style={{
                       background: "var(--tf-surface)",

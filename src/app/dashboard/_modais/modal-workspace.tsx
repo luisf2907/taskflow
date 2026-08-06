@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Folder } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import type { Workspace } from "@/types";
+import { nomeDaCor } from "@/lib/cores";
 
 const CORES_WORKSPACE = [
   "#C4841D",
@@ -119,12 +120,14 @@ export function ModalWorkspace({
 
         <div>
           <label
+            htmlFor="nome"
             className="text-[13px] font-bold mb-2 block"
             style={{ color: "var(--tf-text-secondary)" }}
           >
             Nome
           </label>
           <input
+            id="nome"
             value={wsNome}
             onChange={(e) => setWsNome(e.target.value)}
             onKeyDown={(e) => {
@@ -151,12 +154,14 @@ export function ModalWorkspace({
 
         <div>
           <label
+            htmlFor="descricao-opcional"
             className="text-[13px] font-bold mb-2 block"
             style={{ color: "var(--tf-text-secondary)" }}
           >
             Descrição (opcional)
           </label>
           <input
+            id="descricao-opcional"
             value={wsDescricao}
             onChange={(e) => setWsDescricao(e.target.value)}
             placeholder="Ex: Projetos da equipe de marketing"
@@ -176,16 +181,25 @@ export function ModalWorkspace({
         </div>
 
         <div>
-          <label
+          <span
+            id="lbl-cor-workspace"
             className="text-[13px] font-bold mb-2 block"
             style={{ color: "var(--tf-text-secondary)" }}
           >
             Cor
-          </label>
-          <div className="flex flex-wrap gap-2.5">
+          </span>
+          <div
+            className="flex flex-wrap gap-2.5"
+            role="radiogroup"
+            aria-labelledby="lbl-cor-workspace"
+          >
             {CORES_WORKSPACE.map((cor) => (
               <button
                 key={cor}
+                type="button"
+                role="radio"
+                aria-checked={wsCor === cor}
+                aria-label={nomeDaCor(cor)}
                 onClick={() => setWsCor(cor)}
                 className={`w-10 h-10 rounded-[var(--tf-radius-md)] transition-all ${
                   wsCor === cor ? "ring-2 ring-offset-2 scale-110" : "hover:scale-110"

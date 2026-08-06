@@ -456,13 +456,14 @@ export function BoardClient({ quadroId }: { quadroId: string }) {
           <div className="space-y-4">
             {/* Status atual */}
             <div>
-              <label
+              <span
+                id="lbl-status-sprint"
                 className="label-mono mb-2 block"
                 style={{ color: "var(--tf-text-tertiary)" }}
               >
                 Status
-              </label>
-              <div className="flex gap-1">
+              </span>
+              <div className="flex gap-1" role="radiogroup" aria-labelledby="lbl-status-sprint">
                 {(["planejada", "ativa", "concluida"] as StatusSprint[]).map((s) => {
                   const ativo = quadro.status_sprint === s;
                   return (
@@ -490,12 +491,14 @@ export function BoardClient({ quadroId }: { quadroId: string }) {
             {/* Meta */}
             <div>
               <label
+                htmlFor="meta-objetivo"
                 className="label-mono mb-1.5 block"
                 style={{ color: "var(--tf-text-tertiary)" }}
               >
                 Meta / Objetivo
               </label>
               <input
+                id="meta-objetivo"
                 value={editMeta}
                 onChange={(e) => setEditMeta(e.target.value)}
                 placeholder="O que queremos alcançar nessa sprint?"
@@ -512,12 +515,14 @@ export function BoardClient({ quadroId }: { quadroId: string }) {
             <div className="grid grid-cols-2 gap-2.5">
               <div>
                 <label
+                  htmlFor="data-inicio"
                   className="label-mono mb-1.5 block"
                   style={{ color: "var(--tf-text-tertiary)" }}
                 >
                   Data início
                 </label>
                 <input
+                  id="data-inicio"
                   type="date"
                   value={editInicio}
                   onChange={(e) => setEditInicio(e.target.value)}
@@ -531,12 +536,14 @@ export function BoardClient({ quadroId }: { quadroId: string }) {
               </div>
               <div>
                 <label
+                  htmlFor="data-fim"
                   className="label-mono mb-1.5 block"
                   style={{ color: "var(--tf-text-tertiary)" }}
                 >
                   Data fim
                 </label>
                 <input
+                  id="data-fim"
                   type="date"
                   value={editFim}
                   onChange={(e) => setEditFim(e.target.value)}
