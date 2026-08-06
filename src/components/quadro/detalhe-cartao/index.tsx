@@ -358,6 +358,13 @@ export function DetalheCartao({
       aria-modal="true"
       aria-label={`Detalhe do card: ${cartao.titulo}`}
     >
+      {/*
+        Backdrop. Fecha no clique, que e o caminho do MOUSE; o equivalente de
+        teclado e o Esc, verificado presente neste componente.
+        Nao leva role nem tabIndex — poe-lo na ordem de Tab colocaria uma
+        parada antes do conteudo do proprio dialogo.
+      */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className="fixed inset-0"
         onClick={handleFechar}

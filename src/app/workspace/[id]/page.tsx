@@ -80,6 +80,7 @@ import {
   SprintDropZone,
 } from "@/components/workspace/backlog/drop-zones";
 import { nomeDaCor } from "@/lib/cores";
+import { aoAtivarPorTeclado } from "@/lib/a11y";
 
 // Lazy load: detalhe do cartao
 const DetalheCartao = dynamic(
@@ -365,6 +366,10 @@ export default function PaginaWorkspace() {
 
     return (
       <div
+        role="button"
+        tabIndex={0}
+        aria-label={`Abrir sprint ${sprint.nome}`}
+        onKeyDown={aoAtivarPorTeclado(() => router.push(`/quadro/${sprint.id}`))}
         className="group p-3.5 cursor-pointer transition-colors"
         style={{
           background: "var(--tf-surface)",
@@ -463,6 +468,12 @@ export default function PaginaWorkspace() {
             )}
           </div>
 
+          {/*
+            Existe so para o clique nao subir ao elemento clicavel do pai.
+            Nao e um controle: dar role/tabIndex criaria uma parada fantasma no
+            Tab, anunciada como botao, que nao faz nada ao ser ativada.
+          */}
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <div
             className="flex items-center gap-1 shrink-0"
             onClick={(e) => e.stopPropagation()}

@@ -62,11 +62,29 @@ export function CardEmbedPicker({
     [onSelecionar, onFechar],
   );
 
+  // Esc fecha. O clique no backdrop e o equivalente de mouse; sem isto,
+  // quem usa teclado ficava preso no modal.
+  useEffect(() => {
+    if (!aberto) return;
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onFechar();
+    };
+    document.addEventListener("keydown", aoTeclar);
+    return () => document.removeEventListener("keydown", aoTeclar);
+  }, [aberto, onFechar]);
+
   if (!aberto) return null;
 
   return (
     <>
       {/* Backdrop */}
+      {/*
+        Backdrop. Fecha no clique, que e o caminho do MOUSE; o equivalente de
+        teclado e o Esc, verificado presente neste componente.
+        Nao leva role nem tabIndex — poe-lo na ordem de Tab colocaria uma
+        parada antes do conteudo do proprio dialogo.
+      */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div className="fixed inset-0 z-50 bg-black/50" onClick={onFechar} />
 
       {/* Modal */}

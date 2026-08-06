@@ -298,6 +298,11 @@ export function GrafoDependenciasOverlay({
   );
 
   return (
+    // Backdrop. Fecha no clique, que e o caminho do MOUSE; o equivalente de
+    // teclado e o Esc, verificado presente neste componente.
+    // Nao leva role nem tabIndex — poe-lo na ordem de Tab colocaria uma
+    // parada antes do conteudo do proprio dialogo.
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <div
       className="fixed inset-0 z-[120] flex flex-col"
       style={{
@@ -309,6 +314,12 @@ export function GrafoDependenciasOverlay({
         if (e.target === e.currentTarget) onClose();
       }}
     >
+      {/*
+        Existe so para o clique nao subir ao elemento clicavel do pai.
+        Nao e um controle: dar role/tabIndex criaria uma parada fantasma no
+        Tab, anunciada como botao, que nao faz nada ao ser ativada.
+      */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className="m-3 md:m-6 flex-1 flex flex-col overflow-hidden"
         style={{

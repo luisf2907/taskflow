@@ -16,21 +16,32 @@ const eslintConfig = defineConfig([
   // conforme forem corrigidas. Assim o que foi consertado nao volta.
   //
   // Zeradas ate agora:
-  //   label-has-associated-control  (45 ocorrencias corrigidas)
+  //   label-has-associated-control    45 corrigidas
+  //   click-events-have-key-events     33 -> 0
+  //   no-static-element-interactions   31 -> 0
   //
   // Ainda abertas, a ligar quando chegarem a zero:
-  //   click-events-have-key-events (33), no-static-element-interactions (31),
-  //   no-noninteractive-element-interactions (3), media-has-caption (3),
-  //   alt-text (1), interactive-supports-focus (1),
-  //   no-noninteractive-tabindex (1)
+  //   media-has-caption (3), no-noninteractive-element-interactions (1),
+  //   no-noninteractive-tabindex (1), interactive-supports-focus (1),
+  //   alt-text (1)
   //
   // no-autofocus fica FORA de proposito. Ela proibe autoFocus, mas mover o
   // foco para o primeiro campo ao abrir um dialogo e o comportamento certo
   // — sao 30 ocorrencias, quase todas em modal, e "consertar" pioraria.
+  //
+  // As duas regras de teclado chegaram a zero com alguns eslint-disable
+  // pontuais, cada um com a razao escrita ao lado. Nao sao atalho: cobrem
+  // tres casos em que transformar o elemento em controle SERIA ERRADO —
+  // <div> de stopPropagation, backdrop (cujo equivalente e Esc) e spread
+  // que o linter nao enxerga ({...listeners} do dnd-kit,
+  // {...propsBarraDeAudio}). Ligar as regras como erro protege justamente
+  // os casos que nao tem excecao registrada.
   {
     files: ["src/**/*.{ts,tsx}"],
     rules: {
       "jsx-a11y/label-has-associated-control": "error",
+      "jsx-a11y/click-events-have-key-events": "error",
+      "jsx-a11y/no-static-element-interactions": "error",
     },
   },
   // Override default ignores of eslint-config-next.

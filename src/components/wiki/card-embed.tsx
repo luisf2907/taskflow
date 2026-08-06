@@ -16,6 +16,7 @@ import {
   Tag,
   Loader2,
 } from "lucide-react";
+import { aoAtivarPorTeclado } from "@/lib/a11y";
 
 // ==========================================
 // Tipos locais para o popup
@@ -132,6 +133,13 @@ function CardPopup({
   return (
     <>
       {/* Backdrop */}
+      {/*
+        Backdrop. Fecha no clique, que e o caminho do MOUSE; o equivalente de
+        teclado e o Esc, verificado presente neste componente.
+        Nao leva role nem tabIndex — poe-lo na ordem de Tab colocaria uma
+        parada antes do conteudo do proprio dialogo.
+      */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className="fixed inset-0 z-50 bg-black/50"
         onClick={onFechar}
@@ -416,6 +424,10 @@ function CardEmbedView(props: ReactNodeViewProps) {
           cursor: card ? "pointer" : "default",
         }}
         contentEditable={false}
+        role={card ? "button" : undefined}
+        tabIndex={card ? 0 : undefined}
+        aria-label={card ? `Abrir card ${card.titulo}` : undefined}
+        onKeyDown={card ? aoAtivarPorTeclado(handleClick) : undefined}
         onClick={card ? handleClick : undefined}
         title={card ? "Clique para ver detalhes" : undefined}
       >

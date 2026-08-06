@@ -14,7 +14,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { usuarioAtualId } from "@/lib/supabase/usuario";
 
@@ -59,10 +59,29 @@ export function ConvidarMembro({
     setCarregando(false);
   }
 
+  // Esc fecha. Era o unico caminho de saida ausente: o painel so fechava
+  // clicando no backdrop.
+  useEffect(() => {
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onFechar();
+    };
+    document.addEventListener("keydown", aoTeclar);
+    return () => document.removeEventListener("keydown", aoTeclar);
+  }, [onFechar]);
+
   return (
     <>
-      <div className="fixed inset-0 bg-black/40 z-50" onClick={onFechar} />
+      {/*
+        Backdrop. Fecha no clique, mas NAO leva role nem tabIndex: nao e um
+        controle, e poe-lo na ordem de Tab criaria uma parada fantasma antes
+        do conteudo do dialogo. O equivalente de teclado e o Esc acima.
+      */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+      <div className="fixed inset-0 bg-black/40 z-50" onClick={onFechar} aria-hidden="true" />
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Convidar membro"
         className="fixed right-4 top-16 w-80 max-h-[70vh] rounded-[var(--tf-radius-md)] z-50 overflow-hidden flex flex-col"
         style={{
           background: "var(--tf-surface)",
@@ -237,7 +256,18 @@ export function ConvidarMembro({
 
       {/* Confirm remove member */}
       {confirmRemoverId && (
+        // Backdrop. Fecha no clique, que e o caminho do MOUSE; o equivalente de
+        // teclado e o Esc, verificado presente neste componente.
+        // Nao leva role nem tabIndex — poe-lo na ordem de Tab colocaria uma
+        // parada antes do conteudo do proprio dialogo.
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setConfirmRemoverId(null)}>
+          {/*
+            Existe so para o clique nao subir ao elemento clicavel do pai.
+            Nao e um controle: dar role/tabIndex criaria uma parada fantasma no
+            Tab, anunciada como botao, que nao faz nada ao ser ativada.
+          */}
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <div className="p-5 rounded-[16px] max-w-sm w-full mx-4" style={{ background: "var(--tf-surface)" }} onClick={(e) => e.stopPropagation()}>
             <h3 className="text-[14px] font-bold mb-2" style={{ color: "var(--tf-text)" }}>Remover membro</h3>
             <p className="text-[13px] mb-4" style={{ color: "var(--tf-text-secondary)" }}>
