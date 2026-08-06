@@ -260,15 +260,22 @@ export function BoardClient({ quadroId }: { quadroId: string }) {
                       />
                     ) : (
                       <h1
-                        className="text-[0.875rem] font-semibold truncate cursor-pointer transition-colors hover:text-[var(--tf-accent)]"
+                        className="text-[0.875rem] font-semibold truncate"
                         style={{
                           color: "var(--tf-text)",
                           letterSpacing: "-0.01em",
                         }}
-                        onClick={iniciarEdicao}
-                        title="Clique para renomear"
                       >
-                        {quadro.nome}
+                        <button
+                          type="button"
+                          onClick={iniciarEdicao}
+                          title="Clique para renomear"
+                          aria-label={`Renomear quadro ${quadro.nome}`}
+                          className="truncate max-w-full transition-colors hover:text-[var(--tf-accent)]"
+                          style={{ font: "inherit", color: "inherit", background: "none", border: 0, padding: 0, textAlign: "left", cursor: "pointer" }}
+                        >
+                          {quadro.nome}
+                        </button>
                       </h1>
                     )}
                   </div>

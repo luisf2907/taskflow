@@ -47,6 +47,7 @@ import { PainelPR } from "./painel-pr";
 import { PainelBranch } from "./painel-branch";
 import { SeletorEpico } from "../seletor-epico";
 import { EpicoMarker } from "../epico-marker";
+import { aoAtivarPorTeclado } from "@/lib/a11y";
 
 interface DetalheCartaoProps {
   cartao: CartaoComResumo | null;
@@ -697,6 +698,10 @@ export function DetalheCartao({
                   </div>
                 ) : (
                   <div
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Editar descrição"
+                    onKeyDown={aoAtivarPorTeclado(() => setEditandoDescricao(true))}
                     className="text-[0.8125rem] px-3.5 py-3 cursor-pointer whitespace-pre-wrap leading-relaxed transition-colors"
                     style={{
                       background: "var(--tf-bg-secondary)",

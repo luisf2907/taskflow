@@ -100,6 +100,15 @@ export function Dropdown({ trigger, children, className, closeOnClick = true, po
   );
 
   return (
+    // O onKeyDown aqui e DELEGACAO: captura setas, Escape, Home e End que
+    // sobem dos <button> filhos do menu. O <div> em si nao e um controle,
+    // entao nao leva role nem tabIndex — isso criaria uma parada fantasma
+    // no Tab antes do gatilho de verdade.
+    //
+    // A regra nao distingue delegacao de interacao propria. O teclado deste
+    // componente (setas, Home, End, Esc devolvendo o foco) e melhor que a
+    // media do app, nao pior.
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div ref={ref} className="relative" onKeyDown={handleKeyDown}>
       <div
         onClick={() => setAberto(!aberto)}

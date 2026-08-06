@@ -265,18 +265,25 @@ export function PageHeader({
           />
         ) : (
           <h1
-            onClick={() => {
-              setTitulo(pagina.titulo);
-              setEditandoTitulo(true);
-            }}
-            className="flex-1 text-[28px] font-bold leading-tight cursor-text py-1 hover:bg-[var(--tf-surface-hover)] rounded-[6px] px-1 -mx-1 transition-colors"
+            className="flex-1 text-[28px] font-bold leading-tight py-1 hover:bg-[var(--tf-surface-hover)] rounded-[6px] px-1 -mx-1 transition-colors"
             style={{
               color: "var(--tf-text)",
               border: "1px solid transparent",
               letterSpacing: "-0.02em",
             }}
           >
-            {pagina.titulo}
+            <button
+              type="button"
+              onClick={() => {
+                setTitulo(pagina.titulo);
+                setEditandoTitulo(true);
+              }}
+              aria-label={`Renomear pagina ${pagina.titulo}`}
+              className="w-full"
+              style={{ font: "inherit", color: "inherit", background: "none", border: 0, padding: 0, textAlign: "left", cursor: "text" }}
+            >
+              {pagina.titulo}
+            </button>
           </h1>
         )}
       </div>

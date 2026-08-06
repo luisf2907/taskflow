@@ -251,6 +251,7 @@ export function BlockHandle({ editor, containerRef }: BlockHandleProps) {
       </button>
 
       <div
+        aria-hidden="true"
         onMouseDown={handleDragMouseDown}
         className="w-6 h-6 flex items-center justify-center rounded-[6px] cursor-grab active:cursor-grabbing transition-colors hover:bg-[var(--tf-surface-hover)]"
         style={{ color: "var(--tf-text-tertiary)" }}

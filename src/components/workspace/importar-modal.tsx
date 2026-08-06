@@ -6,6 +6,7 @@ import { Upload, FileJson, FileSpreadsheet, ArrowLeft, Check, Loader2, Columns3,
 import { supabase } from "@/lib/supabase/client";
 import type { ImportData } from "@/lib/import-types";
 import { mutate as globalMutate } from "swr";
+import { aoAtivarPorTeclado } from "@/lib/a11y";
 
 type Fonte = "trello" | "jira" | null;
 type Fase = "escolher" | "upload" | "preview";
@@ -326,6 +327,10 @@ export function ImportarModal({ aberto, onFechar, workspaceId }: ImportarModalPr
 
           {/* Drop zone */}
           <div
+            role="button"
+            tabIndex={0}
+            aria-label="Selecionar arquivo para importar"
+            onKeyDown={aoAtivarPorTeclado(() => fileRef.current?.click())}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}

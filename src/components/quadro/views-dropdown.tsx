@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Filtros } from "./barra-filtros";
+import { aoAtivarPorTeclado } from "@/lib/a11y";
 
 interface ViewsDropdownProps {
   workspaceId: string;
@@ -299,6 +300,9 @@ export function ViewsDropdown({
                               e.stopPropagation();
                               setMenuViewId(menuViewId === v.id ? null : v.id);
                             }}
+                            onKeyDown={aoAtivarPorTeclado(() =>
+                              setMenuViewId(menuViewId === v.id ? null : v.id)
+                            )}
                             role="button"
                             tabIndex={0}
                             aria-label="Mais opções"
