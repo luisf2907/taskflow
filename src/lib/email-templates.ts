@@ -1,14 +1,18 @@
-const ACCENT = "#00857A";
-const BG = "#E4F0EE";
-const TEXT = "#1C2B29";
-const TEXT_SECONDARY = "#4A5D5A";
-const BORDER = "#E1EBE9";
+const ACCENT = "#FF5A1F";        // --tf-accent
+const BG = "#FAFAF9";            // --tf-bg
+const TEXT = "#0F0F10";          // --tf-text
+const TEXT_SECONDARY = "#3F3F44"; // --tf-text-secondary
+const BORDER = "#E4E4E1";        // --tf-border
+
+// Os cinco acima espelham os tokens de src/app/globals.css (tema claro).
+// E-mail nao le CSS custom properties, entao os valores vivem resolvidos
+// aqui — se a paleta do app mudar, estes precisam mudar junto.
 
 function layout(content: string) {
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:${BG};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<body style="margin:0;padding:0;background:${BG};font-family:\"Geist\", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
   <div style="max-width:560px;margin:0 auto;padding:40px 24px">
     <!-- Logo -->
     <div style="text-align:center;margin-bottom:32px">
@@ -16,7 +20,7 @@ function layout(content: string) {
     </div>
 
     <!-- Card -->
-    <div style="background:#FFFFFF;border-radius:16px;padding:32px;border:1px solid ${BORDER}">
+    <div style="background:#FFFFFF;border-radius:14px;padding:32px;border:1px solid ${BORDER}">
       ${content}
     </div>
 
