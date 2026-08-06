@@ -144,7 +144,7 @@ BEGIN
   SELECT count, window_start INTO v_count, v_window_start
   FROM rate_limits WHERE key = p_key;
 
-  -- Se n├úo existe ou janela expirou, resetar
+  -- Se não existe ou janela expirou, resetar
   IF NOT FOUND OR v_now > v_window_start + (p_window_seconds || ' seconds')::INTERVAL THEN
     INSERT INTO rate_limits (key, count, window_start)
     VALUES (p_key, 1, v_now)
@@ -200,7 +200,7 @@ BEGIN
   END IF;
 
   -- Self-notify: sempre permitido.
-  -- Cross-user: s├│ se ambos compartilham algum workspace.
+  -- Cross-user: só se ambos compartilham algum workspace.
   IF v_caller <> p_user_id THEN
     IF NOT EXISTS (
       SELECT 1
@@ -1025,7 +1025,7 @@ CREATE TABLE IF NOT EXISTS "public"."wiki_paginas" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "workspace_id" "uuid" NOT NULL,
     "parent_id" "uuid",
-    "titulo" "text" DEFAULT 'Sem t├¡tulo'::"text" NOT NULL,
+    "titulo" "text" DEFAULT 'Sem título'::"text" NOT NULL,
     "slug" "text" NOT NULL,
     "icone" "text",
     "capa_url" "text",
@@ -1060,7 +1060,7 @@ CREATE TABLE IF NOT EXISTS "public"."workspaces" (
     "descricao" "text",
     "cor" "text" DEFAULT '#C4841D'::"text" NOT NULL,
     "icone" "text" DEFAULT 'folder'::"text",
-    "colunas_padrao" "text"[] DEFAULT '{"A Fazer","Em Andamento","Em Revis├úo",Conclu├¡do}'::"text"[],
+    "colunas_padrao" "text"[] DEFAULT '{"A Fazer","Em Andamento","Em Revisão","Concluído"}'::"text"[],
     "criado_em" timestamp with time zone DEFAULT "now"(),
     "atualizado_em" timestamp with time zone DEFAULT "now"(),
     "criado_por" "uuid"
