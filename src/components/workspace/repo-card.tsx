@@ -2,6 +2,7 @@
 
 import { GitBranch, Trash2 } from "lucide-react";
 import { useGitHubRepo } from "@/hooks/use-github";
+import { aoAtivarPorTeclado } from "@/lib/a11y";
 
 interface RepoCardProps {
   owner: string;
@@ -21,6 +22,9 @@ export function RepoCard({ owner, nome, onAbrir, onDesconectar }: RepoCardProps)
         borderColor: "var(--tf-border)",
       }}
       onClick={onAbrir}
+      onKeyDown={aoAtivarPorTeclado(onAbrir)}
+      role="button"
+      tabIndex={0}
     >
       <div
         className="w-10 h-10 rounded-[var(--tf-radius-xs)] flex items-center justify-center shrink-0"

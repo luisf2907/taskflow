@@ -18,6 +18,7 @@ import dagre from "dagre";
 import { CheckCircle2, Lock, X } from "lucide-react";
 import { useCallback, useEffect, useMemo } from "react";
 import { EpicoMarker } from "./epico-marker";
+import { aoAtivarPorTeclado } from "@/lib/a11y";
 
 // =============================================
 // Layout com dagre (DAG top-down)
@@ -60,6 +61,9 @@ function CardNode({ data }: NodeProps<Node<NoData>>) {
   return (
     <div
       onClick={() => onAbrir(no.id)}
+      onKeyDown={aoAtivarPorTeclado(() => onAbrir(no.id))}
+      role="button"
+      tabIndex={0}
       className="relative cursor-pointer transition-transform hover:scale-[1.02]"
       style={{
         width: NODE_W,

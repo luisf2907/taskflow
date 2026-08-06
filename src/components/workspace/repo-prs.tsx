@@ -21,6 +21,7 @@ import useSWR from "swr";
 import type { GitHubPR } from "@/types/github";
 
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { aoAtivarPorTeclado } from "@/lib/a11y";
 
 
 interface RepoPRsProps {
@@ -141,6 +142,9 @@ function PRItem({ pr, onAbrir }: { pr: GitHubPR; repoId?: string; onAcao?: () =>
   return (
     <div
       onClick={onAbrir}
+      onKeyDown={aoAtivarPorTeclado(onAbrir)}
+      role="button"
+      tabIndex={0}
       className={`px-4 py-3.5 flex flex-col gap-2 transition-[background] duration-150 ${onAbrir ? "cursor-pointer" : "cursor-default"}`}
       style={{ borderBottom: "1px solid var(--tf-border)" }}
       onMouseEnter={(e) =>

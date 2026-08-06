@@ -13,6 +13,7 @@ import {
 import type { CartaoBacklog } from "@/hooks/use-backlog";
 import type { Etiqueta, Quadro } from "@/types";
 import { getContrastTextColor } from "@/lib/colors";
+import { aoAtivarPorTeclado } from "@/lib/a11y";
 
 interface BacklogRowProps {
   tarefa: CartaoBacklog;
@@ -73,6 +74,9 @@ export function BacklogRow({
         (e.currentTarget.style.borderColor = "var(--tf-border)")
       }
       onClick={onClick}
+      onKeyDown={aoAtivarPorTeclado(onClick)}
+      role="button"
+      tabIndex={0}
     >
       {/* Drag handle */}
       <button

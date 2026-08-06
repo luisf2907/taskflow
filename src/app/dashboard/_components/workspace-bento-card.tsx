@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Folder, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import type { Workspace } from "@/types";
@@ -20,7 +20,6 @@ export function WorkspaceBentoCard({
   onExcluir,
   onNovaSprint,
 }: WorkspaceBentoCardProps) {
-  const router = useRouter();
 
   const fakeProgress =
     (Array.from(ws.id).reduce((acc, char) => acc + char.charCodeAt(0), 0) %
@@ -44,12 +43,12 @@ export function WorkspaceBentoCard({
     >
       <div className="flex justify-between items-start relative z-10">
         <div
-          className="w-10 h-10 flex items-center justify-center cursor-pointer transition-colors"
+          aria-hidden="true"
+          className="w-10 h-10 flex items-center justify-center transition-colors"
           style={{
             background: ws.cor,
             borderRadius: "var(--tf-radius-sm)",
           }}
-          onClick={() => router.push(`/workspace/${ws.id}`)}
         >
           <Folder size={18} className="text-white" strokeWidth={1.75} />
         </div>
@@ -77,9 +76,9 @@ export function WorkspaceBentoCard({
         </Dropdown>
       </div>
 
-      <div
+      <Link
+        href={`/workspace/${ws.id}`}
         className="relative z-10 mt-4 cursor-pointer flex-1 flex flex-col"
-        onClick={() => router.push(`/workspace/${ws.id}`)}
       >
         <p className="label-mono mb-1" style={{ color: "var(--tf-text-tertiary)" }}>
           Workspace
@@ -132,7 +131,7 @@ export function WorkspaceBentoCard({
             />
           </div>
         </div>
-      </div>
+      </Link>
 
       <div
         className="flex items-center justify-between mt-4 pt-3 border-t relative z-10"

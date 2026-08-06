@@ -36,6 +36,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Repositorio } from "@/types/github";
+import { aoAtivarPorTeclado } from "@/lib/a11y";
 
 // ─── Webhook Config Inline ───
 function WebhookConfigInline({ repoDb, workspaceId }: { repoDb: Repositorio; workspaceId: string }) {
@@ -197,6 +198,9 @@ function RepoCard({ owner, nome, onAbrir, onDesconectar }: { owner: string; nome
       className="flex items-center gap-4 p-4 rounded-[var(--tf-radius-md)] border transition-all duration-200 cursor-pointer group"
       style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}
       onClick={onAbrir}
+      onKeyDown={aoAtivarPorTeclado(onAbrir)}
+      role="button"
+      tabIndex={0}
     >
       <div className="w-12 h-12 rounded-[var(--tf-radius-xs)] flex items-center justify-center shrink-0" style={{ background: "var(--tf-accent-light)" }}>
         <GitBranch size={22} style={{ color: "var(--tf-accent-text)" }} />
