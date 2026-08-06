@@ -114,6 +114,16 @@ log "confirmado no remoto: $enviados arquivos"
 
 # ───── 5. Retencao ─────
 find "$DESTINO_LOCAL" -maxdepth 1 -type d -name '20*' -mtime "+$DIAS_LOCAL" -exec rm -rf {} + || true
-rclone delete "$REMOTO" --min-age "${DIAS_REMOTO}d" --rmdirs || true
+
+# Apaga os arquivos velhos, depois as pastas que ficaram vazias.
+#
+# Em passos separados de proposito: `delete --rmdirs` tenta remover TODA
+# pasta ao final, inclusive a que acabou de ser enviada, e falha com
+# "directory not empty" — tres ERROR por execucao, toda noite. Log que
+# sempre tem erro e log que ninguem le.
+#
+# `rmdirs --leave-root` so remove pasta vazia, sem reclamar das cheias.
+rclone delete "$REMOTO" --min-age "${DIAS_REMOTO}d" || true
+rclone rmdirs "$REMOTO" --leave-root || true
 
 log "concluido"
