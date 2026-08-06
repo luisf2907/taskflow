@@ -12,7 +12,7 @@ function layout(content: string) {
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:${BG};font-family:\"Geist\", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+<body style="margin:0;padding:0;background:${BG};font-family:'Geist', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
   <div style="max-width:560px;margin:0 auto;padding:40px 24px">
     <!-- Logo -->
     <div style="text-align:center;margin-bottom:32px">
