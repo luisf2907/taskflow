@@ -31,7 +31,15 @@ set -euo pipefail
 
 # ───── CONFIG ─────
 DB_CONTAINER="${DB_CONTAINER:-supabase-db-hb0kltydxevy8udmd48r11g3}"
-MINIO_VOLUME="${MINIO_VOLUME:-}"          # descubra com: docker volume ls | grep -i minio
+
+# Aceita volume nomeado OU caminho no host. O Coolify usa bind mount, entao
+# costuma ser um caminho tipo:
+#   /data/coolify/services/<uuid>/volumes/storage
+# Descubra com:
+#   docker inspect <container-do-storage> \
+#     --format '{{range .Mounts}}{{.Type}} {{.Name}}{{.Source}} -> {{.Destination}}{{println}}{{end}}'
+STORAGE_ORIGEM="${STORAGE_ORIGEM:-${MINIO_VOLUME:-}}"
+
 DB_USER="${DB_USER:-supabase_admin}"      # NAO use "postgres": no Supabase ele nao e superusuario
 DB_NAME="${DB_NAME:-postgres}"
 DESTINO_LOCAL="${DESTINO_LOCAL:-/root/backups}"
@@ -46,10 +54,18 @@ dir="$DESTINO_LOCAL/$carimbo"
 log() { echo "[backup $(date +%H:%M:%S)] $*"; }
 falhar() { echo "[backup ERRO] $*" >&2; exit 1; }
 
-[ -n "$MINIO_VOLUME" ] || falhar "MINIO_VOLUME nao configurado. Rode: docker volume ls | grep -i minio"
+[ -n "$STORAGE_ORIGEM" ] || falhar "STORAGE_ORIGEM nao configurado (volume nomeado ou caminho no host)"
 docker inspect "$DB_CONTAINER" >/dev/null 2>&1 || falhar "container $DB_CONTAINER nao existe"
-docker volume inspect "$MINIO_VOLUME" >/dev/null 2>&1 || falhar "volume $MINIO_VOLUME nao existe"
 command -v rclone >/dev/null || falhar "rclone nao instalado"
+
+# Um caminho absoluto e bind mount; o resto e nome de volume.
+if [ "${STORAGE_ORIGEM:0:1}" = "/" ]; then
+  STORAGE_TIPO="bind"
+  [ -d "$STORAGE_ORIGEM" ] || falhar "diretorio $STORAGE_ORIGEM nao existe"
+else
+  STORAGE_TIPO="volume"
+  docker volume inspect "$STORAGE_ORIGEM" >/dev/null 2>&1 || falhar "volume $STORAGE_ORIGEM nao existe"
+fi
 
 mkdir -p "$dir"
 log "destino: $dir"
@@ -68,12 +84,18 @@ tam_db=$(stat -c%s "$dir/database.sql.gz")
 [ "$tam_db" -gt 10240 ] || falhar "dump com apenas ${tam_db} bytes — algo deu errado"
 log "banco: $(numfmt --to=iec "$tam_db")"
 
-# ───── 2. Storage (MinIO) ─────
-log "snapshot do storage..."
-docker run --rm \
-  -v "$MINIO_VOLUME":/data:ro \
-  -v "$dir":/saida \
-  alpine:3.19 tar czf /saida/storage.tar.gz -C /data .
+# ───── 2. Storage ─────
+log "snapshot do storage ($STORAGE_TIPO)..."
+if [ "$STORAGE_TIPO" = "bind" ]; then
+  # Bind mount: o diretorio ja esta no host, nao precisa de container.
+  tar czf "$dir/storage.tar.gz" -C "$STORAGE_ORIGEM" .
+else
+  # Volume nomeado: so acessivel de dentro do Docker.
+  docker run --rm \
+    -v "$STORAGE_ORIGEM":/data:ro \
+    -v "$dir":/saida \
+    alpine:3.19 tar czf /saida/storage.tar.gz -C /data .
+fi
 
 tam_st=$(stat -c%s "$dir/storage.tar.gz")
 log "storage: $(numfmt --to=iec "$tam_st")"
