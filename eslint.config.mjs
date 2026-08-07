@@ -2,46 +2,43 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier";
+// Vem transitivo do eslint-config-next; importado so para ler o preset.
+import jsxA11y from "eslint-plugin-jsx-a11y";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   prettier,
   // ───── Acessibilidade ─────
-  // O eslint-config-next ja traz um subconjunto do jsx-a11y (alt-text,
-  // aria-props, role-*). O plugin completo tem muito mais, mas ligar tudo
-  // de uma vez produziria ~100 avisos — e parede de aviso e aviso ignorado.
+  // O eslint-config-next traz so um subconjunto do jsx-a11y. O conjunto
+  // recomendado (34 regras) apontava 148 problemas; foram todos tratados, e
+  // agora ele fica ligado para nao regredir.
   //
-  // A estrategia e travar como ERRO cada regra ja zerada, uma por vez,
-  // conforme forem corrigidas. Assim o que foi consertado nao volta.
+  // Espalhar `configs.recommended.rules` em vez de listar as regras a mao:
+  // varias trazem OPCOES junto da severidade, e tres vem desligadas de
+  // proposito (control-has-associated-label, label-has-for,
+  // anchor-ambiguous-text). Uma lista manual perde isso e vira ruido —
+  // ligar as tres como erro produzia 139 erros que o preset nao pede.
   //
-  // Zeradas ate agora:
-  //   label-has-associated-control    45 corrigidas
-  //   click-events-have-key-events     33 -> 0
-  //   no-static-element-interactions   31 -> 0
+  // O plugin ja esta registrado pelo eslint-config-next; o import aqui so le
+  // o preset, nao declara plugin de novo (isso daria "Cannot redefine").
   //
-  // Ainda abertas, a ligar quando chegarem a zero:
-  //   media-has-caption (3), no-noninteractive-element-interactions (1),
-  //   no-noninteractive-tabindex (1), interactive-supports-focus (1),
-  //   alt-text (1)
+  // UMA REGRA FICA DE FORA: no-autofocus. Ela proibe autoFocus, mas mover o
+  // foco para o primeiro campo ao abrir um dialogo e o comportamento CERTO.
+  // Sao 30 ocorrencias, quase todas em modal — "consertar" pioraria a vida
+  // de quem usa teclado, que e justamente quem a regra deveria proteger.
   //
-  // no-autofocus fica FORA de proposito. Ela proibe autoFocus, mas mover o
-  // foco para o primeiro campo ao abrir um dialogo e o comportamento certo
-  // — sao 30 ocorrencias, quase todas em modal, e "consertar" pioraria.
-  //
-  // As duas regras de teclado chegaram a zero com alguns eslint-disable
-  // pontuais, cada um com a razao escrita ao lado. Nao sao atalho: cobrem
-  // tres casos em que transformar o elemento em controle SERIA ERRADO —
-  // <div> de stopPropagation, backdrop (cujo equivalente e Esc) e spread
-  // que o linter nao enxerga ({...listeners} do dnd-kit,
-  // {...propsBarraDeAudio}). Ligar as regras como erro protege justamente
-  // os casos que nao tem excecao registrada.
+  // Onde ha eslint-disable pontual, a razao esta escrita ao lado. Cobrem
+  // casos em que obedecer seria ERRADO: <div> de stopPropagation, backdrop
+  // (equivalente e Esc, nao Tab), spread que o linter nao enxerga
+  // ({...listeners} do dnd-kit, {...propsBarraDeAudio}), <audio> de gravacao
+  // sem faixa .vtt, e o icone `Image` do lucide-react que a regra alt-text
+  // confunde com <img> por causa do nome.
   {
     files: ["src/**/*.{ts,tsx}"],
     rules: {
-      "jsx-a11y/label-has-associated-control": "error",
-      "jsx-a11y/click-events-have-key-events": "error",
-      "jsx-a11y/no-static-element-interactions": "error",
+      ...jsxA11y.configs.recommended.rules,
+      "jsx-a11y/no-autofocus": "off",
     },
   },
   // Override default ignores of eslint-config-next.

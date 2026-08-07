@@ -36,6 +36,16 @@ export function ConvidarMembro({
   const [confirmRemoverId, setConfirmRemoverId] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
 
+  // Esc fecha. Era o unico caminho de saida ausente: o painel so fechava
+  // clicando no backdrop.
+  useEffect(() => {
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onFechar();
+    };
+    document.addEventListener("keydown", aoTeclar);
+    return () => document.removeEventListener("keydown", aoTeclar);
+  }, [onFechar]);
+
   if (!aberto) return null;
 
   async function handleConvidar(e: React.FormEvent) {
@@ -58,16 +68,6 @@ export function ConvidarMembro({
     }
     setCarregando(false);
   }
-
-  // Esc fecha. Era o unico caminho de saida ausente: o painel so fechava
-  // clicando no backdrop.
-  useEffect(() => {
-    const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onFechar();
-    };
-    document.addEventListener("keydown", aoTeclar);
-    return () => document.removeEventListener("keydown", aoTeclar);
-  }, [onFechar]);
 
   return (
     <>

@@ -71,7 +71,9 @@ export const Cartao = memo(function Cartao({
     // dnd-kit, e o ESLint nao enxerga atraves do spread. O KeyboardSensor
     // esta configurado (kanban-board.tsx e workspace/[id]/page.tsx), entao
     // arrastar cartao por teclado ja funciona.
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+    // (interactive-supports-focus entra na lista pelo mesmo motivo: o
+    // tabIndex vem do {...attributes} do dnd-kit.)
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions, jsx-a11y/interactive-supports-focus
     <div
       ref={setNodeRef}
       style={{ ...style, touchAction: "manipulation" }}

@@ -673,6 +673,12 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                     </div>
 
                     {/* Custom audio player */}
+                    {/*
+                      Amostra de voz gravada pelo proprio usuario, de poucos segundos —
+                      legenda de audio exige um arquivo .vtt, que so existiria se alguem
+                      transcrevesse cada gravacao para esse formato.
+                    */}
+                    {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                     <audio
                       ref={previewAudioRef}
                       src={audioUrl}

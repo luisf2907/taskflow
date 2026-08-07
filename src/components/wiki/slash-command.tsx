@@ -106,6 +106,9 @@ function getSlashItems(): SlashCommandItem[] {
     {
       title: "Imagem",
       description: "Inserir imagem",
+      // O Image aqui e o icone do lucide-react (ver import), nao um <img>.
+      // A regra alt-text decide pelo nome do elemento e erra aqui.
+      // eslint-disable-next-line jsx-a11y/alt-text
       icon: <Image size={18} />,
       command: ({ editor, range }) => {
         editor.chain().focus().deleteRange(range).run();

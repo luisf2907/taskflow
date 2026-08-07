@@ -144,20 +144,8 @@ export function NotificationBell() {
             <div
               key={n.id}
               role="listitem"
-              tabIndex={0}
-              className="group flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors w-full text-left hover:bg-[var(--tf-surface-hover)] outline-none focus-visible:bg-[var(--tf-surface-hover)]"
+              className="group flex items-start gap-2.5 px-3 py-2.5 transition-colors w-full text-left hover:bg-[var(--tf-surface-hover)]"
               style={{ borderBottom: "1px solid var(--tf-border-subtle)" }}
-              onClick={() => {
-                marcarComoLida(n.id);
-                if (n.link) window.location.href = n.link;
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  marcarComoLida(n.id);
-                  if (n.link) window.location.href = n.link;
-                }
-              }}
             >
               {/* Unread indicator — orange bar vertical */}
               <div
@@ -170,7 +158,14 @@ export function NotificationBell() {
                 }}
               />
 
-              <div className="flex-1 min-w-0">
+              <button
+                type="button"
+                onClick={() => {
+                  marcarComoLida(n.id);
+                  if (n.link) window.location.href = n.link;
+                }}
+                className="flex-1 min-w-0 text-left cursor-pointer bg-transparent border-0 p-0 outline-none focus-visible:underline"
+              >
                 <div className="flex items-baseline gap-2">
                   <span
                     className="font-medium truncate flex-1"
@@ -202,7 +197,7 @@ export function NotificationBell() {
                     {n.mensagem}
                   </div>
                 )}
-              </div>
+              </button>
 
               <button
                 onClick={(e) => {

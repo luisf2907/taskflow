@@ -426,6 +426,12 @@ export default function ReuniaoDetailPage() {
                 </div>
 
                 {/* Hidden audio element */}
+                {/*
+                  Gravacao de reuniao. A TRANSCRICAO e renderizada logo abaixo na propria
+                  legenda de audio exige um arquivo .vtt, que so existiria se alguem
+                  transcrevesse cada gravacao para esse formato.
+                */}
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                 <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
                 {/* Player UI */}

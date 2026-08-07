@@ -75,10 +75,24 @@ export function AudioPlayer({ src, label, accentColor = "var(--tf-accent)" }: Au
     [durationMs]
   );
 
+  // Em useCallback e nao inline: a regra react-hooks/refs marca leitura de
+  // .current em funcao criada durante o render, mesmo quando ela so executa
+  // depois. O useCallback tira a criacao do caminho de render.
+  const irPara = useCallback((ms: number) => {
+    const audio = audioRef.current;
+    if (audio) audio.currentTime = ms / 1000;
+  }, []);
+
   const progressPct = durationMs > 0 ? (currentMs / durationMs) * 100 : 0;
 
   return (
     <div className="flex flex-col gap-2">
+      {/*
+        Audio enviado pelo usuario. Nao existe faixa de legenda para anexar —
+        legenda de audio exige um arquivo .vtt, que so existiria se alguem
+        transcrevesse cada gravacao para esse formato.
+      */}
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} src={src} preload="metadata" />
 
       {label && (
@@ -153,14 +167,15 @@ export function AudioPlayer({ src, label, accentColor = "var(--tf-accent)" }: Au
         <div
           ref={seekRef}
           onClick={seek}
+          /* irPara le audioRef.current, mas SO quando uma tecla e
+             pressionada — nunca durante o render. A regra ve a funcao sendo
+             passada para uma chamada feita no render e assume o pior. */
+          // eslint-disable-next-line react-hooks/refs
           {...propsBarraDeAudio({
             rotulo: "Progresso do áudio",
             atualMs: currentMs,
             totalMs: durationMs,
-            irPara: (ms) => {
-              const audio = audioRef.current;
-              if (audio) audio.currentTime = ms / 1000;
-            },
+            irPara,
           })}
           className="flex-1 h-[3px] cursor-pointer relative group"
           style={{
