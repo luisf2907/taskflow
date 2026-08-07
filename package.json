@@ -9,7 +9,7 @@
     "lint": "eslint",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
-    "analyze": "ANALYZE=true next build",
+    "analyze": "next experimental-analyze",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -69,7 +69,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^16.2.2",
     "@sentry/nextjs": "^10.47.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",

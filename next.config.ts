@@ -1,5 +1,18 @@
 import type { NextConfig } from "next";
-import bundleAnalyzer from "@next/bundle-analyzer";
+
+// ANALISE DE BUNDLE — nao use @next/bundle-analyzer aqui.
+//
+// Ele e plugin do WEBPACK, e este projeto builda com Turbopack (ha um
+// turbopack-*.js entre os chunks). O wrapper ficava no arquivo e nunca
+// rodava: `ANALYZE=true next build` terminava sem gerar .next/analyze, em
+// silencio. Config morta prometendo uma ferramenta que nao existia.
+//
+// O caminho certo no Next 16.1+ e o analisador integrado ao Turbopack:
+//
+//   npx next experimental-analyze            # abre a UI interativa
+//   npx next experimental-analyze --output   # grava .next/diagnostics/analyze
+//
+// Ver node_modules/next/dist/docs/01-app/02-guides/package-bundling.md.
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -99,8 +112,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === "true",
-});
-
-export default withBundleAnalyzer(nextConfig);
+export default nextConfig;

@@ -158,26 +158,6 @@ const serverEnvSchema = envSchema.extend({
 // Parsing (lazy, SSR-safe)
 // ═══════════════════════════════════════════════════════════════════════════
 
-function parsePublicEnv() {
-  const result = envSchema.safeParse(cleanEnv({
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-    NEXT_PUBLIC_REALTIME_DRIVER: process.env.NEXT_PUBLIC_REALTIME_DRIVER,
-    NEXT_PUBLIC_VCS_TOKEN_MODE: process.env.NEXT_PUBLIC_VCS_TOKEN_MODE,
-    NEXT_PUBLIC_OBS_DRIVER: process.env.NEXT_PUBLIC_OBS_DRIVER,
-  }));
-
-  if (!result.success) {
-    const formatted = result.error.issues
-      .map((i) => `  ${i.path.join(".")}: ${i.message}`)
-      .join("\n");
-    throw new Error(`Missing or invalid environment variables:\n${formatted}`);
-  }
-
-  return result.data;
-}
-
 function parseServerEnv() {
   const result = serverEnvSchema.safeParse(cleanEnv({
     // Supabase core
@@ -247,19 +227,13 @@ function parseServerEnv() {
   return result.data;
 }
 
-/** Public env vars (safe for client) — lazy loaded on first access */
-let _publicEnv: ReturnType<typeof parsePublicEnv> | null = null;
-export function getPublicEnv() {
-  if (!_publicEnv) _publicEnv = parsePublicEnv();
-  return _publicEnv;
-}
-
-/** @deprecated Use getPublicEnv() instead. Kept for backward compatibility. */
-export const publicEnv = new Proxy({} as ReturnType<typeof parsePublicEnv>, {
-  get(_target, prop: string) {
-    return getPublicEnv()[prop as keyof ReturnType<typeof parsePublicEnv>];
-  },
-});
+// As env PUBLICAS vivem em `env-publico.ts`, sem zod — e o unico jeito de o
+// zod nao descer para o navegador, ja que ele e obrigatorio aqui por causa do
+// `serverEnvSchema` e o bundler nao consegue separar os dois dentro do mesmo
+// modulo. Reexportado para quem ja importava daqui; codigo de CLIENTE deve
+// importar direto de `@/lib/env-publico`, senao arrasta este arquivo junto.
+export { getPublicEnv, publicEnv } from "@/lib/env-publico";
+export type { EnvPublica } from "@/lib/env-publico";
 
 /** Server-only env vars (includes service role key) — only import in server code */
 export function getServerEnv() {
