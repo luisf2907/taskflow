@@ -83,8 +83,8 @@ export function NotificationBell() {
             <span
               className="text-[0.625rem] px-1.5 rounded-[var(--tf-radius-xs)]"
               style={{
-                background: "var(--tf-accent-solid)",
-                color: "#FFFFFF",
+                background: "var(--tf-accent)",
+                color: "var(--tf-on-accent)",
                 fontFamily: "var(--tf-font-mono)",
                 letterSpacing: "0.02em",
                 fontWeight: 500,

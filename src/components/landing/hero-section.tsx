@@ -88,9 +88,9 @@ export default function HeroSection() {
               href="/login"
               className="no-underline inline-flex items-center gap-1.5 h-11 px-5 text-[0.875rem] font-medium transition-colors hover:brightness-110"
               style={{
-                backgroundColor: "var(--tf-accent-solid)",
-                color: "#FFFFFF",
-                border: "1px solid var(--tf-accent-solid)",
+                backgroundColor: "var(--tf-accent)",
+                color: "var(--tf-on-accent)",
+                border: "1px solid var(--tf-accent)",
                 borderRadius: "var(--tf-radius-xs)",
                 letterSpacing: "-0.005em",
               }}
@@ -241,9 +241,9 @@ export default function HeroSection() {
             style={{
               bottom: -8,
               left: -8,
-              backgroundColor: "var(--tf-accent-solid)",
-              color: "#FFFFFF",
-              border: "1px solid var(--tf-accent-solid)",
+              backgroundColor: "var(--tf-accent)",
+              color: "var(--tf-on-accent)",
+              border: "1px solid var(--tf-accent)",
               borderRadius: "var(--tf-radius-xs)",
               boxShadow: "var(--tf-shadow-lg)",
             }}

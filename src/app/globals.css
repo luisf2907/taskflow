@@ -100,11 +100,11 @@ button, a, [role="button"], label[for], summary, input[type="submit"], input[typ
   --tf-accent-hover: #E04A10;
   --tf-accent-light: #FFE8DC;
   --tf-accent-text: #C03E0C;
-  /* Versão para FUNDO SÓLIDO com texto branco por cima — ver o bloco
-     @supports adiante. Branco sobre #FF5A1F da 3,12:1 e reprova no AA;
-     sobre este da 5,77:1. O --tf-accent continua valendo para borda,
-     ícone e anel de foco, que exigem 3:1 e ja passam. */
-  --tf-accent-solid: #B33F16;
+  /* Cor do TEXTO que fica em cima do --tf-accent (botao primario, badge,
+     avatar). Branco ali da 3,12:1 e reprova no AA; este marrom da 5,48:1
+     — e o laranja fica intacto, que era o ponto.
+     Derivado do proprio accent no bloco @supports adiante. */
+  --tf-on-accent: #331206;
 
   /* Accent secundário — verde-neon (sucesso/done) */
   --tf-accent-yellow: #F5D547;
@@ -115,10 +115,12 @@ button, a, [role="button"], label[for], summary, input[type="submit"], input[typ
   --tf-success-bg: #ECFDF5;
   --tf-danger: #DC2626;
   --tf-danger-bg: #FEF2F2;
-  /* Mesmo caso do accent-solid. No claro o --tf-danger ja daria 4,83:1,
-     mas no escuro (#FF4444) cai para 3,41:1 — um token so para os dois
-     evita que o botao de perigo mude de regra conforme o tema. */
-  --tf-danger-solid: #9A1B1B;
+  /* O botao de perigo mantem texto BRANCO — vermelho com texto escuro nao
+     le como alerta. Entao aqui quem cede e o fundo: branco sobre
+     --tf-danger da 4,83:1 no claro mas so 3,41:1 no escuro (#FF4444).
+     Sobre este da 5,74:1, e continua um vermelho de verdade. Um valor so
+     para os dois temas, para o botao nao mudar de regra conforme o tema. */
+  --tf-danger-solid: #C81E1E;
   --tf-warning: #D97706;
   --tf-warning-bg: #FFFBEB;
   --tf-merged: #7C3AED;
@@ -197,10 +199,8 @@ button, a, [role="button"], label[for], summary, input[type="submit"], input[typ
   --tf-accent-hover: #FF8558;
   --tf-accent-light: #2A1810;
   --tf-accent-text: #FF9468;
-  /* Branco sobre #FF6B35 da 2,84:1; sobre este da 5,32:1. Ainda destaca
-     do fundo escuro (3,82:1 contra --tf-bg), que e o limite util —
-     escurecer mais deixa o botao abafado. */
-  --tf-accent-solid: #B34B25;
+  /* Branco sobre #FF6B35 da 2,84:1; este marrom da 5,91:1. */
+  --tf-on-accent: #33150B;
 
   --tf-accent-yellow: #F5D547;
   --tf-accent-yellow-hover: #F7E078;
@@ -210,7 +210,7 @@ button, a, [role="button"], label[for], summary, input[type="submit"], input[typ
   --tf-success-bg: #062C1A;
   --tf-danger: #FF4444;
   --tf-danger-bg: #2E1010;
-  --tf-danger-solid: #9A1B1B;
+  --tf-danger-solid: #C81E1E;
   --tf-warning: #F5A524;
   --tf-warning-bg: #2A1F08;
   --tf-merged: #A78BFA;
@@ -236,34 +236,35 @@ button, a, [role="button"], label[for], summary, input[type="submit"], input[typ
 }
 
 /* ============================================
-   SOLIDOS DERIVADOS DO ACCENT
+   TEXTO SOBRE O ACCENT, DERIVADO DO ACCENT
 
-   Os hex acima sao o valor de partida. Aqui os mesmos tokens passam a ser
-   CALCULADOS a partir de --tf-accent / --tf-danger.
+   Os hex acima sao o valor de partida. Aqui o --tf-on-accent passa a ser
+   CALCULADO a partir do --tf-accent.
 
    O motivo e o use-custom-palette: o usuario pode trocar --tf-accent pelo
-   theme_preferences. Com valor fixo, quem escolhesse outra cor veria a cor
-   dele na borda e no icone, mas o laranja padrao no botao. Derivando, o
-   solido acompanha sozinho.
+   theme_preferences. Com valor fixo, quem escolhesse um accent diferente
+   ficaria com um marrom alaranjado por cima dele. Derivando, o texto se
+   tinge da propria cor escolhida.
 
-   70% e a proporcao que deixa os dois accents padrao acima de 4,5:1 com
-   texto branco (5,77:1 no claro, 5,32:1 no escuro) sobrando margem para
-   uma cor customizada um pouco mais clara. Nao ha como GARANTIR o AA para
-   qualquer cor que o usuario escolha — para isso seria preciso calcular
-   luminancia em JS.
+   20% deixa os dois accents padrao acima de 4,5:1 (5,48:1 no claro,
+   5,91:1 no escuro). ATENCAO: isto assume accent CLARO. Se o usuario
+   escolher uma cor escura, o texto derivado fica escuro tambem e o
+   contraste cai. Garantir o AA para qualquer cor exigiria calcular
+   luminancia em JS e decidir entre texto claro e escuro — e o que um
+   color-contrast() do CSS faria, se ja tivesse suporte.
 
    Uma regra so cobre os dois temas: a classe .dark fica no <html>, que e o
    proprio :root, entao var(--tf-accent) aqui ja resolve para o valor do
    tema ativo.
 
    @supports porque color-mix so existe a partir do Firefox 113, e o alvo
-   do Next inclui o 111. Sem a guarda, um custom property invalido derruba
-   o background inteiro em vez de cair no hex.
+   do Next inclui o 111. Custom property nao aceita o truque de declarar
+   duas vezes — a segunda e valida no parse e so falha na substituicao,
+   derrubando a cor inteira em vez de cair no hex.
    ============================================ */
-@supports (background: color-mix(in srgb, red 70%, black)) {
+@supports (color: color-mix(in srgb, red 20%, black)) {
   :root {
-    --tf-accent-solid: color-mix(in srgb, var(--tf-accent) 70%, #000);
-    --tf-danger-solid: color-mix(in srgb, var(--tf-danger) 70%, #000);
+    --tf-on-accent: color-mix(in srgb, var(--tf-accent) 20%, #000);
   }
 }
 

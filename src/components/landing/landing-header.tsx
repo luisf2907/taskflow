@@ -110,9 +110,9 @@ export default function LandingHeader() {
             href="/login"
             className="h-8 px-3.5 inline-flex items-center gap-1.5 text-[0.75rem] font-medium no-underline transition-colors hover:brightness-110"
             style={{
-              background: "var(--tf-accent-solid)",
-              color: "#FFFFFF",
-              border: "1px solid var(--tf-accent-solid)",
+              background: "var(--tf-accent)",
+              color: "var(--tf-on-accent)",
+              border: "1px solid var(--tf-accent)",
               borderRadius: "var(--tf-radius-xs)",
               letterSpacing: "-0.005em",
             }}
@@ -195,9 +195,9 @@ export default function LandingHeader() {
             href="/login"
             className="h-9 px-3 inline-flex items-center justify-center text-[0.8125rem] font-medium no-underline transition-colors hover:brightness-110"
             style={{
-              background: "var(--tf-accent-solid)",
-              color: "#FFFFFF",
-              border: "1px solid var(--tf-accent-solid)",
+              background: "var(--tf-accent)",
+              color: "var(--tf-on-accent)",
+              border: "1px solid var(--tf-accent)",
               borderRadius: "var(--tf-radius-xs)",
               letterSpacing: "-0.005em",
             }}
