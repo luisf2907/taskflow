@@ -9,7 +9,21 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/dashboard", "/quadro/", "/workspace/", "/settings", "/api/"],
+        disallow: [
+          // App autenticado — nada aqui rende busca.
+          "/dashboard",
+          "/quadro/",
+          "/workspace/",
+          "/settings",
+          "/api/",
+          // Transacionais: a URL carrega token de uso único ou depende de
+          // sessão. Indexar não serve para nada e ainda expõe o formato do
+          // link no índice de busca.
+          "/convite/",
+          "/reset-password",
+          "/trocar-senha",
+          "/auth/",
+        ],
       },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,

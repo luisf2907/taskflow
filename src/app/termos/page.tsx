@@ -1,8 +1,12 @@
 import { LegalLayout, Section } from "@/components/landing/legal-layout";
 
 export const metadata = {
-  title: "Termos de Uso | Taskflow",
+  title: "Termos de Uso",
   description: "Termos de Uso da plataforma Taskflow.",
+  // Resolvido contra o metadataBase do layout raiz. Sem isto, cada hostname
+  // que serve o app vira uma pagina distinta para o buscador, dividindo os
+  // sinais em vez de somar.
+  alternates: { canonical: "/termos" },
 };
 
 export default function TermosPage() {

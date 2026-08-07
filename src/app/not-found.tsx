@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "404 — Página não encontrada | Taskflow",
+  title: "404 — Página não encontrada",
 };
 
 export default function NotFound() {

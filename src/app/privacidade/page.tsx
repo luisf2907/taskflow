@@ -1,8 +1,9 @@
 import { LegalLayout, Section } from "@/components/landing/legal-layout";
 
 export const metadata = {
-  title: "Politica de Privacidade | Taskflow",
+  title: "Politica de Privacidade",
   description: "Politica de Privacidade da plataforma Taskflow. LGPD compliant.",
+  alternates: { canonical: "/privacidade" },
 };
 
 export default function PrivacidadePage() {

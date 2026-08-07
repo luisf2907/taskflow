@@ -17,9 +17,10 @@ import {
 } from "lucide-react";
 
 export const metadata = {
-  title: "Preços | Taskflow",
+  title: "Preços",
   description:
     "Taskflow é grátis durante o beta. Kanban, sprints, GitHub integration, Planning Poker e IA sem custo.",
+  alternates: { canonical: "/pricing" },
 };
 
 const features = [

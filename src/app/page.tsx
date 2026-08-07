@@ -19,6 +19,9 @@ export const metadata = {
     title: "Taskflow — Gestão de tarefas para times que entregam",
     description: "Kanban boards, sprints e integração com GitHub num só lugar.",
   },
+  // Fica na PAGINA, nao no layout raiz: no layout, todas as rotas herdariam
+  // este canonical e cada uma diria ser a home.
+  alternates: { canonical: "/" },
 };
 
 const jsonLd = {
