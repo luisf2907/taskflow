@@ -27,12 +27,31 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { diasRestantes } from "@/lib/datas";
 import { useRealtimeBoard } from "@/hooks/use-realtime";
 
-function diasRestantes(dataFim: string | null): number | null {
-  if (!dataFim) return null;
-  const diff = new Date(dataFim).getTime() - new Date().getTime();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+/**
+ * Devolve o instante que o servidor usou no render e, depois de hidratar,
+ * troca pelo relogio do proprio cliente.
+ *
+ * O primeiro render precisa bater com o HTML que veio pronto, senao o
+ * contador de dias pode divergir. Depois disso nao ha mais o que casar, e o
+ * relogio local passa a valer — importante porque o valor do servidor pode
+ * chegar velho se a resposta ficar em cache no caminho.
+ *
+ * A diferenca entre os dois e de milissegundos, entao o numero na tela nao
+ * pisca. Nao ha atualizacao periodica: a versao anterior tambem so
+ * recalculava quando algo re-renderizava.
+ */
+function useAgora(agoraMs: number): number {
+  const [agora, setAgora] = useState(agoraMs);
+  useEffect(() => {
+    // set-state-in-effect intencional: e o atraso de um render que faz o
+    // primeiro render do cliente ser identico ao do servidor.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAgora(Date.now());
+  }, []);
+  return agora;
 }
 
 function formatarData(data: string | null): string {
@@ -72,7 +91,7 @@ function statusBg(s: StatusSprint) {
  * `quadroId` chega por prop em vez de `useParams()` porque quem sabe o id
  * primeiro passa a ser o servidor.
  */
-export function BoardClient({ quadroId }: { quadroId: string }) {
+export function BoardClient({ quadroId, agoraMs }: { quadroId: string; agoraMs: number }) {
   const router = useRouter();
   // `quadros` alimenta a Sidebar e a checagem de "outra sprint ativa"; nao
   // e o caminho critico do board. O quadro em si vem do useQuadro, que
@@ -98,7 +117,8 @@ export function BoardClient({ quadroId }: { quadroId: string }) {
   const [editInicio, setEditInicio] = useState("");
   const [editFim, setEditFim] = useState("");
 
-  const dias = quadro ? diasRestantes(quadro.data_fim) : null;
+  const agora = useAgora(agoraMs);
+  const dias = quadro ? diasRestantes(quadro.data_fim, agora) : null;
 
   useEffect(() => {
     if (!telaCheia) return;
@@ -285,19 +305,21 @@ export function BoardClient({ quadroId }: { quadroId: string }) {
                 <div className="order-3 md:order-2 w-full md:w-auto flex items-center gap-1.5 flex-wrap shrink-0">
                   {isSprint && (
                     <Dropdown
-                      trigger={
-                        <button
-                          className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[0.625rem] font-medium transition-colors"
-                          style={{
-                            background: statusBg(quadro.status_sprint),
-                            color: statusColor(quadro.status_sprint),
-                            border: `1px solid ${statusColor(quadro.status_sprint)}`,
-                            borderRadius: "var(--tf-radius-xs)",
-                            fontFamily: "var(--tf-font-mono)",
-                            letterSpacing: "0.06em",
-                            textTransform: "uppercase",
-                          }}
-                        >
+                      rotulo={`Status da sprint: ${STATUS_LABELS[quadro.status_sprint]}. Alterar`}
+                      propsGatilho={{
+                        className: "inline-flex items-center gap-1.5 h-7 px-2.5 text-[0.625rem] font-medium transition-colors",
+                        style: {
+                          background: statusBg(quadro.status_sprint),
+                          color: statusColor(quadro.status_sprint),
+                          border: `1px solid ${statusColor(quadro.status_sprint)}`,
+                          borderRadius: "var(--tf-radius-xs)",
+                          fontFamily: "var(--tf-font-mono)",
+                          letterSpacing: "0.06em",
+                          textTransform: "uppercase",
+                        },
+                      }}
+                      gatilho={
+                        <>
                           <span
                             className="w-1.5 h-1.5"
                             style={{
@@ -306,7 +328,7 @@ export function BoardClient({ quadroId }: { quadroId: string }) {
                             }}
                           />
                           {STATUS_LABELS[quadro.status_sprint]}
-                        </button>
+                        </>
                       }
                     >
                       {quadro.status_sprint !== "ativa" && (
@@ -392,14 +414,12 @@ export function BoardClient({ quadroId }: { quadroId: string }) {
                     )}
                   </button>
                   <Dropdown
-                    trigger={
-                      <button
-                        className="p-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]"
-                        style={headerBtnStyle}
-                      >
-                        <MoreHorizontal size={14} strokeWidth={1.75} />
-                      </button>
-                    }
+                    rotulo={`Opções do ${isSprint ? "sprint" : "quadro"} ${quadro.nome}`}
+                    propsGatilho={{
+                      className: "p-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]",
+                      style: headerBtnStyle,
+                    }}
+                    gatilho={<MoreHorizontal size={14} strokeWidth={1.75} />}
                   >
                     <DropdownItem onClick={iniciarEdicao}>
                       <Pencil size={12} strokeWidth={1.75} /> Renomear

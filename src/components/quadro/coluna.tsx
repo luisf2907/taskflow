@@ -130,7 +130,13 @@ export const Coluna = memo(function Coluna({
           />
         ) : (
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            <h3
+            {/*
+              h2, nao h3: o titulo do quadro e o h1 da pagina, e a coluna vem
+              logo abaixo dele. Com h3 a estrutura pulava um nivel, o que faz
+              quem navega por titulos achar que perdeu uma secao. O nivel nao
+              tem relacao com o tamanho — este continua em 0,75rem.
+            */}
+            <h2
               className="text-[0.75rem] font-semibold uppercase truncate"
               style={{
                 color: "var(--tf-text)",
@@ -139,7 +145,7 @@ export const Coluna = memo(function Coluna({
               }}
             >
               {coluna.nome}
-            </h3>
+            </h2>
             <span
               className="inline-flex items-center justify-center min-w-[18px] h-[17px] px-1 text-[0.625rem] font-medium shrink-0"
               style={{
@@ -181,15 +187,13 @@ export const Coluna = memo(function Coluna({
         >
           <Dropdown
             portal
-            trigger={
-              <button
-                className="w-9 h-9 md:w-7 md:h-7 flex items-center justify-center rounded-[var(--tf-radius-xs)] transition-colors hover:bg-[var(--tf-surface-hover)]"
-                style={{ color: "var(--tf-text-tertiary)" }}
-                aria-label={`Opções da coluna ${coluna.nome}`}
-              >
-                <MoreHorizontal size={14} strokeWidth={1.75} />
-              </button>
-            }
+            rotulo={`Opções da coluna ${coluna.nome}`}
+            propsGatilho={{
+              className:
+                "w-9 h-9 md:w-7 md:h-7 flex items-center justify-center rounded-[var(--tf-radius-xs)] transition-colors hover:bg-[var(--tf-surface-hover)]",
+              style: { color: "var(--tf-text-tertiary)" },
+            }}
+            gatilho={<MoreHorizontal size={14} strokeWidth={1.75} />}
           >
             <DropdownItem
               onClick={() => {

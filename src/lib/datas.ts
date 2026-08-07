@@ -70,9 +70,20 @@ export function toISODate(d: Date): string {
 /**
  * Quantos dias faltam ate a dataFim (string ISO). Negativo se passou.
  * Retorna null se dataFim for nula.
+ *
+ * `agoraMs` e OBRIGATORIO de proposito. A versao anterior chamava
+ * `new Date()` aqui dentro, o que escondia uma leitura de relogio no meio
+ * de um render. Em pagina renderizada no servidor isso acontece duas vezes
+ * — servidor e hidratacao — e se a virada do Math.ceil cair entre as duas
+ * o texto diverge e o React descarta a arvore.
+ *
+ * Com o parametro explicito, quem chama precisa decidir de onde vem o
+ * "agora": congelado no servidor quando a pagina e SSR (ver
+ * `src/app/quadro/[id]/page.tsx`), ou `Date.now()` mesmo quando o trecho
+ * so existe no cliente.
  */
-export function diasRestantes(dataFim: string | null): number | null {
+export function diasRestantes(dataFim: string | null, agoraMs: number): number | null {
   if (!dataFim) return null;
-  const diff = new Date(dataFim).getTime() - new Date().getTime();
+  const diff = new Date(dataFim).getTime() - agoraMs;
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }

@@ -8,8 +8,33 @@ import { scaleIn } from "@/lib/motion/presets";
 
 const DropdownContext = createContext<(() => void) | undefined>(undefined);
 
+/**
+ * Props que o caller controla no <button> do gatilho.
+ *
+ * `type`, `aria-haspopup`, `aria-expanded` e `onClick` ficam de fora de
+ * proposito: sao a semantica do menu, nao aparencia, e o Dropdown os
+ * define. `aria-label` sai porque vem do `rotulo`, que e obrigatorio.
+ */
+type PropsGatilho = Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  "type" | "aria-haspopup" | "aria-expanded" | "onClick" | "aria-label" | "children"
+>;
+
 interface DropdownProps {
-  trigger: React.ReactNode;
+  /**
+   * Conteudo VISUAL do gatilho — icone, avatar, texto. NAO passe um
+   * <button>: o Dropdown ja renderiza um em volta disto, e botao dentro de
+   * botao e HTML invalido.
+   */
+  gatilho: React.ReactNode;
+  /**
+   * Nome acessivel do gatilho. Obrigatorio porque quase todo gatilho daqui
+   * e so um icone — sem isto o leitor de tela anuncia "botao" e mais nada.
+   * Escreva o que ele ABRE ("Opcoes da coluna Backlog"), nao o desenho.
+   */
+  rotulo: string;
+  /** className, style e handlers de aparencia aplicados ao <button>. */
+  propsGatilho?: PropsGatilho;
   children: React.ReactNode;
   className?: string;
   closeOnClick?: boolean;
@@ -18,20 +43,44 @@ interface DropdownProps {
   portal?: boolean;
 }
 
-export function Dropdown({ trigger, children, className, closeOnClick = true, portal = false }: DropdownProps) {
+/**
+ * `.tf-botao-nu` vive em globals.css, dentro de @layer base — ver o
+ * comentario la. Em resumo: <button> nao herda fonte do pai, e tres dos
+ * gatilhos daqui eram <div>, entao sem o reset eles passariam a renderizar
+ * na fonte padrao do navegador. A classe fica numa layer anterior a das
+ * utilities para que qualquer classe do caller a sobreponha.
+ */
+const RESET_GATILHO = "tf-botao-nu";
+
+export function Dropdown({
+  gatilho,
+  rotulo,
+  propsGatilho,
+  children,
+  className,
+  closeOnClick = true,
+  portal = false,
+}: DropdownProps) {
   const [aberto, setAberto] = useState(false);
   const [coords, setCoords] = useState<{ top: number; right: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const botaoRef = useRef<HTMLButtonElement>(null);
 
-  // Posiciona o menu portal alinhado ao trigger.
+  const focarPrimeiroItem = useCallback(() => {
+    setTimeout(() => {
+      const items = menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+      items?.[0]?.focus();
+    }, 0);
+  }, []);
+
+  // Posiciona o menu portal alinhado ao gatilho.
   // set-state-in-effect intencional: precisamos do bounding rect do DOM,
-  // só conhecido após o trigger renderizar.
+  // só conhecido após o gatilho renderizar.
   useLayoutEffect(() => {
     if (!portal || !aberto) return;
-    const trigger = ref.current?.querySelector('[aria-haspopup]') as HTMLElement | null;
-    if (!trigger) return;
-    const rect = trigger.getBoundingClientRect();
+    const rect = botaoRef.current?.getBoundingClientRect();
+    if (!rect) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCoords({
       top: rect.bottom + 4,
@@ -43,7 +92,7 @@ export function Dropdown({ trigger, children, className, closeOnClick = true, po
     function handleClickFora(e: MouseEvent) {
       const target = e.target as Node;
       // Quando o menu é renderizado via portal, ref.current não contém o menu.
-      // Por isso checamos tanto o trigger (ref) quanto o menu (menuRef).
+      // Por isso checamos tanto o gatilho (ref) quanto o menu (menuRef).
       const dentroTrigger = ref.current?.contains(target);
       const dentroMenu = menuRef.current?.contains(target);
       if (!dentroTrigger && !dentroMenu) setAberto(false);
@@ -54,14 +103,13 @@ export function Dropdown({ trigger, children, className, closeOnClick = true, po
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      // Fechado, so a seta pra baixo interessa: Enter e Espaco ja viram
+      // clique sozinhos, porque agora o gatilho e um <button> de verdade.
       if (!aberto) {
-        if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+        if (e.key === "ArrowDown") {
           e.preventDefault();
           setAberto(true);
-          setTimeout(() => {
-            const items = menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
-            items?.[0]?.focus();
-          }, 0);
+          focarPrimeiroItem();
         }
         return;
       }
@@ -84,7 +132,7 @@ export function Dropdown({ trigger, children, className, closeOnClick = true, po
         case "Escape":
           e.preventDefault();
           setAberto(false);
-          (ref.current?.querySelector("[aria-haspopup]") as HTMLElement)?.focus();
+          botaoRef.current?.focus();
           break;
         case "Home":
           e.preventDefault();
@@ -96,98 +144,71 @@ export function Dropdown({ trigger, children, className, closeOnClick = true, po
           break;
       }
     },
-    [aberto]
+    [aberto, focarPrimeiroItem]
+  );
+
+  const menu = (
+    <motion.div
+      ref={menuRef}
+      role="menu"
+      aria-label={rotulo}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={scaleIn}
+      className={cn(
+        portal ? "fixed min-w-[200px] py-1 z-[100] border" : "absolute right-0 mt-1 min-w-[200px] py-1 z-50 border",
+        "rounded-[var(--tf-radius-md)]",
+        className
+      )}
+      style={{
+        ...(portal ? { top: coords?.top ?? -9999, right: coords?.right ?? -9999 } : {}),
+        background: "var(--tf-surface-raised)",
+        borderColor: "var(--tf-border)",
+        boxShadow: "var(--tf-shadow-md)",
+        transformOrigin: "top right",
+      }}
+    >
+      <DropdownContext.Provider value={closeOnClick ? () => setAberto(false) : undefined}>
+        {children}
+      </DropdownContext.Provider>
+    </motion.div>
   );
 
   return (
-    // O onKeyDown aqui e DELEGACAO: captura setas, Escape, Home e End que
-    // sobem dos <button> filhos do menu. O <div> em si nao e um controle,
-    // entao nao leva role nem tabIndex — isso criaria uma parada fantasma
-    // no Tab antes do gatilho de verdade.
+    // O onKeyDown aqui e DELEGACAO: captura setas, Escape, Home e End vindas
+    // tanto do gatilho quanto dos itens do menu. Precisa ficar no wrapper
+    // porque o foco pode estar nos dois lugares — abrir com o mouse deixa o
+    // foco no botao, abrir com teclado joga pro primeiro item. Funciona
+    // mesmo com `portal`: o React propaga eventos pela arvore de
+    // componentes, nao pela do DOM.
     //
-    // A regra nao distingue delegacao de interacao propria. O teclado deste
-    // componente (setas, Home, End, Esc devolvendo o foco) e melhor que a
-    // media do app, nao pior.
+    // O <div> em si nao e um controle, entao nao leva role nem tabIndex —
+    // isso criaria uma parada fantasma no Tab. A regra nao distingue
+    // delegacao de interacao propria.
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div ref={ref} className="relative" onKeyDown={handleKeyDown}>
-      <div
-        onClick={() => setAberto(!aberto)}
-        role="button"
+      <button
+        {...propsGatilho}
+        ref={botaoRef}
+        type="button"
+        aria-label={rotulo}
         aria-haspopup="menu"
         aria-expanded={aberto}
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setAberto(!aberto);
-            if (!aberto) {
-              setTimeout(() => {
-                const items = menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
-                items?.[0]?.focus();
-              }, 0);
-            }
-          }
+        className={cn(RESET_GATILHO, propsGatilho?.className)}
+        onClick={(e) => {
+          // detail === 0 significa clique sintetizado pelo teclado (Enter ou
+          // Espaco num <button>). So nesse caso o foco desce pro primeiro
+          // item; com mouse ele fica no botao, como se espera.
+          const porTeclado = e.detail === 0;
+          setAberto((v) => !v);
+          if (!aberto && porTeclado) focarPrimeiroItem();
         }}
       >
-        {trigger}
-      </div>
+        {gatilho}
+      </button>
       <AnimatePresence>
-        {aberto && (
-          portal && typeof document !== "undefined" ? (
-            createPortal(
-              <motion.div
-                ref={menuRef}
-                role="menu"
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                variants={scaleIn}
-                className={cn(
-                  "fixed min-w-[200px] py-1 z-[100] border",
-                  "rounded-[var(--tf-radius-md)]",
-                  className
-                )}
-                style={{
-                  top: coords?.top ?? -9999,
-                  right: coords?.right ?? -9999,
-                  background: "var(--tf-surface-raised)",
-                  borderColor: "var(--tf-border)",
-                  boxShadow: "var(--tf-shadow-md)",
-                  transformOrigin: "top right",
-                }}
-              >
-                <DropdownContext.Provider value={closeOnClick ? () => setAberto(false) : undefined}>
-                  {children}
-                </DropdownContext.Provider>
-              </motion.div>,
-              document.body
-            )
-          ) : (
-            <motion.div
-              ref={menuRef}
-              role="menu"
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              variants={scaleIn}
-              className={cn(
-                "absolute right-0 mt-1 min-w-[200px] py-1 z-50 border",
-                "rounded-[var(--tf-radius-md)]",
-                className
-              )}
-              style={{
-                background: "var(--tf-surface-raised)",
-                borderColor: "var(--tf-border)",
-                boxShadow: "var(--tf-shadow-md)",
-                transformOrigin: "top right",
-              }}
-            >
-              <DropdownContext.Provider value={closeOnClick ? () => setAberto(false) : undefined}>
-                {children}
-              </DropdownContext.Provider>
-            </motion.div>
-          )
-        )}
+        {aberto && (portal && typeof document !== "undefined" ? createPortal(menu, document.body) : menu)}
       </AnimatePresence>
     </div>
   );

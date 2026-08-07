@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTema } from "@/hooks/use-tema";
 import { HelpCircle, LogOut, Menu, Moon, Sun, User, Search, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
@@ -51,10 +51,23 @@ function HeaderIconButton({
 export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
   const { tema, alternar } = useTema();
   const { user, perfil, logout } = useAuth();
-  const isMac = useMemo(
-    () => typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.userAgent),
-    []
-  );
+  // ATENCAO: isto NAO pode ser decidido durante o render.
+  //
+  // Era um useMemo lendo navigator.userAgent. useMemo roda no render, e no
+  // servidor `navigator` nao existe — o HTML saia sempre com "Ctrl K". Num
+  // Mac o primeiro render do cliente ja dava "⌘K", divergia do HTML
+  // recebido e estourava o React #418 ("the server rendered text didn't
+  // match the client") em TODA pagina, porque o header e global.
+  //
+  // Com estado + efeito o primeiro render do cliente e igual ao do
+  // servidor, e a correcao acontece depois de hidratar.
+  const [isMac, setIsMac] = useState(false);
+  useEffect(() => {
+    // set-state-in-effect intencional e necessario: e justamente o atraso
+    // de um render que faz o HTML do servidor bater com o do cliente.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMac(/Mac|iPod|iPhone|iPad/.test(navigator.userAgent));
+  }, []);
 
   const avatar = avatarDimensionado(perfil?.avatar_url, 24);
   const nome = perfil?.nome ?? user?.email?.split("@")[0] ?? "";
@@ -99,7 +112,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
           color: "var(--tf-text-tertiary)",
         }}
         onClick={() => window.dispatchEvent(new Event("open-command-palette"))}
-        aria-label="Buscar (Ctrl+K)"
+        aria-label={`Buscar ou executar (${isMac ? "Cmd+K" : "Ctrl+K"})`}
       >
         <Search size={13} strokeWidth={1.75} />
         <span
@@ -173,20 +186,27 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
         {/* Profile */}
         {user ? (
           <Dropdown
-            trigger={
-              <div
-                className="flex items-center gap-1.5 h-8 pl-1 pr-2 cursor-pointer transition-colors hover:bg-[var(--tf-surface-hover)]"
-                style={{ borderRadius: "var(--tf-radius-sm)" }}
-              >
+            rotulo={`Conta de ${nome || "usuário"}`}
+            propsGatilho={{
+              className:
+                "flex items-center gap-1.5 h-8 pl-1 pr-2 transition-colors hover:bg-[var(--tf-surface-hover)]",
+              style: { borderRadius: "var(--tf-radius-sm)" },
+            }}
+            gatilho={
+              <>
                 {avatar ? (
+                  // alt vazio: o nome ja esta no aria-label do gatilho e no
+                  // <span> ao lado. Repetir faria o leitor de tela dizer o
+                  // nome tres vezes seguidas.
                   <img
                     src={avatar}
-                    alt={nome}
+                    alt=""
                     className="w-6 h-6 shrink-0"
                     style={{ borderRadius: "var(--tf-radius-xs)" }}
                   />
                 ) : (
                   <div
+                    aria-hidden="true"
                     className="w-6 h-6 flex items-center justify-center text-[0.6875rem] font-semibold shrink-0"
                     style={{
                       background: "var(--tf-accent)",
@@ -204,7 +224,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
                 >
                   {nome || "Conta"}
                 </span>
-              </div>
+              </>
             }
             className="!w-52 !max-w-[calc(100vw-16px)] !mt-2"
           >

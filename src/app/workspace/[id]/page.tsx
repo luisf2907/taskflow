@@ -135,6 +135,19 @@ export default function PaginaWorkspace() {
   const searchParams = useSearchParams();
   const workspaceId = params.id as string;
 
+  // Relogio lido no render, de proposito e sem risco AQUI.
+  //
+  // Ler a hora durante o render e o que quebra hidratacao em pagina
+  // renderizada no servidor. Nesta nao quebra: os dados de sprint vem de
+  // SWR no cliente e nao ha loader de servidor (so o quadro tem, em
+  // `board-loader-server.ts`), entao no SSR a lista chega vazia e nenhum
+  // dos trechos que usam `agoraMs` chega a sair no HTML.
+  //
+  // SE esta pagina um dia ganhar dados no servidor, este valor precisa
+  // passar a vir de la — ver como `src/app/quadro/[id]/page.tsx` congela o
+  // instante e entrega ao cliente.
+  const agoraMs = Date.now();
+
   const { workspaces, atualizar: atualizarWs, excluir: excluirWs } = useWorkspaces();
   const { quadros, criar: criarQuadro, atualizar: atualizarQuadro, excluir: excluirQuadro } = useQuadros();
   const { cartoes: todosCartoes, backlogPuro, cartoesDaSprint, criarTarefa, associarASprint, desassociarDeSprint, moverParaSprint, excluirTarefa, buscar: buscarBacklog } = useBacklog(workspaceId);
@@ -359,7 +372,7 @@ export default function PaginaWorkspace() {
   }
 
   function SprintCard({ sprint, tipo }: { sprint: Quadro; tipo: "ativa" | "planejada" | "concluida" }) {
-    const dias = diasRestantes(sprint.data_fim);
+    const dias = diasRestantes(sprint.data_fim, agoraMs);
     const statusLabel = tipo === "ativa" ? "Ativa" : tipo === "concluida" ? "Concluída" : "Planejada";
     const statusColor = tipo === "ativa" ? "var(--tf-success)" : tipo === "concluida" ? "var(--tf-text-tertiary)" : "var(--tf-warning)";
     const statusBg = tipo === "ativa" ? "var(--tf-success-bg)" : tipo === "concluida" ? "var(--tf-bg-secondary)" : "var(--tf-warning-bg)";
@@ -511,18 +524,19 @@ export default function PaginaWorkspace() {
               </button>
             )}
             <Dropdown
-              trigger={
-                <button
-                  className="p-1 opacity-0 group-hover:opacity-100 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]"
-                  style={{
-                    color: "var(--tf-text-tertiary)",
-                    borderRadius: "var(--tf-radius-xs)",
-                  }}
-                  aria-label="Opções"
-                >
-                  <MoreHorizontal size={14} strokeWidth={1.75} />
-                </button>
-              }
+              rotulo={`Opções de ${sprint.nome}`}
+              propsGatilho={{
+                // opacity-0 + group-hover: some no mouse, mas focus-visible
+                // traz de volta — senao o gatilho fica invisivel pra quem
+                // chega nele pelo Tab.
+                className:
+                  "p-1 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]",
+                style: {
+                  color: "var(--tf-text-tertiary)",
+                  borderRadius: "var(--tf-radius-xs)",
+                },
+              }}
+              gatilho={<MoreHorizontal size={14} strokeWidth={1.75} />}
             >
               <DropdownItem onClick={() => router.push(`/quadro/${sprint.id}`)}>
                 <ArrowRight size={12} strokeWidth={1.75} /> Abrir board
@@ -1305,7 +1319,7 @@ export default function PaginaWorkspace() {
                         {sprintAtiva.data_inicio && sprintAtiva.data_fim && (
                           <p className="text-[11px] mt-0.5 truncate" style={{ color: "var(--tf-text-tertiary)" }}>
                             {formatarData(sprintAtiva.data_inicio)} → {formatarData(sprintAtiva.data_fim)}
-                            {(() => { const d = diasRestantes(sprintAtiva.data_fim); return d !== null ? <span className="font-bold ml-1" style={{ color: d <= 2 ? "var(--tf-danger)" : d <= 5 ? "var(--tf-warning)" : "var(--tf-success)" }}>· {d > 0 ? `${d}d` : d === 0 ? "Hoje!" : `${Math.abs(d)}d atrás`}</span> : null; })()}
+                            {(() => { const d = diasRestantes(sprintAtiva.data_fim, agoraMs); return d !== null ? <span className="font-bold ml-1" style={{ color: d <= 2 ? "var(--tf-danger)" : d <= 5 ? "var(--tf-warning)" : "var(--tf-success)" }}>· {d > 0 ? `${d}d` : d === 0 ? "Hoje!" : `${Math.abs(d)}d atrás`}</span> : null; })()}
                           </p>
                         )}
                       </div>
@@ -1355,7 +1369,7 @@ export default function PaginaWorkspace() {
                       const total = tarefas.length;
                       const done = tarefas.filter(t => t.coluna_nome?.toLowerCase().includes("conclu") || t.coluna_nome?.toLowerCase().includes("done")).length;
                       const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-                      const dias = diasRestantes(sprintAtiva.data_fim);
+                      const dias = diasRestantes(sprintAtiva.data_fim, agoraMs);
                       return (
                         <div className="space-y-5">
                           {/* Circular-ish progress */}

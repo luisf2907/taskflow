@@ -19,28 +19,8 @@ export function NotificationBell() {
   const { notificacoes, naoLidas, marcarComoLida, marcarTodasComoLidas, apagar, limparTodas } =
     useNotificacoes();
 
-  const trigger = (
-    <button
-      className="relative w-8 h-8 flex items-center justify-center transition-colors outline-none cursor-pointer"
-      aria-label={
-        naoLidas > 0
-          ? `Notificações — ${naoLidas} não lida${naoLidas > 1 ? "s" : ""}`
-          : "Notificações"
-      }
-      style={{
-        borderRadius: "var(--tf-radius-sm)",
-        color: "var(--tf-text-secondary)",
-        background: "transparent",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "var(--tf-surface-hover)";
-        e.currentTarget.style.color = "var(--tf-text)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "transparent";
-        e.currentTarget.style.color = "var(--tf-text-secondary)";
-      }}
-    >
+  const gatilho = (
+    <>
       <Bell size={15} strokeWidth={1.75} aria-hidden="true" />
       {naoLidas > 0 && (
         <span
@@ -55,12 +35,35 @@ export function NotificationBell() {
           }}
         />
       )}
-    </button>
+    </>
   );
 
   return (
     <Dropdown
-      trigger={trigger}
+      // A contagem entra no nome porque o ponto laranja e aria-hidden: sem
+      // isto nao ha como saber que existe notificacao sem abrir o menu.
+      rotulo={
+        naoLidas > 0
+          ? `Notificações — ${naoLidas} não lida${naoLidas > 1 ? "s" : ""}`
+          : "Notificações"
+      }
+      propsGatilho={{
+        className: "relative w-8 h-8 flex items-center justify-center transition-colors outline-none",
+        style: {
+          borderRadius: "var(--tf-radius-sm)",
+          color: "var(--tf-text-secondary)",
+          background: "transparent",
+        },
+        onMouseEnter: (e) => {
+          e.currentTarget.style.background = "var(--tf-surface-hover)";
+          e.currentTarget.style.color = "var(--tf-text)";
+        },
+        onMouseLeave: (e) => {
+          e.currentTarget.style.background = "transparent";
+          e.currentTarget.style.color = "var(--tf-text-secondary)";
+        },
+      }}
+      gatilho={gatilho}
       closeOnClick={false}
       className="!w-[340px] !max-w-[calc(100vw-16px)] !p-0 overflow-hidden !mt-2"
     >

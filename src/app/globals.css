@@ -47,6 +47,30 @@ button, a, [role="button"], label[for], summary, input[type="submit"], input[typ
   cursor: pointer;
 }
 
+/* Neutraliza o estilo que o navegador da ao <button>, para ele poder ser
+   usado onde antes havia uma <div> clicavel sem mudar o layout. O que mais
+   pega e a FONTE: o botao NAO herda font-family nem font-size do pai — o
+   Chrome aplica Arial 13.333px por conta propria.
+
+   Fica em @layer base de proposito: as utilities do Tailwind vem depois na
+   cascata, entao qualquer classe que o caller passe (text-sm, font-medium,
+   text-left) vence isto sem precisar de !important.
+
+   Usado pelo gatilho do <Dropdown>. */
+@layer base {
+  .tf-botao-nu {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    letter-spacing: inherit;
+  }
+}
+
 /* ============================================
    TASKFLOW — Design System
    Tech-futurista sóbrio · Orange #FF5A1F
@@ -146,7 +170,14 @@ button, a, [role="button"], label[for], summary, input[type="submit"], input[typ
 
   --tf-text: #E8E8EA;
   --tf-text-secondary: #A8A8AE;
-  --tf-text-tertiary: #6B6B70;
+  /* Era #6B6B70, o MESMO valor do tema claro — foi o unico neutro que nao
+     mudou entre os temas. Sobre branco da 5,30:1 e passa; sobre o surface
+     escuro cai para 3,56:1 e reprova no AA. Como quase todo texto que usa
+     este token e pequeno (0,625rem em contador de coluna, atalho, rotulo),
+     vale o criterio de 4,5:1, nao o de texto grande.
+     #8A8A90 fica em 5,50:1 sobre --tf-surface e nao desce de 5,06:1 em
+     nenhum fundo escuro, incluindo --tf-surface-raised. */
+  --tf-text-tertiary: #8A8A90;
 
   --tf-border: #2A2A2E;
   --tf-border-subtle: #1E1E22;

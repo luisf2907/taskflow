@@ -54,18 +54,15 @@ export function WorkspaceBentoCard({
         </div>
 
         <Dropdown
-          trigger={
-            <button
-              className="p-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]"
-              style={{
-                color: "var(--tf-text-tertiary)",
-                borderRadius: "var(--tf-radius-xs)",
-              }}
-              aria-label="Opções"
-            >
-              <MoreVertical size={14} strokeWidth={1.75} />
-            </button>
-          }
+          rotulo={`Opções do workspace ${ws.nome}`}
+          propsGatilho={{
+            className: "p-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]",
+            style: {
+              color: "var(--tf-text-tertiary)",
+              borderRadius: "var(--tf-radius-xs)",
+            },
+          }}
+          gatilho={<MoreVertical size={14} strokeWidth={1.75} />}
         >
           <DropdownItem onClick={() => onEditar(ws)}>
             <Pencil size={12} strokeWidth={1.75} /> Editar

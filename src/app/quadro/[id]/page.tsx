@@ -46,8 +46,29 @@ export default async function PaginaQuadro({
   const { id } = await params;
   const dados = await carregarBoardServidor(id);
 
+  // O instante do render vai junto com o HTML.
+  //
+  // O contador de "dias restantes" da sprint deriva do relogio. Como esta
+  // pagina agora sai renderizada do servidor, o valor era calculado duas
+  // vezes — uma aqui, outra ao hidratar — com relogios diferentes. Quase
+  // sempre da o mesmo numero, mas se a virada do Math.ceil cair entre os
+  // dois renders o texto diverge e o React descarta a arvore (o mesmo
+  // #418 do atalho do teclado, so que intermitente).
+  //
+  // Rota dinamica (ƒ), entao isto roda a cada request — nao congela no
+  // build. O cliente parte deste valor e troca pelo relogio dele depois de
+  // hidratar; ver `useAgora` no board-client.
+  //
+  // react-hooks/purity reclama de Date.now() no render, e com razao num
+  // componente de cliente: la o valor mudaria a cada re-render. Este e um
+  // SERVER COMPONENT async, que roda UMA vez por request e nao re-renderiza
+  // — capturar o instante aqui e o que torna o render do cliente estavel.
+  // A regra nao distingue os dois casos.
+  // eslint-disable-next-line react-hooks/purity
+  const agoraMs = Date.now();
+
   if (!dados) {
-    return <BoardClient quadroId={id} />;
+    return <BoardClient quadroId={id} agoraMs={agoraMs} />;
   }
 
   return (
@@ -60,7 +81,7 @@ export default async function PaginaQuadro({
         },
       }}
     >
-      <BoardClient quadroId={id} />
+      <BoardClient quadroId={id} agoraMs={agoraMs} />
     </SWRConfig>
   );
 }

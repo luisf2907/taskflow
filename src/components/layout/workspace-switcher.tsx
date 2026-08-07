@@ -49,16 +49,16 @@ export function WorkspaceSwitcher({ aberta, onNovoWorkspace }: WorkspaceSwitcher
 
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId);
 
-  const trigger = (
-    <div
-      className={cn(
-        "flex items-center gap-2 cursor-pointer transition-colors sidebar-item",
-        "hover:bg-[var(--tf-surface-hover)]",
-        aberta
-          ? "justify-between px-2 py-1.5 rounded-[var(--tf-radius-sm)]"
-          : "justify-center w-8 h-8 mx-auto rounded-[var(--tf-radius-sm)]"
-      )}
-    >
+  const classeGatilho = cn(
+    "flex items-center gap-2 transition-colors sidebar-item w-full",
+    "hover:bg-[var(--tf-surface-hover)]",
+    aberta
+      ? "justify-between px-2 py-1.5 rounded-[var(--tf-radius-sm)]"
+      : "justify-center w-8 h-8 mx-auto rounded-[var(--tf-radius-sm)]"
+  );
+
+  const gatilho = (
+    <>
       <div className="flex items-center gap-2 overflow-hidden">
         <WorkspaceInitial workspace={activeWorkspace ?? null} size={24} />
         {aberta && (
@@ -88,9 +88,10 @@ export function WorkspaceSwitcher({ aberta, onNovoWorkspace }: WorkspaceSwitcher
           style={{ color: "var(--tf-text-tertiary)" }}
           className="shrink-0"
           strokeWidth={1.75}
+          aria-hidden="true"
         />
       )}
-    </div>
+    </>
   );
 
   // Dropdown SEMPRE abre pra direita da sidebar (left-full ml-2), independente
@@ -102,7 +103,13 @@ export function WorkspaceSwitcher({ aberta, onNovoWorkspace }: WorkspaceSwitcher
       title={!aberta ? activeWorkspace?.nome || "Workspace" : undefined}
     >
       <Dropdown
-        trigger={trigger}
+        // Colapsada o gatilho e so o quadradinho da inicial, sem texto
+        // nenhum — o nome do workspace precisa vir daqui.
+        rotulo={
+          activeWorkspace ? `Workspace ${activeWorkspace.nome}. Trocar` : "Selecione um workspace"
+        }
+        propsGatilho={{ className: classeGatilho }}
+        gatilho={gatilho}
         className={cn(
           // Expandida: !w-full faz o dropdown casar exatamente com a largura
           // do trigger (que preenche o container px-2 da sidebar). Evita o

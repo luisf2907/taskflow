@@ -356,14 +356,16 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               </div>
             ) : (
               <Dropdown
-                trigger={
-                  <div
-                    className="w-full text-left text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border cursor-pointer"
-                    style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}
-                  >
-                    {carregandoCards ? "Carregando cards..." : "Selecionar card..."}
-                  </div>
-                }
+                rotulo="Selecionar card vinculado"
+                propsGatilho={{
+                  className: "w-full text-left text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border",
+                  style: {
+                    background: "var(--tf-bg)",
+                    borderColor: "var(--tf-border)",
+                    color: "var(--tf-text-tertiary)",
+                  },
+                }}
+                gatilho={carregandoCards ? "Carregando cards..." : "Selecionar card..."}
                 className="!left-0 !right-0 w-full max-h-48 overflow-y-auto"
               >
                 {cards.length === 0 ? (
@@ -423,14 +425,16 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
               )}
 
               <Dropdown
-                trigger={
-                  <div
-                    className="w-full text-left text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border cursor-pointer"
-                    style={{ background: "var(--tf-bg)", borderColor: "var(--tf-border)", color: "var(--tf-text-tertiary)" }}
-                  >
-                    Adicionar reviewer...
-                  </div>
-                }
+                rotulo="Adicionar reviewer"
+                propsGatilho={{
+                  className: "w-full text-left text-sm px-3 py-2 rounded-[var(--tf-radius-xs)] border",
+                  style: {
+                    background: "var(--tf-bg)",
+                    borderColor: "var(--tf-border)",
+                    color: "var(--tf-text-tertiary)",
+                  },
+                }}
+                gatilho="Adicionar reviewer..."
                 className="!left-0 !right-0 w-full max-h-40 overflow-y-auto"
               >
                 {membrosComGithub
