@@ -29,9 +29,9 @@ const Botao = forwardRef<HTMLButtonElement, BotaoProps>(
 
     const estilos: Record<string, React.CSSProperties> = {
       primario: {
-        background: "var(--tf-accent)",
+        background: "var(--tf-accent-solid)",
         color: "#FFFFFF",
-        border: "1px solid var(--tf-accent)",
+        border: "1px solid var(--tf-accent-solid)",
       },
       secundario: {
         background: "transparent",
@@ -44,9 +44,9 @@ const Botao = forwardRef<HTMLButtonElement, BotaoProps>(
         border: "1px solid transparent",
       },
       perigo: {
-        background: "var(--tf-danger)",
+        background: "var(--tf-danger-solid)",
         color: "#FFFFFF",
-        border: "1px solid var(--tf-danger)",
+        border: "1px solid var(--tf-danger-solid)",
       },
     };
 

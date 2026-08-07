@@ -209,7 +209,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
                     aria-hidden="true"
                     className="w-6 h-6 flex items-center justify-center text-[0.6875rem] font-semibold shrink-0"
                     style={{
-                      background: "var(--tf-accent)",
+                      background: "var(--tf-accent-solid)",
                       color: "#FFFFFF",
                       borderRadius: "var(--tf-radius-xs)",
                       fontFamily: "var(--tf-font-mono)",
