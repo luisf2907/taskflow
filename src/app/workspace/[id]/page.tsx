@@ -70,6 +70,8 @@ import { usePRSync } from "@/hooks/use-pr-sync";
 import { useWorkspaceUsuarios } from "@/hooks/use-workspace-usuarios";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
+import { abrirModalPro } from "@/lib/pro";
+import { SeloPro } from "@/components/pro/selo-pro";
 import { features } from "@/lib/features";
 import { Quadro } from "@/types";
 
@@ -152,7 +154,7 @@ export default function PaginaWorkspace() {
   const agoraMs = Date.now();
 
   const { workspaces, atualizar: atualizarWs, excluir: excluirWs, sair: sairDoWs } = useWorkspaces();
-  const { user } = useAuth();
+  const { user, ehPro } = useAuth();
   const { quadros, criar: criarQuadro, atualizar: atualizarQuadro, excluir: excluirQuadro } = useQuadros();
   const { cartoes: todosCartoes, backlogPuro, cartoesDaSprint, criarTarefa, associarASprint, desassociarDeSprint, moverParaSprint, excluirTarefa, buscar: buscarBacklog } = useBacklog(workspaceId);
   const { etiquetas: etiquetasWs, criar: criarEtiquetaWs, excluir: excluirEtiquetaWs } = useEtiquetasWorkspace(workspaceId);
@@ -746,12 +748,13 @@ export default function PaginaWorkspace() {
                     </button>
                     {features.ai && (
                       <button
-                        onClick={() => setModalIA(true)}
+                        onClick={() => (ehPro ? setModalIA(true) : abrirModalPro())}
                         className="flex items-center justify-center gap-1.5 h-9 px-3 text-[13px] font-semibold rounded-[var(--tf-radius-xs)] transition-smooth border whitespace-nowrap"
                         style={{ borderColor: "var(--tf-border)", color: "var(--tf-text)", background: "var(--tf-surface)" }}
-                        title="Gerar cards com IA"
+                        title={ehPro ? "Gerar cards com IA" : "Gerar cards com IA — recurso PRO"}
                       >
                         <Sparkles size={14} style={{ color: "var(--tf-accent)" }} /> IA
+                        {!ehPro && <SeloPro />}
                       </button>
                     )}
                   </div>

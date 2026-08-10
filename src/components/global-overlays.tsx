@@ -32,6 +32,11 @@ const HelpModal = dynamic(
   () => import("./help/help-modal").then((m) => m.HelpModal),
   { ssr: false }
 );
+// O nome do evento fica hardcoded de proposito: importar a constante do
+// modulo puxaria o chunk dele pra ca e mataria o lazy load.
+const ModalPro = dynamic(() => import("./pro/modal-pro").then((m) => m.ModalPro), {
+  ssr: false,
+});
 
 /** Dispara o evento de abertura uma vez, depois que o overlay irmao montou. */
 function AbrirAoMontar({ evento }: { evento: string }) {
@@ -45,6 +50,7 @@ export function GlobalOverlays() {
   const [paletteMontada, setPaletteMontada] = useState(false);
   const [askAiMontado, setAskAiMontado] = useState(false);
   const [helpMontado, setHelpMontado] = useState(false);
+  const [proMontado, setProMontado] = useState(false);
 
   // ─── Command Palette: Cmd/Ctrl+K, Cmd/Ctrl+S ou evento ───
   useEffect(() => {
@@ -85,6 +91,14 @@ export function GlobalOverlays() {
     return () => window.removeEventListener("open-help-modal", montarHelp);
   }, [helpMontado, montarHelp]);
 
+  // ─── Aviso de PRO: so por evento ───
+  const montarPro = useCallback(() => setProMontado(true), []);
+  useEffect(() => {
+    if (proMontado) return;
+    window.addEventListener("open-modal-pro", montarPro);
+    return () => window.removeEventListener("open-modal-pro", montarPro);
+  }, [proMontado, montarPro]);
+
   return (
     <>
       {paletteMontada && (
@@ -103,6 +117,12 @@ export function GlobalOverlays() {
         <>
           <HelpModal />
           <AbrirAoMontar evento="open-help-modal" />
+        </>
+      )}
+      {proMontado && (
+        <>
+          <ModalPro />
+          <AbrirAoMontar evento="open-modal-pro" />
         </>
       )}
     </>

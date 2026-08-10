@@ -23,7 +23,7 @@ export function useAuth() {
       const { data } = await supabase
         .from("perfis")
         .select(
-          "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at, theme_preferences",
+          "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at, theme_preferences, plano",
         )
         .eq("id", user!.id)
         .single();
@@ -52,6 +52,12 @@ export function useAuth() {
     carregando,
     logout,
     refresh,
+    /**
+     * Se a conta tem PRO. Enquanto o perfil nao carregou vem `false`, entao a
+     * UI mostra o estado bloqueado por um instante em vez de piscar o recurso
+     * liberado — quem manda de verdade e a checagem nas rotas /api/ai/*.
+     */
+    ehPro: perfil?.plano === "pro",
   };
 }
 

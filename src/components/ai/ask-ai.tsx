@@ -1,6 +1,7 @@
 "use client";
 
 import { features } from "@/lib/features";
+import { abrirModalPro, ehErroDePlano } from "@/lib/pro";
 import { AnimatePresence, motion, useDragControls } from "motion/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -139,7 +140,9 @@ export function AskAi() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) {
+      if (ehErroDePlano(data)) {
+        abrirModalPro();
+      } else if (!res.ok) {
         setMensagens((prev) => [
           ...prev,
           { papel: "model", texto: data.error || "Erro ao consultar a IA.", revelado: 9999 },

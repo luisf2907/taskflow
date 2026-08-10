@@ -5,6 +5,7 @@ import { Botao } from "@/components/ui/botao";
 import { toast } from "@/hooks/use-toast";
 import { Etiqueta } from "@/types";
 import { getContrastTextColor } from "@/lib/colors";
+import { abrirModalPro, ehErroDePlano } from "@/lib/pro";
 import { Sparkles, Zap, Trash2, Plus, Loader2, CheckSquare, Tag } from "lucide-react";
 import { useState, useCallback, useEffect } from "react";
 
@@ -155,6 +156,10 @@ export function GerarCardsModal({ aberto, onFechar, workspaceId, etiquetas = [],
 
       const data = await res.json();
 
+      if (ehErroDePlano(data)) {
+        abrirModalPro();
+        return;
+      }
       if (!res.ok) {
         toast.error(data.error || "Erro ao gerar cards");
         return;

@@ -26,6 +26,9 @@ import { useSidebar } from "@/hooks/use-sidebar";
 import { useQuadros } from "@/hooks/use-quadros";
 import { useWorkspaces } from "@/hooks/use-workspaces";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { abrirModalPro, ehErroDePlano } from "@/lib/pro";
+import { SeloPro } from "@/components/pro/selo-pro";
 import { supabase } from "@/lib/supabase/client";
 import type { Perfil, Reuniao, ReuniaoFala, ReuniaoStatus } from "@/types";
 import { propsBarraDeAudio } from "@/lib/a11y";
@@ -51,6 +54,7 @@ export default function ReuniaoDetailPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [summarizing, setSummarizing] = useState(false);
+  const { ehPro } = useAuth();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const seekBarRef = useRef<HTMLDivElement | null>(null);
 
@@ -93,7 +97,7 @@ export default function ReuniaoDetailPage() {
       const { data: perfisData } = await supabase
         .from("perfis")
         .select(
-          "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at, theme_preferences",
+          "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at, theme_preferences, plano",
         )
         .in("id", Array.from(userIds));
       if (perfisData) {
@@ -217,6 +221,10 @@ export default function ReuniaoDetailPage() {
 
   async function gerarResumo() {
     if (!reuniaoId || summarizing) return;
+    if (!ehPro) {
+      abrirModalPro();
+      return;
+    }
     setSummarizing(true);
     try {
       const res = await fetch("/api/ai/summarize-reuniao", {
@@ -225,6 +233,10 @@ export default function ReuniaoDetailPage() {
         body: JSON.stringify({ reuniao_id: reuniaoId }),
       });
       const data = await res.json();
+      if (ehErroDePlano(data)) {
+        abrirModalPro();
+        return;
+      }
       if (!res.ok) {
         toast.error(data.error || "Erro ao gerar resumo");
         return;
@@ -532,6 +544,7 @@ export default function ReuniaoDetailPage() {
                 resumo={reuniao.resumo_ia}
                 loading={summarizing}
                 onGerar={gerarResumo}
+                ehPro={ehPro}
               />
             )}
 
@@ -807,10 +820,12 @@ function ResumoIaCard({
   resumo,
   loading,
   onGerar,
+  ehPro,
 }: {
   resumo: Reuniao["resumo_ia"];
   loading: boolean;
   onGerar: () => void;
+  ehPro: boolean;
 }) {
   if (!resumo && !loading) {
     return (
@@ -819,9 +834,11 @@ function ResumoIaCard({
           onClick={onGerar}
           className="flex items-center gap-2.5 px-5 py-2.5 rounded-[var(--tf-radius-sm)] text-[13px] font-bold transition-all duration-150 hover:opacity-90"
           style={{ background: "var(--tf-accent)", color: "var(--tf-on-accent)" }}
+          title={ehPro ? "Resumir com IA" : "Resumir com IA — recurso PRO"}
         >
           <Sparkles size={15} />
           Resumir com IA
+          {!ehPro && <SeloPro />}
         </button>
       </div>
     );

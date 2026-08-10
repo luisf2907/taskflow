@@ -3,6 +3,9 @@ import { chaveCartoes } from "@/lib/board-keys";
 
 import { supabase } from "@/lib/supabase/client";
 import { features } from "@/lib/features";
+import { abrirModalPro, ehErroDePlano } from "@/lib/pro";
+import { SeloPro } from "@/components/pro/selo-pro";
+import { useAuth } from "@/hooks/use-auth";
 import { useAnexos } from "@/hooks/use-anexos";
 import { useCartaoEtiquetas } from "@/hooks/use-cartao-etiquetas";
 import { useCartaoMembros } from "@/hooks/use-cartao-membros";
@@ -75,6 +78,7 @@ export function DetalheCartao({
   const [painelAberto, setPainelAberto] = useState<Painel>(null);
   const [confirmExcluirCard, setConfirmExcluirCard] = useState(false);
   const [melhorandoIA, setMelhorandoIA] = useState(false);
+  const { ehPro } = useAuth();
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const tituloInputRef = useRef<HTMLInputElement>(null);
 
@@ -243,6 +247,7 @@ export function DetalheCartao({
       });
 
       const data = await res.json();
+      if (ehErroDePlano(data)) { abrirModalPro(); return; }
       if (!res.ok) { toast.error(data.error || "Erro ao melhorar card"); return; }
 
       // Resumo do que a IA aplicou (feedback claro pro usuário)
@@ -1102,7 +1107,7 @@ export function DetalheCartao({
                   metadados (etiquetas + peso + responsável sugerido). */}
               {features.ai && (
                 <button
-                  onClick={melhorarComIA}
+                  onClick={ehPro ? melhorarComIA : abrirModalPro}
                   disabled={melhorandoIA}
                   className="w-full flex items-center gap-2 h-8 px-3 transition-colors hover:bg-[var(--tf-accent-light)] disabled:opacity-50 outline-none"
                   style={{
@@ -1119,6 +1124,7 @@ export function DetalheCartao({
                   <span className="text-[0.75rem] font-medium">
                     {melhorandoIA ? "Melhorando…" : "Melhorar com IA"}
                   </span>
+                  {!ehPro && <SeloPro />}
                 </button>
               )}
 

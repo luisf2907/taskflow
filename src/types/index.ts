@@ -265,7 +265,16 @@ export interface Perfil {
   voice_enrolled_at: string | null;
   voice_consent_at: string | null;
   theme_preferences: Record<string, string> | null;
+  /**
+   * Plano do usuario. Concedido a mao nesta fase (ver migration 057) e
+   * protegido por trigger — o client consegue escrever nas outras colunas do
+   * proprio perfil, mas nesta nao.
+   */
+  plano: PlanoUsuario;
 }
+
+/** `pro` destrava a IA. Sem cobranca por enquanto. */
+export type PlanoUsuario = "free" | "pro";
 
 // =============================================
 // REUNIOES (voice meetings)

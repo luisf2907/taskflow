@@ -3,6 +3,8 @@
 import { avatarDimensionado } from "@/lib/avatar-url";
 
 import { useAuth } from "@/hooks/use-auth";
+import { abrirModalPro } from "@/lib/pro";
+import { CadeadoPro } from "@/components/pro/selo-pro";
 import { useTema } from "@/hooks/use-tema";
 import { HelpCircle, LogOut, Menu, Moon, Sun, User, Search, Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -50,7 +52,7 @@ function HeaderIconButton({
 
 export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
   const { tema, alternar } = useTema();
-  const { user, perfil, logout } = useAuth();
+  const { user, perfil, logout, ehPro } = useAuth();
   // ATENCAO: isto NAO pode ser decidido durante o render.
   //
   // Era um useMemo lendo navigator.userAgent. useMemo roda no render, e no
@@ -153,13 +155,25 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
       {/* Right side: Tools & Profile */}
       <div className="flex items-center gap-1 sm:gap-1.5">
         {features.ai && (
-          <Tooltip content="Perguntar à IA" position="bottom">
-            <HeaderIconButton
-              onClick={() => window.dispatchEvent(new Event("open-ask-ai"))}
-              ariaLabel="Perguntar à IA"
-            >
-              <Sparkles size={15} strokeWidth={1.75} />
-            </HeaderIconButton>
+          <Tooltip
+            content={ehPro ? "Perguntar à IA" : "Perguntar à IA — recurso PRO"}
+            position="bottom"
+          >
+            <div className="relative">
+              <HeaderIconButton
+                onClick={() =>
+                  ehPro
+                    ? window.dispatchEvent(new Event("open-ask-ai"))
+                    : abrirModalPro()
+                }
+                ariaLabel={
+                  ehPro ? "Perguntar à IA" : "Perguntar à IA (recurso PRO)"
+                }
+              >
+                <Sparkles size={15} strokeWidth={1.75} />
+              </HeaderIconButton>
+              {!ehPro && <CadeadoPro />}
+            </div>
           </Tooltip>
         )}
 

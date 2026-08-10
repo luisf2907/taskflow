@@ -1,4 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server";
+import { exigirPro } from "@/lib/plano";
 import { applyRateLimitAsync, validateBody, stripFormatting } from "@/lib/api-utils";
 import { trackEvent } from "@/lib/umami";
 import { NextRequest, NextResponse } from "next/server";
@@ -73,6 +74,10 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
   }
+
+  // IA e recurso do plano PRO (migration 057).
+  const semPro = await exigirPro(supabase, user.id);
+  if (semPro) return semPro;
 
   const parsed = await validateBody(request, schema);
   if ("error" in parsed) return parsed.error;
