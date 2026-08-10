@@ -461,9 +461,10 @@ export function NovaReuniaoModal({
             </p>
             <button
               onClick={handleStartRecording}
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[0.8125rem] font-medium text-white transition-colors hover:brightness-110"
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[0.8125rem] font-medium transition-colors hover:brightness-110"
               style={{
                 background: "var(--tf-accent)",
+                color: "var(--tf-on-accent)",
                 border: "1px solid var(--tf-accent)",
                 borderRadius: "var(--tf-radius-xs)",
               }}
@@ -638,9 +639,10 @@ export function NovaReuniaoModal({
           <button
             onClick={handleSubmit}
             disabled={!audioBlob || !titulo.trim() || isBusy || isRecording}
-            className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[0.8125rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 h-9 px-3.5 text-[0.8125rem] font-medium transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
               background: "var(--tf-accent)",
+              color: "var(--tf-on-accent)",
               border: "1px solid var(--tf-accent)",
               borderRadius: "var(--tf-radius-xs)",
             }}

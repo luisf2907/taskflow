@@ -86,7 +86,7 @@ export function SeletorEtiquetas({
               {onExcluir && (
                 <button
                   onClick={() => onExcluir(etiqueta.id)}
-                  className="p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+                  className="p-1 tf-acao-toque opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
                   style={{
                     color: "var(--tf-text-tertiary)",
                     borderRadius: "var(--tf-radius-xs)",

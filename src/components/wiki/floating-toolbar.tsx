@@ -308,8 +308,8 @@ export function FloatingToolbar({ editor }: { editor: Editor }) {
             />
             <button
               onMouseDown={(e) => { e.preventDefault(); applyLink(); }}
-              className="text-[11px] font-semibold px-2.5 py-1 rounded-[5px] text-white"
-              style={{ background: "var(--tf-accent)" }}
+              className="text-[11px] font-semibold px-2.5 py-1 rounded-[5px]"
+              style={{ background: "var(--tf-accent)", color: "var(--tf-on-accent)" }}
             >
               OK
             </button>

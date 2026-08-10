@@ -79,7 +79,7 @@ export function RepoCard({ owner, nome, onAbrir, onDesconectar }: RepoCardProps)
           e.stopPropagation();
           onDesconectar();
         }}
-        className="p-1.5 rounded-[var(--tf-radius-xs)] opacity-0 group-hover:opacity-100 transition-smooth"
+        className="p-1.5 rounded-[var(--tf-radius-xs)] tf-acao-toque opacity-0 group-hover:opacity-100 transition-smooth"
         style={{ color: "var(--tf-danger)" }}
         title="Desconectar"
       >

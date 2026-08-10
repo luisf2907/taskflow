@@ -233,8 +233,8 @@ export function ModalConectarRepo({
                       </div>
                     </div>
                     <span
-                      className="text-[11px] font-semibold px-2.5 py-1 rounded-[var(--tf-radius-xs)] opacity-0 group-hover:opacity-100 transition-smooth"
-                      style={{ background: "var(--tf-accent)", color: "#fff" }}
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-[var(--tf-radius-xs)] tf-acao-toque opacity-0 group-hover:opacity-100 transition-smooth"
+                      style={{ background: "var(--tf-accent)", color: "var(--tf-on-accent)" }}
                     >
                       Conectar
                     </span>

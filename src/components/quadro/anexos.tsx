@@ -173,7 +173,7 @@ export function Anexos({ anexos, enviando, onUpload, onExcluir }: AnexosProps) {
                 </p>
               </div>
               <div
-                className="flex gap-0.5 opacity-0 group-hover:opacity-100"
+                className="flex gap-0.5 tf-acao-toque opacity-0 group-hover:opacity-100"
                 style={{ transition: "opacity 0.15s ease" }}
               >
                 <a

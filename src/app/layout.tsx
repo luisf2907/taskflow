@@ -11,7 +11,7 @@ import { ThemeInjector } from "@/components/theme-injector";
 import { ToastContainer } from "@/components/ui/toast";
 import { UserVariantInjector } from "@/components/user-variant-injector";
 import { RecordingProvider } from "@/hooks/use-recording";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, JetBrains_Mono } from "next/font/google";
 import { readFileSync } from "fs";
 import path from "path";
@@ -111,6 +111,41 @@ export const metadata: Metadata = {
     telephone: false,
   },
   // icons auto-discovered via src/app/icon.tsx e apple-icon.tsx
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Viewport — o que faz o safe-area existir
+// ═══════════════════════════════════════════════════════════════════════════
+// `viewportFit: "cover"` NAO e detalhe. Sem ele o iOS nao estende o layout
+// sob a Dynamic Island e a home indicator, e — o que importa aqui —
+// `env(safe-area-inset-*)` resolve para ZERO. Ou seja: o
+// `paddingBottom: env(safe-area-inset-bottom)` do bottom-nav e o
+// `calc(56px + env(...))` do globals.css ja estavam escritos, mas nunca
+// valeram nada no iPhone. A barra encostava na home indicator.
+//
+// `themeColor` pinta a UI do navegador (barra de status no iOS, barra de
+// endereco no Chrome Android) com o fundo do app. Sem isso o topo da tela
+// fica branco por cima de uma interface dark-first. Os dois valores sao os
+// mesmos `--tf-bg` de globals.css, um por esquema.
+//
+// `colorScheme` avisa o navegador para desenhar controles nativos (scrollbar,
+// caixa de selecao de data, autofill) no tema certo.
+// `interactiveWidget: "resizes-content"` trata o teclado virtual. O padrao
+// dos navegadores e "resizes-visual": o teclado sobe POR CIMA sem encolher o
+// viewport de layout, entao `100dvh` continua valendo a tela inteira e todo
+// elemento ancorado embaixo — campo de chat, barra de navegacao — fica
+// escondido atras do teclado. Com "resizes-content" o viewport encolhe de
+// verdade e o `dvh` passa a significar "o que da para ver".
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAFAF9" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0A0B" },
+  ],
 };
 
 export default function RootLayout({

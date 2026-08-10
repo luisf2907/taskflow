@@ -304,7 +304,9 @@ export default function ReuniaoDetailPage() {
               />
             </div>
           ) : (
-          <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
+          // Mesmo ajuste da lista: px-6 fixo comia 48px de uma tela de 360.
+          // O md: devolve exatamente a metrica anterior.
+          <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-10 space-y-6">
             {/* Breadcrumb */}
             <button
               onClick={() =>
@@ -335,7 +337,7 @@ export default function ReuniaoDetailPage() {
                 </p>
               )}
               <div
-                className="flex items-center gap-3 mt-2 text-[11px]"
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px]"
                 style={{ color: "var(--tf-text-tertiary)" }}
               >
                 <span>
@@ -442,17 +444,14 @@ export default function ReuniaoDetailPage() {
                   {/* Play/Pause */}
                   <button
                     onClick={togglePlay}
-                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-150 hover:opacity-80"
-                    style={{ background: "var(--tf-accent)" }}
+                    className="w-11 h-11 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-150 hover:opacity-80"
+                    style={{ background: "var(--tf-accent)", color: "var(--tf-on-accent)" }}
+                    aria-label={isPlaying ? "Pausar" : "Reproduzir"}
                   >
                     {isPlaying ? (
-                      <Pause size={14} className="text-white" fill="white" />
+                      <Pause size={14} fill="currentColor" />
                     ) : (
-                      <Play
-                        size={14}
-                        className="text-white ml-0.5"
-                        fill="white"
-                      />
+                      <Play size={14} className="ml-0.5" fill="currentColor" />
                     )}
                   </button>
 
@@ -474,6 +473,12 @@ export default function ReuniaoDetailPage() {
                     A barra E operavel: setas movem 5s, PageUp/Down 30s, Home e End vao
                     para as pontas, e o aria-valuetext anuncia "1 minuto e 30 segundos de
                     4 minutos" em vez de um numero solto.
+
+                    A classe tf-alvo-toque estica a area de TOQUE 14px para
+                    cima e para baixo no dedo, sem mexer nos 6px desenhados —
+                    uma barra de 6px e impossivel de acertar com o polegar. O
+                    pseudo-elemento so cresce na vertical, entao a conta de
+                    clientX que posiciona o seek nao muda. Ver globals.css.
                   */}
                   {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                   <div
@@ -488,7 +493,7 @@ export default function ReuniaoDetailPage() {
                         if (audio) audio.currentTime = ms / 1000;
                       },
                     })}
-                    className="flex-1 h-1.5 rounded-full cursor-pointer relative group"
+                    className="tf-alvo-toque flex-1 h-1.5 rounded-full cursor-pointer relative group"
                     style={{ background: "var(--tf-border)" }}
                   >
                     {/* Progress fill */}
@@ -501,7 +506,7 @@ export default function ReuniaoDetailPage() {
                     />
                     {/* Thumb */}
                     <div
-                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                      className="tf-acao-hover absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full"
                       style={{
                         left: `calc(${progressPct}% - 6px)`,
                         background: "var(--tf-accent)",
@@ -740,18 +745,22 @@ function SpeakerBlock({
                     <Pause
                       size={10}
                       style={{
-                        color: active ? "white" : "var(--tf-text-tertiary)",
+                        color: active
+                          ? "var(--tf-on-accent)"
+                          : "var(--tf-text-tertiary)",
                       }}
-                      fill={active ? "white" : "currentColor"}
+                      fill="currentColor"
                     />
                   ) : (
                     <Play
                       size={10}
                       className="ml-px"
                       style={{
-                        color: active ? "white" : "var(--tf-text-tertiary)",
+                        color: active
+                          ? "var(--tf-on-accent)"
+                          : "var(--tf-text-tertiary)",
                       }}
-                      fill={active ? "white" : "currentColor"}
+                      fill="currentColor"
                     />
                   )}
                 </button>
@@ -808,8 +817,8 @@ function ResumoIaCard({
       <div className="flex items-center justify-center">
         <button
           onClick={onGerar}
-          className="flex items-center gap-2.5 px-5 py-2.5 rounded-[var(--tf-radius-sm)] text-[13px] font-bold text-white transition-all duration-150 hover:opacity-90"
-          style={{ background: "var(--tf-accent)" }}
+          className="flex items-center gap-2.5 px-5 py-2.5 rounded-[var(--tf-radius-sm)] text-[13px] font-bold transition-all duration-150 hover:opacity-90"
+          style={{ background: "var(--tf-accent)", color: "var(--tf-on-accent)" }}
         >
           <Sparkles size={15} />
           Resumir com IA

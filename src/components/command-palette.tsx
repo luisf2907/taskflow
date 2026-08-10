@@ -291,7 +291,12 @@ export function CommandPalette() {
           animate="visible"
           exit="exit"
           variants={fadeOnly}
-          className="fixed inset-0 z-[100] flex justify-center pt-[15vh]"
+          // No mobile a paleta sobe de baixo em vez de boiar a 15% do topo.
+          // O campo de busca fica onde o polegar alcanca, e com
+          // interactiveWidget: "resizes-content" o teclado empurra a folha
+          // para cima em vez de cobri-la. A partir de md volta ao
+          // pt-[15vh] de sempre — desktop intacto.
+          className="fixed inset-0 z-[100] flex items-end md:items-start justify-center pt-0 md:pt-[15vh]"
           style={{
             background: "rgba(0,0,0,0.55)",
             backdropFilter: "blur(10px)",
@@ -306,12 +311,16 @@ export function CommandPalette() {
             animate="visible"
             exit="exit"
             variants={scaleIn}
-            className="w-full max-w-[600px] mx-4 h-fit overflow-hidden"
+            className={cn(
+              "w-full md:max-w-[600px] mx-0 md:mx-4 h-fit overflow-hidden",
+              "max-h-[85dvh] md:max-h-none",
+              "rounded-t-2xl md:rounded-[var(--tf-radius-lg)]"
+            )}
             style={{
               background: "var(--tf-surface-raised)",
               border: "1px solid var(--tf-border)",
-              borderRadius: "var(--tf-radius-lg)",
               boxShadow: "var(--tf-shadow-lg)",
+              paddingBottom: "env(safe-area-inset-bottom, 0px)",
             }}
           >
             {/* Search Input */}

@@ -62,7 +62,8 @@ function TreeNode({
     <div>
       <div
         className={cn(
-          "group flex items-center gap-1 py-[5px] pr-2 rounded-[var(--tf-radius-xs)] relative transition-colors",
+          // tf-linha-toque: 44px de altura minima so no toque. Ver globals.css.
+          "tf-linha-toque group flex items-center gap-1 py-[5px] pr-2 rounded-[var(--tf-radius-xs)] relative transition-colors",
           ativo
             ? "font-medium"
             : "hover:bg-[var(--tf-surface-hover)]",
@@ -145,8 +146,10 @@ function TreeNode({
           </button>
         )}
 
-        {/* Ações hover */}
-        <div className="shrink-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Acoes da pagina. Ver .tf-acao-hover em globals.css: no toque elas
+            ficam sempre visiveis, senao seriam inalcancaveis — e no celular
+            esta arvore e o drawer, a unica forma de navegar pela wiki. */}
+        <div className="tf-acao-hover shrink-0 flex items-center gap-0.5">
           <button
             type="button"
             onClick={(e) => {
@@ -169,6 +172,9 @@ function TreeNode({
               }}
               className="p-1 rounded-[4px] hover:bg-[var(--tf-surface-hover)]"
               style={{ color: "var(--tf-text-tertiary)" }}
+              aria-haspopup="menu"
+              aria-expanded={menuAberto}
+              aria-label={`Opções da página ${node.titulo}`}
             >
               <MoreHorizontal size={13} />
             </button>

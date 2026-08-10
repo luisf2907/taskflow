@@ -728,7 +728,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                             if (audio) audio.currentTime = ms / 1000;
                           },
                         })}
-                        className="flex-1 h-1.5 rounded-full cursor-pointer relative group"
+                        className="tf-alvo-toque flex-1 h-1.5 rounded-full cursor-pointer relative group"
                         style={{ background: "var(--tf-border)" }}
                       >
                         <div
@@ -739,7 +739,7 @@ export function VoiceSection({ perfil, onUpdate }: VoiceSectionProps) {
                           }}
                         />
                         <div
-                          className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                          className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full tf-acao-toque opacity-0 group-hover:opacity-100 transition-opacity duration-150"
                           style={{
                             left: `calc(${previewDuration > 0 ? (previewCurrentMs / previewDuration) * 100 : 0}% - 5px)`,
                             background: "var(--tf-accent)",

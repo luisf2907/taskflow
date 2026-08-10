@@ -2,9 +2,10 @@
 
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useDragControls } from "motion/react";
 import { useCallback, useEffect, useRef } from "react";
 import { fadeOnly, scaleIn } from "@/lib/motion/presets";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 interface ModalProps {
   aberto: boolean;
@@ -17,6 +18,10 @@ interface ModalProps {
 export function Modal({ aberto, onFechar, titulo, children, className }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  // Arraste so no mobile: no desktop a folha e um dialogo centralizado e
+  // arrastar nao significa nada. Nada aqui muda o desktop.
+  const isMobile = useIsMobile();
+  const controlesArraste = useDragControls();
 
   // Focus trap: cycle Tab within the modal
   const handleKeyDown = useCallback(
@@ -101,9 +106,39 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
             animate="visible"
             exit="exit"
             variants={scaleIn}
+            // ═══════════════════════════════════════════════════════════
+            // Arrastar para fechar — so no mobile
+            // ═══════════════════════════════════════════════════════════
+            // O puxador ja existia, mas era DESENHO: nao arrastava nada.
+            // Afordancia que nao cumpre o que promete e pior que afordancia
+            // nenhuma, e arrastar a folha para baixo e o gesto padrao para
+            // dispensar no iOS e no One UI.
+            //
+            // dragListener={false} + dragControls: o arraste comeca SO pelo
+            // puxador. Se a folha inteira fosse arrastavel, rolar o
+            // conteudo dispensaria o modal sem querer.
+            //
+            // dragElastic assimetrico: para baixo cede (0.4), para cima
+            // trava (0). A folha nasce colada no fundo da tela — deixar
+            // subir revelaria uma faixa vazia embaixo dela.
+            drag={isMobile ? "y" : false}
+            dragControls={controlesArraste}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.4 }}
+            onDragEnd={(_evento, info) => {
+              // Fecha por DISTANCIA ou por VELOCIDADE. So distancia obrigaria
+              // um arrasto longo; so velocidade ignoraria quem puxa devagar
+              // ate embaixo. As duas juntas e o que o gesto nativo faz.
+              if (info.offset.y > 120 || info.velocity.y > 600) onFechar();
+            }}
             className={cn(
               "w-full max-w-lg mx-0 md:mx-4 my-0 md:my-auto",
-              "rounded-t-[var(--tf-radius-lg)] md:rounded-[var(--tf-radius-lg)]",
+              // Cantos maiores no mobile (16px contra os 10px do
+              // --tf-radius-lg): a folha e um objeto que sobe por cima da
+              // tela, mesma classe da capsula da barra de navegacao. No
+              // desktop segue --tf-radius-lg, inalterado.
+              "rounded-t-2xl md:rounded-[var(--tf-radius-lg)]",
               "border-t md:border",
               "flex flex-col max-h-[90dvh] md:max-h-[90vh]",
               className
@@ -112,14 +147,21 @@ export function Modal({ aberto, onFechar, titulo, children, className }: ModalPr
               background: "var(--tf-surface)",
               borderColor: "var(--tf-border)",
               boxShadow: "var(--tf-shadow-lg)",
+              // Respira acima da home indicator. No desktop o env() e 0.
+              paddingBottom: "env(safe-area-inset-bottom, 0px)",
             }}
           >
-            {/* Drag handle visual (mobile bottom sheet) */}
-            <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
+            {/* Puxador. touch-none impede o navegador de sequestrar o gesto
+                para rolagem antes de o motion recebe-lo. A area de toque e
+                a faixa inteira, nao o risquinho de 4px. */}
+            <div
+              onPointerDown={(e) => controlesArraste.start(e)}
+              className="md:hidden flex justify-center pt-3 pb-2 shrink-0 cursor-grab active:cursor-grabbing touch-none"
+            >
               <span
                 aria-hidden
-                className="w-10 h-1 rounded-full"
-                style={{ background: "var(--tf-border)" }}
+                className="w-9 h-1 rounded-full"
+                style={{ background: "var(--tf-border-strong)" }}
               />
             </div>
             {titulo && (

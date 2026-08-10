@@ -165,7 +165,7 @@ function ModalConectarRepoLocal({
                     </div>
                     {r.description && <p className="text-[11px] truncate mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>{r.description}</p>}
                   </div>
-                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-[var(--tf-radius-xs)] opacity-0 group-hover:opacity-100" style={{ background: "var(--tf-accent)", color: "#fff" }}>
+                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-[var(--tf-radius-xs)] tf-acao-toque opacity-0 group-hover:opacity-100" style={{ background: "var(--tf-accent)", color: "var(--tf-on-accent)" }}>
                     Conectar
                   </span>
                 </button>
@@ -231,7 +231,7 @@ function RepoCard({ owner, nome, onAbrir, onDesconectar }: { owner: string; nome
       </div>
       <button
         onClick={(e) => { e.stopPropagation(); onDesconectar(); }}
-        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-[var(--tf-radius-xs)] transition-all"
+        className="tf-acao-toque opacity-0 group-hover:opacity-100 p-1.5 rounded-[var(--tf-radius-xs)] transition-all"
         style={{ color: "var(--tf-text-tertiary)" }}
         title="Desconectar"
       >
@@ -285,7 +285,7 @@ export default function ReposPage() {
   }
 
   return (
-    <div className="h-screen flex overflow-hidden" style={{ background: "var(--tf-bg)" }}>
+    <div className="h-dvh flex overflow-hidden" style={{ background: "var(--tf-bg)" }}>
       <Sidebar
         quadros={quadros}
         onNovoQuadro={() => {}}

@@ -65,7 +65,7 @@ export function PropertyRow({
       <div className="flex items-center">
         {children || (
           <span
-            className="text-[0.625rem] opacity-0 group-hover:opacity-100 transition-opacity"
+            className="text-[0.625rem] tf-acao-toque opacity-0 group-hover:opacity-100 transition-opacity"
             style={{
               color: "var(--tf-text-tertiary)",
               fontFamily: "var(--tf-font-mono)",

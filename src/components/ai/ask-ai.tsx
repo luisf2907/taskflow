@@ -1,11 +1,13 @@
 "use client";
 
 import { features } from "@/lib/features";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useDragControls } from "motion/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fadeOnly, scaleIn } from "@/lib/motion/presets";
 import { Kanban, Send, Sparkles, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 interface CardFonte {
   id: string;
@@ -36,6 +38,9 @@ export function AskAi() {
   const [carregando, setCarregando] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Arraste so no mobile — no desktop a folha e um dialogo centralizado.
+  const isMobile = useIsMobile();
+  const controlesArraste = useDragControls();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -171,7 +176,17 @@ export function AskAi() {
           animate="visible"
           exit="exit"
           variants={fadeOnly}
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4"
+          // ═══════════════════════════════════════════════════════════════
+          // No mobile isto e uma FOLHA, nao uma caixinha centrada.
+          // ═══════════════════════════════════════════════════════════════
+          // Antes o dialogo de desktop era so encolhido: uma caixa de 560px
+          // boiando com margem de 16px em volta. Conversa em celular nao tem
+          // essa forma — ela ocupa a tela, sobe de baixo, e o campo de
+          // escrita fica ancorado no rodape, ao alcance do polegar.
+          //
+          // items-end + p-0 no mobile; items-center + p-4 volta a partir de
+          // md, entao o desktop segue identico.
+          className="fixed inset-0 z-[120] flex items-end md:items-center justify-center p-0 md:p-4"
           style={{
             background: "rgba(0,0,0,0.55)",
             backdropFilter: "blur(10px)",
@@ -188,15 +203,40 @@ export function AskAi() {
             variants={scaleIn}
             role="dialog"
             aria-label="Perguntar à IA"
-            className="w-full max-w-[560px] flex flex-col overflow-hidden"
+            drag={isMobile ? "y" : false}
+            dragControls={controlesArraste}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.4 }}
+            onDragEnd={(_e, info) => {
+              if (info.offset.y > 120 || info.velocity.y > 600) fechar();
+            }}
+            className={cn(
+              "w-full md:max-w-[560px] flex flex-col overflow-hidden",
+              // 88dvh deixa ver um naco da pagina atras — e o que diz "isto
+              // e uma folha, arraste para baixo". Tela cheia leria como
+              // navegacao para outra pagina.
+              "h-[88dvh] md:h-[min(600px,85vh)]",
+              "rounded-t-2xl md:rounded-[var(--tf-radius-lg)]"
+            )}
             style={{
-              height: "min(600px, 85vh)",
               background: "var(--tf-surface-raised)",
               border: "1px solid var(--tf-border)",
-              borderRadius: "var(--tf-radius-lg)",
               boxShadow: "var(--tf-shadow-lg)",
             }}
           >
+            {/* Puxador — so mobile. Mesmo gesto da folha modal. */}
+            <div
+              onPointerDown={(e) => controlesArraste.start(e)}
+              className="md:hidden flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing touch-none"
+            >
+              <span
+                aria-hidden
+                className="w-9 h-1 rounded-full"
+                style={{ background: "var(--tf-border-strong)" }}
+              />
+            </div>
+
             {/* Header */}
             <div
               className="flex items-center gap-2 px-4 h-12 shrink-0"
@@ -305,8 +345,13 @@ export function AskAi() {
                 e.preventDefault();
                 enviar(pergunta);
               }}
-              className="flex items-center gap-2 px-3 h-14 shrink-0"
-              style={{ borderTop: "1px solid var(--tf-border)" }}
+              className="flex items-center gap-2 px-3 h-16 md:h-14 shrink-0"
+              style={{
+                borderTop: "1px solid var(--tf-border)",
+                // Sem isto o campo encosta na home indicator quando a folha
+                // vai ate embaixo. No desktop env() e 0.
+                paddingBottom: "env(safe-area-inset-bottom, 0px)",
+              }}
             >
               <input
                 ref={inputRef}
@@ -314,7 +359,11 @@ export function AskAi() {
                 onChange={(e) => setPergunta(e.target.value)}
                 placeholder={temContexto ? "Pergunte algo…" : "Abra um workspace primeiro"}
                 disabled={!temContexto || carregando}
-                className="flex-1 h-9 px-3 text-[0.8125rem] outline-none disabled:opacity-50"
+                // h-11 no mobile: 44px e o minimo de alvo de toque, e campo
+                // baixo demais e desconfortavel de mirar. text-base evita o
+                // zoom automatico que o Safari da em fonte menor que 16px ao
+                // focar um input — o pulo mais irritante da web no iPhone.
+                className="flex-1 h-11 md:h-9 px-3 text-base md:text-[0.8125rem] outline-none disabled:opacity-50"
                 style={{
                   background: "var(--tf-surface)",
                   border: "1px solid var(--tf-border)",
@@ -325,10 +374,12 @@ export function AskAi() {
               <button
                 type="submit"
                 disabled={!pergunta.trim() || carregando || !temContexto}
-                className="w-9 h-9 flex items-center justify-center transition-colors disabled:opacity-40"
+                className="w-11 h-11 md:w-9 md:h-9 shrink-0 flex items-center justify-center transition-colors disabled:opacity-40"
                 style={{
                   background: "var(--tf-accent)",
-                  color: "#fff",
+                  // Era "#fff", que sobre o accent da 3,12:1 e reprova no AA
+                  // — o mesmo caso que ja corrigimos no botao primario.
+                  color: "var(--tf-on-accent)",
                   borderRadius: "var(--tf-radius-sm)",
                 }}
                 aria-label="Enviar"
@@ -358,7 +409,8 @@ function Bolha({ m, onAbrirCard }: { m: Mensagem; onAbrirCard: (f: CardFonte) =>
           className="max-w-[80%] px-3 py-2 text-[0.8125rem]"
           style={{
             background: "var(--tf-accent)",
-            color: "#fff",
+            // Era "#fff" — 3,12:1 sobre o accent, reprova no AA.
+            color: "var(--tf-on-accent)",
             borderRadius: "var(--tf-radius-md)",
             borderTopRightRadius: "2px",
             letterSpacing: "-0.005em",

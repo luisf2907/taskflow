@@ -17,12 +17,159 @@ button, a, [role="button"], label[for], summary, input[type="submit"], input[typ
   touch-action: manipulation;
 }
 
+/* Altura da capsula do bottom-nav. Fonte unica: a <nav> usa como height e a
+   ilha de busca usa como width, que e o que a mantem REDONDA. Nao dava pra
+   deixar isso implicito — aspect-square dentro de um flex align-stretch nao
+   funciona: o flex resolve a largura pelo conteudo antes de esticar a
+   altura, entao a ilha saia com a largura do icone e a altura da barra. */
+:root {
+  --tf-nav-capsula: 60px;
+}
+
+/* Altura total que o bottom-nav flutuante ocupa: a capsula + 16px de folga
+   ate a borda de baixo + 16px de respiro acima + o safe-area do aparelho.
+   Usado pelo padding do main e pelo <BottomNavSpacer>.
+
+   O env() so devolve valor porque o layout declara viewportFit: "cover".
+   Sem aquilo isto aqui vira 0 no iOS. */
+:root {
+  --tf-altura-nav: calc(var(--tf-nav-capsula) + 2rem + env(safe-area-inset-bottom, 0px));
+}
+
 /* Spacer para o bottom-nav fixo: adiciona padding em main em <lg
    pra ultimo item nao ficar escondido atras da nav. */
 @media (max-width: 1023px) {
   main#main-content {
-    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: var(--tf-altura-nav);
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CAMPOS EM 16px NO TOQUE — mata o zoom automatico do Safari
+   ═══════════════════════════════════════════════════════════════════
+   O Safari do iOS da zoom na pagina ao focar QUALQUER campo com fonte
+   menor que 16px, e depois nao volta sozinho — o usuario fica com o
+   layout deslocado e precisa despinçar. Sao 30 campos assim no app, com
+   text-[0.8125rem] e afins.
+
+   A alternativa comum e `maximum-scale=1` no viewport, que resolve
+   desativando o zoom da pagina inteira. Isso quebra quem precisa ampliar
+   para ler — trocar acessibilidade por conveniencia, justo depois de
+   chegar a 100 na auditoria. Aqui a fonte sobe, o zoom nao acontece, e o
+   pinch continua funcionando.
+
+   `pointer: coarse` e nao `max-width`: o alvo e DEDO, nao tela pequena.
+   Uma janela estreita no desktop continua com a tipografia densa de
+   sempre — o desktop nao muda.
+   ═══════════════════════════════════════════════════════════════════ */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ACOES QUE SO APARECEM NO HOVER — no dedo elas nao aparecem NUNCA
+   ═══════════════════════════════════════════════════════════════════
+   O padrao `opacity-0 group-hover:opacity-100` esconde acoes ate o mouse
+   passar por cima. Num aparelho de toque nao existe "passar por cima": o
+   primeiro evento ja e o toque. Entao a acao fica invisivel e o usuario
+   nao tem como descobrir que ela existe.
+
+   Onde isso doia de verdade: as acoes de cada pagina na arvore da wiki
+   (criar sub-pagina, renomear, excluir) — que no celular e justamente o
+   drawer, a unica forma de navegar — e os botoes de trocar/remover capa.
+
+   Mesma escolha do bloco acima: `pointer: coarse`, nao `max-width`. Num
+   ponteiro fino o comportamento fica byte a byte o de antes.
+
+   O :focus-within cobre o teclado, que tinha o mesmo problema: dar Tab
+   ate um botao invisivel deixava o foco em lugar nenhum.
+   ═══════════════════════════════════════════════════════════════════ */
+.tf-acao-hover {
+  opacity: 0;
+  transition: opacity 150ms;
+}
+.group:hover .tf-acao-hover,
+.group:focus-within .tf-acao-hover,
+.tf-acao-hover:focus-within {
+  opacity: 1;
+}
+@media (pointer: coarse) {
+  .tf-acao-hover {
+    opacity: 1;
+  }
+}
+
+/* Variante ADITIVA da de cima. A diferenca importa:
+
+   .tf-acao-hover SUBSTITUI o par `opacity-0 group-hover:opacity-100` — o
+   elemento larga as classes do Tailwind e passa a ser regido daqui.
+
+   .tf-acao-toque CONVIVE com elas: so forca visibilidade no dedo e nao
+   toca no comportamento de ponteiro fino, que segue sendo do Tailwind.
+
+   Existe porque metade das ocorrencias usa GRUPO NOMEADO
+   (`group-hover/item`, `group-hover/checklist`), e o seletor `.group:hover`
+   da classe de cima nao alcanca `.group\/item:hover`. Listar cada nome de
+   grupo aqui acoplaria o CSS global a detalhes internos de componente.
+
+   Nao precisa de !important: estas regras estao FORA de @layer, e regra
+   sem camada vence qualquer regra dentro de @layer utilities, que e onde o
+   Tailwind poe o opacity-0. */
+@media (pointer: coarse) {
+  .tf-acao-toque {
+    opacity: 1;
+  }
+}
+
+/* Linha de lista que precisa de altura de alvo no dedo (44px do HIG e do
+   WCAG 2.5.8). Na arvore da wiki a linha tem 26px — boa de mouse, ruim de
+   polegar. So no toque; no desktop a densidade fica como esta. */
+@media (pointer: coarse) {
+  .tf-linha-toque {
+    min-height: 44px;
+  }
+}
+
+/* Amplia a area de TOQUE sem mudar a area DESENHADA. Usado na barra de
+   progresso do audio, que tem 6px de altura: visualmente correta, mas
+   impossivel de acertar com o dedo. O pseudo-elemento so estica na
+   vertical, entao a conta de clientX que posiciona o seek nao muda.
+   Exige position:relative no elemento. */
+@media (pointer: coarse) {
+  .tf-alvo-toque::before {
+    content: "";
+    position: absolute;
+    inset: -14px 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCROLL EDGE — o conteudo se dissolve ao passar sob a barra
+   ═══════════════════════════════════════════════════════════════════
+   O iOS 26 chama de "scroll edge effect" e o One UI 8.5 descreve como
+   "transicao suavizada com um blur leve nas bordas". Serve para a barra
+   flutuante continuar legivel com conteudo passando por baixo, em vez de
+   texto colidindo com texto.
+
+   Aqui e um degrade para --tf-bg, NAO um blur. Blur exigiria
+   backdrop-filter, que custa GPU em lista longa e traz de volta o
+   problema de contraste que evitamos ao nao usar vidro. O degrade da a
+   mesma leitura de profundidade por um pixel de custo.
+
+   pointer-events:none e obrigatorio: e enfeite, nao pode comer toque.
+   ═══════════════════════════════════════════════════════════════════ */
+.tf-borda-rolagem {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  height: var(--tf-altura-nav);
+  pointer-events: none;
+  z-index: 39; /* sob a nav (40), sobre o conteudo */
+  background: linear-gradient(to top, var(--tf-bg) 35%, transparent);
 }
 
 /* Cursor pointer global — maozinha em todos os clicaveis */

@@ -177,7 +177,7 @@ export function AudioPlayer({ src, label, accentColor = "var(--tf-accent)" }: Au
             totalMs: durationMs,
             irPara,
           })}
-          className="flex-1 h-[3px] cursor-pointer relative group"
+          className="tf-alvo-toque flex-1 h-[3px] cursor-pointer relative group"
           style={{
             background: "var(--tf-border)",
             borderRadius: "1px",
@@ -193,7 +193,7 @@ export function AudioPlayer({ src, label, accentColor = "var(--tf-accent)" }: Au
           />
           {/* Thumb quadrado */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-2 h-2 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-1/2 -translate-y-1/2 w-2 h-2 tf-acao-toque opacity-0 group-hover:opacity-100 transition-opacity"
             style={{
               left: `calc(${progressPct}% - 4px)`,
               background: accentColor,

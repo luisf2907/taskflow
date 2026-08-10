@@ -184,7 +184,7 @@ export function ChecklistComponent({
         </h4>
         <button
           onClick={() => onExcluirChecklist(checklist.id)}
-          className="p-1 opacity-0 group-hover/checklist:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+          className="p-1 tf-acao-toque opacity-0 group-hover/checklist:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
           style={{
             color: "var(--tf-text-tertiary)",
             borderRadius: "var(--tf-radius-xs)",
@@ -210,7 +210,7 @@ export function ChecklistComponent({
             <ItemLabel texto={item.texto} checked={item.concluido} />
             <button
               onClick={() => onExcluirItem(item.id)}
-              className="p-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+              className="p-0.5 tf-acao-toque opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
               style={{
                 color: "var(--tf-text-tertiary)",
                 borderRadius: "var(--tf-radius-xs)",

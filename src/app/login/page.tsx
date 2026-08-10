@@ -170,7 +170,7 @@ function LoginContent() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden hero-grid"
+      className="min-h-dvh flex items-center justify-center p-4 relative overflow-hidden hero-grid"
       style={{ background: "var(--tf-bg)" }}
     >
       <div className="w-full max-w-[400px] relative z-10">

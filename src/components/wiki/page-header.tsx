@@ -86,29 +86,41 @@ export function PageHeader({
 
   return (
     <div className="pb-2 mb-4">
-      {/* Cover image */}
+      {/* Cover image.
+
+          As margens negativas tem que casar com o padding do container em
+          wiki/page.tsx, que e `px-3 md:px-8 py-4 md:py-10`. Estava -mx-8
+          fixo: no celular a capa sangrava 20px para cada lado alem do
+          container e gerava rolagem horizontal na pagina inteira. */}
       {pagina.capa_url ? (
-        <div className="relative group -mx-8 -mt-10 mb-6 h-[200px] rounded-t-[16px] overflow-hidden">
+        <div className="relative group -mx-3 -mt-4 md:-mx-8 md:-mt-10 mb-6 h-[140px] md:h-[200px] rounded-t-[16px] overflow-hidden">
           <img
             src={pagina.capa_url}
             alt="Capa"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="absolute bottom-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="tf-acao-hover absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+          {/* Acoes da capa. tf-acao-hover as mantem visiveis no toque — antes
+              eram inalcancaveis no celular, onde nao existe hover.
+
+              O fundo subiu de 0,5 para 0,65 de preto: sobre uma capa clara
+              o branco dava 3,95:1, que reprova para texto; 0,65 leva o pior
+              caso a 7,0:1. Passou a importar mais agora que os botoes ficam
+              sempre visiveis. */}
+          <div className="tf-acao-hover absolute bottom-3 right-3 flex items-center gap-2">
             <button
               type="button"
               onClick={() => capaInputRef.current?.click()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[11px] font-medium text-white/90 backdrop-blur-sm transition-colors"
-              style={{ background: "rgba(0,0,0,0.5)" }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[11px] font-medium text-white backdrop-blur-sm transition-colors"
+              style={{ background: "rgba(0,0,0,0.65)" }}
             >
               <ImagePlus size={12} /> Trocar
             </button>
             <button
               type="button"
               onClick={() => onCapaChange(null)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[11px] font-medium text-white/90 backdrop-blur-sm transition-colors"
-              style={{ background: "rgba(0,0,0,0.5)" }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[11px] font-medium text-white backdrop-blur-sm transition-colors"
+              style={{ background: "rgba(0,0,0,0.65)" }}
             >
               <X size={12} /> Remover
             </button>

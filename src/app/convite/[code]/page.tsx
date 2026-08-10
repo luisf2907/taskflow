@@ -70,7 +70,7 @@ export default function ConvitePage() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4 hero-grid"
+      className="min-h-dvh flex items-center justify-center px-4 hero-grid"
       style={{ background: "var(--tf-bg)" }}
     >
       <div

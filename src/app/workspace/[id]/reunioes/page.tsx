@@ -148,7 +148,9 @@ export default function ReunioesPage() {
           }}
         >
         <main id="main-content" className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
+          {/* px-6 fixo comia 48px de uma tela de 360. A wiki ja usava
+              `px-3 md:px-8`; aqui o md: devolve exatamente o que havia. */}
+          <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-10 space-y-8">
             {/* Breadcrumb + title */}
             <div>
               <button
@@ -159,7 +161,9 @@ export default function ReunioesPage() {
                 <ArrowLeft size={12} />
                 {workspace?.nome ?? "Workspace"}
               </button>
-              <div className="flex items-start justify-between gap-4">
+              {/* Empilha no celular: titulo + descricao ao lado de um botao
+                  de 140px numa tela de 360 deixava a descricao com ~150px. */}
+              <div className="flex flex-col md:flex-row items-stretch md:items-start justify-between gap-3 md:gap-4">
                 <div>
                   <h1
                     className="text-2xl font-black tracking-tight flex items-center gap-2.5"
@@ -178,8 +182,8 @@ export default function ReunioesPage() {
                 </div>
                 <button
                   onClick={() => setModalOpen(true)}
-                  className="px-4 py-2 rounded-[var(--tf-radius-xs)] text-[12px] font-bold text-white flex items-center gap-2 flex-shrink-0 transition-all duration-150 hover:opacity-90"
-                  style={{ background: "var(--tf-accent)" }}
+                  className="px-4 py-3 md:py-2 rounded-[var(--tf-radius-xs)] text-[12px] font-bold flex items-center justify-center gap-2 flex-shrink-0 transition-all duration-150 hover:opacity-90"
+                  style={{ background: "var(--tf-accent)", color: "var(--tf-on-accent)" }}
                 >
                   <Plus size={14} />
                   Nova reuniao
@@ -263,8 +267,8 @@ export default function ReunioesPage() {
                 </p>
                 <button
                   onClick={() => setModalOpen(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[var(--tf-radius-xs)] text-[12px] font-bold text-white transition-all duration-150 hover:opacity-90"
-                  style={{ background: "var(--tf-accent)" }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[var(--tf-radius-xs)] text-[12px] font-bold transition-all duration-150 hover:opacity-90"
+                  style={{ background: "var(--tf-accent)", color: "var(--tf-on-accent)" }}
                 >
                   <Plus size={14} />
                   Nova reuniao
@@ -350,8 +354,10 @@ function ReuniaoCard({ reuniao, onOpen, onDelete }: ReuniaoCardProps) {
           >
             {reuniao.titulo}
           </p>
+          {/* flex-wrap: a linha "data · duracao · status" nao cabe nos ~190px
+              que sobram no celular e escapava do card. */}
           <div
-            className="flex items-center gap-2 mt-0.5 text-[11px]"
+            className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-[11px]"
             style={{ color: "var(--tf-text-tertiary)" }}
           >
             <span>{createdAt}</span>
@@ -382,7 +388,7 @@ function ReuniaoCard({ reuniao, onOpen, onDelete }: ReuniaoCardProps) {
           e.stopPropagation();
           onDelete();
         }}
-        className="p-2 rounded-[var(--tf-radius-xs)] flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-150 hover:!opacity-100"
+        className="tf-acao-hover p-2 rounded-[var(--tf-radius-xs)] flex-shrink-0"
         style={{ color: "var(--tf-text-tertiary)" }}
         title="Apagar reuniao"
       >

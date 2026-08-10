@@ -80,11 +80,20 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
 
   return (
     <header
-      className="h-12 md:h-11 mt-3.5 px-2 md:px-4 gap-2 md:gap-0 flex items-center justify-between shrink-0 mb-3 z-30 relative"
+      className="h-12 md:h-11 px-2 md:px-4 gap-2 md:gap-0 flex items-center justify-between shrink-0 mb-3 z-30 relative"
       style={{
         background: "var(--tf-surface)",
         border: "1px solid var(--tf-border)",
         borderRadius: "var(--tf-radius-xl)",
+        // Era `mt-3.5` puro. Desde que o layout passou a declarar
+        // viewportFit: "cover", a pagina se estende POR BAIXO da barra de
+        // status e da Dynamic Island — sem somar o inset aqui, o cabecalho
+        // ficaria parcialmente encoberto no iPhone.
+        //
+        // Este e o elemento mais alto das 11 telas do app, entao resolver
+        // aqui cobre todas. No desktop env() e 0 e a margem continua
+        // exatamente 14px, como antes.
+        marginTop: "calc(0.875rem + env(safe-area-inset-top, 0px))",
       }}
     >
       {/* Mobile menu */}
@@ -102,9 +111,14 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
         </button>
       )}
 
-      {/* Search trigger (Cmd+K) */}
+      {/* Search trigger (Cmd+K)
+          `hidden lg:flex`: abaixo de 1024px a busca vive na ILHA ao lado da
+          barra de navegacao — ver bottom-nav.tsx. Duas entradas para a mesma
+          coisa seria ruido, e no header ela roubava metade da largura numa
+          tela de 360px. O breakpoint casa com o que mostra a barra
+          (useIsTabletOrBelow, max-width: 1023px). Desktop inalterado. */}
       <button
-        className="flex items-center gap-2 h-9 md:h-7 px-2.5 pr-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] outline-none flex-1 max-w-[320px]"
+        className="hidden lg:flex items-center gap-2 h-9 md:h-7 px-2.5 pr-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] outline-none flex-1 max-w-[320px]"
         style={{
           background: "var(--tf-bg-secondary)",
           border: "1px solid var(--tf-border)",

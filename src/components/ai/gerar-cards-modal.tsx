@@ -393,7 +393,7 @@ export function GerarCardsModal({ aberto, onFechar, workspaceId, etiquetas = [],
                         </span>
                         <button
                           onClick={() => handleRemoverChecklistItem(idx, itemIdx)}
-                          className="p-0.5 rounded opacity-0 group-hover/item:opacity-100 transition-smooth"
+                          className="p-0.5 rounded tf-acao-toque opacity-0 group-hover/item:opacity-100 transition-smooth"
                           style={{ color: "var(--tf-text-tertiary)" }}
                         >
                           <Trash2 size={10} />

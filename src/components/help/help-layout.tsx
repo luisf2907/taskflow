@@ -23,7 +23,7 @@ export function HelpLayout({ children }: HelpLayoutProps) {
   // Enquanto carrega, renderiza so o conteudo (evita flash)
   if (carregando) {
     return (
-      <div style={{ background: "var(--tf-bg)", minHeight: "100vh" }}>
+      <div style={{ background: "var(--tf-bg)", minHeight: "100dvh" }}>
         {children}
       </div>
     );

@@ -7,7 +7,7 @@ export const metadata = {
 export default function NotFound() {
   return (
     <div
-      className="flex flex-col items-center justify-center min-h-screen px-6 text-center hero-grid relative"
+      className="flex flex-col items-center justify-center min-h-dvh px-6 text-center hero-grid relative"
       style={{ background: "var(--tf-bg)" }}
     >
       <div className="relative z-10 flex flex-col items-center">

@@ -530,7 +530,7 @@ export default function PaginaWorkspace() {
                 // traz de volta — senao o gatilho fica invisivel pra quem
                 // chega nele pelo Tab.
                 className:
-                  "p-1 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]",
+                  "p-1 tf-acao-toque opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]",
                 style: {
                   color: "var(--tf-text-tertiary)",
                   borderRadius: "var(--tf-radius-xs)",
@@ -1225,7 +1225,7 @@ export default function PaginaWorkspace() {
                           </span>
 
                           {/* Ações */}
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-smooth">
+                          <div className="flex items-center gap-1 tf-acao-toque opacity-0 group-hover:opacity-100 transition-smooth">
                             <button
                               onClick={() => alterarPapel(u.id, u.papel === "admin" ? "membro" : "admin")}
                               className="p-1.5 rounded-[var(--tf-radius-xs)] transition-smooth"

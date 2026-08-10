@@ -213,7 +213,7 @@ export function BacklogRow({
             e.stopPropagation();
             setSeletor(true);
           }}
-          className="inline-flex items-center gap-1 h-[22px] px-2 text-[0.625rem] font-medium opacity-0 group-hover:opacity-100 transition-all shrink-0 hover:brightness-110"
+          className="inline-flex items-center gap-1 h-[22px] px-2 text-[0.625rem] font-medium tf-acao-toque opacity-0 group-hover:opacity-100 transition-all shrink-0 hover:brightness-110"
           style={{
             background: "var(--tf-accent-light)",
             color: "var(--tf-accent-text)",
@@ -232,7 +232,7 @@ export function BacklogRow({
         // Tab, anunciada como botao, que nao faz nada ao ser ativada.
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <div
-          className="flex items-center gap-1 opacity-0 group-hover:opacity-100 shrink-0"
+          className="flex items-center gap-1 tf-acao-toque opacity-0 group-hover:opacity-100 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
           <select

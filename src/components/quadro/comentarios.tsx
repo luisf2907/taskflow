@@ -222,7 +222,7 @@ export function Comentarios({
                     </span>
                     <button
                       onClick={() => onExcluir(comentario.id)}
-                      className="p-0.5 opacity-0 group-hover:opacity-100 ml-auto transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+                      className="p-0.5 tf-acao-toque opacity-0 group-hover:opacity-100 ml-auto transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
                       style={{
                         color: "var(--tf-text-tertiary)",
                         borderRadius: "var(--tf-radius-xs)",

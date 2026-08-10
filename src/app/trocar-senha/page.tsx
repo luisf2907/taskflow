@@ -75,7 +75,7 @@ export default function TrocarSenhaPage() {
   if (carregando) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
+        className="min-h-dvh flex items-center justify-center"
         style={{ background: "var(--tf-bg)" }}
       >
         <Loader2
@@ -89,7 +89,7 @@ export default function TrocarSenhaPage() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4 hero-grid"
+      className="min-h-dvh flex items-center justify-center px-4 hero-grid"
       style={{ background: "var(--tf-bg)" }}
     >
       <div className="w-full max-w-[400px]">

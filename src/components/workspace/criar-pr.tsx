@@ -350,7 +350,7 @@ export function CriarPR({ aberto, onFechar, repoId, owner, nome, workspaceId, me
                     <p className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>{cardEscolhido.coluna_nome}</p>
                   )}
                 </div>
-                <button onClick={() => setCardSelecionado(null)} className="p-1 rounded" style={{ color: "var(--tf-text-tertiary)" }}>
+                <button onClick={() => setCardSelecionado(null)} className="w-11 h-11 md:w-auto md:h-auto md:p-1 grid place-items-center shrink-0 rounded" aria-label="Remover card vinculado" style={{ color: "var(--tf-text-tertiary)" }}>
                   <X size={14} />
                 </button>
               </div>

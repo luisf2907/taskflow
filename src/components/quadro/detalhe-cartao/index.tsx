@@ -377,7 +377,10 @@ export function DetalheCartao({
 
       <div className="relative min-h-full flex items-stretch md:items-center justify-center p-0 md:p-4">
         <div
-          className="relative rounded-none md:rounded-[var(--tf-radius-xl)] w-full max-w-4xl z-10 overflow-hidden min-h-screen md:min-h-0"
+          // min-h-dvh e nao min-h-screen: no celular 100vh conta a barra de
+          // endereco que se esconde, entao a folha nascia mais alta que a
+          // tela e o rodape ficava cortado.
+          className="relative rounded-none md:rounded-[var(--tf-radius-xl)] w-full max-w-4xl z-10 overflow-hidden min-h-dvh md:min-h-0"
           style={{
             background: "var(--tf-surface)",
             border: "1px solid var(--tf-border)",
@@ -386,8 +389,17 @@ export function DetalheCartao({
         >
         {/* ─── TOP BAR ─── */}
         <div
-          className="flex items-center justify-between px-3 md:px-5 h-12 md:h-10 sticky top-0 z-10"
-          style={{ borderBottom: "1px solid var(--tf-border)", background: "var(--tf-surface)" }}
+          className="flex items-center justify-between px-3 md:px-5 h-12 md:h-10 sticky top-0 z-10 box-content md:box-border"
+          style={{
+            borderBottom: "1px solid var(--tf-border)",
+            background: "var(--tf-surface)",
+            // Esta barra fica em `sticky top-0` dentro de um overlay
+            // `fixed inset-0`, ou seja: encosta no topo absoluto da tela.
+            // Com viewportFit: "cover" isso significa ficar por baixo da
+            // Dynamic Island. O box-content acima faz o inset somar a
+            // altura em vez de comer o espaco dos botoes.
+            paddingTop: "env(safe-area-inset-top, 0px)",
+          }}
         >
           <div className="flex items-center gap-1.5">
             {etiquetasDoCartao.length > 0 && (

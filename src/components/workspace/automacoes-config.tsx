@@ -196,7 +196,7 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
               {/* Delete */}
               <button
                 onClick={() => excluir(auto.id)}
-                className="p-1.5 rounded-[var(--tf-radius-xs)] opacity-0 group-hover:opacity-100"
+                className="p-1.5 rounded-[var(--tf-radius-xs)] tf-acao-toque opacity-0 group-hover:opacity-100"
                 style={{ color: "var(--tf-text-tertiary)", transition: "opacity 0.15s ease" }}
                 title="Excluir regra"
               >
@@ -215,7 +215,7 @@ export function AutomacoesConfig({ workspaceId, colunas, membros, etiquetas }: A
         >
           <div className="flex items-center justify-between">
             <h4 className="text-[13px] font-bold" style={{ color: "var(--tf-text)" }}>Nova automação</h4>
-            <button onClick={resetForm} className="p-1 rounded-[4px]" style={{ color: "var(--tf-text-tertiary)" }}>
+            <button onClick={resetForm} className="w-11 h-11 md:w-auto md:h-auto md:p-1 grid place-items-center shrink-0 rounded-[4px]" aria-label="Cancelar nova automação" style={{ color: "var(--tf-text-tertiary)" }}>
               <X size={14} />
             </button>
           </div>

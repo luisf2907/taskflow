@@ -309,6 +309,12 @@ export function GrafoDependenciasOverlay({
         background: "rgba(0,0,0,0.55)",
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
+        // Overlay de tela cheia: com viewportFit: "cover" o topo fica sob a
+        // Dynamic Island e a base sobre a home indicator. Como e flex-col, o
+        // padding aqui empurra a barra de ferramentas e o grafo de uma vez.
+        // No desktop os dois env() sao 0.
+        paddingTop: "env(safe-area-inset-top, 0px)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();

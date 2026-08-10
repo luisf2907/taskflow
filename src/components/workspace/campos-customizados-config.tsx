@@ -387,7 +387,7 @@ function CampoRow({
       </span>
       <button
         onClick={() => setEditando(true)}
-        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        className="tf-acao-toque opacity-0 group-hover:opacity-100 transition-opacity"
         style={{ color: "var(--tf-text-tertiary)" }}
         aria-label="Editar"
       >
@@ -395,7 +395,7 @@ function CampoRow({
       </button>
       <button
         onClick={onExcluir}
-        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        className="tf-acao-toque opacity-0 group-hover:opacity-100 transition-opacity"
         style={{ color: "var(--tf-danger)" }}
         aria-label="Excluir"
       >
