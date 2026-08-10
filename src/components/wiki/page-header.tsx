@@ -111,7 +111,7 @@ export function PageHeader({
             <button
               type="button"
               onClick={() => capaInputRef.current?.click()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[11px] font-medium text-white backdrop-blur-sm transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[11px] font-medium text-white backdrop-blur-sm transition-colors"
               style={{ background: "rgba(0,0,0,0.65)" }}
             >
               <ImagePlus size={12} /> Trocar
@@ -119,7 +119,7 @@ export function PageHeader({
             <button
               type="button"
               onClick={() => onCapaChange(null)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[11px] font-medium text-white backdrop-blur-sm transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--tf-radius-xs)] text-[11px] font-medium text-white backdrop-blur-sm transition-colors"
               style={{ background: "rgba(0,0,0,0.65)" }}
             >
               <X size={12} /> Remover
