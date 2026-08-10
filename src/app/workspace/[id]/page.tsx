@@ -1638,39 +1638,70 @@ export default function PaginaWorkspace() {
         onFechar={() => setModalIA(false)}
         workspaceId={workspaceId}
         etiquetas={etiquetasWs}
-        onCriarCards={async (cards) => {
-          for (const card of cards) {
-            const criado = await criarTarefa(card.titulo, card.peso, card.descricao);
-            if (!criado) continue;
-
-            // Criar checklist com itens (se houver)
-            if (card.checklist && card.checklist.length > 0) {
-              const { data: checklist } = await supabase
-                .from("checklists")
-                .insert({ cartao_id: criado.id, titulo: "Criterios de aceitacao", posicao: 0 })
-                .select()
-                .single();
-
-              if (checklist) {
-                const itens = card.checklist.map((texto: string, idx: number) => ({
-                  checklist_id: checklist.id,
-                  texto,
-                  posicao: idx,
-                  concluido: false,
-                }));
-                await supabase.from("checklist_itens").insert(itens);
-              }
-            }
-
-            // Atribuir etiquetas (se houver)
-            if (card.etiqueta_ids && card.etiqueta_ids.length > 0) {
-              const inserts = card.etiqueta_ids.map((etiquetaId: string) => ({
-                cartao_id: criado.id,
-                etiqueta_id: etiquetaId,
-              }));
-              await supabase.from("cartao_etiquetas").insert(inserts);
-            }
+        onCriarCards={async (cards, etiquetasNovas) => {
+          // As etiquetas propostas pela IA so viram registro aqui, e apenas
+          // as que sobraram em algum card depois das edicoes no preview —
+          // apagar o card no preview nao pode deixar etiqueta orfa.
+          const usadas = new Set(cards.flatMap((c) => c.etiqueta_ids));
+          const idPorChave = new Map<string, string>();
+          for (let i = 0; i < etiquetasNovas.length; i++) {
+            const chave = `novo:${i}`;
+            if (!usadas.has(chave)) continue;
+            const criada = await criarEtiquetaWs(etiquetasNovas[i].nome, etiquetasNovas[i].cor);
+            if (criada) idPorChave.set(chave, criada.id);
           }
+
+          // Em lote: com ate 40 cards, tres idas ao banco por card em serie
+          // deixavam a confirmacao na casa dos minutos.
+          const criados = await Promise.all(
+            cards.map((card) => criarTarefa(card.titulo, card.peso, card.descricao))
+          );
+
+          const checklistsPedidos = criados
+            .map((criado, i) => ({ criado, card: cards[i] }))
+            .filter((x) => x.criado && x.card.checklist?.length > 0);
+
+          if (checklistsPedidos.length > 0) {
+            const { data: checklists } = await supabase
+              .from("checklists")
+              .insert(
+                checklistsPedidos.map((x) => ({
+                  cartao_id: x.criado!.id,
+                  titulo: "Criterios de aceitacao",
+                  posicao: 0,
+                }))
+              )
+              .select();
+
+            const itens = (checklists || []).flatMap((cl, i) =>
+              checklistsPedidos[i].card.checklist.map((texto: string, idx: number) => ({
+                checklist_id: cl.id,
+                texto,
+                posicao: idx,
+                concluido: false,
+              }))
+            );
+            if (itens.length > 0) await supabase.from("checklist_itens").insert(itens);
+          }
+
+          const vinculos = criados.flatMap((criado, i) => {
+            if (!criado) return [];
+            return cards[i].etiqueta_ids
+              .map((id) => (id.startsWith("novo:") ? idPorChave.get(id) : id))
+              .filter((id): id is string => !!id)
+              .map((etiqueta_id) => ({ cartao_id: criado.id, etiqueta_id }));
+          });
+          if (vinculos.length > 0) {
+            await supabase.from("cartao_etiquetas").insert(vinculos);
+          }
+
+          const falharam = criados.filter((c) => !c).length;
+          if (falharam > 0) {
+            toast.error(
+              `${falharam} de ${cards.length} card(s) nao foram criados. Os demais estao no backlog.`
+            );
+          }
+
           buscarBacklog();
         }}
       />

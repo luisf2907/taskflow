@@ -1,3 +1,25 @@
+/**
+ * Paleta dos seletores de etiqueta. Vivia dentro de seletor-etiquetas.tsx;
+ * saiu de la porque o servidor tambem escolhe cor agora, ao criar etiquetas
+ * sugeridas pela IA, e as duas precisam sair do mesmo lugar.
+ */
+export const CORES_ETIQUETA = [
+  "#22C55E",
+  "#16A34A",
+  "#A855F7",
+  "#7C3AED",
+  "#3B82F6",
+  "#2563EB",
+  "#06B6D4",
+  "#14B8A6",
+  "#EAB308",
+  "#F97316",
+  "#EF4444",
+  "#EC4899",
+  "#78716C",
+  "#475569",
+];
+
 export const TASKFLOW_PALETTE = [
   "#00857A", // Accent primary
   "#006D63", // Accent hover

@@ -4,22 +4,7 @@ import { Etiqueta } from "@/types";
 import { Check, Plus, X } from "lucide-react";
 import { useState } from "react";
 
-const CORES_PRESET = [
-  "#22C55E",
-  "#16A34A",
-  "#A855F7",
-  "#7C3AED",
-  "#3B82F6",
-  "#2563EB",
-  "#06B6D4",
-  "#14B8A6",
-  "#EAB308",
-  "#F97316",
-  "#EF4444",
-  "#EC4899",
-  "#78716C",
-  "#475569",
-];
+import { CORES_ETIQUETA as CORES_PRESET } from "@/lib/colors";
 
 interface SeletorEtiquetasProps {
   etiquetas: Etiqueta[];
