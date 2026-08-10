@@ -21,6 +21,11 @@ export function WorkspaceBentoCard({
   onNovaSprint,
 }: WorkspaceBentoCardProps) {
 
+  // Editar e Excluir exigem `is_workspace_admin` no banco. Pra quem e so
+  // membro o Postgres recusa em silencio (200 com zero linhas), entao o menu
+  // nao oferece a acao — o unico item restante seria vazio, e escondemos ele.
+  const ehAdmin = ws.meu_papel === "admin";
+
   const fakeProgress =
     (Array.from(ws.id).reduce((acc, char) => acc + char.charCodeAt(0), 0) %
       60) +
@@ -53,24 +58,26 @@ export function WorkspaceBentoCard({
           <Folder size={18} className="text-white" strokeWidth={1.75} />
         </div>
 
-        <Dropdown
-          rotulo={`Opções do workspace ${ws.nome}`}
-          propsGatilho={{
-            className: "p-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]",
-            style: {
-              color: "var(--tf-text-tertiary)",
-              borderRadius: "var(--tf-radius-xs)",
-            },
-          }}
-          gatilho={<MoreVertical size={14} strokeWidth={1.75} />}
-        >
-          <DropdownItem onClick={() => onEditar(ws)}>
-            <Pencil size={12} strokeWidth={1.75} /> Editar
-          </DropdownItem>
-          <DropdownItem perigo onClick={() => onExcluir(ws.id)}>
-            <Trash2 size={12} strokeWidth={1.75} /> Excluir
-          </DropdownItem>
-        </Dropdown>
+        {ehAdmin && (
+          <Dropdown
+            rotulo={`Opções do workspace ${ws.nome}`}
+            propsGatilho={{
+              className: "p-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-text)]",
+              style: {
+                color: "var(--tf-text-tertiary)",
+                borderRadius: "var(--tf-radius-xs)",
+              },
+            }}
+            gatilho={<MoreVertical size={14} strokeWidth={1.75} />}
+          >
+            <DropdownItem onClick={() => onEditar(ws)}>
+              <Pencil size={12} strokeWidth={1.75} /> Editar
+            </DropdownItem>
+            <DropdownItem perigo onClick={() => onExcluir(ws.id)}>
+              <Trash2 size={12} strokeWidth={1.75} /> Excluir
+            </DropdownItem>
+          </Dropdown>
+        )}
       </div>
 
       <Link

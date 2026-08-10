@@ -60,6 +60,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // A insercao abaixo usa service role, que ignora `ws_usuarios_insert`
+  // (WITH CHECK is_workspace_admin). Sem esta checagem qualquer membro
+  // conseguiria adicionar gente ao workspace por esta rota.
+  if (meuPapel.papel !== "admin") {
+    return NextResponse.json(
+      { error: "Apenas administradores do workspace podem convidar membros." },
+      { status: 403 }
+    );
+  }
+
   // Buscar perfil pelo email (service role bypassa RLS)
   const { data: perfil } = await service
     .from("perfis")

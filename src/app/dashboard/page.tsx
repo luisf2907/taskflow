@@ -7,6 +7,7 @@ import { useSidebar } from "@/hooks/use-sidebar";
 import { useWorkspaces } from "@/hooks/use-workspaces";
 import { useDashboardMetrics } from "@/hooks/use-dashboard-metrics";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "@/hooks/use-toast";
 import { Workspace } from "@/types";
 import {
   CheckCircle2,
@@ -587,7 +588,10 @@ export default function PaginaInicial() {
         workspaceId={confirmExcluirWsId}
         onFechar={() => setConfirmExcluirWsId(null)}
         onConfirmar={async (id) => {
-          await excluirWorkspace(id);
+          const nome = workspaces.find((w) => w.id === id)?.nome ?? "Workspace";
+          const { ok, erro } = await excluirWorkspace(id);
+          if (ok) toast.success(`"${nome}" foi excluído.`);
+          else toast.error(erro ?? "Não foi possível excluir o workspace.");
         }}
       />
     </div>

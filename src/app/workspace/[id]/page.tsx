@@ -31,6 +31,7 @@ import {
   Inbox,
   Kanban,
   Layers,
+  LogOut,
   Mail,
   MoreHorizontal,
   Pencil,
@@ -67,6 +68,8 @@ import { CartaoComResumo } from "@/hooks/use-cartoes";
 import { useRealtimeWorkspace } from "@/hooks/use-realtime";
 import { usePRSync } from "@/hooks/use-pr-sync";
 import { useWorkspaceUsuarios } from "@/hooks/use-workspace-usuarios";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "@/hooks/use-toast";
 import { features } from "@/lib/features";
 import { Quadro } from "@/types";
 
@@ -148,7 +151,8 @@ export default function PaginaWorkspace() {
   // instante e entrega ao cliente.
   const agoraMs = Date.now();
 
-  const { workspaces, atualizar: atualizarWs, excluir: excluirWs } = useWorkspaces();
+  const { workspaces, atualizar: atualizarWs, excluir: excluirWs, sair: sairDoWs } = useWorkspaces();
+  const { user } = useAuth();
   const { quadros, criar: criarQuadro, atualizar: atualizarQuadro, excluir: excluirQuadro } = useQuadros();
   const { cartoes: todosCartoes, backlogPuro, cartoesDaSprint, criarTarefa, associarASprint, desassociarDeSprint, moverParaSprint, excluirTarefa, buscar: buscarBacklog } = useBacklog(workspaceId);
   const { etiquetas: etiquetasWs, criar: criarEtiquetaWs, excluir: excluirEtiquetaWs } = useEtiquetasWorkspace(workspaceId);
@@ -159,9 +163,21 @@ export default function PaginaWorkspace() {
   const [convidando, setConvidando] = useState(false);
 
   const workspace = workspaces.find((w) => w.id === workspaceId);
+  // Editar o workspace, mexer na equipe e excluir exigem `is_workspace_admin`
+  // no banco. Pra quem e so membro o Postgres recusa em silencio (200 com zero
+  // linhas), entao essas acoes nem sao oferecidas.
+  const ehAdminWs = workspace?.meu_papel === "admin";
+  // Sair e sempre permitido pelo RLS, mas se o ultimo admin sair o workspace
+  // fica sem ninguem que possa gerenciar equipe ou exclui-lo. Nesse caso a UI
+  // pede que ele promova outra pessoa antes.
+  const souUltimoAdmin =
+    ehAdminWs &&
+    !wsUsuarios.some((u) => u.papel === "admin" && u.user_id !== user?.id);
   const { sidebarAberta, toggleSidebar, iniciado } = useSidebar();
   const [abaAtiva, setAbaAtiva] = useState<"backlog" | "sprints" | "timeline" | "metricas" | "config" | "atividade">("sprints");
   const [confirmExcluirWs, setConfirmExcluirWs] = useState(false);
+  const [confirmSairWs, setConfirmSairWs] = useState(false);
+  const [saindo, setSaindo] = useState(false);
   const [confirmExcluirSprintId, setConfirmExcluirSprintId] = useState<string | null>(null);
   const [confirmRemoverMembroId, setConfirmRemoverMembroId] = useState<string | null>(null);
   useRealtimeWorkspace(workspaceId);
@@ -976,7 +992,7 @@ export default function PaginaWorkspace() {
                 <div className="p-4" style={{ background: "var(--tf-surface)", border: "1px solid var(--tf-border)", borderRadius: "var(--tf-radius-md)" }}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Informações</h3>
-                    {!editandoConfig && (
+                    {ehAdminWs && !editandoConfig && (
                       <button onClick={iniciarEditConfig} className="flex items-center gap-1 text-[12px] font-medium transition-smooth" style={{ color: "var(--tf-accent-text)" }}>
                         <Pencil size={12} /> Editar
                       </button>
@@ -1012,7 +1028,7 @@ export default function PaginaWorkspace() {
                       <h3 className="text-sm font-bold" style={{ color: "var(--tf-text)" }}>Colunas padrão</h3>
                       <p className="text-[12px] mt-0.5" style={{ color: "var(--tf-text-tertiary)" }}>Criadas automaticamente em novas sprints</p>
                     </div>
-                    {!editandoColunas && (
+                    {ehAdminWs && !editandoColunas && (
                       <button
                         onClick={() => { setColunasEdit([...(workspace.colunas_padrao || [])]); setEditandoColunas(true); }}
                         className="flex items-center gap-1 text-[12px] font-medium transition-smooth"
@@ -1118,7 +1134,9 @@ export default function PaginaWorkspace() {
                     </span>
                   </div>
 
-                  {/* Convidar */}
+                  {/* Convidar — gestao de equipe e restrita a admins */}
+                  {ehAdminWs && (
+                  <>
                   <div className="flex gap-2 mb-4">
                     <div className="relative flex-1">
                       <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--tf-text-tertiary)" }} />
@@ -1166,6 +1184,8 @@ export default function PaginaWorkspace() {
 
                   {/* Link de convite */}
                   <InviteLinkInline workspaceId={workspaceId} />
+                  </>
+                  )}
 
                   {/* Lista de membros */}
                   <div className="space-y-1">
@@ -1224,29 +1244,31 @@ export default function PaginaWorkspace() {
                             {u.papel === "admin" ? "Admin" : "Membro"}
                           </span>
 
-                          {/* Ações */}
-                          <div className="flex items-center gap-1 tf-acao-toque opacity-0 group-hover:opacity-100 transition-smooth">
-                            <button
-                              onClick={() => alterarPapel(u.id, u.papel === "admin" ? "membro" : "admin")}
-                              className="p-1.5 rounded-[var(--tf-radius-xs)] transition-smooth"
-                              style={{ color: "var(--tf-text-tertiary)" }}
-                              title={u.papel === "admin" ? "Tornar membro" : "Tornar admin"}
-                              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-accent)")}
-                              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
-                            >
-                              <Shield size={13} />
-                            </button>
-                            <button
-                              onClick={() => setConfirmRemoverMembroId(u.id)}
-                              className="p-1.5 rounded-[var(--tf-radius-xs)] transition-smooth"
-                              style={{ color: "var(--tf-text-tertiary)" }}
-                              title="Remover do workspace"
-                              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
-                              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
-                            >
-                              <UserMinus size={13} />
-                            </button>
-                          </div>
+                          {/* Ações — `ws_usuarios_update`/`_delete` exigem admin */}
+                          {ehAdminWs && (
+                            <div className="flex items-center gap-1 tf-acao-toque opacity-0 group-hover:opacity-100 transition-smooth">
+                              <button
+                                onClick={() => alterarPapel(u.id, u.papel === "admin" ? "membro" : "admin")}
+                                className="p-1.5 rounded-[var(--tf-radius-xs)] transition-smooth"
+                                style={{ color: "var(--tf-text-tertiary)" }}
+                                title={u.papel === "admin" ? "Tornar membro" : "Tornar admin"}
+                                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-accent)")}
+                                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
+                              >
+                                <Shield size={13} />
+                              </button>
+                              <button
+                                onClick={() => setConfirmRemoverMembroId(u.id)}
+                                className="p-1.5 rounded-[var(--tf-radius-xs)] transition-smooth"
+                                style={{ color: "var(--tf-text-tertiary)" }}
+                                title="Remover do workspace"
+                                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tf-danger)")}
+                                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tf-text-tertiary)")}
+                              >
+                                <UserMinus size={13} />
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))
                     )}
@@ -1266,6 +1288,7 @@ export default function PaginaWorkspace() {
                   />
                 </div>
 
+                {ehAdminWs && (
                 <div className="rounded-[var(--tf-radius-lg)] border p-6 transition-smooth" style={{ background: "var(--tf-danger-bg)", borderColor: "var(--tf-danger)" }}>
                   <h3 className="text-sm font-bold mb-2 flex items-center gap-2" style={{ color: "var(--tf-danger)" }}><Trash2 size={16}/> Zona de perigo</h3>
                   <p className="text-[13px] mb-4 font-medium" style={{ color: "var(--tf-danger)" }}>Excluir este workspace. Os quadros/sprints ficarão como avulsos soltos.</p>
@@ -1280,7 +1303,16 @@ export default function PaginaWorkspace() {
                     <div className="flex items-center gap-3">
                       <span className="text-[12px] font-semibold" style={{ color: "var(--tf-danger)" }}>Confirmar exclusão?</span>
                       <button
-                        onClick={async () => { await excluirWs(workspaceId); router.push("/dashboard"); }}
+                        onClick={async () => {
+                          const { ok, erro } = await excluirWs(workspaceId);
+                          if (!ok) {
+                            setConfirmExcluirWs(false);
+                            toast.error(erro ?? "Não foi possível excluir o workspace.");
+                            return;
+                          }
+                          toast.success(`"${workspace.nome}" foi excluído.`);
+                          router.push("/dashboard");
+                        }}
                         className="px-4 py-2 text-[12px] font-bold text-white rounded-[var(--tf-radius-xs)]" style={{ background: "var(--tf-danger)" }}
                       >
                         Sim, excluir
@@ -1292,6 +1324,64 @@ export default function PaginaWorkspace() {
                         Cancelar
                       </button>
                     </div>
+                  )}
+                </div>
+                )}
+
+                {/* ─── Sair do workspace ─── */}
+                <div className="rounded-[var(--tf-radius-lg)] border p-6" style={{ background: "var(--tf-surface)", borderColor: "var(--tf-border)" }}>
+                  <h3 className="text-sm font-bold mb-2 flex items-center gap-2" style={{ color: "var(--tf-text)" }}>
+                    <LogOut size={16} /> Sair do workspace
+                  </h3>
+                  {souUltimoAdmin ? (
+                    <p className="text-[13px]" style={{ color: "var(--tf-text-secondary)" }}>
+                      Você é o único administrador daqui. Promova outra pessoa a admin antes de sair — senão o workspace fica sem ninguém para gerenciá-lo.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-[13px] mb-4" style={{ color: "var(--tf-text-secondary)" }}>
+                        Você perde o acesso a este workspace e a tudo que está dentro dele. Nada é apagado, e um admin pode te convidar de volta.
+                      </p>
+                      {!confirmSairWs ? (
+                        <button
+                          onClick={() => setConfirmSairWs(true)}
+                          className="px-5 py-2.5 text-[13px] font-semibold rounded-[var(--tf-radius-md)] border transition-smooth"
+                          style={{ borderColor: "var(--tf-border)", color: "var(--tf-text-secondary)" }}
+                        >
+                          Sair do workspace
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <span className="text-[12px] font-semibold" style={{ color: "var(--tf-text)" }}>Confirmar saída?</span>
+                          <button
+                            disabled={saindo}
+                            onClick={async () => {
+                              setSaindo(true);
+                              const { ok, erro } = await sairDoWs(workspaceId);
+                              if (!ok) {
+                                setSaindo(false);
+                                setConfirmSairWs(false);
+                                toast.error(erro ?? "Não foi possível sair do workspace.");
+                                return;
+                              }
+                              toast.success(`Você saiu de "${workspace.nome}".`);
+                              router.push("/dashboard");
+                            }}
+                            className="px-4 py-2 text-[12px] font-bold text-white rounded-[var(--tf-radius-xs)] disabled:opacity-40"
+                            style={{ background: "var(--tf-danger)" }}
+                          >
+                            {saindo ? "Saindo..." : "Sim, sair"}
+                          </button>
+                          <button
+                            onClick={() => setConfirmSairWs(false)}
+                            className="px-4 py-2 text-[12px] font-medium rounded-[var(--tf-radius-xs)]"
+                            style={{ color: "var(--tf-text-secondary)", background: "var(--tf-bg-secondary)" }}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </section>

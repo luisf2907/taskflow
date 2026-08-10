@@ -10,6 +10,13 @@ export interface Workspace {
   colunas_padrao: string[];
   criado_em: string;
   atualizado_em: string;
+  /**
+   * Papel do usuario logado neste workspace. Nao vem da tabela `workspaces` —
+   * e resolvido em use-workspaces.ts a partir de workspace_usuarios. Existe
+   * porque as policies de UPDATE/DELETE exigem `is_workspace_admin`, entao a
+   * UI precisa saber o papel pra nao oferecer acao que o banco vai recusar.
+   */
+  meu_papel?: "admin" | "membro" | null;
 }
 
 export type StatusSprint = "planejada" | "ativa" | "concluida";
