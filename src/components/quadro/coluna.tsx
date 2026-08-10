@@ -99,7 +99,13 @@ export const Coluna = memo(function Coluna({
       {/* Header */}
       <div
         className="flex items-center justify-between px-3 pt-3 pb-2 cursor-grab active:cursor-grabbing"
-        style={{ touchAction: "pan-y" }}
+        // "manipulation", nao "pan-y". O quadro rola na HORIZONTAL, e pan-y
+        // manda o navegador ignorar arrasto horizontal. Como o TouchSensor
+        // so ativa depois de 250ms parado (tolerance: 8 cancela se o dedo
+        // andar antes), um swipe rapido no cabecalho nao rolava nem
+        // arrastava — a faixa de 86vw no topo de cada coluna era um ponto
+        // morto. E o mesmo valor que cartao.tsx ja usa com este sensor.
+        style={{ touchAction: "manipulation" }}
         {...attributes}
         {...listeners}
       >

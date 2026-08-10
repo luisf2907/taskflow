@@ -1,5 +1,6 @@
 "use client";
 
+import { getContrastTextColor } from "@/lib/colors";
 import { Etiqueta, Membro } from "@/types";
 import { Filter, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -135,9 +136,10 @@ export function BarraFiltros({
         Filtros
         {totalAtivos > 0 && (
           <span
-            className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[0.625rem] font-medium text-white"
+            className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[0.625rem] font-medium"
             style={{
               background: "var(--tf-accent)",
+              color: "var(--tf-on-accent)",
               borderRadius: "var(--tf-radius-xs)",
               fontFamily: "var(--tf-font-mono)",
             }}
@@ -191,9 +193,14 @@ export function BarraFiltros({
                     <button
                       key={e.id}
                       onClick={() => toggleEtiqueta(e.id)}
-                      className="h-[22px] px-2 text-[0.6875rem] font-medium text-white transition-all"
+                      // Branco fixo sobre a cor da etiqueta: numa etiqueta
+                      // amarela o nome sumia. Todas as outras cinco telas que
+                      // desenham chip de etiqueta ja usam getContrastTextColor
+                      // — esta era a unica fora do padrao.
+                      className="h-[26px] md:h-[22px] px-2 text-[0.6875rem] font-medium transition-all"
                       style={{
                         backgroundColor: e.cor,
+                        color: getContrastTextColor(e.cor),
                         borderRadius: "var(--tf-radius-xs)",
                         opacity:
                           filtros.etiquetaIds.length === 0 || ativa ? 1 : 0.35,

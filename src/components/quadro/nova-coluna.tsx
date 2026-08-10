@@ -27,7 +27,12 @@ export function NovaColuna({ onCriar }: NovaColunaProps) {
           setAtivo(true);
           setTimeout(() => inputRef.current?.focus(), 50);
         }}
-        className="flex items-center justify-center gap-2 w-[290px] min-w-[290px] h-11 text-[0.75rem] font-medium transition-colors shrink-0"
+        // Largura e snap iguais aos da <Coluna>. Estava 290px fixo e sem
+        // snap-start: num container `snap-x snap-mandatory` o navegador so
+        // descansa em pontos de snap, entao ao soltar o dedo no fim da
+        // lista ele voltava para a ultima coluna e este botao nunca ficava
+        // alcancavel no celular.
+        className="flex items-center justify-center gap-2 w-[86vw] min-w-[86vw] md:w-[290px] md:min-w-[290px] h-11 text-[0.75rem] font-medium transition-colors shrink-0 snap-start"
         style={{
           border: "1px dashed var(--tf-border-strong)",
           borderRadius: "var(--tf-radius-lg)",
@@ -52,7 +57,7 @@ export function NovaColuna({ onCriar }: NovaColunaProps) {
   }
 
   return (
-    <div className="w-[290px] min-w-[290px] column-surface p-2.5 space-y-2 shrink-0">
+    <div className="w-[86vw] min-w-[86vw] md:w-[290px] md:min-w-[290px] column-surface p-2.5 space-y-2 shrink-0 snap-start">
       <input
         ref={inputRef}
         value={nome}
@@ -76,9 +81,10 @@ export function NovaColuna({ onCriar }: NovaColunaProps) {
         <button
           onClick={handleSubmit}
           disabled={!nome.trim()}
-          className="h-7 px-2.5 text-[0.75rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="h-9 md:h-7 px-2.5 text-[0.75rem] font-medium transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
             background: "var(--tf-accent)",
+            color: "var(--tf-on-accent)",
             border: "1px solid var(--tf-accent)",
             borderRadius: "var(--tf-radius-xs)",
           }}

@@ -190,7 +190,14 @@ function CartaoArrastavel({
       {...listeners}
       style={{
         cursor: "grab",
-        touchAction: "none",
+        // "none" bloqueia QUALQUER rolagem iniciada em cima do cartao, e
+        // aqui o cartao ocupa boa parte da celula — no celular a agenda
+        // ficava impossivel de rolar. O sensor de toque desta view tambem e
+        // por atraso (250ms), entao "manipulation" e o valor certo: o
+        // navegador rola no swipe e o dnd assume no toque longo.
+        // (backlog-row.tsx mantem "none" de proposito: la o alvo e um
+        // punho de arrasto de 32px, nao a linha inteira.)
+        touchAction: "manipulation",
         opacity: isDragging ? 0.4 : 1,
       }}
     >

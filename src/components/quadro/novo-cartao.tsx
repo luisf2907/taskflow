@@ -61,7 +61,7 @@ export const NovoCartao = memo(function NovoCartao({ onCriar, colunaId }: NovoCa
     return (
       <button
         onClick={() => setAtivo(true)}
-        className="flex items-center gap-1.5 w-full px-2.5 h-7 text-[0.75rem] transition-colors"
+        className="flex items-center gap-1.5 w-full px-2.5 h-11 md:h-7 text-[0.75rem] transition-colors"
         style={{
           color: "var(--tf-text-tertiary)",
           borderRadius: "var(--tf-radius-xs)",
@@ -118,9 +118,10 @@ export const NovoCartao = memo(function NovoCartao({ onCriar, colunaId }: NovoCa
         <button
           onClick={handleSubmit}
           disabled={enviando || !titulo.trim()}
-          className="h-7 px-2.5 text-[0.75rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="h-9 md:h-7 px-2.5 text-[0.75rem] font-medium transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
             background: "var(--tf-accent)",
+            color: "var(--tf-on-accent)",
             border: "1px solid var(--tf-accent)",
             borderRadius: "var(--tf-radius-xs)",
           }}
