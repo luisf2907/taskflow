@@ -157,7 +157,7 @@ export default function PaginaWorkspace() {
   const { user, ehPro } = useAuth();
   const { quadros, criar: criarQuadro, atualizar: atualizarQuadro, excluir: excluirQuadro } = useQuadros();
   const { cartoes: todosCartoes, backlogPuro, cartoesDaSprint, criarTarefa, associarASprint, desassociarDeSprint, moverParaSprint, excluirTarefa, buscar: buscarBacklog } = useBacklog(workspaceId);
-  const { etiquetas: etiquetasWs, criar: criarEtiquetaWs, excluir: excluirEtiquetaWs } = useEtiquetasWorkspace(workspaceId);
+  const { etiquetas: etiquetasWs, criar: criarEtiquetaWs, excluir: excluirEtiquetaWs, buscar: buscarEtiquetasWs } = useEtiquetasWorkspace(workspaceId);
   const { membros: membrosWs, criar: criarMembroWs, excluir: excluirMembroWs } = useMembrosWorkspace(workspaceId);
   const { usuarios: wsUsuarios, convidar: convidarUsuario, remover: removerUsuario, alterarPapel } = useWorkspaceUsuarios(workspaceId);
   const [emailConvite, setEmailConvite] = useState("");
@@ -1644,11 +1644,16 @@ export default function PaginaWorkspace() {
           // apagar o card no preview nao pode deixar etiqueta orfa.
           const usadas = new Set(cards.flatMap((c) => c.etiqueta_ids));
           const idPorChave = new Map<string, string>();
+          const etiquetasFalhas: string[] = [];
           for (let i = 0; i < etiquetasNovas.length; i++) {
             const chave = `novo:${i}`;
             if (!usadas.has(chave)) continue;
             const criada = await criarEtiquetaWs(etiquetasNovas[i].nome, etiquetasNovas[i].cor);
             if (criada) idPorChave.set(chave, criada.id);
+            else etiquetasFalhas.push(etiquetasNovas[i].nome);
+          }
+          if (etiquetasFalhas.length > 0) {
+            toast.error(`Nao consegui criar a(s) etiqueta(s): ${etiquetasFalhas.join(", ")}.`);
           }
 
           // Em lote: com ate 40 cards, tres idas ao banco por card em serie
@@ -1692,8 +1697,16 @@ export default function PaginaWorkspace() {
               .map((etiqueta_id) => ({ cartao_id: criado.id, etiqueta_id }));
           });
           if (vinculos.length > 0) {
-            await supabase.from("cartao_etiquetas").insert(vinculos);
+            const { error: erroVinculo } = await supabase
+              .from("cartao_etiquetas")
+              .insert(vinculos);
+            if (erroVinculo) toast.error("Os cards foram criados, mas as etiquetas nao foram aplicadas.");
           }
+
+          // Revalida a lista de etiquetas: a linha do backlog so desenha
+          // etiqueta que esteja nela, entao sem isto as recem-criadas
+          // ficariam invisiveis nos cards ate um reload.
+          buscarEtiquetasWs();
 
           const falharam = criados.filter((c) => !c).length;
           if (falharam > 0) {

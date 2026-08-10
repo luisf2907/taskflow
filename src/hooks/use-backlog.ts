@@ -136,7 +136,10 @@ export function useBacklog(workspaceId: string) {
         etiqueta_ids: [],
         membro_ids: [],
       };
-      globalMutate(key, [novo, ...cartoes], false);
+      // Forma funcional: o "gerar cards" cria varias tarefas em paralelo, e
+      // reescrever com `cartoes` faria cada uma partir da mesma lista do
+      // render — so a ultima sobreviveria ate a revalidacao.
+      globalMutate(key, (atual: CartaoBacklog[] = []) => [novo, ...atual], false);
     }
     return data;
   }
