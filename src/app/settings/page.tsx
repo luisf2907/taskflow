@@ -9,6 +9,7 @@ import { useWorkspaces } from "@/hooks/use-workspaces";
 import { Loader2 } from "lucide-react";
 
 import { ProfileSection } from "./_sections/perfil";
+import { PlanoSection } from "./_sections/plano";
 import { GithubSection } from "./_sections/github";
 import { FotoGithubBanner } from "./_sections/foto-github-banner";
 import { AparenciaSection } from "./_sections/aparencia";
@@ -104,6 +105,8 @@ export default function SettingsPage() {
               userEmail={user?.email}
               onUpdate={refresh}
             />
+
+            <PlanoSection perfil={perfil} />
 
             <GithubSection
               temGithub={temGithub}
