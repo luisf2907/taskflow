@@ -98,6 +98,9 @@ async function fetchBacklog(workspaceId: string): Promise<CartaoBacklog[]> {
   return [...backlogFormatado, ...cartoesEmSprints];
 }
 
+/** Resultado de uma operacao em lote — `afetados` conta o que de fato pegou. */
+export type ResultadoLote = { ok: boolean; erro?: string; afetados: number };
+
 export function useBacklog(workspaceId: string) {
   const key = chave(workspaceId);
 
@@ -203,6 +206,130 @@ export function useBacklog(workspaceId: string) {
     await supabase.from("cartoes").delete().eq("id", cartaoId);
   }
 
+  // ─────────────────────────────────────────────────────────────────────
+  // Operacoes em lote
+  // ─────────────────────────────────────────────────────────────────────
+  // Sem update otimista, ao contrario das versoes de um card so: aqui a
+  // acao e explicita e a barra de selecao mostra que esta rodando. Tirar 20
+  // linhas da tela antes de saber se o banco aceitou e o tipo de mentira
+  // que so aparece no proximo reload.
+
+  /** Revalida o backlog e os quadros afetados pela movimentacao. */
+  function revalidarQuadros(quadroIds: Array<string | null>) {
+    globalMutate(key);
+    for (const q of new Set(quadroIds)) {
+      if (q) globalMutate(chaveCartoes(q));
+    }
+  }
+
+  function quadrosDe(cartaoIds: string[]): Array<string | null> {
+    const alvo = new Set(cartaoIds);
+    return cartoes.filter((c) => alvo.has(c.id)).map((c) => c.quadro_id);
+  }
+
+  /**
+   * Move varias tarefas de uma vez. `quadroIdDestino` null devolve pro
+   * backlog puro.
+   */
+  async function moverEmLote(
+    cartaoIds: string[],
+    quadroIdDestino: string | null
+  ): Promise<ResultadoLote> {
+    if (cartaoIds.length === 0) return { ok: true, afetados: 0 };
+    const origens = quadrosDe(cartaoIds);
+
+    // Voltar pro backlog: todos recebem o mesmo valor, entao um update so.
+    if (quadroIdDestino === null) {
+      const { data, error } = await supabase
+        .from("cartoes")
+        .update({ coluna_id: null, workspace_id: workspaceId, posicao: 0 })
+        .in("id", cartaoIds)
+        .select("id");
+
+      revalidarQuadros(origens);
+      if (error) return { ok: false, erro: error.message, afetados: 0 };
+      const afetados = data?.length ?? 0;
+      return afetados === cartaoIds.length
+        ? { ok: true, afetados }
+        : {
+            ok: false,
+            afetados,
+            erro: `Apenas ${afetados} de ${cartaoIds.length} tarefas foram movidas.`,
+          };
+    }
+
+    const { data: colunas } = await supabase
+      .from("colunas")
+      .select("id")
+      .eq("quadro_id", quadroIdDestino)
+      .order("posicao")
+      .limit(1);
+
+    if (!colunas || colunas.length === 0) {
+      return {
+        ok: false,
+        afetados: 0,
+        erro: "A sprint de destino nao tem colunas. Abra a sprint e crie uma antes.",
+      };
+    }
+
+    const colunaId = colunas[0].id;
+    const { count } = await supabase
+      .from("cartoes")
+      .select("id", { count: "exact", head: true })
+      .eq("coluna_id", colunaId);
+    const base = count || 0;
+
+    // Cada card precisa de uma posicao diferente, e um update com `.in()` so
+    // consegue gravar o mesmo valor pra todos — dai uma chamada por card.
+    const resultados = await Promise.all(
+      cartaoIds.map((id, i) =>
+        supabase
+          .from("cartoes")
+          .update({ coluna_id: colunaId, posicao: base + i })
+          .eq("id", id)
+          .select("id")
+      )
+    );
+
+    revalidarQuadros([...origens, quadroIdDestino]);
+
+    const afetados = resultados.filter((r) => !r.error && (r.data?.length ?? 0) > 0).length;
+    return afetados === cartaoIds.length
+      ? { ok: true, afetados }
+      : {
+          ok: false,
+          afetados,
+          erro: `Apenas ${afetados} de ${cartaoIds.length} tarefas foram movidas.`,
+        };
+  }
+
+  /** Exclui varias tarefas. O cascade leva checklists, comentarios e anexos. */
+  async function excluirEmLote(cartaoIds: string[]): Promise<ResultadoLote> {
+    if (cartaoIds.length === 0) return { ok: true, afetados: 0 };
+    const origens = quadrosDe(cartaoIds);
+
+    const { data, error } = await supabase
+      .from("cartoes")
+      .delete()
+      .in("id", cartaoIds)
+      .select("id");
+
+    revalidarQuadros(origens);
+    if (error) return { ok: false, erro: error.message, afetados: 0 };
+
+    // RLS nao levanta erro: sem permissao o delete casa com zero linhas e
+    // volta 200. Contar as linhas e a unica forma de saber.
+    const afetados = data?.length ?? 0;
+    return afetados === cartaoIds.length
+      ? { ok: true, afetados }
+      : {
+          ok: false,
+          afetados,
+          erro: `Apenas ${afetados} de ${cartaoIds.length} tarefas foram excluidas.`,
+        };
+  }
+
   function buscar() {
     globalMutate(key);
   }
@@ -217,6 +344,8 @@ export function useBacklog(workspaceId: string) {
     desassociarDeSprint,
     moverParaSprint,
     excluirTarefa,
+    moverEmLote,
+    excluirEmLote,
     buscar,
   };
 }

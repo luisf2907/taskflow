@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import {
   ArrowRight,
+  Check,
   GripVertical,
   Layers,
   Trash2,
@@ -30,6 +31,12 @@ interface BacklogRowProps {
   onExcluir: (cartaoId: string) => void;
   onClick: () => void;
   onEstimar?: (cartaoId: string) => void;
+  /** Selecionada para acao em lote. */
+  selecionada?: boolean;
+  /** Ausente = selecao desligada nesta lista (nao renderiza a caixinha). */
+  onSelecionar?: (cartaoId: string, comShift: boolean) => void;
+  /** Ha alguma selecao ativa: mantem as caixinhas visiveis sem hover. */
+  selecaoAtiva?: boolean;
 }
 
 export function BacklogRow({
@@ -42,6 +49,9 @@ export function BacklogRow({
   onExcluir,
   onClick,
   onEstimar,
+  selecionada = false,
+  onSelecionar,
+  selecaoAtiva = false,
 }: BacklogRowProps) {
   const [seletor, setSeletor] = useState(false);
   const noSprint = !tarefa.coluna_id;
@@ -63,21 +73,49 @@ export function BacklogRow({
         isDragging ? "opacity-30" : ""
       }`}
       style={{
-        background: "var(--tf-surface)",
-        border: "1px solid var(--tf-border)",
+        background: selecionada ? "var(--tf-accent-light)" : "var(--tf-surface)",
+        border: `1px solid ${selecionada ? "var(--tf-accent)" : "var(--tf-border)"}`,
         borderRadius: "var(--tf-radius-sm)",
       }}
-      onMouseEnter={(e) =>
-        (e.currentTarget.style.borderColor = "var(--tf-border-strong)")
-      }
-      onMouseLeave={(e) =>
-        (e.currentTarget.style.borderColor = "var(--tf-border)")
-      }
+      onMouseEnter={(e) => {
+        if (!selecionada) e.currentTarget.style.borderColor = "var(--tf-border-strong)";
+      }}
+      onMouseLeave={(e) => {
+        if (!selecionada) e.currentTarget.style.borderColor = "var(--tf-border)";
+      }}
       onClick={onClick}
       onKeyDown={aoAtivarPorTeclado(onClick)}
       role="button"
       tabIndex={0}
     >
+      {/* Caixa de selecao — some quando nao ha selecao e o mouse esta fora,
+          pra lista parada continuar limpa. */}
+      {onSelecionar && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelecionar(tarefa.id, e.shiftKey);
+          }}
+          role="checkbox"
+          aria-checked={selecionada}
+          aria-label={`Selecionar "${tarefa.titulo}"`}
+          className={`w-8 h-8 md:w-auto md:h-auto flex items-center justify-center shrink-0 -ml-1.5 md:ml-0 mt-0.5 md:mt-0 transition-opacity ${
+            selecionada || selecaoAtiva ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          }`}
+        >
+          <span
+            className="w-[15px] h-[15px] flex items-center justify-center shrink-0"
+            style={{
+              border: `1.5px solid ${selecionada ? "var(--tf-accent)" : "var(--tf-border-strong)"}`,
+              background: selecionada ? "var(--tf-accent)" : "transparent",
+              borderRadius: "var(--tf-radius-xs)",
+            }}
+          >
+            {selecionada && <Check size={11} strokeWidth={3} color="#fff" />}
+          </span>
+        </button>
+      )}
+
       {/* Drag handle */}
       <button
         {...attributes}

@@ -3,7 +3,7 @@
 import { avatarDimensionado } from "@/lib/avatar-url";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   KeyboardSensor,
@@ -80,6 +80,7 @@ import { ExportDropdown } from "@/components/workspace/export-dropdown";
 import { InviteLinkInline } from "@/components/workspace/invite-link-inline";
 import { ModalConectarRepo } from "@/components/workspace/modal-conectar-repo";
 import { BacklogRow } from "@/components/workspace/backlog/backlog-row";
+import { BarraSelecao } from "@/components/workspace/backlog/barra-selecao";
 import {
   BacklogPuroDropZone,
   SprintDropZone,
@@ -156,7 +157,7 @@ export default function PaginaWorkspace() {
   const { workspaces, atualizar: atualizarWs, excluir: excluirWs, sair: sairDoWs } = useWorkspaces();
   const { user, ehPro } = useAuth();
   const { quadros, criar: criarQuadro, atualizar: atualizarQuadro, excluir: excluirQuadro } = useQuadros();
-  const { cartoes: todosCartoes, backlogPuro, cartoesDaSprint, criarTarefa, associarASprint, desassociarDeSprint, moverParaSprint, excluirTarefa, buscar: buscarBacklog } = useBacklog(workspaceId);
+  const { cartoes: todosCartoes, backlogPuro, cartoesDaSprint, criarTarefa, associarASprint, desassociarDeSprint, moverParaSprint, excluirTarefa, moverEmLote, excluirEmLote, buscar: buscarBacklog } = useBacklog(workspaceId);
   const { etiquetas: etiquetasWs, criar: criarEtiquetaWs, excluir: excluirEtiquetaWs, buscar: buscarEtiquetasWs } = useEtiquetasWorkspace(workspaceId);
   const { membros: membrosWs, criar: criarMembroWs, excluir: excluirMembroWs } = useMembrosWorkspace(workspaceId);
   const { usuarios: wsUsuarios, convidar: convidarUsuario, remover: removerUsuario, alterarPapel } = useWorkspaceUsuarios(workspaceId);
@@ -169,6 +170,69 @@ export default function PaginaWorkspace() {
   // no banco. Pra quem e so membro o Postgres recusa em silencio (200 com zero
   // linhas), entao essas acoes nem sao oferecidas.
   const ehAdminWs = workspace?.meu_papel === "admin";
+
+  // ── Selecao em lote do backlog ───────────────────────────────────────
+  // A ancora do shift guarda a ULTIMA linha clicada e a lista visivel dela,
+  // pra faixa sair na ordem que esta na tela, nao na do array cru.
+  const ancoraSelecao = useRef<{ id: string; lista: string[] } | null>(null);
+
+  function alternarSelecao(cartaoId: string, comShift: boolean, listaVisivel: string[]) {
+    setSelecionadas((atual) => {
+      const ancora = ancoraSelecao.current;
+      if (comShift && ancora && ancora.lista.includes(cartaoId)) {
+        const de = ancora.lista.indexOf(ancora.id);
+        const ate = ancora.lista.indexOf(cartaoId);
+        if (de !== -1 && ate !== -1) {
+          const faixa = ancora.lista.slice(Math.min(de, ate), Math.max(de, ate) + 1);
+          return [...new Set([...atual, ...faixa])];
+        }
+      }
+      return atual.includes(cartaoId)
+        ? atual.filter((id) => id !== cartaoId)
+        : [...atual, cartaoId];
+    });
+    ancoraSelecao.current = { id: cartaoId, lista: listaVisivel };
+  }
+
+  function alternarSecao(ids: string[]) {
+    setSelecionadas((atual) => {
+      const todasMarcadas = ids.length > 0 && ids.every((id) => atual.includes(id));
+      return todasMarcadas
+        ? atual.filter((id) => !ids.includes(id))
+        : [...new Set([...atual, ...ids])];
+    });
+  }
+
+  function limparSelecao() {
+    setSelecionadas([]);
+    ancoraSelecao.current = null;
+  }
+
+  // Some da selecao o que sumiu do backlog (excluido aqui, por outra aba ou
+  // por outra pessoa via realtime). Sem isto a barra contaria fantasmas e a
+  // acao seguinte tentaria mover id que nao existe mais.
+  useEffect(() => {
+    setSelecionadas((atual) => {
+      const existentes = new Set(todosCartoes.map((c) => c.id));
+      const filtrado = atual.filter((id) => existentes.has(id));
+      return filtrado.length === atual.length ? atual : filtrado;
+    });
+  }, [todosCartoes]);
+
+  async function executarLote(
+    acao: () => Promise<{ ok: boolean; erro?: string; afetados: number }>,
+    sucesso: (n: number) => string
+  ) {
+    setLoteOcupado(true);
+    try {
+      const r = await acao();
+      if (r.afetados > 0) toast.success(sucesso(r.afetados));
+      if (!r.ok) toast.error(r.erro ?? "Nao foi possivel concluir a acao.");
+      limparSelecao();
+    } finally {
+      setLoteOcupado(false);
+    }
+  }
   // Sair e sempre permitido pelo RLS, mas se o ultimo admin sair o workspace
   // fica sem ninguem que possa gerenciar equipe ou exclui-lo. Nesse caso a UI
   // pede que ele promova outra pessoa antes.
@@ -179,10 +243,25 @@ export default function PaginaWorkspace() {
   const [abaAtiva, setAbaAtiva] = useState<"backlog" | "sprints" | "timeline" | "metricas" | "config" | "atividade">("sprints");
   const [confirmExcluirWs, setConfirmExcluirWs] = useState(false);
   const [confirmSairWs, setConfirmSairWs] = useState(false);
+  // Selecao em lote do backlog. Guarda ids, nao indices: a lista se
+  // reordena a cada revalidacao.
+  const [selecionadas, setSelecionadas] = useState<string[]>([]);
+  const [confirmExcluirLote, setConfirmExcluirLote] = useState(false);
+  const [loteOcupado, setLoteOcupado] = useState(false);
   const [saindo, setSaindo] = useState(false);
   const [confirmExcluirSprintId, setConfirmExcluirSprintId] = useState<string | null>(null);
   const [confirmRemoverMembroId, setConfirmRemoverMembroId] = useState<string | null>(null);
   useRealtimeWorkspace(workspaceId);
+
+  // Trocar de aba abandona a selecao: a barra so existe no backlog, e voltar
+  // depois com 12 linhas marcadas que nao dao pra ver seria uma armadilha.
+  useEffect(() => {
+    if (abaAtiva !== "backlog") {
+      setSelecionadas([]);
+      ancoraSelecao.current = null;
+    }
+  }, [abaAtiva]);
+
 
   // Repositórios
   const { repositorios, conectar: conectarRepo, desconectar: desconectarRepo } = useRepositorios(workspaceId);
@@ -802,11 +881,20 @@ export default function PaginaWorkspace() {
                       <h3 className="text-[12px] font-bold uppercase tracking-widest" style={{ color: "var(--tf-text-secondary)" }}>
                         Sem sprint ({backlogPuro.length})
                       </h3>
+                      {backlogPuro.length > 0 && (
+                        <button
+                          onClick={() => alternarSecao(backlogPuro.map((t) => t.id))}
+                          className="text-[11px] underline"
+                          style={{ color: "var(--tf-text-tertiary)" }}
+                        >
+                          {backlogPuro.every((t) => selecionadas.includes(t.id)) ? "limpar" : "selecionar todas"}
+                        </button>
+                      )}
                     </div>
                     {backlogPuro.length > 0 ? (
                       <div className="flex flex-col gap-2.5">
                         {backlogPuro.map((tarefa, i) => (
-                          <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === backlogPuro.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} onEstimar={(id) => { setPokerCartaoId(id); setPokerAberto(true); }} />
+                          <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === backlogPuro.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} onEstimar={(id) => { setPokerCartaoId(id); setPokerAberto(true); }} selecionada={selecionadas.includes(tarefa.id)} selecaoAtiva={selecionadas.length > 0} onSelecionar={(id, comShift) => alternarSelecao(id, comShift, backlogPuro.map((t) => t.id))} />
                         ))}
                       </div>
                     ) : (
@@ -834,11 +922,20 @@ export default function PaginaWorkspace() {
                           <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>
                             {sprint.status_sprint === "ativa" ? "ativa" : "planejada"}
                           </span>
+                          {tarefas.length > 0 && (
+                            <button
+                              onClick={() => alternarSecao(tarefas.map((t) => t.id))}
+                              className="text-[11px] underline"
+                              style={{ color: "var(--tf-text-tertiary)" }}
+                            >
+                              {tarefas.every((t) => selecionadas.includes(t.id)) ? "limpar" : "selecionar todas"}
+                            </button>
+                          )}
                         </div>
                         {tarefas.length > 0 ? (
                           <div className="flex flex-col gap-2.5">
                             {tarefas.map((tarefa, i) => (
-                              <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} onEstimar={(id) => { setPokerCartaoId(id); setPokerAberto(true); }} />
+                              <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} onEstimar={(id) => { setPokerCartaoId(id); setPokerAberto(true); }} selecionada={selecionadas.includes(tarefa.id)} selecaoAtiva={selecionadas.length > 0} onSelecionar={(id, comShift) => alternarSelecao(id, comShift, tarefas.map((t) => t.id))} />
                             ))}
                           </div>
                         ) : (
@@ -863,10 +960,17 @@ export default function PaginaWorkspace() {
                           {sprint.nome} ({tarefas.length})
                         </h3>
                         <span className="text-[11px]" style={{ color: "var(--tf-text-tertiary)" }}>concluída</span>
+                        <button
+                          onClick={() => alternarSecao(tarefas.map((t) => t.id))}
+                          className="text-[11px] underline"
+                          style={{ color: "var(--tf-text-tertiary)" }}
+                        >
+                          {tarefas.every((t) => selecionadas.includes(t.id)) ? "limpar" : "selecionar todas"}
+                        </button>
                       </div>
                       <div className="flex flex-col gap-2.5 opacity-80 mix-blend-luminosity">
                         {tarefas.map((tarefa, i) => (
-                          <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} onEstimar={(id) => { setPokerCartaoId(id); setPokerAberto(true); }} />
+                          <BacklogRow key={tarefa.id} tarefa={tarefa} sprints={sprintsDoWorkspace} etiquetas={etiquetasWs} isLast={i === tarefas.length - 1} onAssociar={associarASprint} onDesassociar={desassociarDeSprint} onMover={moverParaSprint} onExcluir={excluirTarefa} onClick={() => abrirDetalhe(tarefa)} onEstimar={(id) => { setPokerCartaoId(id); setPokerAberto(true); }} selecionada={selecionadas.includes(tarefa.id)} selecaoAtiva={selecionadas.length > 0} onSelecionar={(id, comShift) => alternarSelecao(id, comShift, tarefas.map((t) => t.id))} />
                         ))}
                       </div>
                     </section>
@@ -1718,6 +1822,58 @@ export default function PaginaWorkspace() {
           buscarBacklog();
         }}
       />
+
+      {/* Barra de acoes em lote — so na aba backlog */}
+      {abaAtiva === "backlog" && (
+        <BarraSelecao
+          quantidade={selecionadas.length}
+          sprints={sprintsDoWorkspace}
+          ocupado={loteOcupado}
+          onLimpar={limparSelecao}
+          onMover={(destino) => {
+            const ids = [...selecionadas];
+            const nome = destino
+              ? sprintsDoWorkspace.find((sp) => sp.id === destino)?.nome ?? "sprint"
+              : "Sem sprint";
+            executarLote(
+              () => moverEmLote(ids, destino),
+              (n) => `${n} tarefa(s) movida(s) para ${nome}.`
+            );
+          }}
+          onExcluir={() => setConfirmExcluirLote(true)}
+        />
+      )}
+
+      {/* Confirmar exclusao em lote */}
+      <Modal
+        aberto={confirmExcluirLote}
+        onFechar={() => setConfirmExcluirLote(false)}
+        titulo={`Excluir ${selecionadas.length} tarefa(s)`}
+      >
+        <p className="text-[13px] mb-4" style={{ color: "var(--tf-text-secondary)" }}>
+          Isso apaga tambem os checklists, comentarios e anexos delas. Esta acao nao pode ser desfeita.
+        </p>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => setConfirmExcluirLote(false)}
+            className="px-4 py-2 text-[13px] font-medium rounded-[var(--tf-radius-xs)]"
+            style={{ color: "var(--tf-text-secondary)", background: "var(--tf-bg-secondary)" }}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => {
+              const ids = [...selecionadas];
+              setConfirmExcluirLote(false);
+              executarLote(() => excluirEmLote(ids), (n) => `${n} tarefa(s) excluida(s).`);
+            }}
+            className="px-4 py-2 text-[13px] font-bold text-white rounded-[var(--tf-radius-xs)]"
+            style={{ background: "var(--tf-danger)" }}
+          >
+            Sim, excluir
+          </button>
+        </div>
+      </Modal>
 
       {/* Planning Poker */}
       <PlanningPokerModal
