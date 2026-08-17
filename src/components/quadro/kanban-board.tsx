@@ -3,6 +3,7 @@
 import { CartaoComResumo, useCartoes } from "@/hooks/use-cartoes";
 import { toast } from "@/hooks/use-toast";
 import { useColunas } from "@/hooks/use-colunas";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useEtiquetasWorkspace } from "@/hooks/use-etiquetas-workspace";
 import { useMembrosWorkspace } from "@/hooks/use-membros-workspace";
 import {
@@ -82,6 +83,7 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
+  const isMobile = useIsMobile();
   const {
     colunas,
     carregando: carregandoColunas,
@@ -330,19 +332,32 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
       reordenados.splice(indiceAlvo, 0, movido);
       reordenarNaColuna(colunaAlvoId, reordenados);
     } else {
-      // Move entre colunas
-      try {
-        const result = await mover(cartaoAtivo.id, colunaAlvoId, indiceAlvo);
-        if (result?.blocked) {
-          setAlertaBloqueio(result.reason || "Ação bloqueada.");
-          setTimeout(() => setAlertaBloqueio(null), 4000);
-        } else if (result?.done) {
-          const titulo = result.titulo || cartaoAtivo.titulo;
-          toast.done(`Tarefa concluída: ${titulo}`);
-        }
-      } catch {
-        toast.error("Erro ao mover cartão. Tente novamente.");
+      await moverEntreColunas(cartaoAtivo, colunaAlvoId, indiceAlvo);
+    }
+  }
+
+  /**
+   * Move um cartao pra outra coluna. Sai do handleDragEnd pra ser o mesmo
+   * caminho usado pelo seletor de coluna do detalhe — no celular arrastar
+   * entre colunas e pouco pratico, e a regra de dependencia bloqueada tem
+   * que valer igual nos dois.
+   */
+  async function moverEntreColunas(
+    cartaoAtivo: CartaoComResumo,
+    colunaAlvoId: string,
+    indiceAlvo: number
+  ) {
+    try {
+      const result = await mover(cartaoAtivo.id, colunaAlvoId, indiceAlvo);
+      if (result?.blocked) {
+        setAlertaBloqueio(result.reason || "Ação bloqueada.");
+        setTimeout(() => setAlertaBloqueio(null), 4000);
+      } else if (result?.done) {
+        const titulo = result.titulo || cartaoAtivo.titulo;
+        toast.done(`Tarefa concluída: ${titulo}`);
       }
+    } catch {
+      toast.error("Erro ao mover cartão. Tente novamente.");
     }
   }
 
@@ -403,9 +418,25 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
+            // O padrao do dnd-kit e acceleration 10 com faixa de 20% da
+            // largura. Num celular de 390px isso vira ~78px de zona quente de
+            // cada lado (40% da tela) rolando a ate 2000px/s: o quadro
+            // atravessa inteiro antes de dar pra mirar a coluna. Aqui a faixa
+            // encolhe e a velocidade cai pra algo que da pra acompanhar.
+            autoScroll={
+              isMobile
+                ? { acceleration: 3, threshold: { x: 0.1, y: 0.15 }, interval: 10 }
+                : { acceleration: 8, threshold: { x: 0.18, y: 0.2 } }
+            }
           >
             <div className="flex-1 flex flex-col overflow-hidden px-3 md:px-4 lg:px-6">
-              <div className="flex-1 overflow-x-auto overflow-y-hidden pb-6 snap-x snap-mandatory md:snap-none">
+              {/* O scroll-snap re-encaixa a coluna no meio do arraste e rouba
+                  o alvo. Durante o drag ele sai; volta ao soltar. */}
+              <div
+                className={`flex-1 overflow-x-auto overflow-y-hidden pb-6 md:snap-none ${
+                  cartaoArrastando ? "" : "snap-x snap-mandatory"
+                }`}
+              >
                 <div className="flex gap-3 md:gap-4 items-start h-full pt-1">
                   <SortableContext
                     items={colunaIds}
@@ -494,6 +525,15 @@ export function KanbanBoard({ quadroId, workspaceId }: KanbanBoardProps) {
         etiquetas={etiquetas}
         membros={membros}
         quadroId={quadroId}
+        colunas={colunas}
+        onMoverColuna={(colunaId) => {
+          if (!cartaoSelecionado || colunaId === cartaoSelecionado.coluna_id) return;
+          return moverEntreColunas(
+            cartaoSelecionado,
+            colunaId,
+            cartoesDaColuna(colunaId).length
+          );
+        }}
         onFechar={handleFecharDetalhe}
         onAtualizar={atualizarCartao}
         onExcluir={excluirCartao}

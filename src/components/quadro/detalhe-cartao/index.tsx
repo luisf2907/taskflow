@@ -19,6 +19,7 @@ import {
   AlignLeft,
   Calendar,
   CheckSquare,
+  Columns3,
   Crosshair,
   GitBranch,
   GitPullRequest,
@@ -64,13 +65,20 @@ interface DetalheCartaoProps {
   onExcluirEtiqueta: (id: string) => void;
   onCriarMembro: (nome: string, email?: string) => void;
   onRefresh: () => void;
+  /**
+   * Colunas do quadro. Ausente (detalhe aberto pelo backlog, onde o cartao
+   * pode nem ter coluna) esconde a linha "Coluna".
+   */
+  colunas?: Array<{ id: string; nome: string }>;
+  onMoverColuna?: (colunaId: string) => void | Promise<void>;
 }
 
-type Painel = "etiquetas" | "membros" | "data" | "peso" | "pr" | "branch" | "epico" | null;
+type Painel = "etiquetas" | "membros" | "data" | "peso" | "pr" | "branch" | "epico" | "coluna" | null;
 
 export function DetalheCartao({
   cartao, etiquetas, membros, quadroId, onFechar, onAtualizar, onExcluir,
   onCriarEtiqueta, onExcluirEtiqueta, onCriarMembro, onRefresh,
+  colunas, onMoverColuna,
 }: DetalheCartaoProps) {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -78,6 +86,9 @@ export function DetalheCartao({
   const [painelAberto, setPainelAberto] = useState<Painel>(null);
   const [confirmExcluirCard, setConfirmExcluirCard] = useState(false);
   const [melhorandoIA, setMelhorandoIA] = useState(false);
+  const [movendoColuna, setMovendoColuna] = useState(false);
+  // CartaoComResumo nao carrega o nome da coluna; vem da lista do quadro.
+  const colunaAtual = colunas?.find((c) => c.id === cartao?.coluna_id);
   const { ehPro } = useAuth();
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const tituloInputRef = useRef<HTMLInputElement>(null);
@@ -591,6 +602,61 @@ export function DetalheCartao({
                 </div>
               )}
 
+              {painelAberto === "coluna" && colunas && onMoverColuna && (
+                <div
+                  ref={painelRef}
+                  className="p-2 space-y-0.5"
+                  style={{
+                    background: "var(--tf-bg-secondary)",
+                    border: "1px solid var(--tf-border)",
+                    borderRadius: "var(--tf-radius-md)",
+                  }}
+                >
+                  {colunas.map((c) => {
+                    const atual = c.id === cartao.coluna_id;
+                    return (
+                      <button
+                        key={c.id}
+                        disabled={atual || movendoColuna}
+                        onClick={async () => {
+                          setMovendoColuna(true);
+                          try {
+                            await onMoverColuna(c.id);
+                            setPainelAberto(null);
+                          } finally {
+                            setMovendoColuna(false);
+                          }
+                        }}
+                        className="w-full flex items-center gap-2 h-8 px-2.5 text-[0.8125rem] transition-colors disabled:cursor-default outline-none"
+                        style={{
+                          background: atual ? "var(--tf-accent-light)" : "transparent",
+                          color: atual ? "var(--tf-accent-text)" : "var(--tf-text)",
+                          borderRadius: "var(--tf-radius-xs)",
+                          opacity: movendoColuna && !atual ? 0.5 : 1,
+                        }}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="w-1.5 h-1.5 rounded-full shrink-0"
+                          style={{
+                            background: atual ? "var(--tf-accent)" : "var(--tf-border-strong)",
+                          }}
+                        />
+                        <span className="truncate">{c.nome}</span>
+                        {atual && (
+                          <span
+                            className="ml-auto text-[0.625rem] shrink-0"
+                            style={{ fontFamily: "var(--tf-font-mono)" }}
+                          >
+                            atual
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {painelAberto === "peso" && (
                 <div
                   className="p-3.5"
@@ -863,6 +929,24 @@ export function DetalheCartao({
               </div>
 
               <div className="space-y-0.5">
+                {colunas && onMoverColuna && (
+                  <PropertyRow
+                    icon={<Columns3 size={13} strokeWidth={1.75} />}
+                    label="Coluna"
+                    onClick={() => setPainelAberto(painelAberto === "coluna" ? null : "coluna")}
+                    active={painelAberto === "coluna"}
+                  >
+                    {colunaAtual ? (
+                      <span
+                        className="text-[0.625rem] truncate max-w-[90px]"
+                        style={{ color: "var(--tf-text-secondary)" }}
+                      >
+                        {colunaAtual.nome}
+                      </span>
+                    ) : null}
+                  </PropertyRow>
+                )}
+
                 <PropertyRow
                   icon={<User size={13} strokeWidth={1.75} />}
                   label="Membros"
