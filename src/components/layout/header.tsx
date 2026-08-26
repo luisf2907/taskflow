@@ -4,9 +4,10 @@ import { avatarDimensionado } from "@/lib/avatar-url";
 
 import { useAuth } from "@/hooks/use-auth";
 import { abrirModalPro } from "@/lib/pro";
+import { abrirModalFeedback } from "@/lib/feedback";
 import { CadeadoPro } from "@/components/pro/selo-pro";
 import { useTema } from "@/hooks/use-tema";
-import { HelpCircle, LogOut, Menu, Moon, Sun, User, Search, Sparkles } from "lucide-react";
+import { HelpCircle, LogOut, Menu, MessageSquarePlus, Moon, Sun, User, Search, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { NotificationBell } from "@/components/layout/notification-bell";
@@ -290,6 +291,11 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
                 <User size={13} strokeWidth={1.75} />
                 <span>Configurações</span>
               </Link>
+            </DropdownItem>
+
+            <DropdownItem onClick={abrirModalFeedback}>
+              <MessageSquarePlus size={13} strokeWidth={1.75} />
+              <span>Enviar feedback</span>
             </DropdownItem>
 
             <DropdownItem onClick={logout} perigo>

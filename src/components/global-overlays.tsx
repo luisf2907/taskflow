@@ -37,6 +37,10 @@ const HelpModal = dynamic(
 const ModalPro = dynamic(() => import("./pro/modal-pro").then((m) => m.ModalPro), {
   ssr: false,
 });
+const ModalFeedback = dynamic(
+  () => import("./feedback/modal-feedback").then((m) => m.ModalFeedback),
+  { ssr: false }
+);
 
 /** Dispara o evento de abertura uma vez, depois que o overlay irmao montou. */
 function AbrirAoMontar({ evento }: { evento: string }) {
@@ -51,6 +55,7 @@ export function GlobalOverlays() {
   const [askAiMontado, setAskAiMontado] = useState(false);
   const [helpMontado, setHelpMontado] = useState(false);
   const [proMontado, setProMontado] = useState(false);
+  const [feedbackMontado, setFeedbackMontado] = useState(false);
 
   // ─── Command Palette: Cmd/Ctrl+K, Cmd/Ctrl+S ou evento ───
   useEffect(() => {
@@ -99,6 +104,14 @@ export function GlobalOverlays() {
     return () => window.removeEventListener("open-modal-pro", montarPro);
   }, [proMontado, montarPro]);
 
+  // ─── Feedback: so por evento ───
+  const montarFeedback = useCallback(() => setFeedbackMontado(true), []);
+  useEffect(() => {
+    if (feedbackMontado) return;
+    window.addEventListener("open-modal-feedback", montarFeedback);
+    return () => window.removeEventListener("open-modal-feedback", montarFeedback);
+  }, [feedbackMontado, montarFeedback]);
+
   return (
     <>
       {paletteMontada && (
@@ -123,6 +136,12 @@ export function GlobalOverlays() {
         <>
           <ModalPro />
           <AbrirAoMontar evento="open-modal-pro" />
+        </>
+      )}
+      {feedbackMontado && (
+        <>
+          <ModalFeedback />
+          <AbrirAoMontar evento="open-modal-feedback" />
         </>
       )}
     </>
