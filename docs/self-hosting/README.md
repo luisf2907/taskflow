@@ -27,6 +27,7 @@ Comece pelo [quickstart-solo](./quickstart-solo.md) se estiver em dúvida.
 - [configuration.md](./configuration.md) — referência completa de env vars
 - [backup-recovery.md](./backup-recovery.md) — backup, restore, schedule
 - [upgrade.md](./upgrade.md) — como atualizar entre versões
+- [migracao-vps.md](./migracao-vps.md) — mover uma instância inteira pra outra VPS
 - [troubleshooting.md](./troubleshooting.md) — erros comuns e soluções
 - [deploy/vps.md](./deploy/vps.md) — VPS com Caddy/Traefik + HTTPS
 - [TODO.md](./TODO.md) — débito técnico restante
