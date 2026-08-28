@@ -11,7 +11,11 @@ function chave(cartaoId: string | null) {
 
 export function useChecklists(cartaoId: string | null) {
   const key = chave(cartaoId);
-  const [localData, setLocalData] = useState<ChecklistComItens[] | null>(null);
+  // O estado otimista guarda a CHAVE junto com os dados. Sem isso, o
+  // DetalheCartao — que fica montado e so troca a prop `cartao` — carregava o
+  // localData do cartao anterior por cima do fetch do novo, e a checklist
+  // criada em um cartao aparecia em todos os outros.
+  const [local, setLocal] = useState<{ key: string; dados: ChecklistComItens[] } | null>(null);
 
   const { data: swrData = [], isLoading: carregando } = useSWR(key, async () => {
     if (!cartaoId) return [];
@@ -27,11 +31,12 @@ export function useChecklists(cartaoId: string | null) {
     })) as ChecklistComItens[];
   });
 
-  const checklists = localData ?? swrData;
+  const checklists = local && local.key === key ? local.dados : swrData;
 
   function update(dados: ChecklistComItens[]) {
-    setLocalData(dados);
-    if (key) globalMutate(key, dados, false);
+    if (!key) return;
+    setLocal({ key, dados });
+    globalMutate(key, dados, false);
   }
 
   async function criarChecklist(titulo: string = "Checklist") {
@@ -81,7 +86,18 @@ export function useChecklists(cartaoId: string | null) {
     await supabase.from("checklist_itens").delete().eq("id", itemId);
   }
 
-  function buscar() { setLocalData(null); if (key) globalMutate(key); }
+  /** Reordena os itens de UMA checklist e grava a nova posicao de cada um. */
+  async function reordenarItens(checklistId: string, itens: ChecklistItem[]) {
+    const comPosicao = itens.map((item, idx) => ({ ...item, posicao: idx }));
+    update(checklists.map((cl) => (cl.id === checklistId ? { ...cl, checklist_itens: comPosicao } : cl)));
+    await Promise.all(
+      comPosicao.map((item) =>
+        supabase.from("checklist_itens").update({ posicao: item.posicao }).eq("id", item.id)
+      )
+    );
+  }
 
-  return { checklists, carregando, criarChecklist, excluirChecklist, criarItem, toggleItem, atualizarItem, excluirItem, buscar };
+  function buscar() { setLocal(null); if (key) globalMutate(key); }
+
+  return { checklists, carregando, criarChecklist, excluirChecklist, criarItem, toggleItem, atualizarItem, excluirItem, reordenarItens, buscar };
 }
