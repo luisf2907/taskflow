@@ -34,7 +34,7 @@ import {
   Zap,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Anexos } from "../anexos";
 import { Avatar } from "../avatar";
 import { ChecklistComponent } from "../checklist";
@@ -92,6 +92,20 @@ export function DetalheCartao({
   const { ehPro } = useAuth();
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const tituloInputRef = useRef<HTMLInputElement>(null);
+  const descricaoRef = useRef<HTMLTextAreaElement>(null);
+  // Vira true quando o usuario arrasta a alca de resize: dali em diante a
+  // altura e dele, e o auto-grow para de mexer.
+  const alturaManualRef = useRef(false);
+
+  // Auto-grow: a textarea acompanha o conteudo ate 60% da viewport; passando
+  // disso rola por dentro. Antes tinha altura fixa de 100px e resize
+  // desligado, entao descricao longa ficava presa numa janelinha.
+  useLayoutEffect(() => {
+    const el = descricaoRef.current;
+    if (!el || alturaManualRef.current) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, window.innerHeight * 0.6)}px`;
+  }, [descricao, editandoDescricao]);
 
   // Store previously focused element on mount
   useEffect(() => {
@@ -140,7 +154,7 @@ export function DetalheCartao({
     await toggleMembroBase(id);
   }
 
-  const { checklists, criarChecklist, excluirChecklist, criarItem, toggleItem, excluirItem, buscar: buscarChecklists } = useChecklists(cartao?.id || null);
+  const { checklists, criarChecklist, excluirChecklist, criarItem, toggleItem, atualizarItem, excluirItem, reordenarItens, buscar: buscarChecklists } = useChecklists(cartao?.id || null);
   const { comentarios, criar: criarComentario, excluir: excluirComentario } = useComentarios(cartao?.id || null);
   const { anexos, enviando, upload: uploadAnexo, excluir: excluirAnexo } = useAnexos(cartao?.id || null);
 
@@ -152,6 +166,9 @@ export function DetalheCartao({
       setDataLocal(cartao.data_entrega);
       setPainelAberto(null);
       setEditandoDescricao(false);
+      // Cartao novo, altura nova: devolve a textarea pro auto-grow.
+      alturaManualRef.current = false;
+      if (descricaoRef.current) descricaoRef.current.style.height = "auto";
     }
   }, [cartao]);
 
@@ -727,11 +744,12 @@ export function DetalheCartao({
                 {editandoDescricao || !descricao ? (
                   <div className="space-y-2">
                     <textarea
+                      ref={descricaoRef}
                       value={descricao}
                       onChange={(e) => setDescricao(e.target.value)}
                       placeholder="Adicione uma descrição..."
                       maxLength={5000}
-                      className="descricao-textarea w-full px-3.5 py-3 text-[0.8125rem] resize-none outline-none min-h-[100px] leading-relaxed"
+                      className="descricao-textarea w-full px-3.5 py-3 text-[0.8125rem] resize-y outline-none min-h-[120px] overflow-auto leading-relaxed"
                       style={{
                         color: "var(--tf-text)",
                         borderRadius: "var(--tf-radius-md)",
@@ -740,6 +758,15 @@ export function DetalheCartao({
                       autoFocus={editandoDescricao}
                       onFocus={() => {
                         if (!editandoDescricao) setEditandoDescricao(true);
+                      }}
+                      // A alca de resize nativa fica no canto inferior direito
+                      // e nao emite evento proprio. Um mousedown nesses 18px e
+                      // o unico sinal de que a altura passou a ser manual.
+                      onMouseDown={(e) => {
+                        const r = e.currentTarget.getBoundingClientRect();
+                        if (e.clientX > r.right - 18 && e.clientY > r.bottom - 18) {
+                          alturaManualRef.current = true;
+                        }
                       }}
                     />
                     <style jsx>{`
@@ -873,7 +900,16 @@ export function DetalheCartao({
                   </div>
                   <div className="space-y-4">
                     {checklists.map((cl) => (
-                      <ChecklistComponent key={cl.id} checklist={cl} onToggleItem={toggleItem} onCriarItem={criarItem} onExcluirItem={excluirItem} onExcluirChecklist={excluirChecklist} />
+                      <ChecklistComponent
+                        key={cl.id}
+                        checklist={cl}
+                        onToggleItem={toggleItem}
+                        onCriarItem={criarItem}
+                        onRenomearItem={(itemId, texto) => atualizarItem(itemId, { texto })}
+                        onExcluirItem={excluirItem}
+                        onReordenarItens={reordenarItens}
+                        onExcluirChecklist={excluirChecklist}
+                      />
                     ))}
                   </div>
                 </div>

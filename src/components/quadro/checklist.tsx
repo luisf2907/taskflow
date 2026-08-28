@@ -1,7 +1,25 @@
 "use client";
 
-import { ChecklistComItens } from "@/types";
-import { Plus, Trash2, X } from "lucide-react";
+import { ChecklistComItens, ChecklistItem } from "@/types";
+import {
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, Plus, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
@@ -26,7 +44,7 @@ function AnimatedCheckbox({ checked, onToggle }: AnimatedCheckboxProps) {
       onClick={onToggle}
       whileTap={reduceMotion ? undefined : { scale: 0.88 }}
       transition={springSnappy}
-      className="relative mt-0.5 shrink-0 w-[14px] h-[14px] outline-none"
+      className="relative shrink-0 w-[14px] h-[14px] outline-none"
       style={{ borderRadius: "var(--tf-radius-xs)" }}
       role="checkbox"
       aria-checked={checked}
@@ -148,11 +166,130 @@ function ItemLabel({ texto, checked }: { texto: string; checked: boolean }) {
   );
 }
 
+// ────────────────────────────────────────────────
+// Linha do item — arrastavel, texto editavel no lugar
+// ────────────────────────────────────────────────
+
+interface ItemLinhaProps {
+  item: ChecklistItem;
+  onToggle: () => void;
+  onRenomear: (texto: string) => void;
+  onExcluir: () => void;
+}
+
+function ItemLinha({ item, onToggle, onRenomear, onExcluir }: ItemLinhaProps) {
+  const [editando, setEditando] = useState(false);
+  const [rascunho, setRascunho] = useState(item.texto);
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id });
+
+  function confirmar() {
+    const texto = rascunho.trim();
+    if (texto && texto !== item.texto) onRenomear(texto);
+    else setRascunho(item.texto);
+    setEditando(false);
+  }
+
+  function abrirEdicao() {
+    setRascunho(item.texto);
+    setEditando(true);
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        borderRadius: "var(--tf-radius-xs)",
+        opacity: isDragging ? 0.4 : 1,
+        position: "relative",
+        zIndex: isDragging ? 1 : undefined,
+      }}
+      className="tf-linha-toque flex items-center gap-1.5 min-h-[34px] py-1 pl-1 pr-1.5 group/item transition-colors hover:bg-[var(--tf-surface-hover)]"
+    >
+      {/* Alca de arraste — tambem move por teclado (setas) quando focada */}
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="shrink-0 p-1 tf-acao-toque opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity cursor-grab active:cursor-grabbing touch-none"
+        style={{ color: "var(--tf-text-tertiary)", borderRadius: "var(--tf-radius-xs)" }}
+        aria-label={`Reordenar "${item.texto}"`}
+      >
+        <GripVertical size={13} strokeWidth={1.75} />
+      </button>
+
+      <AnimatedCheckbox checked={item.concluido} onToggle={onToggle} />
+
+      {editando ? (
+        <input
+          value={rascunho}
+          onChange={(e) => setRascunho(e.target.value)}
+          maxLength={200}
+          autoFocus
+          onFocus={(e) => e.currentTarget.select()}
+          onBlur={confirmar}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              confirmar();
+            }
+            if (e.key === "Escape") {
+              e.preventDefault();
+              setRascunho(item.texto);
+              setEditando(false);
+            }
+          }}
+          className="checklist-item-input flex-1 min-w-0 h-7 px-2 text-[0.8125rem] outline-none"
+          style={{
+            color: "var(--tf-text)",
+            letterSpacing: "-0.005em",
+            borderRadius: "var(--tf-radius-xs)",
+          }}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={abrirEdicao}
+          className="flex-1 min-w-0 flex text-left px-1 py-0.5 cursor-text"
+          style={{ borderRadius: "var(--tf-radius-xs)" }}
+          title="Clique para editar"
+        >
+          <ItemLabel texto={item.texto} checked={item.concluido} />
+        </button>
+      )}
+
+      <button
+        type="button"
+        onClick={onExcluir}
+        className="shrink-0 p-1.5 tf-acao-toque opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 transition-colors transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+        style={{
+          color: "var(--tf-text-tertiary)",
+          borderRadius: "var(--tf-radius-xs)",
+        }}
+        aria-label={`Excluir "${item.texto}"`}
+      >
+        <Trash2 size={14} strokeWidth={1.75} />
+      </button>
+
+      <style jsx>{`
+        .checklist-item-input {
+          background: var(--tf-surface);
+          border: 1px solid var(--tf-accent);
+        }
+      `}</style>
+    </div>
+  );
+}
+
 interface ChecklistProps {
   checklist: ChecklistComItens;
   onToggleItem: (itemId: string, concluido: boolean) => void;
   onCriarItem: (checklistId: string, texto: string) => void;
+  onRenomearItem: (itemId: string, texto: string) => void;
   onExcluirItem: (itemId: string) => void;
+  onReordenarItens: (checklistId: string, itens: ChecklistItem[]) => void;
   onExcluirChecklist: (checklistId: string) => void;
 }
 
@@ -160,16 +297,36 @@ export function ChecklistComponent({
   checklist,
   onToggleItem,
   onCriarItem,
+  onRenomearItem,
   onExcluirItem,
+  onReordenarItens,
   onExcluirChecklist,
 }: ChecklistProps) {
   const [novoItem, setNovoItem] = useState("");
   const [adicionando, setAdicionando] = useState(false);
 
+  // Mesma config do quadro: distancia no mouse pra nao roubar o clique,
+  // delay no toque pra nao roubar o scroll.
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   function handleCriar() {
     if (!novoItem.trim()) return;
     onCriarItem(checklist.id, novoItem.trim());
     setNovoItem("");
+  }
+
+  function handleDragEnd(evento: DragEndEvent) {
+    const { active, over } = evento;
+    if (!over || active.id === over.id) return;
+    const itens = checklist.checklist_itens;
+    const de = itens.findIndex((i) => i.id === active.id);
+    const para = itens.findIndex((i) => i.id === over.id);
+    if (de === -1 || para === -1) return;
+    onReordenarItens(checklist.id, arrayMove(itens, de, para));
   }
 
   return (
@@ -184,44 +341,40 @@ export function ChecklistComponent({
         </h4>
         <button
           onClick={() => onExcluirChecklist(checklist.id)}
-          className="p-1 tf-acao-toque opacity-0 group-hover/checklist:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+          className="p-1.5 tf-acao-toque opacity-0 group-hover/checklist:opacity-100 focus-visible:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
           style={{
             color: "var(--tf-text-tertiary)",
             borderRadius: "var(--tf-radius-xs)",
           }}
           title="Excluir checklist"
         >
-          <Trash2 size={11} strokeWidth={1.75} />
+          <Trash2 size={14} strokeWidth={1.75} />
         </button>
       </div>
 
       {/* Items */}
-      <div className="space-y-0.5">
-        {checklist.checklist_itens.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-start gap-2 py-1 px-2 group/item transition-colors hover:bg-[var(--tf-surface-hover)]"
-            style={{ borderRadius: "var(--tf-radius-xs)" }}
-          >
-            <AnimatedCheckbox
-              checked={item.concluido}
-              onToggle={() => onToggleItem(item.id, !item.concluido)}
-            />
-            <ItemLabel texto={item.texto} checked={item.concluido} />
-            <button
-              onClick={() => onExcluirItem(item.id)}
-              className="p-0.5 tf-acao-toque opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
-              style={{
-                color: "var(--tf-text-tertiary)",
-                borderRadius: "var(--tf-radius-xs)",
-              }}
-              aria-label="Excluir item"
-            >
-              <Trash2 size={10} strokeWidth={1.75} />
-            </button>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={checklist.checklist_itens.map((i) => i.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-0.5">
+            {checklist.checklist_itens.map((item) => (
+              <ItemLinha
+                key={item.id}
+                item={item}
+                onToggle={() => onToggleItem(item.id, !item.concluido)}
+                onRenomear={(texto) => onRenomearItem(item.id, texto)}
+                onExcluir={() => onExcluirItem(item.id)}
+              />
+            ))}
           </div>
-        ))}
-      </div>
+        </SortableContext>
+      </DndContext>
 
       {/* Add item */}
       {adicionando ? (
@@ -231,7 +384,7 @@ export function ChecklistComponent({
             onChange={(e) => setNovoItem(e.target.value)}
             placeholder="Novo item…"
             maxLength={200}
-            className="checklist-input w-full h-8 px-2.5 text-[0.8125rem] outline-none"
+            className="checklist-input w-full h-9 px-3 text-[0.8125rem] outline-none"
             style={{
               color: "var(--tf-text)",
               letterSpacing: "-0.005em",
@@ -257,7 +410,7 @@ export function ChecklistComponent({
             <button
               onClick={handleCriar}
               disabled={!novoItem.trim()}
-              className="h-7 px-2.5 text-[0.75rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="h-8 px-3 text-[0.75rem] font-medium text-white transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
                 background: "var(--tf-accent)",
                 border: "1px solid var(--tf-accent)",
@@ -282,7 +435,7 @@ export function ChecklistComponent({
       ) : (
         <button
           onClick={() => setAdicionando(true)}
-          className="flex items-center gap-1.5 mt-1.5 px-2 h-7 text-[0.75rem] transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
+          className="flex items-center gap-1.5 mt-1.5 px-2.5 h-8 text-[0.75rem] transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
           style={{
             color: "var(--tf-text-tertiary)",
             borderRadius: "var(--tf-radius-xs)",
