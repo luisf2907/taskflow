@@ -14,6 +14,8 @@
 //   user:list              Lista users
 //   user:reset-password    Troca senha de user
 //   user:delete            Remove user (usa --yes pra confirmar)
+//   feedback:list          Lista feedbacks pra triagem
+//   feedback:premiar       Marca como implementado e da insignia (usa --yes)
 //   help                   Mostra esta lista
 //
 // Flags globais:
@@ -44,6 +46,7 @@ import { backup } from "./cli/backup.mjs";
 import { restore } from "./cli/restore.mjs";
 import { migrateStorage } from "./cli/migrate-storage.mjs";
 import { tokenRotate } from "./cli/token.mjs";
+import { feedbackList, feedbackPremiar } from "./cli/feedback.mjs";
 import { log } from "./cli/lib.mjs";
 
 const COMMANDS = {
@@ -56,6 +59,11 @@ const COMMANDS = {
   "workspace:create": { fn: workspaceCreate, desc: "Cria workspace e associa owner" },
   "workspace:list": { fn: workspaceList, desc: "Lista workspaces" },
   "workspace:invite": { fn: workspaceInvite, desc: "Gera link de convite (sem email)" },
+  "feedback:list": { fn: feedbackList, desc: "Lista feedbacks (--status, --limite)" },
+  "feedback:premiar": {
+    fn: feedbackPremiar,
+    desc: "Marca feedback como implementado e da insignia (use --yes)",
+  },
   backup: { fn: backup, desc: "Dump Postgres + tar do volume de storage" },
   restore: { fn: restore, desc: "Restore destrutivo a partir de backup (use --yes)" },
   "token:rotate": { fn: tokenRotate, desc: "Rotaciona JWT_SECRET e/ou ENCRYPTION_KEY (use --yes)" },

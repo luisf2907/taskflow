@@ -271,6 +271,28 @@ export interface Perfil {
    * proprio perfil, mas nesta nao.
    */
   plano: PlanoUsuario;
+  /**
+   * Ultima versao cujo "o que mudou" a pessoa ja viu (migration 059).
+   *
+   * Opcional no tipo, e nao `string | null`, porque a lista de colunas do
+   * .select() esta duplicada em cinco lugares e so o use-auth pede esta —
+   * nos outros o campo chega ausente.
+   *
+   * NULL/ausente significa "nunca carimbado": o app grava a versao atual sem
+   * mostrar nada. Ver a regra completa em 059_versionamento_e_conquistas.sql.
+   */
+  ultima_versao_vista?: string | null;
+}
+
+/** Insignia ganha por alguem. Ver src/lib/conquistas.ts pro catalogo. */
+export interface Conquista {
+  id: string;
+  usuario_id: string;
+  tipo: string;
+  feedback_id: string | null;
+  versao: string | null;
+  vista: boolean;
+  criado_em: string;
 }
 
 /** `pro` destrava a IA. Sem cobranca por enquanto. */

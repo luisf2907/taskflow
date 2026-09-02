@@ -23,7 +23,7 @@ export function useAuth() {
       const { data } = await supabase
         .from("perfis")
         .select(
-          "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at, theme_preferences, plano",
+          "id, nome, email, avatar_url, github_username, notif_preferences, onboarding_done, onboarding_step, criado_em, atualizado_em, voice_enrolled_at, voice_consent_at, theme_preferences, plano, ultima_versao_vista",
         )
         .eq("id", user!.id)
         .single();
