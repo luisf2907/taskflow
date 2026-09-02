@@ -75,6 +75,41 @@ export const CHANGELOG: EntradaChangelog[] = [
       },
     ],
   },
+  {
+    // Marco zero do changelog: o que ja estava no ar quando o versionamento
+    // passou a existir. Ninguem recebe esta entrada como "novidade" — quem ja
+    // era usuario foi carimbado direto na 0.2.0 (regra do NULL na migration
+    // 059). Ela existe pra dar historico a quem abrir a lista, e pra servir de
+    // ponto de partida.
+    versao: "0.1.0",
+    data: "2026-08-28",
+    titulo: "O TaskFlow antes do versionamento",
+    itens: [
+      {
+        tipo: "novo",
+        texto:
+          "Envio de feedback: sugestão ou relato de problema, direto do menu da conta.",
+      },
+      {
+        tipo: "novo",
+        texto:
+          "Seleção múltipla no backlog para mover ou excluir várias tarefas de uma vez.",
+      },
+      {
+        tipo: "novo",
+        texto: "Plano PRO com selo em Configurações, destravando os recursos de IA.",
+      },
+      {
+        tipo: "melhoria",
+        texto:
+          "A IA passou a aceitar lista pronta e texto longo no backlog, criando etiquetas novas.",
+      },
+      {
+        tipo: "correcao",
+        texto: "Mover cartão de coluna no celular sem depender do arraste.",
+      },
+    ],
+  },
 ];
 
 /** Versao que o app considera "atual". Nunca leia o package.json pra isto. */
