@@ -15,7 +15,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { features } from "@/lib/features";
 
-// Botão icônico quadrado do header — altura 32px, densidade Linear-style.
+// Botão icônico quadrado do header — 36px no desktop, densidade Linear-style.
 function HeaderIconButton({
   onClick,
   children,
@@ -31,7 +31,7 @@ function HeaderIconButton({
     <button
       onClick={onClick}
       aria-label={ariaLabel}
-      className={`w-10 h-10 md:w-8 md:h-8 flex items-center justify-center transition-colors outline-none ${className ?? ""}`}
+      className={`w-10 h-10 md:w-9 md:h-9 flex items-center justify-center transition-colors outline-none ${className ?? ""}`}
       style={{
         borderRadius: "var(--tf-radius-sm)",
         color: "var(--tf-text-secondary)",
@@ -83,7 +83,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
 
   return (
     <header
-      className="h-12 md:h-11 px-2 md:px-4 gap-2 md:gap-0 flex items-center justify-between shrink-0 mb-3 z-30 relative"
+      className="h-12 px-2 md:px-4 gap-2 md:gap-0 flex items-center justify-between shrink-0 mb-3 z-30 relative"
       style={{
         background: "var(--tf-surface)",
         border: "1px solid var(--tf-border)",
@@ -121,7 +121,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
           tela de 360px. O breakpoint casa com o que mostra a barra
           (useIsTabletOrBelow, max-width: 1023px). Desktop inalterado. */}
       <button
-        className="hidden lg:flex items-center gap-2 h-9 md:h-7 px-2.5 pr-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] outline-none flex-1 max-w-[320px]"
+        className="hidden lg:flex items-center gap-2 h-9 md:h-8 px-3 pr-1.5 transition-colors hover:bg-[var(--tf-surface-hover)] outline-none flex-1 max-w-[400px] xl:max-w-[520px]"
         style={{
           background: "var(--tf-bg-secondary)",
           border: "1px solid var(--tf-border)",
@@ -131,9 +131,9 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
         onClick={() => window.dispatchEvent(new Event("open-command-palette"))}
         aria-label={`Buscar ou executar (${isMac ? "Cmd+K" : "Ctrl+K"})`}
       >
-        <Search size={13} strokeWidth={1.75} />
+        <Search size={15} strokeWidth={1.75} />
         <span
-          className="flex-1 text-left text-[0.75rem]"
+          className="flex-1 text-left text-[0.8125rem]"
           style={{ color: "var(--tf-text-tertiary)" }}
         >
           Buscar ou executar
@@ -171,7 +171,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
                   ehPro ? "Perguntar à IA" : "Perguntar à IA (recurso PRO)"
                 }
               >
-                <Sparkles size={15} strokeWidth={1.75} />
+                <Sparkles size={16} strokeWidth={1.75} />
               </HeaderIconButton>
               {!ehPro && <CadeadoPro />}
             </div>
@@ -186,7 +186,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
             ariaLabel="Central de Ajuda"
             className="hidden sm:flex"
           >
-            <HelpCircle size={15} strokeWidth={1.75} />
+            <HelpCircle size={16} strokeWidth={1.75} />
           </HeaderIconButton>
         </Tooltip>
 
@@ -199,9 +199,9 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
             ariaLabel={tema === "claro" ? "Alternar para modo escuro" : "Alternar para modo claro"}
           >
             {tema === "claro" ? (
-              <Moon size={15} strokeWidth={1.75} />
+              <Moon size={16} strokeWidth={1.75} />
             ) : (
-              <Sun size={15} strokeWidth={1.75} />
+              <Sun size={16} strokeWidth={1.75} />
             )}
           </HeaderIconButton>
         </Tooltip>
@@ -218,7 +218,7 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
             rotulo={`Conta de ${nome || "usuário"}`}
             propsGatilho={{
               className:
-                "flex items-center gap-1.5 h-8 pl-1 pr-2 transition-colors hover:bg-[var(--tf-surface-hover)]",
+                "flex items-center gap-1.5 h-9 pl-1 pr-2 transition-colors hover:bg-[var(--tf-surface-hover)]",
               style: { borderRadius: "var(--tf-radius-sm)" },
             }}
             gatilho={

@@ -21,7 +21,7 @@ export function NotificationBell() {
 
   const gatilho = (
     <>
-      <Bell size={15} strokeWidth={1.75} aria-hidden="true" />
+      <Bell size={16} strokeWidth={1.75} aria-hidden="true" />
       {naoLidas > 0 && (
         <span
           aria-hidden="true"
@@ -48,7 +48,7 @@ export function NotificationBell() {
           : "Notificações"
       }
       propsGatilho={{
-        className: "relative w-8 h-8 flex items-center justify-center transition-colors outline-none",
+        className: "relative w-8 h-8 md:w-9 md:h-9 flex items-center justify-center transition-colors outline-none",
         style: {
           borderRadius: "var(--tf-radius-sm)",
           color: "var(--tf-text-secondary)",
