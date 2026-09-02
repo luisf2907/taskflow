@@ -116,19 +116,35 @@ export const CHANGELOG: EntradaChangelog[] = [
 export const VERSAO_ATUAL = CHANGELOG[0].versao;
 
 /**
+ * Se `versao` ainda existe no array.
+ *
+ * Falso quando a pessoa guardou uma versao que foi aparada do changelog, ou
+ * quando houve rollback. Quem chama precisa tratar isso como "nao sei o que
+ * essa pessoa ja viu" — ver o carimbo silencioso no useAvisos. Sem isso ela
+ * ficaria presa: fila vazia pra sempre, coluna nunca atualizada, nenhum
+ * release futuro exibido.
+ */
+export function versaoConhecida(versao: string | null): boolean {
+  return versao !== null && CHANGELOG.some((e) => e.versao === versao);
+}
+
+/**
  * O que mostrar pra quem viu `vistaPor` por ultimo.
  *
  * Retorna as entradas MAIS NOVAS que `vistaPor`, da mais recente pra mais
  * antiga — quem ficou tres releases sem entrar ve as tres de uma vez, e nao
- * so a ultima.
+ * so a ultima. O modal rola quando sao muitas.
  *
- * `vistaPor` nulo devolve lista vazia de proposito: e o caso "carimba em
- * silencio" descrito na migration 059. Uma versao desconhecida (rollback, ou
- * entrada removida do array) cai no mesmo lugar seguro — mostra nada.
+ * Nulo ou desconhecida devolve lista vazia; nos dois casos quem decide o que
+ * fazer e o useAvisos, que carimba a versao atual em silencio.
+ *
+ * AO APARAR entradas antigas daqui (o array cresce a cada release), lembre que
+ * todo mundo parado numa versao removida cai no caso "desconhecida" e perde o
+ * historico acumulado. Aparar so o que for mais velho que o release mais
+ * antigo ainda em uso.
  */
 export function novidadesDesde(vistaPor: string | null): EntradaChangelog[] {
-  if (!vistaPor) return [];
+  if (!versaoConhecida(vistaPor)) return [];
   const indice = CHANGELOG.findIndex((e) => e.versao === vistaPor);
-  if (indice === -1) return [];
   return CHANGELOG.slice(0, indice);
 }

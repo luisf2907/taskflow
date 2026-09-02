@@ -53,10 +53,10 @@ export function ModalAvisos({
     window.setTimeout(() => void onDispensar(aviso), 180);
   }
 
-  if (aviso.tipo === "conquista") {
+  if (aviso.tipo === "conquistas") {
     return (
       <Modal aberto={aberto} onFechar={fechar}>
-        <VistaConquista conquista={aviso.conquista} onFechar={fechar} />
+        <VistaConquista conquistas={aviso.conquistas} onFechar={fechar} />
       </Modal>
     );
   }
@@ -71,36 +71,53 @@ export function ModalAvisos({
 // ─── Conquista ───
 
 function VistaConquista({
-  conquista,
+  conquistas,
   onFechar,
 }: {
-  conquista: Conquista;
+  conquistas: Conquista[];
   onFechar: () => void;
 }) {
-  const def = definicaoConquista(conquista.tipo);
+  // Todas do mesmo tipo — o agrupamento e feito por tipo no useAvisos.
+  const def = definicaoConquista(conquistas[0].tipo);
+  const varias = conquistas.length > 1;
+
+  const idsFeedback = conquistas
+    .map((c) => c.feedback_id)
+    .filter((id): id is string => Boolean(id));
 
   // Mostrar o texto original faz a diferenca entre "voce ganhou uma medalha"
   // e "ISTO que voce escreveu virou produto". A RLS de feedbacks so deixa a
   // pessoa ler os proprios, entao nao ha vazamento aqui.
-  const { data: mensagemOriginal } = useSWR(
-    conquista.feedback_id ? `feedback-conquista-${conquista.feedback_id}` : null,
+  //
+  // Uma consulta para o grupo todo, nao uma por conquista.
+  const { data: mensagens = [] } = useSWR(
+    idsFeedback.length > 0 ? `feedbacks-conquista-${idsFeedback.join(",")}` : null,
     async () => {
       const { data } = await supabase
         .from("feedbacks")
-        .select("mensagem")
-        .eq("id", conquista.feedback_id!)
-        .single();
-      return (data?.mensagem as string | undefined) ?? null;
+        .select("id, mensagem")
+        .in("id", idsFeedback);
+      // Reordena pela ordem das conquistas: o .in() nao garante ordem.
+      const porId = new Map(
+        (data ?? []).map((f) => [f.id as string, f.mensagem as string]),
+      );
+      return idsFeedback
+        .map((id) => porId.get(id))
+        .filter((m): m is string => Boolean(m));
     },
   );
 
   // Tipo que este build nao conhece (CLI de um checkout mais novo). Cai num
   // agradecimento generico em vez de quebrar a tela.
   const icone = def?.icone ?? "🏅";
-  const titulo = def?.tituloCelebracao ?? "Obrigado pela contribuição";
-  const mensagem =
-    def?.mensagemCelebracao ??
-    "Uma contribuição sua ajudou a melhorar o TaskFlow.";
+  const titulo = varias
+    ? (def?.tituloCelebracaoPlural ?? "Obrigado pelas contribuições")
+    : (def?.tituloCelebracao ?? "Obrigado pela contribuição");
+  const mensagem = varias
+    ? (def?.mensagemCelebracaoPlural ??
+      "Contribuições suas ajudaram a melhorar o TaskFlow.")
+    : (def?.mensagemCelebracao ??
+      "Uma contribuição sua ajudou a melhorar o TaskFlow.");
 
   return (
     <div className="text-center pt-2">
@@ -129,24 +146,32 @@ function VistaConquista({
         {mensagem}
       </p>
 
-      {mensagemOriginal && (
-        <blockquote
-          className="text-left text-[0.8125rem] leading-relaxed px-4 py-3 mb-5"
-          style={{
-            background: "var(--tf-bg-secondary)",
-            borderLeft: "2px solid var(--tf-accent)",
-            borderRadius: "var(--tf-radius-xs)",
-            color: "var(--tf-text-secondary)",
-          }}
-        >
-          <span
-            className="label-mono block mb-1.5"
-            style={{ color: "var(--tf-text-tertiary)" }}
-          >
-            Você escreveu
-          </span>
-          {mensagemOriginal}
-        </blockquote>
+      {mensagens.length > 0 && (
+        // Rola quando alguem teve muitas sugestoes aceitas de uma vez.
+        <div className="max-h-[32vh] overflow-y-auto mb-5 space-y-2">
+          {mensagens.map((texto, i) => (
+            <blockquote
+              key={i}
+              className="text-left text-[0.8125rem] leading-relaxed px-4 py-3"
+              style={{
+                background: "var(--tf-bg-secondary)",
+                borderLeft: "2px solid var(--tf-accent)",
+                borderRadius: "var(--tf-radius-xs)",
+                color: "var(--tf-text-secondary)",
+              }}
+            >
+              {i === 0 && (
+                <span
+                  className="label-mono block mb-1.5"
+                  style={{ color: "var(--tf-text-tertiary)" }}
+                >
+                  Você escreveu
+                </span>
+              )}
+              {texto}
+            </blockquote>
+          ))}
+        </div>
       )}
 
       {def && (
@@ -154,9 +179,10 @@ function VistaConquista({
           className="text-[0.75rem] mb-5"
           style={{ color: "var(--tf-text-tertiary)" }}
         >
-          Insígnia <strong style={{ color: "var(--tf-text-secondary)" }}>{def.nome}</strong>
-          {conquista.versao ? ` · versão ${conquista.versao}` : ""} — fica salva
-          em Configurações.
+          {varias ? `${conquistas.length}× a insígnia ` : "Insígnia "}
+          <strong style={{ color: "var(--tf-text-secondary)" }}>{def.nome}</strong>
+          {conquistas[0].versao ? ` · versão ${conquistas[0].versao}` : ""} — fica
+          {varias ? "m" : ""} salva{varias ? "s" : ""} em Configurações.
         </p>
       )}
 

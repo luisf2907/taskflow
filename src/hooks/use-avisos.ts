@@ -9,6 +9,7 @@ import {
   EntradaChangelog,
   VERSAO_ATUAL,
   novidadesDesde,
+  versaoConhecida,
 } from "@/lib/changelog";
 import { Conquista } from "@/types";
 
@@ -21,7 +22,10 @@ import { Conquista } from "@/types";
  * com uma ordem definida.
  */
 export type Aviso =
-  | { tipo: "conquista"; conquista: Conquista }
+  // Varias conquistas DO MESMO TIPO viram um aviso so. Uma pessoa que teve
+  // tres sugestoes implementadas no mesmo release veria, senao, tres modais
+  // seguidos com titulo e texto identicos — mudando apenas a citacao.
+  | { tipo: "conquistas"; conquistas: Conquista[] }
   | { tipo: "novidades"; entradas: EntradaChangelog[] };
 
 /**
@@ -68,22 +72,38 @@ export function useAvisos() {
   const versaoVista = perfil?.ultima_versao_vista ?? null;
 
   // ─── Carimbo silencioso ───
-  // Perfil sem versao gravada = cadastro novo, ou usuario que ja existia
-  // antes da migration 059. Nos dois casos o certo e gravar a versao atual
-  // SEM mostrar nada: o primeiro nunca viu as versoes antigas, e o segundo
-  // nao merece receber o changelog inteiro retroativo. O modal passa a valer
-  // do proximo release em diante.
+  // Grava a versao atual SEM mostrar nada em dois casos:
+  //
+  //   1. versao nula — cadastro novo, ou usuario anterior a migration 059. O
+  //      primeiro nunca viu as versoes antigas; o segundo nao merece o
+  //      changelog inteiro retroativo.
+  //   2. versao DESCONHECIDA — foi aparada do array, ou houve rollback. Sem
+  //      este caso a pessoa travava: novidadesDesde devolve vazio, o modal
+  //      nunca abre, o dispensar nunca roda e a coluna nunca muda — nenhum
+  //      release futuro apareceria pra ela, pra sempre.
+  //
+  // Nos dois, o modal volta a valer do proximo release em diante.
   //
   // O ref evita reenviar o UPDATE a cada render enquanto o SWR do perfil nao
   // revalida.
   const carimbando = useRef(false);
   useEffect(() => {
-    if (!pronto || versaoVista !== null || carimbando.current) return;
+    if (!pronto || carimbando.current) return;
+    if (versaoConhecida(versaoVista)) return;
     carimbando.current = true;
-    void supabase
-      .from("perfis")
-      .update({ ultima_versao_vista: VERSAO_ATUAL })
-      .eq("id", user!.id);
+    void (async () => {
+      const { error } = await supabase
+        .from("perfis")
+        .update({ ultima_versao_vista: VERSAO_ATUAL })
+        .eq("id", user!.id);
+      if (error) {
+        // Falha silenciosa aqui e cara: a pessoa fica com a versao antiga e
+        // nunca mais ve release nenhum. Solta o ref pra tentar de novo no
+        // proximo render em vez de desistir de vez.
+        carimbando.current = false;
+        console.error("[avisos] falha ao carimbar versao vista:", error);
+      }
+    })();
   }, [pronto, versaoVista, user]);
 
   const fila = useMemo<Aviso[]>(() => {
@@ -94,8 +114,17 @@ export function useAvisos() {
     const entradas = novidadesDesde(versaoVista);
     if (entradas.length > 0) avisos.push({ tipo: "novidades", entradas });
 
-    for (const conquista of conquistas) {
-      avisos.push({ tipo: "conquista", conquista });
+    // Agrupa por tipo, preservando a ordem de chegada. Tipos diferentes
+    // continuam sendo avisos separados: cada insignia tem titulo e texto
+    // proprios, e junta-las numa tela so nao faria sentido.
+    const porTipo = new Map<string, Conquista[]>();
+    for (const c of conquistas) {
+      const grupo = porTipo.get(c.tipo);
+      if (grupo) grupo.push(c);
+      else porTipo.set(c.tipo, [c]);
+    }
+    for (const grupo of porTipo.values()) {
+      avisos.push({ tipo: "conquistas", conquistas: grupo });
     }
 
     return avisos;
@@ -109,13 +138,19 @@ export function useAvisos() {
     async (aviso: Aviso) => {
       if (!user) return;
 
-      if (aviso.tipo === "conquista") {
+      if (aviso.tipo === "conquistas") {
         // So a coluna `vista` — as outras sao negadas por privilegio de
         // coluna no banco (ver GRANT UPDATE (vista) na migration 059).
+        //
+        // O grupo inteiro de uma vez: foram celebradas na mesma tela, entao
+        // marcar so uma faria as outras reaparecerem no proximo login.
         await supabase
           .from("conquistas")
           .update({ vista: true })
-          .eq("id", aviso.conquista.id);
+          .in(
+            "id",
+            aviso.conquistas.map((c) => c.id),
+          );
         await recarregarConquistas();
         return;
       }

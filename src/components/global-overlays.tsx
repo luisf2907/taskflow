@@ -74,7 +74,7 @@ function AvisosGate() {
   // a instancia, o estado `aberto` continua true e o segundo aviso da fila
   // (ex.: novidades logo apos a insignia) aparece estatico, sem animar.
   const chave =
-    aviso.tipo === "conquista" ? aviso.conquista.id : "novidades";
+    aviso.tipo === "conquistas" ? aviso.conquistas[0].id : "novidades";
   return <ModalAvisos key={chave} aviso={aviso} onDispensar={dispensar} />;
 }
 

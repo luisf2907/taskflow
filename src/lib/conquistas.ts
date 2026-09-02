@@ -22,6 +22,14 @@ export interface DefinicaoConquista {
   tituloCelebracao: string;
   /** Corpo do agradecimento. Aparece uma vez, no primeiro login apos ganhar. */
   mensagemCelebracao: string;
+  /**
+   * Variantes pra quando a pessoa ganha varias insignias DO MESMO TIPO de uma
+   * vez — um release que implementa tres sugestoes da mesma pessoa, por
+   * exemplo. Sem isto ela veria a mesma tela tres vezes seguidas, com titulo
+   * identico, mudando so a citacao: isso irrita em vez de celebrar.
+   */
+  tituloCelebracaoPlural: string;
+  mensagemCelebracaoPlural: string;
 }
 
 export const CATALOGO_CONQUISTAS: Record<TipoConquista, DefinicaoConquista> = {
@@ -32,6 +40,9 @@ export const CATALOGO_CONQUISTAS: Record<TipoConquista, DefinicaoConquista> = {
     tituloCelebracao: "Sua sugestão virou realidade",
     mensagemCelebracao:
       "Você mandou uma sugestão e ela virou parte do TaskFlow. Obrigado por reservar um tempo pra escrever — é assim que o produto melhora de verdade.",
+    tituloCelebracaoPlural: "Suas sugestões viraram realidade",
+    mensagemCelebracaoPlural:
+      "Mais de uma sugestão sua virou parte do TaskFlow. Obrigado por reservar um tempo pra escrever — é assim que o produto melhora de verdade.",
   },
 };
 
