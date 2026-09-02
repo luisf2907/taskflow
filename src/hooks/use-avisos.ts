@@ -52,9 +52,20 @@ export type Aviso =
 export function useAvisos() {
   const { user, perfil } = useAuth();
 
-  // `onboarding_done` falso: a pessoa esta no wizard de primeiro uso.
-  // Empilhar o changelog por cima seria dois modais na primeira sessao.
-  const pronto = Boolean(user && perfil && perfil.onboarding_done === true);
+  // Basta ter perfil carregado.
+  //
+  // Aqui havia um `perfil.onboarding_done === true`, pra nao empilhar aviso
+  // por cima do wizard de primeiro uso. Estava errado por dois motivos:
+  //
+  //   1. `onboarding_done` false NAO quer dizer "usuario novo", quer dizer
+  //      "nunca terminou o wizard". Metade da base cai nisso — gente que usa
+  //      o produto ha meses. Elas ficariam sem receber aviso NENHUM, pra
+  //      sempre.
+  //   2. O gate era redundante. O wizard so aparece com workspaces.length e
+  //      quadros.length zerados (ver showOnboarding no dashboard), e pra essa
+  //      conta a fila ja esta vazia por construcao: novidades sao suprimidas
+  //      pela regra do NULL, e quem acabou de se cadastrar nao tem conquista.
+  const pronto = Boolean(user && perfil);
 
   const { data: conquistas = [], mutate: recarregarConquistas } = useSWR(
     pronto ? `conquistas-nao-vistas-${user!.id}` : null,
