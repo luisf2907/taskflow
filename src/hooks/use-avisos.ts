@@ -27,10 +27,17 @@ export type Aviso =
 /**
  * Fila de avisos do usuario logado.
  *
- * Ordem: conquistas primeiro, novidades depois. A comemoracao e pessoal e a
- * release costuma conter justamente a melhoria que a pessoa sugeriu — ler
- * "sua ideia entrou" antes de "o que mudou" faz a segunda tela significar
- * mais.
+ * Ordem: novidades primeiro, conquistas depois — do geral pro pessoal.
+ *
+ * A release costuma conter justamente a melhoria que a pessoa sugeriu, entao
+ * ela le "a descricao do cartao agora cresce" e SO DEPOIS descobre que aquilo
+ * foi ideia dela. Na ordem inversa o changelog vira conferencia de uma coisa
+ * ja sabida, e a sequencia termina numa lista generica logo depois de uma
+ * comemoracao — anticlimax.
+ *
+ * Nao ha risco de a pessoa "perder" o agradecimento fechando a primeira tela e
+ * indo embora: o dispensar marca UM aviso por vez, entao a conquista continua
+ * com vista=false e reaparece no proximo login.
  *
  * Nao ha cache em localStorage de proposito. O onboarding usa um porque
  * roda no dashboard e o perfil pode nao ter chegado ainda; aqui o hook so
@@ -82,13 +89,14 @@ export function useAvisos() {
   const fila = useMemo<Aviso[]>(() => {
     if (!pronto) return [];
 
-    const avisos: Aviso[] = conquistas.map((conquista) => ({
-      tipo: "conquista" as const,
-      conquista,
-    }));
+    const avisos: Aviso[] = [];
 
     const entradas = novidadesDesde(versaoVista);
     if (entradas.length > 0) avisos.push({ tipo: "novidades", entradas });
+
+    for (const conquista of conquistas) {
+      avisos.push({ tipo: "conquista", conquista });
+    }
 
     return avisos;
   }, [pronto, conquistas, versaoVista]);
