@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import { features } from "@/lib/features";
+import { useAvisos } from "@/hooks/use-avisos";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Overlays globais — montagem sob demanda
@@ -41,6 +42,10 @@ const ModalFeedback = dynamic(
   () => import("./feedback/modal-feedback").then((m) => m.ModalFeedback),
   { ssr: false }
 );
+const ModalAvisos = dynamic(
+  () => import("./avisos/modal-avisos").then((m) => m.ModalAvisos),
+  { ssr: false }
+);
 
 /** Dispara o evento de abertura uma vez, depois que o overlay irmao montou. */
 function AbrirAoMontar({ evento }: { evento: string }) {
@@ -48,6 +53,29 @@ function AbrirAoMontar({ evento }: { evento: string }) {
     window.dispatchEvent(new Event(evento));
   }, [evento]);
   return null;
+}
+
+/**
+ * Avisos de primeiro login (insignia ganha, novidades da versao).
+ *
+ * A excecao da regra deste arquivo: os outros overlays esperam um evento do
+ * usuario, este aparece sozinho. Fica num componente separado porque o
+ * useAvisos consulta perfil e conquistas — se rodasse dentro do
+ * GlobalOverlays, esse trabalho aconteceria tambem na landing, onde nao ha
+ * ninguem logado.
+ *
+ * O chunk do modal (com o texto do changelog) so e baixado quando a fila tem
+ * algo, que e o caso raro.
+ */
+function AvisosGate() {
+  const { aviso, dispensar } = useAvisos();
+  if (!aviso) return null;
+  // A `key` forca remontagem ao trocar de aviso. Sem ela o React reaproveita
+  // a instancia, o estado `aberto` continua true e o segundo aviso da fila
+  // (ex.: novidades logo apos a insignia) aparece estatico, sem animar.
+  const chave =
+    aviso.tipo === "conquista" ? aviso.conquista.id : "novidades";
+  return <ModalAvisos key={chave} aviso={aviso} onDispensar={dispensar} />;
 }
 
 export function GlobalOverlays() {
@@ -144,6 +172,7 @@ export function GlobalOverlays() {
           <AbrirAoMontar evento="open-modal-feedback" />
         </>
       )}
+      <AvisosGate />
     </>
   );
 }

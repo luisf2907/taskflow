@@ -104,6 +104,10 @@ SQL_PUBLICACAO
 053_grafo_workspace.sql|EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'public' AND p.proname = 'grafo_dependencias_workspace')
 054_cards_sem_dep.sql|EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'public' AND p.proname = 'cards_sem_dependencia_workspace')
 055_board_rpc.sql|EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'public' AND p.proname = 'get_board_data')
+056_invite_links_somente_admin.sql|EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'invite_links' AND policyname = 'invite_links_insert' AND with_check LIKE '%is_workspace_admin%')
+057_plano_pro.sql|EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'perfis' AND column_name = 'plano')
+058_feedbacks.sql|to_regclass('public.feedbacks') IS NOT NULL
+059_versionamento_e_conquistas.sql|to_regclass('public.conquistas') IS NOT NULL
 MIGRATIONS_PENDENTES
 }
 

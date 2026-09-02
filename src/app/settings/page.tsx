@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 
 import { ProfileSection } from "./_sections/perfil";
 import { PlanoSection } from "./_sections/plano";
+import { ConquistasSection } from "./_sections/conquistas";
 import { GithubSection } from "./_sections/github";
 import { FotoGithubBanner } from "./_sections/foto-github-banner";
 import { AparenciaSection } from "./_sections/aparencia";
@@ -107,6 +108,8 @@ export default function SettingsPage() {
             />
 
             <PlanoSection perfil={perfil} />
+
+            <ConquistasSection userId={user?.id} />
 
             <GithubSection
               temGithub={temGithub}
