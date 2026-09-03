@@ -44,6 +44,31 @@ export const ROTULO_TIPO: Record<TipoItemChangelog, string> = {
 
 export const CHANGELOG: EntradaChangelog[] = [
   {
+    versao: "0.3.0",
+    data: "2026-09-03",
+    titulo: "Quatro incômodos que vocês apontaram",
+    itens: [
+      {
+        tipo: "correcao",
+        texto:
+          "O título do cartão agora quebra linha — dá pra ler o título e a descrição na mesma tela.",
+      },
+      {
+        tipo: "correcao",
+        texto: "Clicar fora do cartão fecha o cartão, não só o X.",
+      },
+      {
+        tipo: "correcao",
+        texto: "“Enviar feedback” abre no primeiro clique.",
+      },
+      {
+        tipo: "correcao",
+        texto:
+          "Link de convite funciona sem precisar estar logado antes.",
+      },
+    ],
+  },
+  {
     versao: "0.2.0",
     data: "2026-09-02",
     titulo: "Novidades, insígnias e um header mais confortável",
