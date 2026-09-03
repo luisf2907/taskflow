@@ -34,7 +34,7 @@ import {
   Zap,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Anexos } from "../anexos";
 import { Avatar } from "../avatar";
 import { ChecklistComponent } from "../checklist";
@@ -91,11 +91,24 @@ export function DetalheCartao({
   const colunaAtual = colunas?.find((c) => c.id === cartao?.coluna_id);
   const { ehPro } = useAuth();
   const previousFocusRef = useRef<HTMLElement | null>(null);
-  const tituloInputRef = useRef<HTMLInputElement>(null);
+  const tituloInputRef = useRef<HTMLTextAreaElement>(null);
   const descricaoRef = useRef<HTMLTextAreaElement>(null);
   // Vira true quando o usuario arrasta a alca de resize: dali em diante a
   // altura e dele, e o auto-grow para de mexer.
   const alturaManualRef = useRef(false);
+
+  // Auto-grow do TITULO. Sem limite de altura: um titulo cabe em duas ou tres
+  // linhas e cortar ali seria repetir o bug que isto corrige.
+  const ajustarAlturaTitulo = useCallback(() => {
+    const el = tituloInputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+
+  // Roda tambem quando o cartao troca: a altura tem que refletir o titulo que
+  // veio do banco, nao so o que foi digitado agora.
+  useLayoutEffect(ajustarAlturaTitulo, [titulo, ajustarAlturaTitulo]);
 
   // Auto-grow: a textarea acompanha o conteudo ate 60% da viewport; passando
   // disso rola por dentro. Antes tinha altura fixa de 100px e resize
@@ -408,7 +421,23 @@ export function DetalheCartao({
         }}
       />
 
-      <div className="relative min-h-full flex items-stretch md:items-center justify-center p-0 md:p-4">
+      {/* Este wrapper de centralizacao e `relative` e `min-h-full`, ou seja:
+          cobre a viewport inteira e fica POR CIMA do backdrop declarado
+          acima. O onClick do backdrop existia desde 0ceb11e mas nunca era
+          alcancado — todo clique "fora do card" acertava este div. Era o
+          feedback f687bc24.
+
+          A comparacao com currentTarget e o que separa "clicou na area vazia
+          ao redor" de "clicou dentro do cartao": eventos vindos de dentro
+          tem target diferente e sobem ate aqui por bubbling. Mesmo padrao do
+          ui/modal.tsx. */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+      <div
+        className="relative min-h-full flex items-stretch md:items-center justify-center p-0 md:p-4"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) handleFechar();
+        }}
+      >
         <div
           // min-h-dvh e nao min-h-screen: no celular 100vh conta a barra de
           // endereco que se esconde, entao a folha nascia mais alta que a
@@ -519,14 +548,37 @@ export function DetalheCartao({
           <div className="flex-1 md:overflow-y-auto md:max-h-[75vh]">
             <div className="px-4 sm:px-8 pb-10 pt-4 md:pt-5 space-y-6 md:space-y-7">
 
-              {/* TITLE */}
-              <input
+              {/* TITLE
+                  Textarea, e nao input: input NAO quebra linha, entao titulo
+                  longo era cortado e nao dava pra ler titulo e descricao na
+                  mesma tela (feedback bfadb34c). Mesmo tratamento que a
+                  descricao ja recebeu — cresce com o conteudo.
+
+                  rows={1} + auto-grow no onChange e no efeito de montagem: a
+                  altura inicial precisa considerar o titulo que ja veio do
+                  banco, nao so o que o usuario digita agora. */}
+              <textarea
                 ref={tituloInputRef}
                 value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
+                rows={1}
+                onChange={(e) => {
+                  // Cola de texto multi-linha vira uma linha so: e um titulo,
+                  // e a quebra iria pro banco sem aparecer no card do quadro.
+                  setTitulo(e.target.value.replace(/\s*\n+\s*/g, " "));
+                  ajustarAlturaTitulo();
+                }}
+                onKeyDown={(e) => {
+                  // Enter salva e sai, como fazia o input. Sem isto a
+                  // textarea inseriria uma quebra que o replace acima tiraria
+                  // logo em seguida — o campo "piscaria" sem motivo.
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    e.currentTarget.blur();
+                  }
+                }}
                 onBlur={salvar}
                 maxLength={200}
-                className="w-full text-[1.375rem] md:text-[1.75rem] font-semibold bg-transparent outline-none px-1.5 py-1 -mx-1.5 leading-tight"
+                className="w-full resize-none overflow-hidden text-[1.375rem] md:text-[1.75rem] font-semibold bg-transparent outline-none px-1.5 py-1 -mx-1.5 leading-tight"
                 style={{
                   color: "var(--tf-text)",
                   border: "1px solid transparent",
