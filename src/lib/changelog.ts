@@ -115,6 +115,30 @@ export const CHANGELOG: EntradaChangelog[] = [
 /** Versao que o app considera "atual". Nunca leia o package.json pra isto. */
 export const VERSAO_ATUAL = CHANGELOG[0].versao;
 
+/** A release mais recente. */
+export const ENTRADA_ATUAL = CHANGELOG[0];
+
+/**
+ * Se a conta ja existia antes da release atual.
+ *
+ * Serve pra separar dois grupos que, sem versao gravada, sao indistinguiveis:
+ *
+ *   - quem se cadastrou AGORA — nunca viu versao nenhuma, e receber "o que
+ *     mudou" no primeiro minuto de uso nao significa nada;
+ *   - quem ja usava o produto — viveu a mudanca e merece saber o que mudou.
+ *
+ * Sem esta distincao, a regra do carimbo silencioso engolia a primeira release
+ * pra base inteira: todo mundo era carimbado no login e ninguem via as notas.
+ *
+ * Compara so a parte YYYY-MM-DD; ISO ordena certo como string. Mesmo dia conta
+ * como "conta nova" de proposito — nao da pra saber se o cadastro veio antes
+ * ou depois do deploy, e o silencio e o lado seguro do erro.
+ */
+export function contaAnteriorAoReleaseAtual(criadoEm: string | null): boolean {
+  if (!criadoEm) return false;
+  return criadoEm.slice(0, 10) < ENTRADA_ATUAL.data;
+}
+
 /**
  * Se `versao` ainda existe no array.
  *

@@ -6,8 +6,10 @@ import useSWR from "swr";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase/client";
 import {
+  ENTRADA_ATUAL,
   EntradaChangelog,
   VERSAO_ATUAL,
+  contaAnteriorAoReleaseAtual,
   novidadesDesde,
   versaoConhecida,
 } from "@/lib/changelog";
@@ -82,25 +84,30 @@ export function useAvisos() {
 
   const versaoVista = perfil?.ultima_versao_vista ?? null;
 
+  // Sem versao gravada, `criado_em` e o que separa cadastro novo de usuario
+  // antigo — ver contaAnteriorAoReleaseAtual.
+  const jaEraUsuario = contaAnteriorAoReleaseAtual(perfil?.criado_em ?? null);
+
+  // Versao ausente ou que sumiu do array (entrada aparada, rollback). Nos dois
+  // casos nao sabemos o que a pessoa ja viu.
+  const semReferencia = !versaoConhecida(versaoVista);
+
   // ─── Carimbo silencioso ───
-  // Grava a versao atual SEM mostrar nada em dois casos:
+  // Grava a versao atual SEM mostrar nada, mas SO pra quem se cadastrou nesta
+  // release ou depois: essa pessoa nunca viu as versoes anteriores, e um "o
+  // que mudou" no primeiro minuto de uso nao diz nada.
   //
-  //   1. versao nula — cadastro novo, ou usuario anterior a migration 059. O
-  //      primeiro nunca viu as versoes antigas; o segundo nao merece o
-  //      changelog inteiro retroativo.
-  //   2. versao DESCONHECIDA — foi aparada do array, ou houve rollback. Sem
-  //      este caso a pessoa travava: novidadesDesde devolve vazio, o modal
-  //      nunca abre, o dispensar nunca roda e a coluna nunca muda — nenhum
-  //      release futuro apareceria pra ela, pra sempre.
-  //
-  // Nos dois, o modal volta a valer do proximo release em diante.
+  // Quem ja era usuario NAO passa por aqui — recebe as notas da release atual
+  // pela fila e o carimbo acontece quando fecha o modal. Antes o carimbo valia
+  // pra todo mundo sem versao, e o efeito era a base inteira ser silenciada no
+  // login: ninguem via a primeira release.
   //
   // O ref evita reenviar o UPDATE a cada render enquanto o SWR do perfil nao
   // revalida.
   const carimbando = useRef(false);
   useEffect(() => {
     if (!pronto || carimbando.current) return;
-    if (versaoConhecida(versaoVista)) return;
+    if (!semReferencia || jaEraUsuario) return;
     carimbando.current = true;
     void (async () => {
       const { error } = await supabase
@@ -115,14 +122,20 @@ export function useAvisos() {
         console.error("[avisos] falha ao carimbar versao vista:", error);
       }
     })();
-  }, [pronto, versaoVista, user]);
+  }, [pronto, semReferencia, jaEraUsuario, user]);
 
   const fila = useMemo<Aviso[]>(() => {
     if (!pronto) return [];
 
     const avisos: Aviso[] = [];
 
-    const entradas = novidadesDesde(versaoVista);
+    // Sem referencia + conta antiga: mostra SO a release atual, nao o
+    // historico inteiro. A pessoa nunca pediu retrospectiva, e as entradas
+    // velhas falam de coisas que ela ja usa ha meses.
+    const entradas =
+      semReferencia && jaEraUsuario
+        ? [ENTRADA_ATUAL]
+        : novidadesDesde(versaoVista);
     if (entradas.length > 0) avisos.push({ tipo: "novidades", entradas });
 
     // Agrupa por tipo, preservando a ordem de chegada. Tipos diferentes
@@ -139,7 +152,7 @@ export function useAvisos() {
     }
 
     return avisos;
-  }, [pronto, conquistas, versaoVista]);
+  }, [pronto, conquistas, versaoVista, semReferencia, jaEraUsuario]);
 
   /**
    * Marca o aviso do topo como visto. Um por vez: se a pessoa fechar a aba no
