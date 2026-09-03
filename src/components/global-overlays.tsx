@@ -166,12 +166,12 @@ export function GlobalOverlays() {
           <AbrirAoMontar evento="open-modal-pro" />
         </>
       )}
-      {feedbackMontado && (
-        <>
-          <ModalFeedback />
-          <AbrirAoMontar evento="open-modal-feedback" />
-        </>
-      )}
+      {/* Sem <AbrirAoMontar> aqui: o modal nasce aberto via prop.
+          O re-disparo de evento perdia o PRIMEIRO clique enquanto o chunk do
+          dynamic() ainda baixava — ver o comentario em modal-feedback.tsx.
+          Os outros overlays continuam no padrao antigo e tem a mesma corrida
+          latente; trocar todos e mudanca maior que esta correcao. */}
+      {feedbackMontado && <ModalFeedback abrirAoMontar />}
       <AvisosGate />
     </>
   );

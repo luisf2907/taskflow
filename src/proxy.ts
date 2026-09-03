@@ -132,6 +132,22 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  // GET /api/invites/<code> e publico, e PRECISA ser: a pagina /convite/<code>
+  // ja e publica e chama este endpoint no carregamento pra mostrar de qual
+  // workspace e o convite. Sem esta linha o proxy devolvia 401 antes de o
+  // handler rodar, o fetch da pagina falhava e o convite so funcionava pra
+  // quem ja estava logado — exatamente o relato do feedback 14b4a43f.
+  //
+  // O handler nao le sessao: usa service_role e filtra por `ativo` e
+  // `expira_em`. Quem tem o codigo ja tem o direito de ver o nome do
+  // workspace, que e o que ele devolve.
+  //
+  // So o GET. O POST do mesmo arquivo ACEITA o convite e exige usuario
+  // logado, entao continua caindo na verificacao de sessao la embaixo.
+  if (request.method === "GET" && /^\/api\/invites\/[^/]+\/?$/.test(pathname)) {
+    return response;
+  }
+
   // /api/health e publico — HEALTHCHECK do Docker e monitoring externo
   if (pathname === "/api/health" || pathname.startsWith("/api/health/")) {
     return response;

@@ -35,8 +35,20 @@ const PLACEHOLDERS: Record<TipoFeedback, string> = {
   outro: "Manda ver.",
 };
 
-export function ModalFeedback() {
-  const [aberto, setAberto] = useState(false);
+/**
+ * `abrirAoMontar`: nasce aberto.
+ *
+ * O GlobalOverlays so monta este componente DEPOIS que alguem pediu o modal,
+ * entao "montado" ja significa "pra abrir". Antes a abertura dependia de um
+ * <AbrirAoMontar> irmao re-disparar o evento logo apos a montagem — e no
+ * PRIMEIRO clique isso nao funcionava: o chunk do dynamic() ainda estava
+ * baixando, o listener daqui nao existia e o evento caia no vazio. So o
+ * segundo clique abria, com o chunk ja em cache.
+ *
+ * Era o feedback 6ae2f12b, da Thalita.
+ */
+export function ModalFeedback({ abrirAoMontar = false }: { abrirAoMontar?: boolean } = {}) {
+  const [aberto, setAberto] = useState(abrirAoMontar);
   const [tipo, setTipo] = useState<TipoFeedback>("sugestao");
   const [mensagem, setMensagem] = useState("");
   const [enviando, setEnviando] = useState(false);
