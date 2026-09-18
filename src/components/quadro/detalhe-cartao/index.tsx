@@ -40,6 +40,7 @@ import { Anexos } from "../anexos";
 import { Avatar } from "../avatar";
 import { ChecklistComponent } from "../checklist";
 import { Comentarios } from "../comentarios";
+import { HistoricoCartao } from "../historico-cartao";
 import { SecaoDependencias } from "../subtarefas-deps";
 import { CamposCustomizados } from "../campos-customizados";
 import { SeletorData, formatarData, statusData } from "../seletor-data";
@@ -1016,6 +1017,10 @@ export function DetalheCartao({
 
               {/* ── COMMENTS ── */}
               <Comentarios comentarios={comentarios} membros={membros} onCriar={criarComentario} onExcluir={excluirComentario} />
+
+              {/* ── HISTORY ── depois dos comentarios, como em quase toda
+                  ferramenta de quadro: e consulta, nao acao. */}
+              <HistoricoCartao cartaoId={cartao.id} colunaId={cartao.coluna_id} />
 
             </div>
           </div>

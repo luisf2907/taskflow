@@ -13,16 +13,20 @@ import {
   Timer,
   Download,
   Calendar,
+  ChevronDown,
 } from "lucide-react";
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { diasEntreCeil as diasEntre } from "@/lib/datas";
 
 import { StatCard } from "./stat-card";
 import { LineChart } from "./line-chart";
 import { DonutChart } from "./donut-chart";
 import { BurndownChart } from "./burndown-chart";
+import { DuracaoCartoes } from "./duracao-cartoes";
 
 interface MetricasProps {
+  /** Pra buscar o historico de movimentacao (migration 060). */
+  workspaceId: string;
   sprints: Quadro[];
   cartoesDaSprint: (quadroId: string) => CartaoBacklog[];
   backlogPuro: CartaoBacklog[];
@@ -31,6 +35,7 @@ interface MetricasProps {
 }
 
 export function MetricasWorkspace({
+  workspaceId,
   sprints,
   cartoesDaSprint,
   backlogPuro,
@@ -48,6 +53,11 @@ export function MetricasWorkspace({
   const sprintsParaMetricas = useMemo(
     () => [...sprintsConcl, ...(sprintAtiva ? [sprintAtiva] : [])],
     [sprintsConcl, sprintAtiva]
+  );
+
+  const cartoesParaMetricas = useMemo(
+    () => sprintsParaMetricas.flatMap((s) => cartoesDaSprint(s.id)),
+    [sprintsParaMetricas, cartoesDaSprint]
   );
 
   // ── Velocity por sprint ──
@@ -122,7 +132,17 @@ export function MetricasWorkspace({
     const todosCards = sprintAtiva ? cartoesDaSprint(sprintAtiva.id) : [];
     const porMembro: Record<
       string,
-      { nome: string; cor: string; cards: number; pontos: number; concluidos: number }
+      {
+        id: string;
+        nome: string;
+        cor: string;
+        cards: number;
+        pontos: number;
+        concluidos: number;
+        // Os cartoes que entraram na conta — mostrados ao clicar no nome
+        // (feedback a8f3cd3a). Sem isto o numero nao dava pra conferir.
+        lista: { id: string; titulo: string; concluido: boolean; coluna: string | null; peso: number | null }[];
+      }
     > = {};
     for (const card of todosCards) {
       for (const mId of card.membro_ids || []) {
@@ -130,12 +150,21 @@ export function MetricasWorkspace({
         if (m) {
           if (!porMembro[mId])
             porMembro[mId] = {
+              id: mId,
               nome: m.nome,
               cor: m.cor_avatar,
               cards: 0,
               pontos: 0,
               concluidos: 0,
+              lista: [],
             };
+          porMembro[mId].lista.push({
+            id: card.id,
+            titulo: card.titulo,
+            concluido: card.concluido,
+            coluna: card.coluna_nome,
+            peso: card.peso,
+          });
           porMembro[mId].cards++;
           porMembro[mId].pontos += card.peso || 0;
           if (card.concluido) porMembro[mId].concluidos++;
@@ -144,6 +173,7 @@ export function MetricasWorkspace({
     }
     return Object.values(porMembro).sort((a, b) => b.pontos - a.pontos);
   }, [sprintAtiva, cartoesDaSprint, membros]);
+  const [membroAberto, setMembroAberto] = useState<string | null>(null);
 
   // ── Distribuição por etiqueta ──
   const etiquetaStats = useMemo(() => {
@@ -450,6 +480,13 @@ export function MetricasWorkspace({
         <BurndownChart sprint={sprintAtiva} cards={ativaCards} />
       )}
 
+      {/* ── Tempo por coluna + cartoes mais rapidos e mais lentos ── */}
+      <DuracaoCartoes
+        workspaceId={workspaceId}
+        sprintIds={sprintsParaMetricas.map((s) => s.id)}
+        cartoes={cartoesParaMetricas}
+      />
+
       {/* ── Throughput Semanal + Cycle Time por Sprint ── */}
       {(throughputData.length >= 2 || cycleTimePerSprint.length >= 2) && (
         <div
@@ -708,9 +745,21 @@ export function MetricasWorkspace({
               )}
             </div>
             <div className="space-y-3">
-              {membroData.map((m, i) => (
-                <div key={i}>
-                  <div className="flex items-center gap-2 mb-1">
+              {membroData.map((m) => {
+                const aberto = membroAberto === m.id;
+                const idLista = `cartoes-membro-${m.id}`;
+                return (
+                <div key={m.id}>
+                  {/* O nome abre a lista dos cartoes contados (feedback
+                      a8f3cd3a): o numero sozinho nao dava pra conferir. */}
+                  <button
+                    type="button"
+                    onClick={() => setMembroAberto(aberto ? null : m.id)}
+                    aria-expanded={aberto}
+                    aria-controls={idLista}
+                    className="w-full flex items-center gap-2 mb-1 -mx-1 px-1 py-0.5 text-left transition-colors hover:bg-[var(--tf-surface-hover)]"
+                    style={{ borderRadius: "var(--tf-radius-xs)" }}
+                  >
                     <div
                       className="w-5 h-5 flex items-center justify-center text-[0.5625rem] font-semibold text-white shrink-0"
                       style={{
@@ -746,7 +795,16 @@ export function MetricasWorkspace({
                     >
                       {m.concluidos}/{m.cards} cards · {m.pontos} pts
                     </span>
-                  </div>
+                    <ChevronDown
+                      size={12}
+                      aria-hidden="true"
+                      className="shrink-0 transition-transform"
+                      style={{
+                        color: "var(--tf-text-tertiary)",
+                        transform: aberto ? "rotate(180deg)" : undefined,
+                      }}
+                    />
+                  </button>
                   <div className="flex ml-7" style={{ borderRadius: "var(--tf-radius-xs)", overflow: "hidden" }}>
                     {m.concluidos > 0 && (
                       <div
@@ -772,8 +830,45 @@ export function MetricasWorkspace({
                       />
                     )}
                   </div>
+                  {aberto && (
+                    <ul id={idLista} className="ml-7 mt-2 mb-1 space-y-1">
+                      {/* Pendentes primeiro: e o que a pessoa ainda carrega. */}
+                      {[...m.lista]
+                        .sort((a, b) => Number(a.concluido) - Number(b.concluido))
+                        .map((c) => (
+                          <li key={c.id} className="flex items-baseline gap-2 text-[0.75rem]">
+                            <span
+                              aria-hidden="true"
+                              className="w-1.5 h-1.5 rounded-full shrink-0 translate-y-[-1px]"
+                              style={{
+                                background: c.concluido ? "var(--tf-success)" : "var(--tf-accent)",
+                                opacity: c.concluido ? 1 : 0.6,
+                              }}
+                            />
+                            <span
+                              className="flex-1 min-w-0 truncate"
+                              style={{
+                                color: c.concluido ? "var(--tf-text-tertiary)" : "var(--tf-text)",
+                                textDecoration: c.concluido ? "line-through" : undefined,
+                              }}
+                              title={c.titulo}
+                            >
+                              {c.titulo}
+                            </span>
+                            <span
+                              className="shrink-0 text-[0.625rem]"
+                              style={{ color: "var(--tf-text-tertiary)", fontFamily: "var(--tf-font-mono)" }}
+                            >
+                              {c.coluna ?? "Backlog"}
+                              {c.peso ? ` · ${c.peso} pts` : ""}
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  )}
                 </div>
-              ))}
+                );
+              })}
               <div
                 className="flex items-center gap-4 pt-3 border-t"
                 style={{ borderColor: "var(--tf-border)" }}
