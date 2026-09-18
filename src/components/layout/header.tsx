@@ -7,7 +7,10 @@ import { abrirModalPro } from "@/lib/pro";
 import { abrirModalFeedback } from "@/lib/feedback";
 import { CadeadoPro } from "@/components/pro/selo-pro";
 import { useTema } from "@/hooks/use-tema";
-import { HelpCircle, LogOut, Menu, MessageSquarePlus, Moon, Sun, User, Search, Sparkles } from "lucide-react";
+import { HelpCircle, LogOut, Megaphone, Menu, MessageSquarePlus, Moon, Sun, User, Search, Sparkles } from "lucide-react";
+// O CHANGELOG ja entra no bundle global via useAvisos (GlobalOverlays, no
+// layout raiz), entao ler a versao daqui nao custa nada a mais.
+import { VERSAO_ATUAL } from "@/lib/changelog";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { NotificationBell } from "@/components/layout/notification-bell";
@@ -290,6 +293,28 @@ export function Header({ onMenuMobile }: { onMenuMobile?: () => void } = {}) {
               >
                 <User size={13} strokeWidth={1.75} />
                 <span>Configurações</span>
+              </Link>
+            </DropdownItem>
+
+            {/* Versao visivel no proprio item: o pedido (4f506227) era poder
+                saber qual versao esta rodando, nao so ler o changelog. */}
+            <DropdownItem onClick={() => {}}>
+              <Link
+                href="/novidades"
+                className="flex items-center gap-2.5 w-full"
+                style={{ color: "var(--tf-text)" }}
+              >
+                <Megaphone size={13} strokeWidth={1.75} />
+                <span className="flex-1">Novidades</span>
+                <span
+                  className="text-[0.625rem]"
+                  style={{
+                    color: "var(--tf-text-tertiary)",
+                    fontFamily: "var(--tf-font-mono)",
+                  }}
+                >
+                  v{VERSAO_ATUAL}
+                </span>
               </Link>
             </DropdownItem>
 

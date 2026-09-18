@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { BotaoCopiar } from "@/components/ui/botao-copiar";
 import { Anexos } from "../anexos";
 import { Avatar } from "../avatar";
 import { ChecklistComponent } from "../checklist";
@@ -557,6 +558,7 @@ export function DetalheCartao({
                   rows={1} + auto-grow no onChange e no efeito de montagem: a
                   altura inicial precisa considerar o titulo que ja veio do
                   banco, nao so o que o usuario digita agora. */}
+              <div className="group flex items-start gap-1">
               <textarea
                 ref={tituloInputRef}
                 value={titulo}
@@ -578,7 +580,7 @@ export function DetalheCartao({
                 }}
                 onBlur={salvar}
                 maxLength={200}
-                className="w-full resize-none overflow-hidden text-[1.375rem] md:text-[1.75rem] font-semibold bg-transparent outline-none px-1.5 py-1 -mx-1.5 leading-tight"
+                className="flex-1 min-w-0 resize-none overflow-hidden text-[1.375rem] md:text-[1.75rem] font-semibold bg-transparent outline-none px-1.5 py-1 -mx-1.5 leading-tight"
                 style={{
                   color: "var(--tf-text)",
                   border: "1px solid transparent",
@@ -596,6 +598,17 @@ export function DetalheCartao({
                 }}
                 placeholder="Título do cartão"
               />
+              {/* mt-2 alinha o icone com a primeira linha do titulo, que e
+                  bem mais alta que o botao. */}
+              {titulo.trim() && (
+                <BotaoCopiar
+                  texto={titulo.trim()}
+                  rotulo="Copiar título"
+                  tamanho={14}
+                  className="mt-2 p-1.5"
+                />
+              )}
+              </div>
 
               {/* LABELS ROW */}
               <div className="flex flex-wrap gap-1 items-center">
@@ -763,7 +776,7 @@ export function DetalheCartao({
               )}
 
               {/* ── DESCRIPTION ── */}
-              <div className="pt-4 border-t" style={{ borderColor: "var(--tf-border-subtle)" }}>
+              <div className="group pt-4 border-t" style={{ borderColor: "var(--tf-border-subtle)" }}>
                 <div className="flex items-center gap-2 mb-2.5">
                   <span
                     aria-hidden
@@ -778,9 +791,16 @@ export function DetalheCartao({
                     Descrição
                   </h3>
                   {!editandoDescricao && descricao && (
+                    <BotaoCopiar
+                      texto={descricao}
+                      rotulo="Copiar descrição"
+                      className="ml-auto p-1"
+                    />
+                  )}
+                  {!editandoDescricao && descricao && (
                     <button
                       onClick={() => setEditandoDescricao(true)}
-                      className="ml-auto h-6 px-2 text-[0.6875rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
+                      className="h-6 px-2 text-[0.6875rem] font-medium transition-colors hover:bg-[var(--tf-surface-hover)] hover:text-[var(--tf-accent)]"
                       style={{
                         color: "var(--tf-text-tertiary)",
                         borderRadius: "var(--tf-radius-xs)",

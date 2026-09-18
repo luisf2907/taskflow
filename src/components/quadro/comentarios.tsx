@@ -5,6 +5,7 @@ import { ComentarioComAutor, Membro } from "@/types";
 import { MessageSquare, Send, Trash2 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { Avatar } from "./avatar";
+import { BotaoCopiar } from "@/components/ui/botao-copiar";
 
 interface ComentariosProps {
   comentarios: ComentarioComAutor[];
@@ -220,9 +221,15 @@ export function Comentarios({
                     >
                       {tempoRelativo(comentario.criado_em)}
                     </span>
+                    <BotaoCopiar
+                      texto={comentario.texto}
+                      rotulo="Copiar comentário"
+                      tamanho={11}
+                      className="ml-auto p-0.5"
+                    />
                     <button
                       onClick={() => onExcluir(comentario.id)}
-                      className="p-0.5 tf-acao-toque opacity-0 group-hover:opacity-100 ml-auto transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
+                      className="p-0.5 tf-acao-toque opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--tf-danger-bg)] hover:text-[var(--tf-danger)]"
                       style={{
                         color: "var(--tf-text-tertiary)",
                         borderRadius: "var(--tf-radius-xs)",
