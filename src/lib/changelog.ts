@@ -44,6 +44,28 @@ export const ROTULO_TIPO: Record<TipoItemChangelog, string> = {
 
 export const CHANGELOG: EntradaChangelog[] = [
   {
+    versao: "0.4.0",
+    data: "2026-09-18",
+    titulo: "Histórico de versões e botão de copiar",
+    itens: [
+      {
+        tipo: "novo",
+        texto:
+          "Página de Novidades com o histórico de todas as versões. Acesse pelo menu da sua conta, onde também aparece a versão atual.",
+      },
+      {
+        tipo: "novo",
+        texto:
+          "Botão de copiar no título, na descrição e nos comentários do cartão.",
+      },
+      {
+        tipo: "melhoria",
+        texto:
+          "Em Configurações, clique numa insígnia para ver a sugestão que a originou.",
+      },
+    ],
+  },
+  {
     versao: "0.3.0",
     data: "2026-09-03",
     titulo: "Quatro incômodos que vocês apontaram",
