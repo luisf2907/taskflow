@@ -1080,6 +1080,7 @@ export default function PaginaWorkspace() {
             {/* ═══ ABA MÉTRICAS ═══ */}
             {abaAtiva === "metricas" && (
               <MetricasWorkspace
+                workspaceId={workspaceId}
                 sprints={sprintsDoWorkspace}
                 cartoesDaSprint={cartoesDaSprint}
                 backlogPuro={backlogPuro}

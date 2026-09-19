@@ -44,6 +44,28 @@ export const ROTULO_TIPO: Record<TipoItemChangelog, string> = {
 
 export const CHANGELOG: EntradaChangelog[] = [
   {
+    versao: "0.5.0",
+    data: "2026-09-19",
+    titulo: "Para onde vai o tempo dos cartões",
+    itens: [
+      {
+        tipo: "novo",
+        texto:
+          "Histórico no cartão: por onde ele passou, quem moveu e há quanto tempo está onde está.",
+      },
+      {
+        tipo: "novo",
+        texto:
+          "Nas métricas, o tempo médio em cada coluna e quais cartões foram os mais rápidos e os mais lentos.",
+      },
+      {
+        tipo: "melhoria",
+        texto:
+          "Em “Carga por membro”, clique no nome para ver os cartões que entraram na conta.",
+      },
+    ],
+  },
+  {
     versao: "0.4.0",
     data: "2026-09-18",
     titulo: "Histórico de versões e botão de copiar",

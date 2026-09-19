@@ -108,6 +108,7 @@ SQL_PUBLICACAO
 057_plano_pro.sql|EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'perfis' AND column_name = 'plano')
 058_feedbacks.sql|to_regclass('public.feedbacks') IS NOT NULL
 059_versionamento_e_conquistas.sql|to_regclass('public.conquistas') IS NOT NULL
+060_historico_movimentacao_cartao.sql|to_regclass('public.cartao_movimentacoes') IS NOT NULL
 MIGRATIONS_PENDENTES
 }
 
